@@ -1,5 +1,5 @@
 #labels Featured
-#A page explaining the concept and how to create advanced movement paths.
+#summery A page explaining the concept and how to create advanced movement paths.
 
 = Introduction =
 It is advised that you practise creating simple movement effects first and understand the basic properties of movement info.
