@@ -2,6 +2,7 @@
     * [Pegs]
     * [Bricks]
     * [Polygons]
+    * [Rods]
     * [Emitters]
     * [Teleports]
     * [Emitters]
