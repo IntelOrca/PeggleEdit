@@ -1,14 +1,14 @@
 #summary Information about pegs
 
-In PeggleEdit, peg will sometimes be naming two different things. Normally a peg just the circular blue and orange objective objects. However sometimes they can also include bricks.
+In PeggleEdit, pegs can be round or rectangular ([bricks]). They can be defined as normal (blue) or objective (orange). When playing the game Peggle will,  at random, change two blue pegs to green (powerup) and one to purple (bonus).
 
 == Peg Info ==
-Pegs are actually [Circle circles] but with additional information which defines the circle as a peg. This information is stored in a small set of properties called PegInfo. This can be stored on any object however PeggleEdit will restrict it to circles and bricks for the reason of them being the only objects that work with it.
+Pegs are [Circle circles] objects with additional information which defines the circle as a peg. This information is stored in a small set of properties called PegInfo. 
 
-You can not add or remove PegInfo properties for that reason, therefore the only way to place pegs is by using the Peg tool which can be found on the tools tab of the ribbon at the top of the main window.
+You can place pegs by using the Peg tool found on the tools tab of the ribbon at the top of the main window.
 
 There are two properties in the PegInfo.
 
-*Can Be Orange* states whether the peg can be designated as an orange peg. By default Peggle will choose 25 pegs to be orange. With this option set to false, the peg will never be orange. This is shown on PeggleEdit by showing the peg as blue or orange.
+*Can Be Orange* states whether the peg can be an orange peg. With this property set to false, the peg will never be orange. In PeggleEdit if the property is true, pegs are displayed orange, otherwise blue. Peggle will choose 25 of the *Can Be Orange* pegs (for a default challenge) to be orange when playing the game. 
 
-*Quick Disappear* states that the peg will disappear seconds after it is hit by the ball. Normally, if the ball does not hit any pegs for a few seconds, all the pegs that were hit will disappear. Sometimes this is likely to happen when you have circles of pegs or bricks. So the ball doesn't end up getting stuck for as long, some bricks or pegs have this property set to true so that the peg will disappear quicker than usual to avoid the ball getting stuck. An example would be to set the bottom brick of a brick circle to quickly disappear as the ball should always be able to exist if the hole is at the bottom.
+*Quick Disappear* states that the peg will disappear shortly after it is hit by the ball. Normally, if the ball does not hit any pegs for a few seconds, there is a delay before the pegs that have been hit will disappear, for instance if the ball is stuck in an arc of pegs. You can set this property on bricks or pegs (e.g. one at the bottom of an arc) to reduce the time that a ball will remain stuck. 
