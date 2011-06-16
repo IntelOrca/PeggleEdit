@@ -1,0 +1,14 @@
+#summary Information about pegs
+
+In PeggleEdit, peg will sometimes be naming two different things. Normally a peg just the circular blue and orange objective objects. However sometimes they can also include bricks.
+
+== Peg Info ==
+Pegs are actually [Circle circles] but with additional information which defines the circle as a peg. This information is stored in a small set of properties called PegInfo. This can be stored on any object however PeggleEdit will restrict it to circles and bricks for the reason of them being the only objects that work with it.
+
+You can not add or remove PegInfo properties for that reason, therefore the only way to place pegs is by using the Peg tool which can be found on the tools tab of the ribbon at the top of the main window.
+
+There are two properties in the PegInfo.
+
+*Can Be Orange* states whether the peg can be designated as an orange peg. By default Peggle will choose 25 pegs to be orange. With this option set to false, the peg will never be orange. This is shown on PeggleEdit by showing the peg as blue or orange.
+
+*Quick Disappear* states that the peg will disappear seconds after it is hit by the ball. Normally, if the ball does not hit any pegs for a few seconds, all the pegs that were hit will disappear. Sometimes this is likely to happen when you have circles of pegs or bricks. So the ball doesn't end up getting stuck for as long, some bricks or pegs have this property set to true so that the peg will disappear quicker than usual to avoid the ball getting stuck. An example would be to set the bottom brick of a brick circle to quickly disappear as the ball should always be able to exist if the hole is at the bottom.
