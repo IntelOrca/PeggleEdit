@@ -6,6 +6,9 @@
     * [Rods]
     * [Teleports]
     * [Emitters]
+    * [Generators]
+      * [PegGenerators Peg Generators]
+      * [BrickGenerators Brick Generators]
     * [AdvancedMovement Advanced Movement]
   * Developer Topics
     * [ApplicationDesign Application Design]
