@@ -1,9 +1,9 @@
   * User Topics
     * [Pegs]
     * [Bricks]
+    * [Circles]
     * [Polygons]
     * [Rods]
-    * [Emitters]
     * [Teleports]
     * [Emitters]
     * [AdvancedMovement Advanced Movement]
