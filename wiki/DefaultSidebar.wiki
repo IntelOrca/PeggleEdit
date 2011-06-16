@@ -1,5 +1,10 @@
   * User Topics
-    * [Pegs Pegs]
+    * [Pegs]
+    * [Bricks]
+    * [Polygons]
+    * [Emitters]
+    * [Teleports]
+    * [Emitters]
     * [AdvancedMovement Advanced Movement]
   * Developer Topics
     * [ApplicationDesign Application Design]
