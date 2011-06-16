@@ -13,4 +13,4 @@ Some examples of where emitters are used are:
 Emitters often have movement info associated with them.
 
 == Properties ==
-There is more than a hand full of properties to change the behaviour of the emitters and the particles.
+There are a number of properties that can be used to change the behaviour of the emitters and their particles.
