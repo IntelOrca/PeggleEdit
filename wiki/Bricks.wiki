@@ -10,3 +10,5 @@ Curved bricks are defined by sectors of a circle. When hovering over bricks in P
 *Length / Radius* defines mostly the brick size.
 
 *Sector angle* defines how curved the brick is.
+
+http://tedtycoon.co.uk/peggle/images/brick_concept.png
