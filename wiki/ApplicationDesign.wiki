@@ -1,5 +1,5 @@
 #summary The code structure of PeggleEdit
-#labels Featured,Phase-Design
+#labels Phase-Design
 
 = Introduction =
 PeggleEdit is written in CSharp uses the .NET Framework. This allows PeggleEdit to maintain a nice hierarchy of classes to implement all the features needed and make it easy to add new tools and functions.
