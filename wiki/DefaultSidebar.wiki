@@ -2,5 +2,4 @@
     * [AdvancedMovement Advanced Movement]
   * Developer Topics
     * [ApplicationDesign Application Design]
-
     [HelpWanted Help Wanted]
