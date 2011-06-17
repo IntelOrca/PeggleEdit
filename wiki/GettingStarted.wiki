@@ -2,11 +2,11 @@
 #labels Featured,Phase-Deploy
 
 = 1. Operating Systems =
-You must have an operating system that is supported by .NET Framework 3.5. Windows 2000, XP, Vista and 7 should be supported.
+You must have an operating system that supports .NET Framework 3.5 e.g. Windows 2000, XP, Vista and 7.
 
 = 2. Downloading and Compiling =
 
-There are four ways to obtain a copy of CorsixTH:
+There are three ways to obtain a copy of PeggleEdit:
   # A *ready-to-use executable* (compiled binary) in an archive for the latest stable release can be downloaded from the [http://code.google.com/p/peggle-edit/downloads/list download page].
   # The *source code* of the latest stable release can be downloaded as an archive from the [http://code.google.com/p/peggle-edit/downloads/list download page].
   # The very latest development source code can be <a href="http://code.google.com/p/peggle-edit/source/checkout">checked-out from *Subversion*</a>.
