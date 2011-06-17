@@ -22,7 +22,7 @@ If you have any questions then take a look at the [FrequentlyAskedQuestions FAQ]
 = What next? =
 
 == Publishing your level packs ==
-At the moment, the editor is still very new and now many level packs have been released yet. Currently released level packs can be downloaded at http://tedtycoon.co.uk/wiki/PeggleEdit. If you would like to submit your own level pack, e-mail your pack to *ted [at] brambles [dot] org*. Eventually when there are more level packs submitted, they will all be moved to a level pack database with it's own website.
+At the moment, the editor is still very new and not many level packs have been released yet. Currently released level packs can be downloaded at http://tedtycoon.co.uk/wiki/PeggleEdit. If you would like to submit your own level pack, e-mail your pack to *ted [at] brambles [dot] org*. Eventually when there are more level packs submitted, they will all be moved to a level pack database with its own website.
 
 == Contributing ==
 If you are interested in helping with the development of PeggleEdit, you might like to see the [HelpWanted Help Wanted] page.
