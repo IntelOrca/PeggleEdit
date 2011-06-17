@@ -1,6 +1,7 @@
   * User Topics
     * [GettingStarted Getting Started]
     * [FrequentlyAskedQuestions Frequently Asked Questions]
+    * [PlannedFeatures Planned Features]
     * [LevelEntries Level Entries]
       * [Pegs]
       * [Bricks]
@@ -15,5 +16,6 @@
     * [AdvancedMovement Advanced Movement]
   * Developer Topics
     * [ApplicationDesign Application Design]
+    * [PakFormat PAK Format]
     * [LevelFormat Level Format]
   * [HelpWanted Help Wanted]
