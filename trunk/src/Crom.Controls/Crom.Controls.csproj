@@ -1,0 +1,281 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <PropertyGroup>
+    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
+    <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
+    <ProductVersion>9.0.30729</ProductVersion>
+    <SchemaVersion>2.0</SchemaVersion>
+    <ProjectGuid>{F2999C1D-BED3-4D47-A8AC-8027334ECDC1}</ProjectGuid>
+    <OutputType>Library</OutputType>
+    <AppDesignerFolder>Properties</AppDesignerFolder>
+    <RootNamespace>Crom.Controls</RootNamespace>
+    <AssemblyName>Crom.Controls</AssemblyName>
+    <TargetFrameworkVersion>v2.0</TargetFrameworkVersion>
+    <FileAlignment>512</FileAlignment>
+    <FileUpgradeFlags>
+    </FileUpgradeFlags>
+    <OldToolsVersion>3.5</OldToolsVersion>
+    <UpgradeBackupLocation />
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
+    <DebugSymbols>true</DebugSymbols>
+    <DebugType>full</DebugType>
+    <Optimize>false</Optimize>
+    <OutputPath>bin\Debug\</OutputPath>
+    <DefineConstants>DEBUG;TRACE</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+    <UseVSHostingProcess>false</UseVSHostingProcess>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
+    <DebugType>pdbonly</DebugType>
+    <Optimize>true</Optimize>
+    <OutputPath>bin\Release\</OutputPath>
+    <DefineConstants>TRACE</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+    <UseVSHostingProcess>false</UseVSHostingProcess>
+  </PropertyGroup>
+  <ItemGroup>
+    <Reference Include="System" />
+    <Reference Include="System.Drawing" />
+    <Reference Include="System.Windows.Forms" />
+    <Reference Include="System.Xml" />
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Include="Internal\Docking\ControlCollections\DockableContainerControlCollection.cs" />
+    <Compile Include="Internal\Docking\ControlCollections\FormsContainerControlCollection.cs" />
+    <Compile Include="Internal\Docking\ControlCollections\FormsDecoratorControlCollection.cs" />
+    <Compile Include="Internal\Docking\ControlCollections\FormsTabbedViewControlCollection.cs" />
+    <Compile Include="Internal\Docking\Controls\AutoHideButtonsPanel.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="Internal\Docking\Controls\AutoHidePanel.cs">
+      <SubType>Component</SubType>
+    </Compile>
+    <Compile Include="Internal\Docking\Controls\DockableContainer.cs">
+      <SubType>Component</SubType>
+    </Compile>
+    <Compile Include="Internal\Docking\Controls\DockButtons\ButtonToDockBottom.cs">
+      <SubType>Component</SubType>
+    </Compile>
+    <Compile Include="Internal\Docking\Controls\DockButtons\ButtonToDockBottom.Designer.cs">
+      <DependentUpon>ButtonToDockBottom.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Internal\Docking\Controls\DockButtons\ButtonToDockLeft.cs">
+      <SubType>Component</SubType>
+    </Compile>
+    <Compile Include="Internal\Docking\Controls\DockButtons\ButtonToDockLeft.Designer.cs">
+      <DependentUpon>ButtonToDockLeft.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Internal\Docking\Controls\DockButtons\ButtonToDockRight.cs">
+      <SubType>Component</SubType>
+    </Compile>
+    <Compile Include="Internal\Docking\Controls\DockButtons\ButtonToDockRight.Designer.cs">
+      <DependentUpon>ButtonToDockRight.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Internal\Docking\Controls\DockButtons\ButtonToDockUp.cs">
+      <SubType>Component</SubType>
+    </Compile>
+    <Compile Include="Internal\Docking\Controls\DockButtons\ButtonToDockUp.Designer.cs">
+      <DependentUpon>ButtonToDockUp.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Internal\Docking\Controls\DockButtons\CenterButtonToDockBottom.cs">
+      <SubType>Component</SubType>
+    </Compile>
+    <Compile Include="Internal\Docking\Controls\DockButtons\CenterButtonToDockBottom.Designer.cs">
+      <DependentUpon>CenterButtonToDockBottom.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Internal\Docking\Controls\DockButtons\CenterButtonToDockFill.cs">
+      <SubType>Component</SubType>
+    </Compile>
+    <Compile Include="Internal\Docking\Controls\DockButtons\CenterButtonToDockFill.Designer.cs">
+      <DependentUpon>CenterButtonToDockFill.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Internal\Docking\Controls\DockButtons\CenterButtonToDockLeft.cs">
+      <SubType>Component</SubType>
+    </Compile>
+    <Compile Include="Internal\Docking\Controls\DockButtons\CenterButtonToDockLeft.Designer.cs">
+      <DependentUpon>CenterButtonToDockLeft.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Internal\Docking\Controls\DockButtons\CenterButtonToDockRight.cs">
+      <SubType>Component</SubType>
+    </Compile>
+    <Compile Include="Internal\Docking\Controls\DockButtons\CenterButtonToDockRight.Designer.cs">
+      <DependentUpon>CenterButtonToDockRight.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Internal\Docking\Controls\DockButtons\CenterButtonToDockUp.cs">
+      <SubType>Component</SubType>
+    </Compile>
+    <Compile Include="Internal\Docking\Controls\DockButtons\CenterButtonToDockUp.Designer.cs">
+      <DependentUpon>CenterButtonToDockUp.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Internal\Docking\Controls\FormsContainer.cs">
+      <SubType>Component</SubType>
+    </Compile>
+    <Compile Include="Internal\Docking\Controls\FormsDecorator.cs">
+      <SubType>Component</SubType>
+    </Compile>
+    <Compile Include="Internal\Docking\Controls\FormsTabbedView.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="Internal\Docking\Controls\Forms\DockPreview.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="Internal\Docking\Controls\Forms\DockPreview.Designer.cs">
+      <DependentUpon>DockPreview.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Internal\Docking\Controls\OwnerDrawPanel.cs">
+      <SubType>Component</SubType>
+    </Compile>
+    <Compile Include="Internal\Docking\Controls\PreviewPane.cs">
+      <SubType>Component</SubType>
+    </Compile>
+    <Compile Include="Internal\Docking\Engine\Autohide.cs" />
+    <Compile Include="Internal\Docking\Engine\DockGuider.cs" />
+    <Compile Include="Internal\Docking\Engine\DockLayout.cs" />
+    <Compile Include="Internal\Docking\Engine\FormsDocker.cs" />
+    <Compile Include="Internal\Docking\EventArgs\InvalidateEventArgs.cs" />
+    <Compile Include="Internal\Docking\EventArgs\TemplateEventArgs.cs" />
+    <Compile Include="Internal\Docking\Helpers\DefaultFormsSelector.cs" />
+    <Compile Include="Internal\Docking\Helpers\FocusFilter.cs" />
+    <Compile Include="Internal\Docking\Helpers\SelectableFormsInfo.cs" />
+    <Compile Include="Public\Docking\Enums\zAllowedDock.cs" />
+    <Compile Include="Public\Docking\Enums\zDockMode.cs" />
+    <Compile Include="Internal\Docking\Enums\zSizeMode.cs" />
+    <Compile Include="Internal\Docking\EventArgs\ControlSwitchedEventArgs.cs" />
+    <Compile Include="Internal\Docking\EventArgs\DockControlEventArgs.cs" />
+    <Compile Include="Public\Docking\EventArgs\DockableFormClosingEventArgs.cs" />
+    <Compile Include="Public\Docking\EventArgs\FormContextMenuEventArgs.cs" />
+    <Compile Include="Internal\Docking\EventArgs\PreviewEventArgs.cs" />
+    <Compile Include="Internal\Docking\Helpers\CenterDockButtons.cs" />
+    <Compile Include="Internal\Docking\Helpers\Command.cs" />
+    <Compile Include="Internal\Docking\Helpers\ControlPositioner.cs" />
+    <Compile Include="Internal\SharedHelpers\Disposable.cs" />
+    <Compile Include="Public\Docking\EventArgs\FormEventArgs.cs" />
+    <Compile Include="Public\Docking\Helpers\DockableFormInfo.cs" />
+    <Compile Include="Internal\Docking\Helpers\DockGuiderWrapper.cs" />
+    <Compile Include="Internal\Docking\Helpers\EnumUtility.cs" />
+    <Compile Include="Internal\Docking\Helpers\FormWrapper.cs" />
+    <Compile Include="Internal\Docking\Helpers\Globals.cs" />
+    <Compile Include="Internal\Docking\Helpers\GuidedDockResult.cs" />
+    <Compile Include="Internal\Docking\Helpers\HierarchyUtility.cs" />
+    <Compile Include="Internal\Docking\Helpers\InnerDockPreviewEngine.cs" />
+    <Compile Include="Internal\Docking\Helpers\MarginDockButtons.cs" />
+    <Compile Include="Internal\Docking\Helpers\OuterDockPreviewEngine.cs" />
+    <Compile Include="Internal\Docking\Helpers\TitleBarRenderer.cs" />
+    <Compile Include="Public\TabbedDocument\Controls\ButtonsPanel.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="Public\TabbedDocument\Controls\ButtonsPanel.Designer.cs">
+      <DependentUpon>ButtonsPanel.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Public\TabbedDocument\Controls\TabbedView.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="Public\TabbedDocument\Controls\TabbedView.Designer.cs">
+      <DependentUpon>TabbedView.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Public\TabbedDocument\Controls\TabPageView.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="Public\TabbedDocument\Controls\TabPageView.Designer.cs">
+      <DependentUpon>TabPageView.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Public\TabbedDocument\Enums\zButtonState.cs" />
+    <Compile Include="Internal\SharedHelpers\GraphicsUtility.cs" />
+    <Compile Include="Public\TabbedDocument\Helpers\TabButton.cs" />
+    <Compile Include="Public\TabbedDocument\Renderers\Base\TabButtonRenderer.cs" />
+    <Compile Include="Public\TabbedDocument\Renderers\BottomTabButtonRenderer.cs" />
+    <Compile Include="Public\TabbedDocument\Renderers\LeftTabButtonRenderer.cs" />
+    <Compile Include="Public\TabbedDocument\Renderers\RightTabButtonRenderer.cs" />
+    <Compile Include="Public\TabbedDocument\Renderers\TopTabButtonRenderer.cs" />
+    <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="Public\Docking\DockContainer.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="Public\Docking\Helpers\DockStateSerializer.cs" />
+    <Compile Include="Public\Docking\Renderers\PreviewRenderer.cs" />
+    <Compile Include="Public\Docking\Helpers\FormsSelector.cs" />
+    <Compile Include="Resources.Designer.cs">
+      <AutoGen>True</AutoGen>
+      <DesignTime>True</DesignTime>
+      <DependentUpon>Resources.resx</DependentUpon>
+    </Compile>
+    <Compile Include="XmlTags.Designer.cs">
+      <AutoGen>True</AutoGen>
+      <DesignTime>True</DesignTime>
+      <DependentUpon>XmlTags.resx</DependentUpon>
+    </Compile>
+  </ItemGroup>
+  <ItemGroup>
+    <EmbeddedResource Include="Internal\Docking\Controls\DockButtons\ButtonToDockBottom.resx">
+      <DependentUpon>ButtonToDockBottom.cs</DependentUpon>
+      <SubType>Designer</SubType>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Internal\Docking\Controls\DockButtons\ButtonToDockLeft.resx">
+      <DependentUpon>ButtonToDockLeft.cs</DependentUpon>
+      <SubType>Designer</SubType>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Internal\Docking\Controls\DockButtons\ButtonToDockRight.resx">
+      <DependentUpon>ButtonToDockRight.cs</DependentUpon>
+      <SubType>Designer</SubType>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Internal\Docking\Controls\DockButtons\ButtonToDockUp.resx">
+      <DependentUpon>ButtonToDockUp.cs</DependentUpon>
+      <SubType>Designer</SubType>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Internal\Docking\Controls\DockButtons\CenterButtonToDockBottom.resx">
+      <DependentUpon>CenterButtonToDockBottom.cs</DependentUpon>
+      <SubType>Designer</SubType>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Internal\Docking\Controls\DockButtons\CenterButtonToDockFill.resx">
+      <DependentUpon>CenterButtonToDockFill.cs</DependentUpon>
+      <SubType>Designer</SubType>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Internal\Docking\Controls\DockButtons\CenterButtonToDockLeft.resx">
+      <DependentUpon>CenterButtonToDockLeft.cs</DependentUpon>
+      <SubType>Designer</SubType>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Internal\Docking\Controls\DockButtons\CenterButtonToDockRight.resx">
+      <DependentUpon>CenterButtonToDockRight.cs</DependentUpon>
+      <SubType>Designer</SubType>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Internal\Docking\Controls\DockButtons\CenterButtonToDockUp.resx">
+      <DependentUpon>CenterButtonToDockUp.cs</DependentUpon>
+      <SubType>Designer</SubType>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Internal\Docking\Controls\Forms\DockPreview.resx">
+      <DependentUpon>DockPreview.cs</DependentUpon>
+      <SubType>Designer</SubType>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Public\TabbedDocument\Controls\ButtonsPanel.resx">
+      <DependentUpon>ButtonsPanel.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Public\TabbedDocument\Controls\TabbedView.resx">
+      <DependentUpon>TabbedView.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Public\TabbedDocument\Controls\TabPageView.resx">
+      <DependentUpon>TabPageView.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Resources.resx">
+      <Generator>ResXFileCodeGenerator</Generator>
+      <LastGenOutput>Resources.Designer.cs</LastGenOutput>
+    </EmbeddedResource>
+    <EmbeddedResource Include="XmlTags.resx">
+      <Generator>ResXFileCodeGenerator</Generator>
+      <LastGenOutput>XmlTags.Designer.cs</LastGenOutput>
+    </EmbeddedResource>
+  </ItemGroup>
+  <ItemGroup>
+    <EmbeddedResource Include="Dock16x16.bmp" />
+  </ItemGroup>
+  <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
+  <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
+       Other similar extension points exist, see Microsoft.Common.targets.
+  <Target Name="BeforeBuild">
+  </Target>
+  <Target Name="AfterBuild">
+  </Target>
+  -->
+</Project>

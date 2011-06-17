@@ -1,0 +1,131 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <PropertyGroup>
+    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
+    <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
+    <ProductVersion>8.0.30703</ProductVersion>
+    <SchemaVersion>2.0</SchemaVersion>
+    <ProjectGuid>{02DFDF7C-8E6A-4C56-BB5C-804623270233}</ProjectGuid>
+    <OutputType>Library</OutputType>
+    <AppDesignerFolder>Properties</AppDesignerFolder>
+    <RootNamespace>IntelOrca.PeggleEdit.Tools</RootNamespace>
+    <AssemblyName>IntelOrca.PeggleEdit.Tools</AssemblyName>
+    <TargetFrameworkVersion>v3.5</TargetFrameworkVersion>
+    <FileAlignment>512</FileAlignment>
+    <TargetFrameworkProfile />
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
+    <DebugSymbols>true</DebugSymbols>
+    <DebugType>full</DebugType>
+    <Optimize>false</Optimize>
+    <OutputPath>bin\Debug\</OutputPath>
+    <DefineConstants>DEBUG;TRACE</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
+    <DebugType>pdbonly</DebugType>
+    <Optimize>true</Optimize>
+    <OutputPath>bin\Release\</OutputPath>
+    <DefineConstants>TRACE</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+  </PropertyGroup>
+  <ItemGroup>
+    <Reference Include="System" />
+    <Reference Include="System.Drawing" />
+    <Reference Include="System.Windows.Forms" />
+    <Reference Include="System.Xml" />
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Include="MathExt.cs" />
+    <Compile Include="Levels\Children\Brick.cs" />
+    <Compile Include="Levels\Children\BrickGenerator.cs" />
+    <Compile Include="Levels\Children\Circle.cs" />
+    <Compile Include="Levels\Children\Emitter.cs" />
+    <Compile Include="Levels\Children\LevelEntry.cs" />
+    <Compile Include="Levels\Children\PegGenerator.cs" />
+    <Compile Include="Levels\Children\Polygon.cs" />
+    <Compile Include="Levels\Children\Rod.cs" />
+    <Compile Include="Levels\Children\Teleport.cs" />
+    <Compile Include="Levels\Children\UnknownEntry.cs" />
+    <Compile Include="Levels\EntryPropertyType.cs" />
+    <Compile Include="FlagGroup.cs" />
+    <Compile Include="Levels\IEntryFunction.cs" />
+    <Compile Include="Levels\Children\ILevelChild.cs" />
+    <Compile Include="Levels\ILocation.cs" />
+    <Compile Include="Levels\Children\IMovementContainer.cs" />
+    <Compile Include="Levels\Level.cs" />
+    <Compile Include="Levels\LevelInfo.cs" />
+    <Compile Include="Levels\LevelReader.cs" />
+    <Compile Include="Levels\LevelWriter.cs" />
+    <Compile Include="Levels\LevelXMLWriter.cs" />
+    <Compile Include="Levels\Children\Movement.cs" />
+    <Compile Include="Levels\MovementUITypeEditor.cs" />
+    <Compile Include="Levels\Children\PegInfo.cs" />
+    <Compile Include="Levels\PercentageConverter.cs" />
+    <Compile Include="Levels\PolygonEditor.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="Levels\PolygonEditor.Designer.cs">
+      <DependentUpon>PolygonEditor.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Levels\PolygonPointsUITypeEditor.cs" />
+    <Compile Include="Levels\VariableFloat.cs" />
+    <Compile Include="Levels\VariableFloatTypeConverter.cs" />
+    <Compile Include="OpenJPEG.cs" />
+    <Compile Include="Pack\CFG\CFGBlock.cs" />
+    <Compile Include="Pack\CFG\CFGDocument.cs" />
+    <Compile Include="Pack\CFG\CFGProperty.cs" />
+    <Compile Include="Pack\CFG\CFGReader.cs" />
+    <Compile Include="Pack\CFG\CFGWriter.cs" />
+    <Compile Include="Pack\Challenge\Challenge.cs" />
+    <Compile Include="Pack\Challenge\ChallengePage.cs" />
+    <Compile Include="Pack\LevelPack.cs" />
+    <Compile Include="Pack\PakCollection.cs" />
+    <Compile Include="Pack\PakRecord.cs" />
+    <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="Properties\Resources.Designer.cs">
+      <AutoGen>True</AutoGen>
+      <DesignTime>True</DesignTime>
+      <DependentUpon>Resources.resx</DependentUpon>
+    </Compile>
+  </ItemGroup>
+  <ItemGroup>
+    <EmbeddedResource Include="Levels\PolygonEditor.resx">
+      <DependentUpon>PolygonEditor.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Properties\Resources.resx">
+      <Generator>ResXFileCodeGenerator</Generator>
+      <LastGenOutput>Resources.Designer.cs</LastGenOutput>
+    </EmbeddedResource>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Files\LevelEditor.cfg" />
+    <None Include="Files\LevelEditor_Choices.cfg" />
+    <None Include="Files\LevelEditor_Types.cfg" />
+    <None Include="Resources\interface_collision.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\interface.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\anchor_point.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <Content Include="j2k_to_image.exe">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="openjpeg.dll">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+  </ItemGroup>
+  <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
+  <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
+       Other similar extension points exist, see Microsoft.Common.targets.
+  <Target Name="BeforeBuild">
+  </Target>
+  <Target Name="AfterBuild">
+  </Target>
+  -->
+</Project>

@@ -1,0 +1,38 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 11.00
+# Visual Studio 2010
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "IntelOrca.PeggleEdit.Designer", "IntelOrca.PeggleEdit.Designer\IntelOrca.PeggleEdit.Designer.csproj", "{D08BD3D0-93E3-4993-83DD-750C8EF7BB9F}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "IntelOrca.PeggleEdit.Tools", "IntelOrca.PeggleEdit.Tools\IntelOrca.PeggleEdit.Tools.csproj", "{02DFDF7C-8E6A-4C56-BB5C-804623270233}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "System.Windows.Forms.Ribbon", "System.Windows.Forms.Ribbon\System.Windows.Forms.Ribbon.csproj", "{46A18A55-5AE8-49CE-91CD-C7421B642E7E}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Crom.Controls", "Crom.Controls\Crom.Controls.csproj", "{F2999C1D-BED3-4D47-A8AC-8027334ECDC1}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{D08BD3D0-93E3-4993-83DD-750C8EF7BB9F}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{D08BD3D0-93E3-4993-83DD-750C8EF7BB9F}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{D08BD3D0-93E3-4993-83DD-750C8EF7BB9F}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{D08BD3D0-93E3-4993-83DD-750C8EF7BB9F}.Release|Any CPU.Build.0 = Release|Any CPU
+		{02DFDF7C-8E6A-4C56-BB5C-804623270233}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{02DFDF7C-8E6A-4C56-BB5C-804623270233}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{02DFDF7C-8E6A-4C56-BB5C-804623270233}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{02DFDF7C-8E6A-4C56-BB5C-804623270233}.Release|Any CPU.Build.0 = Release|Any CPU
+		{46A18A55-5AE8-49CE-91CD-C7421B642E7E}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{46A18A55-5AE8-49CE-91CD-C7421B642E7E}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{46A18A55-5AE8-49CE-91CD-C7421B642E7E}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{46A18A55-5AE8-49CE-91CD-C7421B642E7E}.Release|Any CPU.Build.0 = Release|Any CPU
+		{F2999C1D-BED3-4D47-A8AC-8027334ECDC1}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{F2999C1D-BED3-4D47-A8AC-8027334ECDC1}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{F2999C1D-BED3-4D47-A8AC-8027334ECDC1}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{F2999C1D-BED3-4D47-A8AC-8027334ECDC1}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+EndGlobal
