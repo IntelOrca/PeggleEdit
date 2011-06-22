@@ -65,7 +65,7 @@ namespace IntelOrca.PeggleEdit.Tools.Levels
 
 				//Read entries
 				for (entry_index = 0; entry_index < mNumEntries; entry_index++) {
-					LevelEntry entry = LevelEntry.FromReader(br, mFileVersion);
+					LevelEntry entry = LevelEntryFactory.CreateLevelEntry(br, mFileVersion);
 					entry.Level = mLevel;
 					mLevel.Entries.Add(entry);
 				}

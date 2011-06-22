@@ -55,7 +55,7 @@ namespace IntelOrca.PeggleEdit.Tools.Levels.Children
 			if (fA[5])
 				br.ReadInt32();
 			if (fA[4]) {
-				mEntry = LevelEntry.FromReader(br, version);
+				mEntry = LevelEntryFactory.CreateLevelEntry(br, version);
 			}
 			if (fA[2]) {
 				X = br.ReadSingle();
