@@ -276,52 +276,6 @@ namespace IntelOrca.PeggleEdit.Tools.Levels.Children
 			WriteData(bw, version);
 		}
 
-		public static LevelEntry FromReader(BinaryReader br, int version)
-		{
-			int sb1 = br.ReadInt32();
-			if (sb1 == 0)
-				return null;
-			if (sb1 != 1) {
-				//Do something weird
-				return null;
-			}
-
-			int type = br.ReadInt32();
-
-			LevelEntry entry = CreateNewEntryOfType(type, null);
-			entry.ReadGenericData(br, version);
-			entry.ReadData(br, version);
-
-			return entry;
-		}
-
-		public static LevelEntry CreateNewEntryOfType(int type, Level level)
-		{
-			switch (type) {
-				case 2:			//Rod
-					return new Rod(level);
-				case 3:			//Polygon
-					return new Polygon(level);
-				case 5:			//Circle
-					return new Circle(level);
-				case 6:			//Brick
-					return new Brick(level);
-				case 8:			//Teleport
-					return new Teleport(level);
-				case 9:			//Effect
-					return new Emitter(level);
-
-				//PeggleEdit's own entries
-				case 1001:
-					return new PegGenerator(level);
-				case 1002:
-					return new BrickGenerator(level);
-
-				default:
-					return new UnknownEntry(level, type);
-			}
-		}
-
 		public override string ToString()
 		{
 			return String.Format("{0}, ({1}, {2})", this.GetType().Name, X, Y);

@@ -38,6 +38,7 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Levels\Children\LevelEntryFactory.cs" />
     <Compile Include="MathExt.cs" />
     <Compile Include="Levels\Children\Brick.cs" />
     <Compile Include="Levels\Children\BrickGenerator.cs" />
