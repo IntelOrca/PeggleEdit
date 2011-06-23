@@ -117,22 +117,6 @@ namespace IntelOrca.PeggleEdit.Tools.Levels.Children
 			mLifeDuration = 2.0f;
 		}
 
-		private string ReadString(BinaryReader br)
-		{
-			short l = br.ReadInt16();
-			return Encoding.UTF8.GetString(br.ReadBytes(l));
-		}
-
-		private void WriteString(BinaryWriter bw, string s)
-		{
-			if (String.IsNullOrEmpty(s)) {
-				bw.Write((short)0);
-			} else {
-				bw.Write((short)s.Length);
-				bw.Write(Encoding.UTF8.GetBytes(s));
-			}
-		}
-
 		public override void ReadData(BinaryReader br, int version)
 		{
 			FlagGroup fA;
@@ -151,14 +135,14 @@ namespace IntelOrca.PeggleEdit.Tools.Levels.Children
 			mChangeDirection = fA[11];
 			mChangeRotation = fA[12];
 
-			mImage = ReadString(br);
+			mImage = LevelReader.ReadPopcapString(br);
 			mWidth = br.ReadInt32();
 			mHeight = br.ReadInt32();
 
 			if (mMainVar == 2) {
 				mMainVar0 = br.ReadInt32();
 				mMainVar1 = br.ReadSingle();
-				mMainVar2 = ReadString(br);
+				mMainVar2 = LevelReader.ReadPopcapString(br);
 				mMainVar3 = br.ReadByte();
 
 				if (fA[13]) {
@@ -172,7 +156,7 @@ namespace IntelOrca.PeggleEdit.Tools.Levels.Children
 				Y = br.ReadSingle();
 			}
 
-			mEmitImage = ReadString(br);
+			mEmitImage = LevelReader.ReadPopcapString(br);
 			mUnknownEmitRate = br.ReadSingle();
 			mUnknown2 = br.ReadSingle();
 			mRotation = br.ReadSingle();
@@ -256,14 +240,14 @@ namespace IntelOrca.PeggleEdit.Tools.Levels.Children
 
 			bw.Write(fA.Int16);
 
-			WriteString(bw, mImage);
+			LevelWriter.WritePopcapString(bw, mImage);
 			bw.Write(mWidth);
 			bw.Write(mHeight);
 			
 			if (mMainVar == 2) {
 				bw.Write(mMainVar0);
 				bw.Write(mMainVar1);
-				WriteString(bw, mMainVar2);
+				LevelWriter.WritePopcapString(bw, mMainVar2);
 				bw.Write(mMainVar3);
 
 				if (fA[13]) {
@@ -277,7 +261,7 @@ namespace IntelOrca.PeggleEdit.Tools.Levels.Children
 				bw.Write(Y);
 			}
 
-			WriteString(bw, mEmitImage);
+			LevelWriter.WritePopcapString(bw, mEmitImage);
 			bw.Write(mUnknownEmitRate);
 			bw.Write(mUnknown2);
 			bw.Write(mRotation);

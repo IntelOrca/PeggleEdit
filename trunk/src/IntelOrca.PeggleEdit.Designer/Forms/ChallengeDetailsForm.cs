@@ -57,7 +57,7 @@ namespace IntelOrca.PeggleEdit.Designer
 			chkClearLevel.Checked = mChallenge.ReqClearLevel;
 
 			cmbCharacter.Text = mChallenge.Character;
-			txtBalls.Text = mChallenge.Balls.ToString();
+			txtBalls.Value = mChallenge.Balls;
 
 			//Levels
 			chkAgainstOpponents.Checked = mChallenge.AgainstOpponents;
@@ -169,7 +169,8 @@ namespace IntelOrca.PeggleEdit.Designer
 			mChallenge.ReqUniqueStyleShots = Convert.ToInt32(txtUniqueStyleShots.Text);
 			mChallenge.ReqClearLevel = chkClearLevel.Checked;
 
-			mChallenge.Character = cmbCharacter.SelectedItem.ToString();
+			//Character
+			mChallenge.Character = (cmbCharacter.SelectedItem == null ? null : cmbCharacter.SelectedItem.ToString());
 			mChallenge.Balls = Convert.ToInt32(txtBalls.Text);
 
 			//Levels

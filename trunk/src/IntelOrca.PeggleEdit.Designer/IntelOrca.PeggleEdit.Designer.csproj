@@ -116,7 +116,11 @@
     <Compile Include="Forms\Tool Windows\PropertiesToolWindow.cs">
       <SubType>Form</SubType>
     </Compile>
+    <Compile Include="Misc\NumericTextBox.cs">
+      <SubType>Component</SubType>
+    </Compile>
     <Compile Include="Misc\PeggleNightsStoryExtractor.cs" />
+    <Compile Include="Misc\WinAPI.cs" />
     <Compile Include="Misc\ShortcutAction.cs" />
     <Compile Include="Forms\ChallengeDetailsForm.cs">
       <SubType>Form</SubType>

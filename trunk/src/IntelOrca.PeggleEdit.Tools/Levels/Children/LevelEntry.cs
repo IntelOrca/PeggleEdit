@@ -106,7 +106,7 @@ namespace IntelOrca.PeggleEdit.Tools.Levels.Children
 			if (f[9])
 				mOutlineColour = Color.FromArgb(br.ReadInt32());
 			if (f[10]) {
-				mImageFilename = Encoding.UTF8.GetString(br.ReadBytes(br.ReadInt16()));
+				mImageFilename = LevelReader.ReadPopcapString(br);
 			}
 			if (f[11])
 				mImageDX = br.ReadSingle();
@@ -117,13 +117,13 @@ namespace IntelOrca.PeggleEdit.Tools.Levels.Children
 			if (f[16])
 				br.ReadInt32();
 			if (f[17])
-				mID = Encoding.UTF8.GetString(br.ReadBytes(br.ReadInt16()));
+				mID = LevelReader.ReadPopcapString(br);
 			if (f[18])
 				br.ReadInt32();
 			if (f[19])
 				mSound = br.ReadByte();
 			if (f[21])
-				mLogic = Encoding.UTF8.GetString(br.ReadBytes(br.ReadInt16()));	//Logic
+				mLogic = LevelReader.ReadPopcapString(br);
 			if (f[23])
 				mMaxBounceVelocity = br.ReadSingle();
 			if (f[26])
@@ -188,8 +188,7 @@ namespace IntelOrca.PeggleEdit.Tools.Levels.Children
 			if (f[9])
 				bw.Write(mOutlineColour.ToArgb());
 			if (f[10]) {
-				bw.Write((short)mImageFilename.Length);
-				bw.Write(Encoding.UTF8.GetBytes(mImageFilename));
+				LevelWriter.WritePopcapString(bw, mImageFilename);
 			}
 			if (f[11])
 				bw.Write(mImageDX);
@@ -198,14 +197,12 @@ namespace IntelOrca.PeggleEdit.Tools.Levels.Children
 			if (f[13])
 				bw.Write(MathExt.ToRadians(mImageRotation));
 			if (f[17]) {
-				bw.Write((short)mID.Length);
-				bw.Write(Encoding.UTF8.GetBytes(mID));
+				LevelWriter.WritePopcapString(bw, mID);
 			}
 			if (f[19])
 				bw.Write(mSolidColour.ToArgb());
 			if (f[21]) {
-				bw.Write((short)mLogic.Length);
-				bw.Write(Encoding.UTF8.GetBytes(mLogic));
+				LevelWriter.WritePopcapString(bw, mLogic);
 			}
 			if (f[23])
 				bw.Write(mMaxBounceVelocity);

@@ -38,12 +38,14 @@
 			this.nudGridSize = new System.Windows.Forms.NumericUpDown();
 			this.chkSnapToGrid = new System.Windows.Forms.CheckBox();
 			this.chkShowGrid = new System.Windows.Forms.CheckBox();
-			this.btnOK = new System.Windows.Forms.Button();
-			this.btnCancel = new System.Windows.Forms.Button();
 			this.tabPeggleNights = new System.Windows.Forms.TabPage();
-			this.txtPeggleNightsExePath = new System.Windows.Forms.TextBox();
 			this.grpTesting = new System.Windows.Forms.GroupBox();
 			this.lblPeggleNightsExePath = new System.Windows.Forms.Label();
+			this.txtPeggleNightsExePath = new System.Windows.Forms.TextBox();
+			this.btnOK = new System.Windows.Forms.Button();
+			this.btnCancel = new System.Windows.Forms.Button();
+			this.tabApplication = new System.Windows.Forms.TabPage();
+			this.btnSetFileAssociation = new System.Windows.Forms.Button();
 			this.tabControl.SuspendLayout();
 			this.tabDesigner.SuspendLayout();
 			this.grpMovement.SuspendLayout();
@@ -52,6 +54,7 @@
 			((System.ComponentModel.ISupportInitialize)(this.nudGridSize)).BeginInit();
 			this.tabPeggleNights.SuspendLayout();
 			this.grpTesting.SuspendLayout();
+			this.tabApplication.SuspendLayout();
 			this.SuspendLayout();
 			// 
 			// tabControl
@@ -61,6 +64,7 @@
 						| System.Windows.Forms.AnchorStyles.Right)));
 			this.tabControl.Controls.Add(this.tabDesigner);
 			this.tabControl.Controls.Add(this.tabPeggleNights);
+			this.tabControl.Controls.Add(this.tabApplication);
 			this.tabControl.Location = new System.Drawing.Point(12, 12);
 			this.tabControl.Name = "tabControl";
 			this.tabControl.SelectedIndex = 0;
@@ -169,6 +173,46 @@
 			this.chkShowGrid.Text = "Show grid";
 			this.chkShowGrid.UseVisualStyleBackColor = true;
 			// 
+			// tabPeggleNights
+			// 
+			this.tabPeggleNights.Controls.Add(this.grpTesting);
+			this.tabPeggleNights.Location = new System.Drawing.Point(4, 22);
+			this.tabPeggleNights.Name = "tabPeggleNights";
+			this.tabPeggleNights.Size = new System.Drawing.Size(321, 182);
+			this.tabPeggleNights.TabIndex = 1;
+			this.tabPeggleNights.Text = "Peggle Nights";
+			this.tabPeggleNights.UseVisualStyleBackColor = true;
+			// 
+			// grpTesting
+			// 
+			this.grpTesting.Controls.Add(this.lblPeggleNightsExePath);
+			this.grpTesting.Controls.Add(this.txtPeggleNightsExePath);
+			this.grpTesting.Location = new System.Drawing.Point(6, 6);
+			this.grpTesting.Name = "grpTesting";
+			this.grpTesting.Size = new System.Drawing.Size(309, 68);
+			this.grpTesting.TabIndex = 1;
+			this.grpTesting.TabStop = false;
+			this.grpTesting.Text = "Testing";
+			// 
+			// lblPeggleNightsExePath
+			// 
+			this.lblPeggleNightsExePath.AutoSize = true;
+			this.lblPeggleNightsExePath.Location = new System.Drawing.Point(6, 22);
+			this.lblPeggleNightsExePath.Name = "lblPeggleNightsExePath";
+			this.lblPeggleNightsExePath.Size = new System.Drawing.Size(155, 13);
+			this.lblPeggleNightsExePath.TabIndex = 1;
+			this.lblPeggleNightsExePath.Text = "Peggle Nights executable path:";
+			// 
+			// txtPeggleNightsExePath
+			// 
+			this.txtPeggleNightsExePath.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left)
+						| System.Windows.Forms.AnchorStyles.Right)));
+			this.txtPeggleNightsExePath.Location = new System.Drawing.Point(9, 38);
+			this.txtPeggleNightsExePath.Name = "txtPeggleNightsExePath";
+			this.txtPeggleNightsExePath.Size = new System.Drawing.Size(294, 20);
+			this.txtPeggleNightsExePath.TabIndex = 0;
+			this.txtPeggleNightsExePath.TextChanged += new System.EventHandler(this.txtPeggleNightsExePath_TextChanged);
+			// 
 			// btnOK
 			// 
 			this.btnOK.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
@@ -192,45 +236,25 @@
 			this.btnCancel.UseVisualStyleBackColor = true;
 			this.btnCancel.Click += new System.EventHandler(this.btnCancel_Click);
 			// 
-			// tabPeggleNights
+			// tabApplication
 			// 
-			this.tabPeggleNights.Controls.Add(this.grpTesting);
-			this.tabPeggleNights.Location = new System.Drawing.Point(4, 22);
-			this.tabPeggleNights.Name = "tabPeggleNights";
-			this.tabPeggleNights.Size = new System.Drawing.Size(321, 182);
-			this.tabPeggleNights.TabIndex = 1;
-			this.tabPeggleNights.Text = "Peggle Nights";
-			this.tabPeggleNights.UseVisualStyleBackColor = true;
+			this.tabApplication.Controls.Add(this.btnSetFileAssociation);
+			this.tabApplication.Location = new System.Drawing.Point(4, 22);
+			this.tabApplication.Name = "tabApplication";
+			this.tabApplication.Size = new System.Drawing.Size(321, 182);
+			this.tabApplication.TabIndex = 2;
+			this.tabApplication.Text = "Application";
+			this.tabApplication.UseVisualStyleBackColor = true;
 			// 
-			// txtPeggleNightsExePath
+			// btnSetFileAssociation
 			// 
-			this.txtPeggleNightsExePath.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left)
-						| System.Windows.Forms.AnchorStyles.Right)));
-			this.txtPeggleNightsExePath.Location = new System.Drawing.Point(9, 38);
-			this.txtPeggleNightsExePath.Name = "txtPeggleNightsExePath";
-			this.txtPeggleNightsExePath.Size = new System.Drawing.Size(294, 20);
-			this.txtPeggleNightsExePath.TabIndex = 0;
-			this.txtPeggleNightsExePath.TextChanged += new System.EventHandler(this.txtPeggleNightsExePath_TextChanged);
-			// 
-			// grpTesting
-			// 
-			this.grpTesting.Controls.Add(this.lblPeggleNightsExePath);
-			this.grpTesting.Controls.Add(this.txtPeggleNightsExePath);
-			this.grpTesting.Location = new System.Drawing.Point(6, 6);
-			this.grpTesting.Name = "grpTesting";
-			this.grpTesting.Size = new System.Drawing.Size(309, 68);
-			this.grpTesting.TabIndex = 1;
-			this.grpTesting.TabStop = false;
-			this.grpTesting.Text = "Testing";
-			// 
-			// lblPeggleNightsExePath
-			// 
-			this.lblPeggleNightsExePath.AutoSize = true;
-			this.lblPeggleNightsExePath.Location = new System.Drawing.Point(6, 22);
-			this.lblPeggleNightsExePath.Name = "lblPeggleNightsExePath";
-			this.lblPeggleNightsExePath.Size = new System.Drawing.Size(155, 13);
-			this.lblPeggleNightsExePath.TabIndex = 1;
-			this.lblPeggleNightsExePath.Text = "Peggle Nights executable path:";
+			this.btnSetFileAssociation.Location = new System.Drawing.Point(6, 6);
+			this.btnSetFileAssociation.Name = "btnSetFileAssociation";
+			this.btnSetFileAssociation.Size = new System.Drawing.Size(139, 23);
+			this.btnSetFileAssociation.TabIndex = 0;
+			this.btnSetFileAssociation.Text = "Set File Association";
+			this.btnSetFileAssociation.UseVisualStyleBackColor = true;
+			this.btnSetFileAssociation.Click += new System.EventHandler(this.btnSetFileAssociation_Click);
 			// 
 			// OptionsForm
 			// 
@@ -259,6 +283,7 @@
 			this.tabPeggleNights.ResumeLayout(false);
 			this.grpTesting.ResumeLayout(false);
 			this.grpTesting.PerformLayout();
+			this.tabApplication.ResumeLayout(false);
 			this.ResumeLayout(false);
 
 		}
@@ -282,5 +307,7 @@
 		private System.Windows.Forms.GroupBox grpTesting;
 		private System.Windows.Forms.Label lblPeggleNightsExePath;
 		private System.Windows.Forms.TextBox txtPeggleNightsExePath;
+		private System.Windows.Forms.TabPage tabApplication;
+		private System.Windows.Forms.Button btnSetFileAssociation;
 	}
 }

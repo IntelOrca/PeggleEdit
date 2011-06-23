@@ -476,6 +476,17 @@ namespace IntelOrca.PeggleEdit.Designer
 
 		private void DefaultStartupPack()
 		{
+			//Check command line arguments
+			string[] args = Environment.GetCommandLineArgs();
+			if (args.Length >= 2) {
+				string openWithFilename = args[1];
+				if (File.Exists(openWithFilename)) {
+					OpenPack(openWithFilename);
+					return;
+				}
+			}
+
+
 			//PeggleNightsStoryExtractor pnse = new PeggleNightsStoryExtractor(@"C:\Program Files\PopCap Games\Peggle Nights\main.pak");
 			//LevelPack pack = pnse.Extract();
 			//OpenPack(pack);
@@ -525,13 +536,18 @@ namespace IntelOrca.PeggleEdit.Designer
 		{
 			SetStatus("Opening '{0}'...", Path.GetFileName(filename));
 
-			mPackFilename = filename;
-
 			LevelPack pack = new LevelPack();
-			if (pack.Open(filename))
+			if (pack.Open(filename)) {
+				mPackFilename = filename;
 				SetStatus("'{0}' successfully loaded.", Path.GetFileName(filename));
+			} else {
+				MessageBox.Show(String.Format("'{0}' could not be opened."));
+				return;
+			}
 
 			//Recent files
+			WinAPI.AddRecentDocument(filename);
+
 			int index = Settings.RecentPackFiles.IndexOf(filename);
 			if (index != -1) {
 				Settings.RecentPackFiles.RemoveAt(index);
@@ -541,7 +557,6 @@ namespace IntelOrca.PeggleEdit.Designer
 			if (Settings.RecentPackFiles.Count > 10) {
 				Settings.RecentPackFiles.RemoveRange(10, Settings.RecentPackFiles.Count - 10);
 			}
-
 
 			mMenuToolPanel.UpdateRecentPackFiles();
 
