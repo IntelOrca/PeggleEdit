@@ -16,6 +16,7 @@
 
 using System;
 using System.IO;
+using System.Text;
 using IntelOrca.PeggleEdit.Tools.Levels.Children;
 
 namespace IntelOrca.PeggleEdit.Tools.Levels
@@ -98,6 +99,12 @@ namespace IntelOrca.PeggleEdit.Tools.Levels
 
 				br.BaseStream.Position -= 7;
 			}
+		}
+
+		public static string ReadPopcapString(BinaryReader br)
+		{
+			short l = br.ReadInt16();
+			return Encoding.UTF8.GetString(br.ReadBytes(l));
 		}
 
 		public void Dispose()

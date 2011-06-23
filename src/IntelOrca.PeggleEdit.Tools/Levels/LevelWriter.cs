@@ -16,6 +16,7 @@
 
 using System;
 using System.IO;
+using System.Text;
 using IntelOrca.PeggleEdit.Tools.Levels.Children;
 
 namespace IntelOrca.PeggleEdit.Tools.Levels
@@ -65,6 +66,16 @@ namespace IntelOrca.PeggleEdit.Tools.Levels
 			bw.Close();
 
 			return true;
+		}
+
+		public static void WritePopcapString(BinaryWriter bw, string sz)
+		{
+			if (String.IsNullOrEmpty(sz)) {
+				bw.Write((short)0);
+			} else {
+				bw.Write((short)sz.Length);
+				bw.Write(Encoding.UTF8.GetBytes(sz));
+			}
 		}
 
 		public void Dispose()

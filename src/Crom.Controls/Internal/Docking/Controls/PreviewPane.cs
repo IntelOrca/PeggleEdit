@@ -43,7 +43,7 @@ namespace Crom.Controls.Docking
       /// </summary>
       public PreviewPane()
       {
-         Renderer = new PreviewRenderer();
+         //Renderer = new PreviewRenderer();
       }
 
       #endregion Instance

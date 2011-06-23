@@ -75,5 +75,10 @@ namespace IntelOrca.PeggleEdit.Designer
 			else
 				txtPeggleNightsExePath.ForeColor = Color.Red;
 		}
+
+		private void btnSetFileAssociation_Click(object sender, EventArgs e)
+		{
+			Settings.SetupFileAssociation();
+		}
 	}
 }

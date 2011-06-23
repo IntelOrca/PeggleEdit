@@ -18,6 +18,8 @@ using System.Drawing;
 using System.IO;
 using System.Windows.Forms;
 using System.Collections.Generic;
+using Microsoft.Win32;
+using System;
 
 namespace IntelOrca.PeggleEdit.Designer
 {
@@ -110,6 +112,22 @@ namespace IntelOrca.PeggleEdit.Designer
 				if (bw != null)
 					bw.Close();
 			}
+		}
+
+		public static void SetupFileAssociation()
+		{
+			//Setup application
+			RegistryKey keyPeggleEdit = Registry.ClassesRoot.CreateSubKey("PeggleEdit");
+			RegistryKey keyShell = keyPeggleEdit.CreateSubKey("Shell");
+			RegistryKey keyOpen = keyShell.CreateSubKey("Open");
+			RegistryKey keyCommand = keyOpen.CreateSubKey("Command");
+
+			keyOpen.SetValue(String.Empty, "Open with PeggleEdit");
+			keyCommand.SetValue(String.Empty, String.Format("\"{0}\" \"%1\"", Application.ExecutablePath));
+
+			//Setup file extension
+			RegistryKey keyPAK = Registry.ClassesRoot.CreateSubKey(".pak");
+			keyPAK.SetValue(String.Empty, "PeggleEdit");
 		}
 
 		public static string Filename

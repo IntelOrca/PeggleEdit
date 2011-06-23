@@ -31,7 +31,6 @@
 			this.tabControl1 = new System.Windows.Forms.TabControl();
 			this.tabGeneral = new System.Windows.Forms.TabPage();
 			this.grpLimits = new System.Windows.Forms.GroupBox();
-			this.txtBalls = new System.Windows.Forms.TextBox();
 			this.lblBalls = new System.Windows.Forms.Label();
 			this.lblCharacter = new System.Windows.Forms.Label();
 			this.cmbCharacter = new System.Windows.Forms.ComboBox();
@@ -106,6 +105,7 @@
 			this.mainToolTip = new System.Windows.Forms.ToolTip(this.components);
 			this.btnOK = new System.Windows.Forms.Button();
 			this.btnCancel = new System.Windows.Forms.Button();
+			this.txtBalls = new IntelOrca.PeggleEdit.Designer.NumericTextBox();
 			this.tabControl1.SuspendLayout();
 			this.tabGeneral.SuspendLayout();
 			this.grpLimits.SuspendLayout();
@@ -161,14 +161,6 @@
 			this.grpLimits.TabIndex = 2;
 			this.grpLimits.TabStop = false;
 			this.grpLimits.Text = "Limits";
-			// 
-			// txtBalls
-			// 
-			this.txtBalls.Location = new System.Drawing.Point(112, 41);
-			this.txtBalls.Name = "txtBalls";
-			this.txtBalls.Size = new System.Drawing.Size(125, 20);
-			this.txtBalls.TabIndex = 3;
-			this.mainToolTip.SetToolTip(this.txtBalls, "The number of balls the player starts off with.");
 			// 
 			// lblBalls
 			// 
@@ -941,6 +933,16 @@
 			this.btnCancel.UseVisualStyleBackColor = true;
 			this.btnCancel.Click += new System.EventHandler(this.btnCancel_Click);
 			// 
+			// txtBalls
+			// 
+			this.txtBalls.Location = new System.Drawing.Point(112, 41);
+			this.txtBalls.Maximum = 1000;
+			this.txtBalls.Minimum = 0;
+			this.txtBalls.Name = "txtBalls";
+			this.txtBalls.Size = new System.Drawing.Size(125, 20);
+			this.txtBalls.TabIndex = 3;
+			this.mainToolTip.SetToolTip(this.txtBalls, "The number of balls the player starts off with.");
+			// 
 			// ChallengeDetailsForm
 			// 
 			this.AcceptButton = this.btnOK;
@@ -1006,7 +1008,7 @@
 		private System.Windows.Forms.Label lblCharacter;
 		private System.Windows.Forms.ComboBox cmbCharacter;
 		private System.Windows.Forms.CheckBox chkClearLevel;
-		private System.Windows.Forms.TextBox txtBalls;
+		private NumericTextBox txtBalls;
 		private System.Windows.Forms.Label lblBalls;
 		private System.Windows.Forms.Label lblGuide;
 		private System.Windows.Forms.TextBox txtTripleScore;
