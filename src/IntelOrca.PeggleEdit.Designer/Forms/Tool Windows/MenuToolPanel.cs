@@ -1238,7 +1238,7 @@ namespace IntelOrca.PeggleEdit.Designer
 			RibbonItem item = (RibbonItem)sender;
 			string path = (string)item.Tag;
 			if (!File.Exists(path)) {
-				MessageBox.Show(String.Format("'{0}' does not exist."), "Open Level Pack", MessageBoxButtons.OK, MessageBoxIcon.Error);
+				MessageBox.Show(String.Format("'{0}' does not exist.", path), "Open Level Pack", MessageBoxButtons.OK, MessageBoxIcon.Error);
 			} else {
 				mParent.OpenPack(path);
 			}

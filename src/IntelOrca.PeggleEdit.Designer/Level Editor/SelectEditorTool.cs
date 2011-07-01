@@ -218,27 +218,6 @@ namespace IntelOrca.PeggleEdit.Designer
 				rect.Inflate(-1, -1);
 				g.DrawRectangle(Pens.SkyBlue, rect);
 			}
-
-			//Draw the individual peg selection rectangles
-			List<LevelEntry> objs = Editor.GetSelectedObjects();
-
-			//Set the pen
-			Pen selectedPegPen = new Pen(Brushes.White, 1.0f);
-			selectedPegPen.DashPattern = new float[] { 1, 1 };
-
-			rect = new Rectangle();
-
-			foreach (LevelEntry o in objs) {
-				Point p = Editor.Level.GetActualXY(o.Bounds.Location);
-
-				rect = Rectangle.Round(o.Bounds);
-				rect.Location = p;
-				//rect.X = p.X - (rect.Width / 2);
-				//rect.Y = p.Y - (rect.Height / 2);
-				rect.Inflate(5, 5);
-
-				g.DrawRectangle(selectedPegPen, rect);
-			}
 		}
 
 		public override object Clone()

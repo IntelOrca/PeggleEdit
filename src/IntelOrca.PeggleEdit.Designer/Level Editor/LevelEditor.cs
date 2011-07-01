@@ -741,6 +741,27 @@ namespace IntelOrca.PeggleEdit.Designer
 
 			if (mSelectedTool != null)
 				mSelectedTool.Draw(g);
+
+			//Draw the individual object selection rectangles
+			foreach (LevelEntry le in GetSelectedObjects())
+				DrawEntrySelection(g, le);
+		}
+
+		private void DrawEntrySelection(Graphics g, LevelEntry le)
+		{
+			//Set the pen
+			Pen selectedEntryPen = new Pen(Brushes.White, 1.0f);
+			selectedEntryPen.DashPattern = new float[] { 1, 1 };
+
+			Rectangle rect = new Rectangle();
+
+			Point p = mLevel.GetActualXY(le.Bounds.Location);
+
+			rect = Rectangle.Round(le.Bounds);
+			rect.Location = p;
+			rect.Inflate(5, 5);
+
+			g.DrawRectangle(selectedEntryPen, rect);
 		}
 
 		private void DrawGrid(Graphics g)

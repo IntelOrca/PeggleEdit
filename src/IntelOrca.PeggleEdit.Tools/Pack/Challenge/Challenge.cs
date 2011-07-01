@@ -140,7 +140,12 @@ namespace IntelOrca.PeggleEdit.Tools.Pack.Challenge
 			mBalls = Convert.ToInt32(GetProperty(block, "Balls", 0));
 
 			//Powerups
-			string[] ppsv = block.GetProperties("Powerups")[0].Values.ToArray();
+			CFGProperty[] cfgps = block.GetProperties("Powerups");
+			string[] ppsv = new string[0];
+
+			if (cfgps.Length > 0)
+				ppsv = cfgps[0].Values.ToArray();
+			
 			foreach (string p in ppsv) {
 				string pv = p.Replace(" ", "");
 				pv = p.Replace("\t", "");
@@ -180,36 +185,47 @@ namespace IntelOrca.PeggleEdit.Tools.Pack.Challenge
 			block.Name = "Trophy";
 			block.Value = mName;
 
-			block.Properties.Add(new CFGProperty("Id", mID.ToString()));
-			block.Properties.Add(new CFGProperty("SmallDesc", mSmallDesc));
-			block.Properties.Add(new CFGProperty("Desc", mDesc));
-			block.Properties.Add(new CFGProperty("NumOrange", mReqOrangePegs.ToString()));
-			block.Properties.Add(new CFGProperty("ScoreReq", mReqScore.ToString()));
-			block.Properties.Add(new CFGProperty("StyleScoreReq", mReqStyleScore.ToString()));
-			block.Properties.Add(new CFGProperty("UniqueStyleShotsReq", mReqUniqueStyleShots.ToString()));
+			if (mID != 0)
+				block.Properties.Add(new CFGProperty("Id", mID.ToString()));
+
+			if (!String.IsNullOrEmpty(mSmallDesc))
+				block.Properties.Add(new CFGProperty("SmallDesc", mSmallDesc));
+			if (!String.IsNullOrEmpty(mDesc))
+				block.Properties.Add(new CFGProperty("Desc", mDesc));
+			if (mReqOrangePegs != 0)
+				block.Properties.Add(new CFGProperty("NumOrange", mReqOrangePegs.ToString()));
+			if (mReqScore != 0)
+				block.Properties.Add(new CFGProperty("ScoreReq", mReqScore.ToString()));
+			if (mReqStyleScore != 0)
+				block.Properties.Add(new CFGProperty("StyleScoreReq", mReqStyleScore.ToString()));
+			if (mReqUniqueStyleShots != 0)
+				block.Properties.Add(new CFGProperty("UniqueStyleShotsReq", mReqUniqueStyleShots.ToString()));
 
 			if (mReqClearLevel)
 				block.Properties.Add(new CFGProperty("ClearLevel", "true"));
 
-			block.Properties.Add(new CFGProperty("Characters", mCharacter));
-			block.Properties.Add(new CFGProperty("Balls", mBalls.ToString()));
+			if (!String.IsNullOrEmpty(mCharacter))
+				block.Properties.Add(new CFGProperty("Characters", mCharacter));
+			if (mBalls != 0)
+				block.Properties.Add(new CFGProperty("Balls", mBalls.ToString()));
 
 			//Levels
 			List<string> levelNames = new List<string>();
 			foreach (ChallengeLevel level in mLevels) {
 				levelNames.Add(level.Level);
 			}
-			block.Properties.Add(new CFGProperty("Levels", levelNames.ToArray()));
+			if (levelNames.Count != 0)
+				block.Properties.Add(new CFGProperty("Levels", levelNames.ToArray()));
 
 
 			//Powerups
 			List<string> pvalues = new List<string>();
 
-			FieldInfo[] fi_array = GetType().GetFields();
-			foreach (FieldInfo fi in fi_array) {
-				if (fi.Name.StartsWith("mPowerup")) {
-					string name = fi.Name.Substring("mPowerup".Length, fi.Name.Length - ("mPowerup".Length) - 1);
-					int value = (int)fi.GetValue(this);
+			PropertyInfo[] pi_array = GetType().GetProperties();
+			foreach (PropertyInfo pi in pi_array) {
+				if (pi.Name.StartsWith("Powerup")) {
+					string name = pi.Name.Substring("Powerup".Length, pi.Name.Length - ("Powerup".Length));
+					int value = (int)pi.GetValue(this, null);
 
 					if (value == 0)
 						continue;
@@ -218,7 +234,8 @@ namespace IntelOrca.PeggleEdit.Tools.Pack.Challenge
 				}
 			}
 
-			block.Properties.Add(new CFGProperty("Powerups", pvalues.ToArray()));
+			if (pvalues.Count != 0)
+				block.Properties.Add(new CFGProperty("Powerups", pvalues.ToArray()));
 			
 
 			if (mScoreReset)
@@ -234,15 +251,17 @@ namespace IntelOrca.PeggleEdit.Tools.Pack.Challenge
 			if (mNoEndOnWin)
 				block.Properties.Add(new CFGProperty("NoEndOnWin", "true"));
 
-			block.Properties.Add(new CFGProperty("GravityMod", mGravityMod.ToString()));
-			block.Properties.Add(new CFGProperty("ProjSpeedMod", mProjectileSpeedMod.ToString()));
+			if (mGravityMod != 0.0f)
+				block.Properties.Add(new CFGProperty("GravityMod", mGravityMod.ToString()));
+			if (mProjectileSpeedMod != 0.0f)
+				block.Properties.Add(new CFGProperty("ProjSpeedMod", mProjectileSpeedMod.ToString()));
 
 			return block;
 		}
 
 		private void SetPowerup(string name, int value)
 		{
-			switch (name) {
+			switch (name.ToLower()) {
 				case "guide":
 					mPowerupGuide = value;
 					return;
@@ -295,6 +314,18 @@ namespace IntelOrca.PeggleEdit.Tools.Pack.Challenge
 				return defaultVar;
 
 			return property.Values[0];
+		}
+
+		public int ID
+		{
+			get
+			{
+				return mID;
+			}
+			set
+			{
+				mID = value;
+			}
 		}
 
 		public string Name

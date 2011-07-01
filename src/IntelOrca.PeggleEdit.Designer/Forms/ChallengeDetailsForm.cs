@@ -46,14 +46,15 @@ namespace IntelOrca.PeggleEdit.Designer
 		private void SetForm()
 		{
 			//General
+			txtID.Value = mChallenge.ID;
 			txtName.Text = mChallenge.Name;
 			txtSmallDescription.Text = mChallenge.SmallDesc;
 			txtDescription.Text = mChallenge.Desc;
 
-			txtOrangePegs.Text = mChallenge.ReqOrangePegs.ToString();
-			txtScore.Text = mChallenge.ReqScore.ToString();
-			txtStyleScore.Text = mChallenge.ReqStyleScore.ToString();
-			txtUniqueStyleShots.Text = mChallenge.ReqUniqueStyleShots.ToString();
+			txtOrangePegs.Value = mChallenge.ReqOrangePegs;
+			txtScore.Value = mChallenge.ReqScore;
+			txtStyleScore.Value = mChallenge.ReqStyleScore;
+			txtUniqueStyleShots.Value = mChallenge.ReqUniqueStyleShots;
 			chkClearLevel.Checked = mChallenge.ReqClearLevel;
 
 			cmbCharacter.Text = mChallenge.Character;
@@ -74,20 +75,20 @@ namespace IntelOrca.PeggleEdit.Designer
 			}
 
 			//Powerups
-			txtGuide.Text = mChallenge.PowerupGuide.ToString();
-			txtPyramid.Text = mChallenge.PowerupPyramid.ToString();
-			txtFlippers.Text = mChallenge.PowerupFlippers.ToString();
-			txtMagicHat.Text = mChallenge.PowerupMagicHat.ToString();
-			txtTripleScore.Text = mChallenge.PowerupTripleScore.ToString();
-			txtFireball.Text = mChallenge.PowerupFireball.ToString();
-			txtZenBall.Text = mChallenge.PowerupZenball.ToString();
-			txtChainLightning.Text = mChallenge.PowerupChainLightning.ToString();
-			txtMultiball.Text = mChallenge.PowerupMultiball.ToString();
-			txtSpaceBlast.Text = mChallenge.PowerupSpaceBlast.ToString();
-			txtSpookyBall.Text = mChallenge.PowerupSpookyBall.ToString();
-			txtFlowerPower.Text = mChallenge.PowerupFlowerPower.ToString();
-			txtLuckySpin.Text = mChallenge.PowerupLuckySpin.ToString();
-			txtShotExtender.Text = mChallenge.PowerupShotExtender.ToString();
+			txtGuide.Value = mChallenge.PowerupGuide;
+			txtPyramid.Value = mChallenge.PowerupPyramid;
+			txtFlippers.Value = mChallenge.PowerupFlippers;
+			txtMagicHat.Value = mChallenge.PowerupMagicHat;
+			txtTripleScore.Value = mChallenge.PowerupTripleScore;
+			txtFireball.Value = mChallenge.PowerupFireball;
+			txtZenBall.Value = mChallenge.PowerupZenball;
+			txtChainLightning.Value = mChallenge.PowerupChainLightning;
+			txtMultiball.Value = mChallenge.PowerupMultiball;
+			txtSpaceBlast.Value = mChallenge.PowerupSpaceBlast;
+			txtSpookyBall.Value = mChallenge.PowerupSpookyBall;
+			txtFlowerPower.Value = mChallenge.PowerupFlowerPower;
+			txtLuckySpin.Value = mChallenge.PowerupLuckySpin;
+			txtShotExtender.Value = mChallenge.PowerupShotExtender;
 
 			//Other
 			chkScoreReset.Checked = mChallenge.ScoreReset;
@@ -159,18 +160,19 @@ namespace IntelOrca.PeggleEdit.Designer
 		private void btnOK_Click(object sender, EventArgs e)
 		{
 			//General
+			mChallenge.ID = txtID.Value;
 			mChallenge.Name = txtName.Text;
 			mChallenge.SmallDesc = txtSmallDescription.Text;
 			mChallenge.Desc = txtDescription.Text;
 
-			mChallenge.ReqOrangePegs = Convert.ToInt32(txtOrangePegs.Text);
-			mChallenge.ReqScore = Convert.ToInt32(txtScore.Text);
-			mChallenge.ReqStyleScore = Convert.ToInt32(txtStyleScore.Text);
-			mChallenge.ReqUniqueStyleShots = Convert.ToInt32(txtUniqueStyleShots.Text);
+			mChallenge.ReqOrangePegs = txtOrangePegs.Value;
+			mChallenge.ReqScore = txtScore.Value;
+			mChallenge.ReqStyleScore = txtStyleScore.Value;
+			mChallenge.ReqUniqueStyleShots = txtUniqueStyleShots.Value;
 			mChallenge.ReqClearLevel = chkClearLevel.Checked;
 
 			//Character
-			mChallenge.Character = (cmbCharacter.SelectedItem == null ? null : cmbCharacter.SelectedItem.ToString());
+			mChallenge.Character = (cmbCharacter.SelectedIndex == 0 ? null : cmbCharacter.SelectedItem.ToString());
 			mChallenge.Balls = Convert.ToInt32(txtBalls.Text);
 
 			//Levels
@@ -178,27 +180,27 @@ namespace IntelOrca.PeggleEdit.Designer
 			mChallenge.Levels.Clear();
 			for (int i = 0; i < nudNumLevels.Value; i++) {
 				Challenge.ChallengeLevel challengeLevel = new Challenge.ChallengeLevel();
-				challengeLevel.Level = ((ComboBox)pnlLevels.Controls["cmbLevel" + i]).SelectedItem.ToString();
-				challengeLevel.Opponent = ((ComboBox)pnlLevels.Controls["cmbOpponent" + i]).SelectedItem.ToString();
-				challengeLevel.OpponentDifficulty = ((ComboBox)pnlLevels.Controls["cmbOpponentDifficulty" + i]).SelectedItem.ToString();
+				challengeLevel.Level = ((ComboBox)pnlLevels.Controls["cmbLevel" + i]).Text.ToString();
+				//challengeLevel.Opponent = ((ComboBox)pnlLevels.Controls["cmbOpponent" + i]).SelectedItem.ToString();
+				//challengeLevel.OpponentDifficulty = ((ComboBox)pnlLevels.Controls["cmbOpponentDifficulty" + i]).SelectedItem.ToString();
 				mChallenge.Levels.Add(challengeLevel);
 			}
 
 			//Powerups
-			mChallenge.PowerupGuide = Convert.ToInt32(txtGuide.Text);
-			mChallenge.PowerupPyramid = Convert.ToInt32(txtPyramid.Text);
-			mChallenge.PowerupFlippers = Convert.ToInt32(txtFlippers.Text);
-			mChallenge.PowerupMagicHat = Convert.ToInt32(txtMagicHat.Text);
-			mChallenge.PowerupTripleScore = Convert.ToInt32(txtTripleScore.Text);
-			mChallenge.PowerupFireball = Convert.ToInt32(txtFireball.Text);
-			mChallenge.PowerupZenball = Convert.ToInt32(txtZenBall.Text);
-			mChallenge.PowerupChainLightning = Convert.ToInt32(txtChainLightning.Text);
-			mChallenge.PowerupMultiball = Convert.ToInt32(txtMultiball.Text);
-			mChallenge.PowerupSpaceBlast = Convert.ToInt32(txtSpaceBlast.Text);
-			mChallenge.PowerupSpookyBall = Convert.ToInt32(txtSpookyBall.Text);
-			mChallenge.PowerupFlowerPower = Convert.ToInt32(txtFlowerPower.Text);
-			mChallenge.PowerupLuckySpin = Convert.ToInt32(txtLuckySpin.Text);
-			mChallenge.PowerupShotExtender = Convert.ToInt32(txtShotExtender.Text);
+			mChallenge.PowerupGuide = txtGuide.Value;
+			mChallenge.PowerupPyramid = txtPyramid.Value;
+			mChallenge.PowerupFlippers = txtFlippers.Value;
+			mChallenge.PowerupMagicHat = txtMagicHat.Value;
+			mChallenge.PowerupTripleScore = txtTripleScore.Value;
+			mChallenge.PowerupFireball = txtFireball.Value;
+			mChallenge.PowerupZenball = txtZenBall.Value;
+			mChallenge.PowerupChainLightning = txtChainLightning.Value;
+			mChallenge.PowerupMultiball = txtMultiball.Value;
+			mChallenge.PowerupSpaceBlast = txtSpaceBlast.Value;
+			mChallenge.PowerupSpookyBall = txtSpookyBall.Value;
+			mChallenge.PowerupFlowerPower = txtFlowerPower.Value;
+			mChallenge.PowerupLuckySpin = txtLuckySpin.Value;
+			mChallenge.PowerupShotExtender = txtShotExtender.Value;
 
 			//Other
 			mChallenge.ScoreReset = chkScoreReset.Checked;
@@ -208,8 +210,8 @@ namespace IntelOrca.PeggleEdit.Designer
 			mChallenge.FreeballBucketCovered = chkFreeballAlwaysCovered.Checked;
 			mChallenge.NoEndOnWin = chkNoEndOnWin.Checked;
 
-			mChallenge.GravityMod = Convert.ToInt32(txtGravityMod.Text);
-			mChallenge.ProjectileSpeedMod = Convert.ToInt32(txtProjSpeedMod.Text);
+			mChallenge.GravityMod = Convert.ToSingle(txtGravityMod.Text);
+			mChallenge.ProjectileSpeedMod = Convert.ToSingle(txtProjSpeedMod.Text);
 
 			this.DialogResult = DialogResult.OK;
 			Close();
