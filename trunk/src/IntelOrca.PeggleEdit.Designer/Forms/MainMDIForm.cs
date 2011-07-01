@@ -541,7 +541,7 @@ namespace IntelOrca.PeggleEdit.Designer
 				mPackFilename = filename;
 				SetStatus("'{0}' successfully loaded.", Path.GetFileName(filename));
 			} else {
-				MessageBox.Show(String.Format("'{0}' could not be opened."));
+				MessageBox.Show(String.Format("'{0}' could not be opened.", filename));
 				return;
 			}
 

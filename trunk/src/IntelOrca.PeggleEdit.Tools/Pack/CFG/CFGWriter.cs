@@ -56,7 +56,7 @@ namespace IntelOrca.PeggleEdit.Tools.Pack.CFG
 		{
 			if (!noCasing) {
 				if (block.HasValue)
-					sb.AppendLine(String.Format("{0}{1} \"{2}\"", GetTabSpacing(level), block.Name, GetValue(block.Value)));
+					sb.AppendLine(String.Format("{0}{1} {2}", GetTabSpacing(level), block.Name, GetValue(block.Value)));
 				else
 					sb.AppendLine(String.Format("{0}{1}", new String('\t', level), block.Name));
 
@@ -87,6 +87,9 @@ namespace IntelOrca.PeggleEdit.Tools.Pack.CFG
 
 		private string GetValue(string value)
 		{
+			if (String.IsNullOrEmpty(value))
+				return String.Empty;
+
 			if (value.Contains(" ") || value.Contains(","))
 				return String.Format("\"{0}\"", value);
 			else

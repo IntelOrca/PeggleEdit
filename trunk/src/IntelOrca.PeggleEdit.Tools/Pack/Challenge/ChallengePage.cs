@@ -14,6 +14,7 @@
 // You should have received a copy of the GNU General Public License
 // along with PeggleEdit. If not, see <http://www.gnu.org/licenses/>.
 
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using IntelOrca.PeggleEdit.Tools.Pack.CFG;
@@ -38,8 +39,13 @@ namespace IntelOrca.PeggleEdit.Tools.Pack.Challenge
 		public ChallengePage(CFGBlock block) :
 			this()
 		{
+			//Read title
 			mTitle = block.Value;
-			mDesc = block.GetFirstProperty("desc").Values[0];
+
+			//Read description
+			CFGProperty cfgp = block.GetFirstProperty("desc");
+			if (cfgp != null)
+				mDesc = cfgp.Values[0];
 
 			CFGBlock[] blocks = block.GetBlocks("trophy");
 			foreach (CFGBlock b in blocks)
@@ -52,8 +58,10 @@ namespace IntelOrca.PeggleEdit.Tools.Pack.Challenge
 			block.Name = "Page";
 			block.Value = mTitle;
 
-			block.Properties.Add(new CFGProperty("Desc", mDesc));
-			block.Properties.Add(new CFGProperty("SmallDesc", mSmallDesc));
+			if (!String.IsNullOrEmpty(mDesc))
+				block.Properties.Add(new CFGProperty("Desc", mDesc));
+			if (!String.IsNullOrEmpty(mSmallDesc))
+				block.Properties.Add(new CFGProperty("SmallDesc", mSmallDesc));
 
 			foreach (Challenge challenge in mChallenges) {
 				block.Blocks.Add(challenge.GetCFGBlock());

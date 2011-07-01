@@ -37,12 +37,8 @@
 			this.grpRequirements = new System.Windows.Forms.GroupBox();
 			this.chkClearLevel = new System.Windows.Forms.CheckBox();
 			this.lblOrangePegs = new System.Windows.Forms.Label();
-			this.txtOrangePegs = new System.Windows.Forms.TextBox();
-			this.txtUniqueStyleShots = new System.Windows.Forms.TextBox();
 			this.lblScore = new System.Windows.Forms.Label();
 			this.lblUniqueStyleShots = new System.Windows.Forms.Label();
-			this.txtScore = new System.Windows.Forms.TextBox();
-			this.txtStyleScore = new System.Windows.Forms.TextBox();
 			this.lblStyleScore = new System.Windows.Forms.Label();
 			this.grpChallengeDetails = new System.Windows.Forms.GroupBox();
 			this.lblName = new System.Windows.Forms.Label();
@@ -55,39 +51,25 @@
 			this.pnlLevels = new System.Windows.Forms.Panel();
 			this.nudNumLevels = new System.Windows.Forms.NumericUpDown();
 			this.chkAgainstOpponents = new System.Windows.Forms.CheckBox();
-			this.label3 = new System.Windows.Forms.Label();
-			this.label1 = new System.Windows.Forms.Label();
-			this.label2 = new System.Windows.Forms.Label();
+			this.lblOpponentDifficulty = new System.Windows.Forms.Label();
+			this.lblOpponent = new System.Windows.Forms.Label();
+			this.lblLevel = new System.Windows.Forms.Label();
 			this.tabPowerups = new System.Windows.Forms.TabPage();
 			this.lblInstantaneous = new System.Windows.Forms.Label();
 			this.lblAccumulative = new System.Windows.Forms.Label();
-			this.txtLuckySpin = new System.Windows.Forms.TextBox();
-			this.txtSpookyBall = new System.Windows.Forms.TextBox();
-			this.txtFlowerPower = new System.Windows.Forms.TextBox();
-			this.txtShotExtender = new System.Windows.Forms.TextBox();
-			this.txtSpaceBlast = new System.Windows.Forms.TextBox();
-			this.txtMultiball = new System.Windows.Forms.TextBox();
-			this.txtTripleScore = new System.Windows.Forms.TextBox();
 			this.lblTripleScore = new System.Windows.Forms.Label();
-			this.txtFlippers = new System.Windows.Forms.TextBox();
 			this.lblFlippers = new System.Windows.Forms.Label();
 			this.lblShotExtender = new System.Windows.Forms.Label();
-			this.txtChainLightning = new System.Windows.Forms.TextBox();
 			this.lblChainLightning = new System.Windows.Forms.Label();
 			this.lblLuckySpin = new System.Windows.Forms.Label();
-			this.txtMagicHat = new System.Windows.Forms.TextBox();
 			this.lblMagicHat = new System.Windows.Forms.Label();
-			this.txtZenBall = new System.Windows.Forms.TextBox();
 			this.lblZenBall = new System.Windows.Forms.Label();
-			this.txtFireball = new System.Windows.Forms.TextBox();
 			this.lblFireball = new System.Windows.Forms.Label();
 			this.lblFlowerPower = new System.Windows.Forms.Label();
 			this.lblSpookyBall = new System.Windows.Forms.Label();
 			this.lblSpaceBlast = new System.Windows.Forms.Label();
-			this.txtPyramid = new System.Windows.Forms.TextBox();
 			this.lblPyramid = new System.Windows.Forms.Label();
 			this.lblMultiball = new System.Windows.Forms.Label();
-			this.txtGuide = new System.Windows.Forms.TextBox();
 			this.lblGuide = new System.Windows.Forms.Label();
 			this.tabOther = new System.Windows.Forms.TabPage();
 			this.grpModifications = new System.Windows.Forms.GroupBox();
@@ -106,6 +88,26 @@
 			this.btnOK = new System.Windows.Forms.Button();
 			this.btnCancel = new System.Windows.Forms.Button();
 			this.txtBalls = new IntelOrca.PeggleEdit.Designer.NumericTextBox();
+			this.txtOrangePegs = new IntelOrca.PeggleEdit.Designer.NumericTextBox();
+			this.txtUniqueStyleShots = new IntelOrca.PeggleEdit.Designer.NumericTextBox();
+			this.txtScore = new IntelOrca.PeggleEdit.Designer.NumericTextBox();
+			this.txtStyleScore = new IntelOrca.PeggleEdit.Designer.NumericTextBox();
+			this.txtLuckySpin = new IntelOrca.PeggleEdit.Designer.NumericTextBox();
+			this.txtSpookyBall = new IntelOrca.PeggleEdit.Designer.NumericTextBox();
+			this.txtFlowerPower = new IntelOrca.PeggleEdit.Designer.NumericTextBox();
+			this.txtShotExtender = new IntelOrca.PeggleEdit.Designer.NumericTextBox();
+			this.txtSpaceBlast = new IntelOrca.PeggleEdit.Designer.NumericTextBox();
+			this.txtMultiball = new IntelOrca.PeggleEdit.Designer.NumericTextBox();
+			this.txtTripleScore = new IntelOrca.PeggleEdit.Designer.NumericTextBox();
+			this.txtFlippers = new IntelOrca.PeggleEdit.Designer.NumericTextBox();
+			this.txtChainLightning = new IntelOrca.PeggleEdit.Designer.NumericTextBox();
+			this.txtMagicHat = new IntelOrca.PeggleEdit.Designer.NumericTextBox();
+			this.txtZenBall = new IntelOrca.PeggleEdit.Designer.NumericTextBox();
+			this.txtFireball = new IntelOrca.PeggleEdit.Designer.NumericTextBox();
+			this.txtPyramid = new IntelOrca.PeggleEdit.Designer.NumericTextBox();
+			this.txtGuide = new IntelOrca.PeggleEdit.Designer.NumericTextBox();
+			this.txtID = new IntelOrca.PeggleEdit.Designer.NumericTextBox();
+			this.lblID = new System.Windows.Forms.Label();
 			this.tabControl1.SuspendLayout();
 			this.tabGeneral.SuspendLayout();
 			this.grpLimits.SuspendLayout();
@@ -231,23 +233,6 @@
 			this.lblOrangePegs.TabIndex = 0;
 			this.lblOrangePegs.Text = "Orange Pegs:";
 			// 
-			// txtOrangePegs
-			// 
-			this.txtOrangePegs.Location = new System.Drawing.Point(112, 16);
-			this.txtOrangePegs.Name = "txtOrangePegs";
-			this.txtOrangePegs.Size = new System.Drawing.Size(125, 20);
-			this.txtOrangePegs.TabIndex = 1;
-			this.mainToolTip.SetToolTip(this.txtOrangePegs, "The number of orange pegs the player must clear.");
-			// 
-			// txtUniqueStyleShots
-			// 
-			this.txtUniqueStyleShots.Location = new System.Drawing.Point(112, 94);
-			this.txtUniqueStyleShots.Name = "txtUniqueStyleShots";
-			this.txtUniqueStyleShots.Size = new System.Drawing.Size(125, 20);
-			this.txtUniqueStyleShots.TabIndex = 7;
-			this.txtUniqueStyleShots.Tag = "PN";
-			this.mainToolTip.SetToolTip(this.txtUniqueStyleShots, "The number of unique style shots required to pass the challenge.");
-			// 
 			// lblScore
 			// 
 			this.lblScore.AutoSize = true;
@@ -265,23 +250,6 @@
 			this.lblUniqueStyleShots.Size = new System.Drawing.Size(100, 13);
 			this.lblUniqueStyleShots.TabIndex = 6;
 			this.lblUniqueStyleShots.Text = "Unique Style Shots:";
-			// 
-			// txtScore
-			// 
-			this.txtScore.Location = new System.Drawing.Point(112, 42);
-			this.txtScore.Name = "txtScore";
-			this.txtScore.Size = new System.Drawing.Size(125, 20);
-			this.txtScore.TabIndex = 3;
-			this.mainToolTip.SetToolTip(this.txtScore, "The score required to pass the challenge.");
-			// 
-			// txtStyleScore
-			// 
-			this.txtStyleScore.Location = new System.Drawing.Point(112, 68);
-			this.txtStyleScore.Name = "txtStyleScore";
-			this.txtStyleScore.Size = new System.Drawing.Size(125, 20);
-			this.txtStyleScore.TabIndex = 5;
-			this.txtStyleScore.Tag = "PN";
-			this.mainToolTip.SetToolTip(this.txtStyleScore, "The number of style points required to pass the challenge.");
 			// 
 			// lblStyleScore
 			// 
@@ -370,9 +338,9 @@
 			this.tabLevels.Controls.Add(this.pnlLevels);
 			this.tabLevels.Controls.Add(this.nudNumLevels);
 			this.tabLevels.Controls.Add(this.chkAgainstOpponents);
-			this.tabLevels.Controls.Add(this.label3);
-			this.tabLevels.Controls.Add(this.label1);
-			this.tabLevels.Controls.Add(this.label2);
+			this.tabLevels.Controls.Add(this.lblOpponentDifficulty);
+			this.tabLevels.Controls.Add(this.lblOpponent);
+			this.tabLevels.Controls.Add(this.lblLevel);
 			this.tabLevels.Location = new System.Drawing.Point(4, 22);
 			this.tabLevels.Name = "tabLevels";
 			this.tabLevels.Padding = new System.Windows.Forms.Padding(3);
@@ -416,40 +384,54 @@
 			this.chkAgainstOpponents.Text = "Against opponents";
 			this.chkAgainstOpponents.UseVisualStyleBackColor = true;
 			// 
-			// label3
+			// lblOpponentDifficulty
 			// 
-			this.label3.AutoSize = true;
-			this.label3.Font = new System.Drawing.Font("Microsoft Sans Serif", 8.25F, ((System.Drawing.FontStyle)((System.Drawing.FontStyle.Bold | System.Drawing.FontStyle.Underline))), System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-			this.label3.Location = new System.Drawing.Point(250, 41);
-			this.label3.Name = "label3";
-			this.label3.Size = new System.Drawing.Size(116, 13);
-			this.label3.TabIndex = 20;
-			this.label3.Text = "Opponent Difficulty";
+			this.lblOpponentDifficulty.AutoSize = true;
+			this.lblOpponentDifficulty.Font = new System.Drawing.Font("Microsoft Sans Serif", 8.25F, ((System.Drawing.FontStyle)((System.Drawing.FontStyle.Bold | System.Drawing.FontStyle.Underline))), System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+			this.lblOpponentDifficulty.Location = new System.Drawing.Point(250, 41);
+			this.lblOpponentDifficulty.Name = "lblOpponentDifficulty";
+			this.lblOpponentDifficulty.Size = new System.Drawing.Size(116, 13);
+			this.lblOpponentDifficulty.TabIndex = 20;
+			this.lblOpponentDifficulty.Text = "Opponent Difficulty";
 			// 
-			// label1
+			// lblOpponent
 			// 
-			this.label1.AutoSize = true;
-			this.label1.Font = new System.Drawing.Font("Microsoft Sans Serif", 8.25F, ((System.Drawing.FontStyle)((System.Drawing.FontStyle.Bold | System.Drawing.FontStyle.Underline))), System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-			this.label1.Location = new System.Drawing.Point(139, 41);
-			this.label1.Name = "label1";
-			this.label1.Size = new System.Drawing.Size(62, 13);
-			this.label1.TabIndex = 19;
-			this.label1.Text = "Opponent";
+			this.lblOpponent.AutoSize = true;
+			this.lblOpponent.Font = new System.Drawing.Font("Microsoft Sans Serif", 8.25F, ((System.Drawing.FontStyle)((System.Drawing.FontStyle.Bold | System.Drawing.FontStyle.Underline))), System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+			this.lblOpponent.Location = new System.Drawing.Point(139, 41);
+			this.lblOpponent.Name = "lblOpponent";
+			this.lblOpponent.Size = new System.Drawing.Size(62, 13);
+			this.lblOpponent.TabIndex = 19;
+			this.lblOpponent.Text = "Opponent";
 			// 
-			// label2
+			// lblLevel
 			// 
-			this.label2.AutoSize = true;
-			this.label2.Font = new System.Drawing.Font("Microsoft Sans Serif", 8.25F, ((System.Drawing.FontStyle)((System.Drawing.FontStyle.Bold | System.Drawing.FontStyle.Underline))), System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-			this.label2.Location = new System.Drawing.Point(3, 41);
-			this.label2.Name = "label2";
-			this.label2.Size = new System.Drawing.Size(38, 13);
-			this.label2.TabIndex = 18;
-			this.label2.Text = "Level";
+			this.lblLevel.AutoSize = true;
+			this.lblLevel.Font = new System.Drawing.Font("Microsoft Sans Serif", 8.25F, ((System.Drawing.FontStyle)((System.Drawing.FontStyle.Bold | System.Drawing.FontStyle.Underline))), System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+			this.lblLevel.Location = new System.Drawing.Point(3, 41);
+			this.lblLevel.Name = "lblLevel";
+			this.lblLevel.Size = new System.Drawing.Size(38, 13);
+			this.lblLevel.TabIndex = 18;
+			this.lblLevel.Text = "Level";
 			// 
 			// tabPowerups
 			// 
 			this.tabPowerups.Controls.Add(this.lblInstantaneous);
 			this.tabPowerups.Controls.Add(this.lblAccumulative);
+			this.tabPowerups.Controls.Add(this.lblTripleScore);
+			this.tabPowerups.Controls.Add(this.lblFlippers);
+			this.tabPowerups.Controls.Add(this.lblShotExtender);
+			this.tabPowerups.Controls.Add(this.lblChainLightning);
+			this.tabPowerups.Controls.Add(this.lblLuckySpin);
+			this.tabPowerups.Controls.Add(this.lblMagicHat);
+			this.tabPowerups.Controls.Add(this.lblZenBall);
+			this.tabPowerups.Controls.Add(this.lblFireball);
+			this.tabPowerups.Controls.Add(this.lblFlowerPower);
+			this.tabPowerups.Controls.Add(this.lblSpookyBall);
+			this.tabPowerups.Controls.Add(this.lblSpaceBlast);
+			this.tabPowerups.Controls.Add(this.lblPyramid);
+			this.tabPowerups.Controls.Add(this.lblMultiball);
+			this.tabPowerups.Controls.Add(this.lblGuide);
 			this.tabPowerups.Controls.Add(this.txtLuckySpin);
 			this.tabPowerups.Controls.Add(this.txtSpookyBall);
 			this.tabPowerups.Controls.Add(this.txtFlowerPower);
@@ -457,27 +439,13 @@
 			this.tabPowerups.Controls.Add(this.txtSpaceBlast);
 			this.tabPowerups.Controls.Add(this.txtMultiball);
 			this.tabPowerups.Controls.Add(this.txtTripleScore);
-			this.tabPowerups.Controls.Add(this.lblTripleScore);
 			this.tabPowerups.Controls.Add(this.txtFlippers);
-			this.tabPowerups.Controls.Add(this.lblFlippers);
-			this.tabPowerups.Controls.Add(this.lblShotExtender);
 			this.tabPowerups.Controls.Add(this.txtChainLightning);
-			this.tabPowerups.Controls.Add(this.lblChainLightning);
-			this.tabPowerups.Controls.Add(this.lblLuckySpin);
 			this.tabPowerups.Controls.Add(this.txtMagicHat);
-			this.tabPowerups.Controls.Add(this.lblMagicHat);
 			this.tabPowerups.Controls.Add(this.txtZenBall);
-			this.tabPowerups.Controls.Add(this.lblZenBall);
 			this.tabPowerups.Controls.Add(this.txtFireball);
-			this.tabPowerups.Controls.Add(this.lblFireball);
-			this.tabPowerups.Controls.Add(this.lblFlowerPower);
-			this.tabPowerups.Controls.Add(this.lblSpookyBall);
-			this.tabPowerups.Controls.Add(this.lblSpaceBlast);
 			this.tabPowerups.Controls.Add(this.txtPyramid);
-			this.tabPowerups.Controls.Add(this.lblPyramid);
-			this.tabPowerups.Controls.Add(this.lblMultiball);
 			this.tabPowerups.Controls.Add(this.txtGuide);
-			this.tabPowerups.Controls.Add(this.lblGuide);
 			this.tabPowerups.Location = new System.Drawing.Point(4, 22);
 			this.tabPowerups.Name = "tabPowerups";
 			this.tabPowerups.Size = new System.Drawing.Size(372, 321);
@@ -506,69 +474,6 @@
 			this.lblAccumulative.TabIndex = 0;
 			this.lblAccumulative.Text = "Accumulative";
 			// 
-			// txtLuckySpin
-			// 
-			this.txtLuckySpin.Location = new System.Drawing.Point(285, 131);
-			this.txtLuckySpin.Name = "txtLuckySpin";
-			this.txtLuckySpin.Size = new System.Drawing.Size(80, 20);
-			this.txtLuckySpin.TabIndex = 27;
-			this.txtLuckySpin.Tag = "PN";
-			this.txtLuckySpin.Text = "0";
-			// 
-			// txtSpookyBall
-			// 
-			this.txtSpookyBall.Location = new System.Drawing.Point(285, 79);
-			this.txtSpookyBall.Name = "txtSpookyBall";
-			this.txtSpookyBall.Size = new System.Drawing.Size(80, 20);
-			this.txtSpookyBall.TabIndex = 23;
-			this.txtSpookyBall.Tag = "PN";
-			this.txtSpookyBall.Text = "0";
-			// 
-			// txtFlowerPower
-			// 
-			this.txtFlowerPower.Location = new System.Drawing.Point(285, 105);
-			this.txtFlowerPower.Name = "txtFlowerPower";
-			this.txtFlowerPower.Size = new System.Drawing.Size(80, 20);
-			this.txtFlowerPower.TabIndex = 25;
-			this.txtFlowerPower.Tag = "PN";
-			this.txtFlowerPower.Text = "0";
-			// 
-			// txtShotExtender
-			// 
-			this.txtShotExtender.Location = new System.Drawing.Point(285, 157);
-			this.txtShotExtender.Name = "txtShotExtender";
-			this.txtShotExtender.Size = new System.Drawing.Size(80, 20);
-			this.txtShotExtender.TabIndex = 29;
-			this.txtShotExtender.Tag = "PN";
-			this.txtShotExtender.Text = "0";
-			// 
-			// txtSpaceBlast
-			// 
-			this.txtSpaceBlast.Location = new System.Drawing.Point(285, 53);
-			this.txtSpaceBlast.Name = "txtSpaceBlast";
-			this.txtSpaceBlast.Size = new System.Drawing.Size(80, 20);
-			this.txtSpaceBlast.TabIndex = 21;
-			this.txtSpaceBlast.Tag = "PN";
-			this.txtSpaceBlast.Text = "0";
-			// 
-			// txtMultiball
-			// 
-			this.txtMultiball.Location = new System.Drawing.Point(285, 27);
-			this.txtMultiball.Name = "txtMultiball";
-			this.txtMultiball.Size = new System.Drawing.Size(80, 20);
-			this.txtMultiball.TabIndex = 19;
-			this.txtMultiball.Tag = "PN";
-			this.txtMultiball.Text = "0";
-			// 
-			// txtTripleScore
-			// 
-			this.txtTripleScore.Location = new System.Drawing.Point(99, 131);
-			this.txtTripleScore.Name = "txtTripleScore";
-			this.txtTripleScore.Size = new System.Drawing.Size(80, 20);
-			this.txtTripleScore.TabIndex = 10;
-			this.txtTripleScore.Tag = "PN";
-			this.txtTripleScore.Text = "0";
-			// 
 			// lblTripleScore
 			// 
 			this.lblTripleScore.AutoSize = true;
@@ -577,15 +482,6 @@
 			this.lblTripleScore.Size = new System.Drawing.Size(67, 13);
 			this.lblTripleScore.TabIndex = 9;
 			this.lblTripleScore.Text = "Triple Score:";
-			// 
-			// txtFlippers
-			// 
-			this.txtFlippers.Location = new System.Drawing.Point(99, 79);
-			this.txtFlippers.Name = "txtFlippers";
-			this.txtFlippers.Size = new System.Drawing.Size(80, 20);
-			this.txtFlippers.TabIndex = 6;
-			this.txtFlippers.Tag = "PN";
-			this.txtFlippers.Text = "0";
 			// 
 			// lblFlippers
 			// 
@@ -605,15 +501,6 @@
 			this.lblShotExtender.TabIndex = 28;
 			this.lblShotExtender.Text = "Shot Extender:";
 			// 
-			// txtChainLightning
-			// 
-			this.txtChainLightning.Location = new System.Drawing.Point(99, 209);
-			this.txtChainLightning.Name = "txtChainLightning";
-			this.txtChainLightning.Size = new System.Drawing.Size(80, 20);
-			this.txtChainLightning.TabIndex = 16;
-			this.txtChainLightning.Tag = "PN";
-			this.txtChainLightning.Text = "0";
-			// 
 			// lblChainLightning
 			// 
 			this.lblChainLightning.AutoSize = true;
@@ -632,15 +519,6 @@
 			this.lblLuckySpin.TabIndex = 26;
 			this.lblLuckySpin.Text = "Lucky Spin:";
 			// 
-			// txtMagicHat
-			// 
-			this.txtMagicHat.Location = new System.Drawing.Point(99, 105);
-			this.txtMagicHat.Name = "txtMagicHat";
-			this.txtMagicHat.Size = new System.Drawing.Size(80, 20);
-			this.txtMagicHat.TabIndex = 8;
-			this.txtMagicHat.Tag = "PN";
-			this.txtMagicHat.Text = "0";
-			// 
 			// lblMagicHat
 			// 
 			this.lblMagicHat.AutoSize = true;
@@ -650,15 +528,6 @@
 			this.lblMagicHat.TabIndex = 7;
 			this.lblMagicHat.Text = "Magic Hat:";
 			// 
-			// txtZenBall
-			// 
-			this.txtZenBall.Location = new System.Drawing.Point(99, 183);
-			this.txtZenBall.Name = "txtZenBall";
-			this.txtZenBall.Size = new System.Drawing.Size(80, 20);
-			this.txtZenBall.TabIndex = 14;
-			this.txtZenBall.Tag = "PN";
-			this.txtZenBall.Text = "0";
-			// 
 			// lblZenBall
 			// 
 			this.lblZenBall.AutoSize = true;
@@ -667,15 +536,6 @@
 			this.lblZenBall.Size = new System.Drawing.Size(49, 13);
 			this.lblZenBall.TabIndex = 13;
 			this.lblZenBall.Text = "Zen Ball:";
-			// 
-			// txtFireball
-			// 
-			this.txtFireball.Location = new System.Drawing.Point(99, 157);
-			this.txtFireball.Name = "txtFireball";
-			this.txtFireball.Size = new System.Drawing.Size(80, 20);
-			this.txtFireball.TabIndex = 12;
-			this.txtFireball.Tag = "PN";
-			this.txtFireball.Text = "0";
 			// 
 			// lblFireball
 			// 
@@ -713,15 +573,6 @@
 			this.lblSpaceBlast.TabIndex = 20;
 			this.lblSpaceBlast.Text = "Space Blast:";
 			// 
-			// txtPyramid
-			// 
-			this.txtPyramid.Location = new System.Drawing.Point(99, 53);
-			this.txtPyramid.Name = "txtPyramid";
-			this.txtPyramid.Size = new System.Drawing.Size(80, 20);
-			this.txtPyramid.TabIndex = 4;
-			this.txtPyramid.Tag = "PN";
-			this.txtPyramid.Text = "0";
-			// 
 			// lblPyramid
 			// 
 			this.lblPyramid.AutoSize = true;
@@ -739,15 +590,6 @@
 			this.lblMultiball.Size = new System.Drawing.Size(48, 13);
 			this.lblMultiball.TabIndex = 18;
 			this.lblMultiball.Text = "Multiball:";
-			// 
-			// txtGuide
-			// 
-			this.txtGuide.Location = new System.Drawing.Point(99, 27);
-			this.txtGuide.Name = "txtGuide";
-			this.txtGuide.Size = new System.Drawing.Size(80, 20);
-			this.txtGuide.TabIndex = 2;
-			this.txtGuide.Tag = "PN";
-			this.txtGuide.Text = "0";
 			// 
 			// lblGuide
 			// 
@@ -943,6 +785,207 @@
 			this.txtBalls.TabIndex = 3;
 			this.mainToolTip.SetToolTip(this.txtBalls, "The number of balls the player starts off with.");
 			// 
+			// txtOrangePegs
+			// 
+			this.txtOrangePegs.Location = new System.Drawing.Point(112, 16);
+			this.txtOrangePegs.Maximum = 10000;
+			this.txtOrangePegs.Minimum = 0;
+			this.txtOrangePegs.Name = "txtOrangePegs";
+			this.txtOrangePegs.Size = new System.Drawing.Size(125, 20);
+			this.txtOrangePegs.TabIndex = 1;
+			this.mainToolTip.SetToolTip(this.txtOrangePegs, "The number of orange pegs the player must clear.");
+			// 
+			// txtUniqueStyleShots
+			// 
+			this.txtUniqueStyleShots.Location = new System.Drawing.Point(112, 94);
+			this.txtUniqueStyleShots.Maximum = 100;
+			this.txtUniqueStyleShots.Minimum = 0;
+			this.txtUniqueStyleShots.Name = "txtUniqueStyleShots";
+			this.txtUniqueStyleShots.Size = new System.Drawing.Size(125, 20);
+			this.txtUniqueStyleShots.TabIndex = 7;
+			this.txtUniqueStyleShots.Tag = "PN";
+			this.mainToolTip.SetToolTip(this.txtUniqueStyleShots, "The number of unique style shots required to pass the challenge.");
+			// 
+			// txtScore
+			// 
+			this.txtScore.Location = new System.Drawing.Point(112, 42);
+			this.txtScore.Maximum = 2000000000;
+			this.txtScore.Minimum = 0;
+			this.txtScore.Name = "txtScore";
+			this.txtScore.Size = new System.Drawing.Size(125, 20);
+			this.txtScore.TabIndex = 3;
+			this.mainToolTip.SetToolTip(this.txtScore, "The score required to pass the challenge.");
+			// 
+			// txtStyleScore
+			// 
+			this.txtStyleScore.Location = new System.Drawing.Point(112, 68);
+			this.txtStyleScore.Maximum = 2000000000;
+			this.txtStyleScore.Minimum = 0;
+			this.txtStyleScore.Name = "txtStyleScore";
+			this.txtStyleScore.Size = new System.Drawing.Size(125, 20);
+			this.txtStyleScore.TabIndex = 5;
+			this.txtStyleScore.Tag = "PN";
+			this.mainToolTip.SetToolTip(this.txtStyleScore, "The number of style points required to pass the challenge.");
+			// 
+			// txtLuckySpin
+			// 
+			this.txtLuckySpin.Location = new System.Drawing.Point(285, 131);
+			this.txtLuckySpin.Maximum = 999;
+			this.txtLuckySpin.Minimum = 0;
+			this.txtLuckySpin.Name = "txtLuckySpin";
+			this.txtLuckySpin.Size = new System.Drawing.Size(80, 20);
+			this.txtLuckySpin.TabIndex = 27;
+			this.txtLuckySpin.Tag = "PN";
+			// 
+			// txtSpookyBall
+			// 
+			this.txtSpookyBall.Location = new System.Drawing.Point(285, 79);
+			this.txtSpookyBall.Maximum = 999;
+			this.txtSpookyBall.Minimum = 0;
+			this.txtSpookyBall.Name = "txtSpookyBall";
+			this.txtSpookyBall.Size = new System.Drawing.Size(80, 20);
+			this.txtSpookyBall.TabIndex = 23;
+			this.txtSpookyBall.Tag = "PN";
+			// 
+			// txtFlowerPower
+			// 
+			this.txtFlowerPower.Location = new System.Drawing.Point(285, 105);
+			this.txtFlowerPower.Maximum = 999;
+			this.txtFlowerPower.Minimum = 0;
+			this.txtFlowerPower.Name = "txtFlowerPower";
+			this.txtFlowerPower.Size = new System.Drawing.Size(80, 20);
+			this.txtFlowerPower.TabIndex = 25;
+			this.txtFlowerPower.Tag = "PN";
+			// 
+			// txtShotExtender
+			// 
+			this.txtShotExtender.Location = new System.Drawing.Point(285, 157);
+			this.txtShotExtender.Maximum = 999;
+			this.txtShotExtender.Minimum = 0;
+			this.txtShotExtender.Name = "txtShotExtender";
+			this.txtShotExtender.Size = new System.Drawing.Size(80, 20);
+			this.txtShotExtender.TabIndex = 29;
+			this.txtShotExtender.Tag = "PN";
+			// 
+			// txtSpaceBlast
+			// 
+			this.txtSpaceBlast.Location = new System.Drawing.Point(285, 53);
+			this.txtSpaceBlast.Maximum = 999;
+			this.txtSpaceBlast.Minimum = 0;
+			this.txtSpaceBlast.Name = "txtSpaceBlast";
+			this.txtSpaceBlast.Size = new System.Drawing.Size(80, 20);
+			this.txtSpaceBlast.TabIndex = 21;
+			this.txtSpaceBlast.Tag = "PN";
+			// 
+			// txtMultiball
+			// 
+			this.txtMultiball.Location = new System.Drawing.Point(285, 27);
+			this.txtMultiball.Maximum = 999;
+			this.txtMultiball.Minimum = 0;
+			this.txtMultiball.Name = "txtMultiball";
+			this.txtMultiball.Size = new System.Drawing.Size(80, 20);
+			this.txtMultiball.TabIndex = 19;
+			this.txtMultiball.Tag = "PN";
+			// 
+			// txtTripleScore
+			// 
+			this.txtTripleScore.Location = new System.Drawing.Point(99, 131);
+			this.txtTripleScore.Maximum = 999;
+			this.txtTripleScore.Minimum = 0;
+			this.txtTripleScore.Name = "txtTripleScore";
+			this.txtTripleScore.Size = new System.Drawing.Size(80, 20);
+			this.txtTripleScore.TabIndex = 10;
+			this.txtTripleScore.Tag = "PN";
+			// 
+			// txtFlippers
+			// 
+			this.txtFlippers.Location = new System.Drawing.Point(99, 79);
+			this.txtFlippers.Maximum = 999;
+			this.txtFlippers.Minimum = 0;
+			this.txtFlippers.Name = "txtFlippers";
+			this.txtFlippers.Size = new System.Drawing.Size(80, 20);
+			this.txtFlippers.TabIndex = 6;
+			this.txtFlippers.Tag = "PN";
+			// 
+			// txtChainLightning
+			// 
+			this.txtChainLightning.Location = new System.Drawing.Point(99, 209);
+			this.txtChainLightning.Maximum = 999;
+			this.txtChainLightning.Minimum = 0;
+			this.txtChainLightning.Name = "txtChainLightning";
+			this.txtChainLightning.Size = new System.Drawing.Size(80, 20);
+			this.txtChainLightning.TabIndex = 16;
+			this.txtChainLightning.Tag = "PN";
+			// 
+			// txtMagicHat
+			// 
+			this.txtMagicHat.Location = new System.Drawing.Point(99, 105);
+			this.txtMagicHat.Maximum = 999;
+			this.txtMagicHat.Minimum = 0;
+			this.txtMagicHat.Name = "txtMagicHat";
+			this.txtMagicHat.Size = new System.Drawing.Size(80, 20);
+			this.txtMagicHat.TabIndex = 8;
+			this.txtMagicHat.Tag = "PN";
+			// 
+			// txtZenBall
+			// 
+			this.txtZenBall.Location = new System.Drawing.Point(99, 183);
+			this.txtZenBall.Maximum = 999;
+			this.txtZenBall.Minimum = 0;
+			this.txtZenBall.Name = "txtZenBall";
+			this.txtZenBall.Size = new System.Drawing.Size(80, 20);
+			this.txtZenBall.TabIndex = 14;
+			this.txtZenBall.Tag = "PN";
+			// 
+			// txtFireball
+			// 
+			this.txtFireball.Location = new System.Drawing.Point(99, 157);
+			this.txtFireball.Maximum = 999;
+			this.txtFireball.Minimum = 0;
+			this.txtFireball.Name = "txtFireball";
+			this.txtFireball.Size = new System.Drawing.Size(80, 20);
+			this.txtFireball.TabIndex = 12;
+			this.txtFireball.Tag = "PN";
+			// 
+			// txtPyramid
+			// 
+			this.txtPyramid.Location = new System.Drawing.Point(99, 53);
+			this.txtPyramid.Maximum = 999;
+			this.txtPyramid.Minimum = 0;
+			this.txtPyramid.Name = "txtPyramid";
+			this.txtPyramid.Size = new System.Drawing.Size(80, 20);
+			this.txtPyramid.TabIndex = 4;
+			this.txtPyramid.Tag = "PN";
+			// 
+			// txtGuide
+			// 
+			this.txtGuide.Location = new System.Drawing.Point(99, 27);
+			this.txtGuide.Maximum = 999;
+			this.txtGuide.Minimum = 0;
+			this.txtGuide.Name = "txtGuide";
+			this.txtGuide.Size = new System.Drawing.Size(80, 20);
+			this.txtGuide.TabIndex = 2;
+			this.txtGuide.Tag = "PN";
+			// 
+			// txtID
+			// 
+			this.txtID.Location = new System.Drawing.Point(40, 368);
+			this.txtID.Maximum = 100000;
+			this.txtID.Minimum = 0;
+			this.txtID.Name = "txtID";
+			this.txtID.Size = new System.Drawing.Size(88, 20);
+			this.txtID.TabIndex = 3;
+			this.mainToolTip.SetToolTip(this.txtID, "The number of orange pegs the player must clear.");
+			// 
+			// lblID
+			// 
+			this.lblID.AutoSize = true;
+			this.lblID.Location = new System.Drawing.Point(13, 370);
+			this.lblID.Name = "lblID";
+			this.lblID.Size = new System.Drawing.Size(21, 13);
+			this.lblID.TabIndex = 4;
+			this.lblID.Text = "ID:";
+			// 
 			// ChallengeDetailsForm
 			// 
 			this.AcceptButton = this.btnOK;
@@ -950,6 +993,8 @@
 			this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
 			this.CancelButton = this.btnCancel;
 			this.ClientSize = new System.Drawing.Size(402, 400);
+			this.Controls.Add(this.lblID);
+			this.Controls.Add(this.txtID);
 			this.Controls.Add(this.btnCancel);
 			this.Controls.Add(this.btnOK);
 			this.Controls.Add(this.tabControl1);
@@ -978,6 +1023,7 @@
 			this.grpVariousFlags.ResumeLayout(false);
 			this.grpVariousFlags.PerformLayout();
 			this.ResumeLayout(false);
+			this.PerformLayout();
 
 		}
 
@@ -988,17 +1034,17 @@
 		private System.Windows.Forms.TabPage tabLevels;
 		private System.Windows.Forms.TabPage tabPowerups;
 		private System.Windows.Forms.TabPage tabOther;
-		private System.Windows.Forms.TextBox txtUniqueStyleShots;
+		private NumericTextBox txtUniqueStyleShots;
 		private System.Windows.Forms.Label lblUniqueStyleShots;
-		private System.Windows.Forms.TextBox txtStyleScore;
+		private NumericTextBox txtStyleScore;
 		private System.Windows.Forms.Label lblStyleScore;
 		private System.Windows.Forms.TextBox txtSmallDescription;
 		private System.Windows.Forms.Label lblSmallDescription;
 		private System.Windows.Forms.TextBox txtDescription;
 		private System.Windows.Forms.Label lblDescription;
-		private System.Windows.Forms.TextBox txtScore;
+		private NumericTextBox txtScore;
 		private System.Windows.Forms.Label lblScore;
-		private System.Windows.Forms.TextBox txtOrangePegs;
+		private NumericTextBox txtOrangePegs;
 		private System.Windows.Forms.Label lblOrangePegs;
 		private System.Windows.Forms.GroupBox grpChallengeDetails;
 		private System.Windows.Forms.Label lblName;
@@ -1011,33 +1057,33 @@
 		private NumericTextBox txtBalls;
 		private System.Windows.Forms.Label lblBalls;
 		private System.Windows.Forms.Label lblGuide;
-		private System.Windows.Forms.TextBox txtTripleScore;
+		private NumericTextBox txtTripleScore;
 		private System.Windows.Forms.Label lblTripleScore;
-		private System.Windows.Forms.TextBox txtFlippers;
+		private NumericTextBox txtFlippers;
 		private System.Windows.Forms.Label lblFlippers;
 		private System.Windows.Forms.Label lblShotExtender;
-		private System.Windows.Forms.TextBox txtChainLightning;
+		private NumericTextBox txtChainLightning;
 		private System.Windows.Forms.Label lblChainLightning;
 		private System.Windows.Forms.Label lblLuckySpin;
-		private System.Windows.Forms.TextBox txtMagicHat;
+		private NumericTextBox txtMagicHat;
 		private System.Windows.Forms.Label lblMagicHat;
-		private System.Windows.Forms.TextBox txtZenBall;
+		private NumericTextBox txtZenBall;
 		private System.Windows.Forms.Label lblZenBall;
-		private System.Windows.Forms.TextBox txtFireball;
+		private NumericTextBox txtFireball;
 		private System.Windows.Forms.Label lblFireball;
 		private System.Windows.Forms.Label lblFlowerPower;
 		private System.Windows.Forms.Label lblSpookyBall;
 		private System.Windows.Forms.Label lblSpaceBlast;
-		private System.Windows.Forms.TextBox txtPyramid;
+		private NumericTextBox txtPyramid;
 		private System.Windows.Forms.Label lblPyramid;
 		private System.Windows.Forms.Label lblMultiball;
-		private System.Windows.Forms.TextBox txtGuide;
-		private System.Windows.Forms.TextBox txtLuckySpin;
-		private System.Windows.Forms.TextBox txtSpookyBall;
-		private System.Windows.Forms.TextBox txtFlowerPower;
-		private System.Windows.Forms.TextBox txtShotExtender;
-		private System.Windows.Forms.TextBox txtSpaceBlast;
-		private System.Windows.Forms.TextBox txtMultiball;
+		private NumericTextBox txtGuide;
+		private NumericTextBox txtLuckySpin;
+		private NumericTextBox txtSpookyBall;
+		private NumericTextBox txtFlowerPower;
+		private NumericTextBox txtShotExtender;
+		private NumericTextBox txtSpaceBlast;
+		private NumericTextBox txtMultiball;
 		private System.Windows.Forms.Label lblInstantaneous;
 		private System.Windows.Forms.Label lblAccumulative;
 		private System.Windows.Forms.CheckBox chkScoreReset;
@@ -1055,11 +1101,13 @@
 		private System.Windows.Forms.ToolTip mainToolTip;
 		private System.Windows.Forms.Button btnOK;
 		private System.Windows.Forms.Button btnCancel;
-		private System.Windows.Forms.Label label1;
-		private System.Windows.Forms.Label label2;
-		private System.Windows.Forms.Label label3;
+		private System.Windows.Forms.Label lblOpponent;
+		private System.Windows.Forms.Label lblLevel;
+		private System.Windows.Forms.Label lblOpponentDifficulty;
 		private System.Windows.Forms.CheckBox chkAgainstOpponents;
 		private System.Windows.Forms.NumericUpDown nudNumLevels;
 		private System.Windows.Forms.Panel pnlLevels;
+		private NumericTextBox txtID;
+		private System.Windows.Forms.Label lblID;
 	}
 }
