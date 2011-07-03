@@ -17,16 +17,21 @@
 using System;
 using System.Drawing;
 using System.Windows.Forms;
+using IntelOrca.PeggleEdit.Tools.Levels;
+using IntelOrca.PeggleEdit.Tools.Pack;
 using IntelOrca.PeggleEdit.Tools.Pack.Challenge;
 
 namespace IntelOrca.PeggleEdit.Designer
 {
 	partial class ChallengeDetailsForm : Form
 	{
+		private LevelPack mLevelPack;
 		private Challenge mChallenge;
 
-		public ChallengeDetailsForm(Challenge challenge)
+		public ChallengeDetailsForm(LevelPack levelPack, Challenge challenge)
 		{
+			mLevelPack = levelPack;
+
 			InitializeComponent();
 
 			mChallenge = challenge;
@@ -58,6 +63,8 @@ namespace IntelOrca.PeggleEdit.Designer
 			chkClearLevel.Checked = mChallenge.ReqClearLevel;
 
 			cmbCharacter.Text = mChallenge.Character;
+			if (cmbCharacter.SelectedIndex == -1)
+				cmbCharacter.SelectedIndex = 0;
 			txtBalls.Value = mChallenge.Balls;
 
 			//Levels
@@ -70,8 +77,8 @@ namespace IntelOrca.PeggleEdit.Designer
 
 				Challenge.ChallengeLevel challengeLevel = mChallenge.Levels[i];
 				levelTextbox.Text = challengeLevel.Level;
-				opponentTextbox.Text = challengeLevel.Opponent;
-				opponentDifficultyTextbox.Text = challengeLevel.OpponentDifficulty;
+				opponentTextbox.Text = (challengeLevel.Opponent == null ? "Rand" : challengeLevel.Opponent);
+				opponentDifficultyTextbox.SelectedIndex = challengeLevel.OpponentDifficulty;
 			}
 
 			//Powerups
@@ -98,8 +105,8 @@ namespace IntelOrca.PeggleEdit.Designer
 			chkFreeballAlwaysCovered.Checked = mChallenge.FreeballBucketCovered;
 			chkNoEndOnWin.Checked = mChallenge.NoEndOnWin;
 
-			txtGravityMod.Text = mChallenge.GravityMod.ToString();
-			txtProjSpeedMod.Text = mChallenge.ProjectileSpeedMod.ToString();
+			txtGravityMod.Value = Math.Round(Convert.ToDouble(mChallenge.GravityMod), 3);
+			txtProjSpeedMod.Value = Math.Round(Convert.ToDouble(mChallenge.ProjectileSpeedMod), 3);
 		}
 
 		private void SetNumLevels()
@@ -119,6 +126,13 @@ namespace IntelOrca.PeggleEdit.Designer
 				cmbLevel.Name = "cmbLevel" + i;
 				cmbLevel.Location = new Point(0, y);
 				cmbLevel.Size = new Size(130, 21);
+
+				cmbLevel.Items.Add("pick");
+				cmbLevel.Items.Add("rand2");
+				foreach (Level level in mLevelPack.Levels) {
+					cmbLevel.Items.Add(level.Info.Filename);
+				}
+
 				panel.Controls.Add(cmbLevel);
 
 				//Opponent
@@ -172,7 +186,7 @@ namespace IntelOrca.PeggleEdit.Designer
 			mChallenge.ReqClearLevel = chkClearLevel.Checked;
 
 			//Character
-			mChallenge.Character = (cmbCharacter.SelectedIndex == 0 ? null : cmbCharacter.SelectedItem.ToString());
+			mChallenge.Character = (cmbCharacter.SelectedIndex == 0 || cmbCharacter.SelectedIndex == -1 ? null : cmbCharacter.SelectedItem.ToString());
 			mChallenge.Balls = Convert.ToInt32(txtBalls.Text);
 
 			//Levels
@@ -181,8 +195,8 @@ namespace IntelOrca.PeggleEdit.Designer
 			for (int i = 0; i < nudNumLevels.Value; i++) {
 				Challenge.ChallengeLevel challengeLevel = new Challenge.ChallengeLevel();
 				challengeLevel.Level = ((ComboBox)pnlLevels.Controls["cmbLevel" + i]).Text.ToString();
-				//challengeLevel.Opponent = ((ComboBox)pnlLevels.Controls["cmbOpponent" + i]).SelectedItem.ToString();
-				//challengeLevel.OpponentDifficulty = ((ComboBox)pnlLevels.Controls["cmbOpponentDifficulty" + i]).SelectedItem.ToString();
+				challengeLevel.Opponent = ((ComboBox)pnlLevels.Controls["cmbOpponent" + i]).SelectedItem.ToString();
+				challengeLevel.OpponentDifficulty = ((ComboBox)pnlLevels.Controls["cmbOpponentDifficulty" + i]).SelectedIndex;
 				mChallenge.Levels.Add(challengeLevel);
 			}
 
@@ -210,8 +224,8 @@ namespace IntelOrca.PeggleEdit.Designer
 			mChallenge.FreeballBucketCovered = chkFreeballAlwaysCovered.Checked;
 			mChallenge.NoEndOnWin = chkNoEndOnWin.Checked;
 
-			mChallenge.GravityMod = Convert.ToSingle(txtGravityMod.Text);
-			mChallenge.ProjectileSpeedMod = Convert.ToSingle(txtProjSpeedMod.Text);
+			mChallenge.GravityMod = Convert.ToSingle(Math.Round(txtGravityMod.Value, 3));
+			mChallenge.ProjectileSpeedMod = Convert.ToSingle(Math.Round(txtProjSpeedMod.Value, 3));
 
 			this.DialogResult = DialogResult.OK;
 			Close();

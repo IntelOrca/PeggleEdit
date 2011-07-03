@@ -24,9 +24,9 @@ namespace IntelOrca.PeggleEdit.Designer
 {
 	static class Program
 	{
-		public const bool AppBetaRelease = false;
+		public const bool AppBetaRelease = true;
 		public const string AppTitle = "PeggleEdit";
-		public const string AppVersion = "0.4.2 Pre-Release Beta";
+		public const string AppVersion = "0.4.3 Beta";
 		public const string AppVersionName = "Buzzard";
 		public const string AppAuthor = "Ted John";
 		public const string AppYear = "2010 - 11";
