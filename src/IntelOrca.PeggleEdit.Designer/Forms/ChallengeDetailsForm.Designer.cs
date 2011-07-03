@@ -74,9 +74,7 @@
 			this.tabOther = new System.Windows.Forms.TabPage();
 			this.grpModifications = new System.Windows.Forms.GroupBox();
 			this.lblGravityMod = new System.Windows.Forms.Label();
-			this.txtGravityMod = new System.Windows.Forms.TextBox();
 			this.lblProjSpeedMod = new System.Windows.Forms.Label();
-			this.txtProjSpeedMod = new System.Windows.Forms.TextBox();
 			this.grpVariousFlags = new System.Windows.Forms.GroupBox();
 			this.chkScoreReset = new System.Windows.Forms.CheckBox();
 			this.chkNoFreeballs = new System.Windows.Forms.CheckBox();
@@ -87,6 +85,8 @@
 			this.mainToolTip = new System.Windows.Forms.ToolTip(this.components);
 			this.btnOK = new System.Windows.Forms.Button();
 			this.btnCancel = new System.Windows.Forms.Button();
+			this.lblID = new System.Windows.Forms.Label();
+			this.txtID = new IntelOrca.PeggleEdit.Designer.NumericTextBox();
 			this.txtBalls = new IntelOrca.PeggleEdit.Designer.NumericTextBox();
 			this.txtOrangePegs = new IntelOrca.PeggleEdit.Designer.NumericTextBox();
 			this.txtUniqueStyleShots = new IntelOrca.PeggleEdit.Designer.NumericTextBox();
@@ -106,8 +106,8 @@
 			this.txtFireball = new IntelOrca.PeggleEdit.Designer.NumericTextBox();
 			this.txtPyramid = new IntelOrca.PeggleEdit.Designer.NumericTextBox();
 			this.txtGuide = new IntelOrca.PeggleEdit.Designer.NumericTextBox();
-			this.txtID = new IntelOrca.PeggleEdit.Designer.NumericTextBox();
-			this.lblID = new System.Windows.Forms.Label();
+			this.txtGravityMod = new IntelOrca.PeggleEdit.Designer.RealTextBox();
+			this.txtProjSpeedMod = new IntelOrca.PeggleEdit.Designer.RealTextBox();
 			this.tabControl1.SuspendLayout();
 			this.tabGeneral.SuspendLayout();
 			this.grpLimits.SuspendLayout();
@@ -633,16 +633,6 @@
 			this.lblGravityMod.TabIndex = 0;
 			this.lblGravityMod.Text = "Gravity Mod:";
 			// 
-			// txtGravityMod
-			// 
-			this.txtGravityMod.Location = new System.Drawing.Point(115, 19);
-			this.txtGravityMod.Name = "txtGravityMod";
-			this.txtGravityMod.Size = new System.Drawing.Size(125, 20);
-			this.txtGravityMod.TabIndex = 1;
-			this.txtGravityMod.Tag = "PN";
-			this.txtGravityMod.Text = "1.0";
-			this.mainToolTip.SetToolTip(this.txtGravityMod, "The gravity multiplier.");
-			// 
 			// lblProjSpeedMod
 			// 
 			this.lblProjSpeedMod.AutoSize = true;
@@ -651,16 +641,6 @@
 			this.lblProjSpeedMod.Size = new System.Drawing.Size(86, 13);
 			this.lblProjSpeedMod.TabIndex = 2;
 			this.lblProjSpeedMod.Text = "Proj Speed Mod:";
-			// 
-			// txtProjSpeedMod
-			// 
-			this.txtProjSpeedMod.Location = new System.Drawing.Point(115, 45);
-			this.txtProjSpeedMod.Name = "txtProjSpeedMod";
-			this.txtProjSpeedMod.Size = new System.Drawing.Size(125, 20);
-			this.txtProjSpeedMod.TabIndex = 3;
-			this.txtProjSpeedMod.Tag = "PN";
-			this.txtProjSpeedMod.Text = "1.0";
-			this.mainToolTip.SetToolTip(this.txtProjSpeedMod, "The ball projecting speed multiplier.");
 			// 
 			// grpVariousFlags
 			// 
@@ -774,6 +754,25 @@
 			this.btnCancel.Text = "Cancel";
 			this.btnCancel.UseVisualStyleBackColor = true;
 			this.btnCancel.Click += new System.EventHandler(this.btnCancel_Click);
+			// 
+			// lblID
+			// 
+			this.lblID.AutoSize = true;
+			this.lblID.Location = new System.Drawing.Point(13, 370);
+			this.lblID.Name = "lblID";
+			this.lblID.Size = new System.Drawing.Size(21, 13);
+			this.lblID.TabIndex = 4;
+			this.lblID.Text = "ID:";
+			// 
+			// txtID
+			// 
+			this.txtID.Location = new System.Drawing.Point(40, 368);
+			this.txtID.Maximum = 100000;
+			this.txtID.Minimum = 0;
+			this.txtID.Name = "txtID";
+			this.txtID.Size = new System.Drawing.Size(88, 20);
+			this.txtID.TabIndex = 3;
+			this.mainToolTip.SetToolTip(this.txtID, "The number of orange pegs the player must clear.");
 			// 
 			// txtBalls
 			// 
@@ -967,24 +966,29 @@
 			this.txtGuide.TabIndex = 2;
 			this.txtGuide.Tag = "PN";
 			// 
-			// txtID
+			// txtGravityMod
 			// 
-			this.txtID.Location = new System.Drawing.Point(40, 368);
-			this.txtID.Maximum = 100000;
-			this.txtID.Minimum = 0;
-			this.txtID.Name = "txtID";
-			this.txtID.Size = new System.Drawing.Size(88, 20);
-			this.txtID.TabIndex = 3;
-			this.mainToolTip.SetToolTip(this.txtID, "The number of orange pegs the player must clear.");
+			this.txtGravityMod.Location = new System.Drawing.Point(115, 19);
+			this.txtGravityMod.Maximum = 10D;
+			this.txtGravityMod.Minimum = -10D;
+			this.txtGravityMod.Name = "txtGravityMod";
+			this.txtGravityMod.Size = new System.Drawing.Size(125, 20);
+			this.txtGravityMod.TabIndex = 1;
+			this.txtGravityMod.Tag = "PN";
+			this.mainToolTip.SetToolTip(this.txtGravityMod, "The gravity multiplier.");
+			this.txtGravityMod.Value = 1D;
 			// 
-			// lblID
+			// txtProjSpeedMod
 			// 
-			this.lblID.AutoSize = true;
-			this.lblID.Location = new System.Drawing.Point(13, 370);
-			this.lblID.Name = "lblID";
-			this.lblID.Size = new System.Drawing.Size(21, 13);
-			this.lblID.TabIndex = 4;
-			this.lblID.Text = "ID:";
+			this.txtProjSpeedMod.Location = new System.Drawing.Point(115, 45);
+			this.txtProjSpeedMod.Maximum = 10D;
+			this.txtProjSpeedMod.Minimum = 0D;
+			this.txtProjSpeedMod.Name = "txtProjSpeedMod";
+			this.txtProjSpeedMod.Size = new System.Drawing.Size(125, 20);
+			this.txtProjSpeedMod.TabIndex = 3;
+			this.txtProjSpeedMod.Tag = "PN";
+			this.mainToolTip.SetToolTip(this.txtProjSpeedMod, "The ball projecting speed multiplier.");
+			this.txtProjSpeedMod.Value = 1D;
 			// 
 			// ChallengeDetailsForm
 			// 
@@ -1095,9 +1099,9 @@
 		private System.Windows.Forms.GroupBox grpVariousFlags;
 		private System.Windows.Forms.GroupBox grpModifications;
 		private System.Windows.Forms.Label lblGravityMod;
-		private System.Windows.Forms.TextBox txtGravityMod;
+		private RealTextBox txtGravityMod;
 		private System.Windows.Forms.Label lblProjSpeedMod;
-		private System.Windows.Forms.TextBox txtProjSpeedMod;
+		private RealTextBox txtProjSpeedMod;
 		private System.Windows.Forms.ToolTip mainToolTip;
 		private System.Windows.Forms.Button btnOK;
 		private System.Windows.Forms.Button btnCancel;

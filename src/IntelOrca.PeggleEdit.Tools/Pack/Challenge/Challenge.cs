@@ -30,7 +30,7 @@ namespace IntelOrca.PeggleEdit.Tools.Pack.Challenge
 		{
 			private string mLevel;
 			private string mOpponent;
-			private string mOpponentDifficulty;
+			private int mOpponentDifficulty;
 
 			public string Level
 			{
@@ -56,7 +56,7 @@ namespace IntelOrca.PeggleEdit.Tools.Pack.Challenge
 				}
 			}
 
-			public string OpponentDifficulty
+			public int OpponentDifficulty
 			{
 				get
 				{
@@ -216,6 +216,24 @@ namespace IntelOrca.PeggleEdit.Tools.Pack.Challenge
 			}
 			if (levelNames.Count != 0)
 				block.Properties.Add(new CFGProperty("Levels", levelNames.ToArray()));
+
+			if (mAgainstOpponents) {
+				//Opponents
+				List<string> opponents = new List<string>();
+				foreach (ChallengeLevel level in mLevels) {
+					opponents.Add(level.Opponent);
+				}
+				if (opponents.Count != 0)
+					block.Properties.Add(new CFGProperty("Opponents", opponents.ToArray()));
+
+				//Opponent difficulties
+				List<string> opponentDifficulties = new List<string>();
+				foreach (ChallengeLevel level in mLevels) {
+					opponentDifficulties.Add(level.OpponentDifficulty.ToString());
+				}
+				if (opponentDifficulties.Count != 0)
+					block.Properties.Add(new CFGProperty("OpponentDifficulty", opponentDifficulties.ToArray()));
+			}
 
 
 			//Powerups

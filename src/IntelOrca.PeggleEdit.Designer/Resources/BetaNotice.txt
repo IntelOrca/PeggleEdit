@@ -1,9 +1,0 @@
-The Peggle Level Editor allows you to create user-designed levels for the game Peggle Nights (available from PopCap Games http://www.popcap.com). Please note that the editor is still in beta stage which means the editor is not fully functional and may still contain bugs. Also take note of the following things:
-
-- There is no function for animated backgrounds, teleporters or polygon solid objects.
-- Curved bricks are not drawn curved in the editor but will be in Peggle.
-- Currently it only creates level packs that work with Peggle Nights and not single levels for Peggle or Peggle Nights adventure.
-- Opening levels created by PopCap may not be read correctly and is not recommended. This is due to the missing features and objects that still need to be implemented.
-- The author has no affiliation with PopCap Games, please leave comments or report any bugs to ted@brambles.org.
-
-Other than that you should be able to create some good levels. Save regularly and enjoy!

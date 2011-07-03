@@ -715,7 +715,7 @@ namespace IntelOrca.PeggleEdit.Designer
 		private void mnuChallengeProperties_Click(object sender, EventArgs e)
 		{
 			Challenge challenge = SelectedNode.Tag as Challenge;
-			ChallengeDetailsForm form = new ChallengeDetailsForm(challenge);
+			ChallengeDetailsForm form = new ChallengeDetailsForm(mPack, challenge);
 			if (form.ShowDialog() == DialogResult.OK) {
 				//Challenge name may have changed
 				SelectedNode.Text = challenge.Name;

@@ -91,7 +91,7 @@ namespace IntelOrca.PeggleEdit.Tools.Pack
 		public bool Save(string path)
 		{
 			bool successful = false;
-			//try {
+			try {
 
 				string pakFilename = Path.GetFileNameWithoutExtension(path);
 
@@ -131,9 +131,9 @@ namespace IntelOrca.PeggleEdit.Tools.Pack
 				pakFile.Save(path);
 
 				successful = true;
-			//} catch (Exception ex) {
-			//	MessageBox.Show(ex.Message, "Save Level Pack", MessageBoxButtons.OK, MessageBoxIcon.Error);
-			//}
+			} catch (Exception ex) {
+				MessageBox.Show(ex.Message, "Save Level Pack", MessageBoxButtons.OK, MessageBoxIcon.Error);
+			}
 
 			return successful;
 		}
