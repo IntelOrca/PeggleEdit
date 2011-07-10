@@ -25,6 +25,9 @@ One reason for this may be because you have not completed the required number of
   * You will get this error if you have a [Generators generator] in your level which hasn't been applied. [Generators] are PeggleEdit objects for designing levels, they are not understood by Peggle. If you have saved a level with an unapplied generator then the level will not be able to be loaded into Peggle.
   * If you still think there is a problem due to PeggleEdit, please submit a bug report with your level as an attachment on the issues page.
 
+=== When I start Peggle, I get an error about duplicate challenge ID ===
+This means that out of all the challenges in the game and in all the level packs, two of them have the same ID. Make sure that all your challenges have a unique ID. Picking an ID between 500 and 10000 should lower the chances of a clash.
+
 === Is there any faster way to repeatedly test my level? ===
 Because Peggle Nights stops its level packs from being overwritten, you have to keep closing and re-opening the game. Another way to test your level is to extract main.pak found in the PeggleNights folder and delete the .pak file so that Peggle Nights reads the individual files in the folder rather than in main.pak. Then you can export your level and save it over the top of an existing quick-play level such as "bjorn1.dat". Then you simply reload the level in the game.
 
