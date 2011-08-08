@@ -39,6 +39,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Levels\Children\LevelEntryFactory.cs" />
+    <Compile Include="Levels\LevelEntryCollection.cs" />
     <Compile Include="MathExt.cs" />
     <Compile Include="Levels\Children\Brick.cs" />
     <Compile Include="Levels\Children\BrickGenerator.cs" />
@@ -102,9 +103,6 @@
     </EmbeddedResource>
   </ItemGroup>
   <ItemGroup>
-    <None Include="Files\LevelEditor.cfg" />
-    <None Include="Files\LevelEditor_Choices.cfg" />
-    <None Include="Files\LevelEditor_Types.cfg" />
     <None Include="Resources\interface_collision.png" />
   </ItemGroup>
   <ItemGroup>

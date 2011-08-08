@@ -49,8 +49,12 @@ namespace IntelOrca.PeggleEdit.Tools.Pack
 				PakCollection pakFile = new PakCollection();
 				pakFile.Open(path);
 
-				string cfgFile = UTF8Encoding.ASCII.GetString(pakFile.GetRecord(pakFilename + ".cfg").Buffer);
-				ParseCFG(cfgFile);
+				PakRecord cfgRecord = GetCFGRecord(pakFilename, pakFile);
+				if (cfgRecord == null) {
+					throw new InvalidDataException("Unable to find a cfg file in the level pack.");
+				}
+
+				ParseCFG(UTF8Encoding.ASCII.GetString(cfgRecord.Buffer));
 
 				//Load levels
 				foreach (LevelInfo linfo in mLevelInfos) {
@@ -136,6 +140,23 @@ namespace IntelOrca.PeggleEdit.Tools.Pack
 			}
 
 			return successful;
+		}
+
+		private PakRecord GetCFGRecord(string pakFilename, PakCollection pakFile)
+		{
+			PakRecord cfgRecord = pakFile.GetRecord(pakFilename + ".cfg");
+			if (cfgRecord != null) {
+				return cfgRecord;
+			}
+
+			//Missing cfg or named wrong
+			PakRecord[] records = pakFile.GetRecords(String.Empty);
+			foreach (PakRecord record in records) {
+				if (Path.GetExtension(record.FileName) == ".cfg")
+					return record;
+			}
+
+			return null;
 		}
 
 		private byte[] GetLevelData(Level level)

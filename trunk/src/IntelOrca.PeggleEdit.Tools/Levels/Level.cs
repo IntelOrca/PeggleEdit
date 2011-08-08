@@ -39,7 +39,7 @@ namespace IntelOrca.PeggleEdit.Tools.Levels
 
 		LevelInfo mInfo = LevelInfo.DefaultInfo;
 		Image mBackground;
-		List<LevelEntry> mEntries = new List<LevelEntry>();
+		LevelEntryCollection mEntries = new LevelEntryCollection();
 
 		private bool mShowingBackground = true;
 		private bool mShowingInterface = true;
@@ -275,7 +275,7 @@ namespace IntelOrca.PeggleEdit.Tools.Levels
 
 		public LevelEntry[] GetObjectsIn(RectangleF rect)
 		{
-			List<LevelEntry> entries = new List<LevelEntry>();
+			LevelEntryCollection entries = new LevelEntryCollection();
 			foreach (LevelEntry le in mEntries) {
 				RectangleF pBounds = le.Bounds;
 				if (pBounds.IntersectsWith(rect)) {
@@ -320,7 +320,7 @@ namespace IntelOrca.PeggleEdit.Tools.Levels
 
 		public LevelEntry[] GetPegsIn(RectangleF rect)
 		{
-			List<LevelEntry> entries = new List<LevelEntry>();
+			LevelEntryCollection entries = new LevelEntryCollection();
 			foreach (LevelEntry le in mEntries) {
 				if (le.HasPegInfo) {
 					RectangleF pBounds = new RectangleF(le.X - 10, le.Y - 10, 20, 20);
@@ -404,7 +404,7 @@ namespace IntelOrca.PeggleEdit.Tools.Levels
 			}
 		}
 
-		public List<LevelEntry> Entries
+		public LevelEntryCollection Entries
 		{
 			get
 			{

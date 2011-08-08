@@ -20,6 +20,7 @@ using System.Drawing;
 using System.Runtime.InteropServices;
 using System.Windows.Forms;
 using IntelOrca.PeggleEdit.Designer.Properties;
+using IntelOrca.PeggleEdit.Tools.Levels;
 using IntelOrca.PeggleEdit.Tools.Levels.Children;
 
 namespace IntelOrca.PeggleEdit.Designer
@@ -32,8 +33,8 @@ namespace IntelOrca.PeggleEdit.Designer
 		ListBox mList;
 		bool mSuspendChangeEvent;
 
-		List<LevelEntry> mEntries = new List<LevelEntry>();
-		List<LevelEntry> mSelectedEntries = new List<LevelEntry>();
+		LevelEntryCollection mEntries = new LevelEntryCollection();
+		LevelEntryCollection mSelectedEntries = new LevelEntryCollection();
 
 		public EntryListToolWindow(MainMDIForm parent)
 		{
