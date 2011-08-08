@@ -34,11 +34,11 @@ namespace IntelOrca.PeggleEdit.Designer
 
 		private Stack<LevelEntry[]> mHistory = new Stack<LevelEntry[]>();
 
-		private List<LevelEntry> mOldSelectedEntries = new List<LevelEntry>();
-		private List<LevelEntry> mSelectedEntries = new List<LevelEntry>();
+		private LevelEntryCollection mOldSelectedEntries = new LevelEntryCollection();
+		private LevelEntryCollection mSelectedEntries = new LevelEntryCollection();
 		private List<PointF> mObjectPoints = new List<PointF>();
 
-		private List<LevelEntry> mCopiedEntries = new List<LevelEntry>();
+		private LevelEntryCollection mCopiedEntries = new LevelEntryCollection();
 
 		public event EventHandler UpdatedRedrawed;
 		public event EventHandler SelectionChanged;
@@ -53,9 +53,9 @@ namespace IntelOrca.PeggleEdit.Designer
 
 		#region Editing and Selecting
 
-		public List<LevelEntry> GetSelectedObjectsInZOrder()
+		public LevelEntryCollection GetSelectedObjectsInZOrder()
 		{
-			List<LevelEntry> objects = new List<LevelEntry>();
+			LevelEntryCollection objects = new LevelEntryCollection();
 			foreach (LevelEntry le in Level.Entries) {
 				if (!mSelectedEntries.Contains(le))
 					continue;
@@ -66,9 +66,9 @@ namespace IntelOrca.PeggleEdit.Designer
 			return objects;
 		}
 
-		public List<LevelEntry> GetSelectedObjects()
+		public LevelEntryCollection GetSelectedObjects()
 		{
-			List<LevelEntry> objects = new List<LevelEntry>();
+			LevelEntryCollection objects = new LevelEntryCollection();
 			foreach (LevelEntry le in mSelectedEntries) {
 				objects.Add(le);
 			}
@@ -78,7 +78,7 @@ namespace IntelOrca.PeggleEdit.Designer
 
 		public void CreateUndoPoint()
 		{
-			List<LevelEntry> copies = new List<LevelEntry>();
+			LevelEntryCollection copies = new LevelEntryCollection();
 			foreach (LevelEntry le in mLevel.Entries) {
 				copies.Add((LevelEntry)le.Clone());
 			}
@@ -278,7 +278,7 @@ namespace IntelOrca.PeggleEdit.Designer
 		public void MoveObjects(float x, float y)
 		{
 			if (x != 0 || y != 0) {
-				List<LevelEntry> LevelObjects = GetSelectedObjects();
+				LevelEntryCollection LevelObjects = GetSelectedObjects();
 
 				if (LevelObjects.Count == 0)
 					return;
@@ -302,7 +302,7 @@ namespace IntelOrca.PeggleEdit.Designer
 			RectangleF threshold = RectangleF.Empty;
 			float threshold_value = 4.0f;
 
-			List<LevelEntry> objects = GetSelectedObjects();
+			LevelEntryCollection objects = GetSelectedObjects();
 			foreach (LevelEntry le in objects) {
 				Brick b = le as Brick;
 				if (b == null)
@@ -324,7 +324,7 @@ namespace IntelOrca.PeggleEdit.Designer
 
 		public void RotateBricks(float angle)
 		{
-			List<LevelEntry> objects = GetSelectedObjects();
+			LevelEntryCollection objects = GetSelectedObjects();
 			if (objects.Count == 0)
 				return;
 
@@ -362,7 +362,7 @@ namespace IntelOrca.PeggleEdit.Designer
 				return;
 			}
 
-			List<LevelEntry> objects = new List<LevelEntry>(GetSelectedObjects());
+			LevelEntryCollection objects = new LevelEntryCollection(GetSelectedObjects());
 			if (objects.Count == 1) {
 				if (objects[0] is Brick) {
 					CreateUndoPoint();
@@ -422,7 +422,7 @@ namespace IntelOrca.PeggleEdit.Designer
 		{
 			CreateUndoPoint();
 
-			List<LevelEntry> objects = new List<LevelEntry>(GetSelectedObjects());
+			LevelEntryCollection objects = new LevelEntryCollection(GetSelectedObjects());
 			if (objects.Count < 2)
 				return;
 
@@ -452,7 +452,7 @@ namespace IntelOrca.PeggleEdit.Designer
 		{
 			CreateUndoPoint();
 
-			List<LevelEntry> objects = new List<LevelEntry>(GetSelectedObjects());
+			LevelEntryCollection objects = new LevelEntryCollection(GetSelectedObjects());
 			if (objects.Count < 2)
 				return;
 
@@ -476,7 +476,7 @@ namespace IntelOrca.PeggleEdit.Designer
 
 		public void AlignObjectXs()
 		{
-			List<LevelEntry> objects = GetSelectedObjects();
+			LevelEntryCollection objects = GetSelectedObjects();
 
 			if (objects.Count < 2)
 				return;
@@ -493,7 +493,7 @@ namespace IntelOrca.PeggleEdit.Designer
 
 		public void AlignObjectYs()
 		{
-			List<LevelEntry> objects = GetSelectedObjects();
+			LevelEntryCollection objects = GetSelectedObjects();
 
 			if (objects.Count < 2)
 				return;
@@ -510,7 +510,7 @@ namespace IntelOrca.PeggleEdit.Designer
 
 		public void SpaceObjectXsEqually()
 		{
-			List<LevelEntry> objects = GetSelectedObjects();
+			LevelEntryCollection objects = GetSelectedObjects();
 
 			if (objects.Count < 3)
 				return;
@@ -532,7 +532,7 @@ namespace IntelOrca.PeggleEdit.Designer
 
 		public void SpaceObjectYsEqually()
 		{
-			List<LevelEntry> objects = GetSelectedObjects();
+			LevelEntryCollection objects = GetSelectedObjects();
 
 			if (objects.Count < 3)
 				return;
@@ -554,7 +554,7 @@ namespace IntelOrca.PeggleEdit.Designer
 
 		public void BringObjectsForward()
 		{
-			List<LevelEntry> objs = GetSelectedObjectsInZOrder();
+			LevelEntryCollection objs = GetSelectedObjectsInZOrder();
 
 			foreach (LevelEntry obj in objs) {
 				int index = mLevel.Entries.IndexOf(obj);
@@ -579,7 +579,7 @@ namespace IntelOrca.PeggleEdit.Designer
 
 		public void SendObjectsBackward()
 		{
-			List<LevelEntry> objs = GetSelectedObjectsInZOrder();
+			LevelEntryCollection objs = GetSelectedObjectsInZOrder();
 
 			foreach (LevelEntry obj in objs) {
 				int index = mLevel.Entries.IndexOf(obj);
@@ -604,7 +604,7 @@ namespace IntelOrca.PeggleEdit.Designer
 
 		public void BringObjectsToFront()
 		{
-			List<LevelEntry> objs = GetSelectedObjectsInZOrder();
+			LevelEntryCollection objs = GetSelectedObjectsInZOrder();
 			//objs.Reverse();
 
 			foreach (LevelEntry obj in objs) {
@@ -621,7 +621,7 @@ namespace IntelOrca.PeggleEdit.Designer
 		public void SendObjectsToBack()
 		{
 			//Reverse the order so that selected objects maintain their inner z order
-			List<LevelEntry> objs = GetSelectedObjectsInZOrder();
+			LevelEntryCollection objs = GetSelectedObjectsInZOrder();
 			objs.Reverse();
 
 			foreach (LevelEntry obj in objs) {
@@ -675,7 +675,7 @@ namespace IntelOrca.PeggleEdit.Designer
 		public void RemoveOffscreenObjects()
 		{
 			bool firstOne = true;
-			List<LevelEntry> removes = new List<LevelEntry>();
+			LevelEntryCollection removes = new LevelEntryCollection();
 			RectangleF insideRect = RectangleF.FromLTRB(-Level.DrawAdjustX, -Level.DrawAdjustY, 800 - Level.DrawAdjustX, 600 - Level.DrawAdjustY);
 			foreach (LevelEntry o in mLevel.Entries) {
 				PointF pegPnt = new PointF(o.X, o.Y);
@@ -929,7 +929,7 @@ namespace IntelOrca.PeggleEdit.Designer
 
 		[Browsable(false)]
 		[DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
-		public List<LevelEntry> SelectedEntries
+		public LevelEntryCollection SelectedEntries
 		{
 			get
 			{

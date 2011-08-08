@@ -963,7 +963,7 @@ namespace IntelOrca.PeggleEdit.Designer
 				return;
 
 			//Check if there is only one peg selected
-			List<LevelEntry> objs = LevelEditor.GetSelectedObjects();
+			LevelEntryCollection objs = LevelEditor.GetSelectedObjects();
 			if (objs.Count != 1) {
 				MessageBox.Show("You must have only one movement peg selected.");
 				return;
@@ -991,7 +991,7 @@ namespace IntelOrca.PeggleEdit.Designer
 				return;
 			}
 
-			List<LevelEntry> entries = new List<LevelEntry>();
+			LevelEntryCollection entries = new LevelEntryCollection();
 			entries.Add((LevelEntry)objs[0]);
 
 			//Duplicate the peg
