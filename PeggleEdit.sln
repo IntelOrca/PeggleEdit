@@ -1,0 +1,26 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio 2012
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "IntelOrca.PeggleEdit.Tools", "IntelOrca.PeggleEdit.Tools\IntelOrca.PeggleEdit.Tools.csproj", "{02DFDF7C-8E6A-4C56-BB5C-804623270233}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "IntelOrca.PeggleEdit.Designer", "IntelOrca.PeggleEdit.Designer\IntelOrca.PeggleEdit.Designer.csproj", "{2C20142E-D2E7-4EC9-BDF2-8B46DD0E685C}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{02DFDF7C-8E6A-4C56-BB5C-804623270233}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{02DFDF7C-8E6A-4C56-BB5C-804623270233}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{02DFDF7C-8E6A-4C56-BB5C-804623270233}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{02DFDF7C-8E6A-4C56-BB5C-804623270233}.Release|Any CPU.Build.0 = Release|Any CPU
+		{2C20142E-D2E7-4EC9-BDF2-8B46DD0E685C}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{2C20142E-D2E7-4EC9-BDF2-8B46DD0E685C}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{2C20142E-D2E7-4EC9-BDF2-8B46DD0E685C}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{2C20142E-D2E7-4EC9-BDF2-8B46DD0E685C}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+EndGlobal

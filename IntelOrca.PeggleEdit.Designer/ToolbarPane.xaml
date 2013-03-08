@@ -1,0 +1,165 @@
+﻿<UserControl x:Class="IntelOrca.PeggleEdit.Designer.ToolbarPane"
+             x:ClassModifier="internal"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:r="clr-namespace:System.Windows.Controls.Ribbon;assembly=System.Windows.Controls.Ribbon"
+             mc:Ignorable="d" >
+    <r:Ribbon Margin="0,-23,0,0">
+        <r:Ribbon.ApplicationMenu>
+            <r:RibbonApplicationMenu Label="File">
+                <r:RibbonApplicationMenu.SmallImageSource>
+                    <DrawingImage>
+                        <DrawingImage.Drawing>
+                            <GlyphRunDrawing ForegroundBrush="White">
+                                <GlyphRunDrawing.GlyphRun>
+                                    <GlyphRun
+                                                CaretStops="{x:Null}" 
+                                                ClusterMap="{x:Null}" 
+                                                IsSideways="False"
+                                                GlyphOffsets="{x:Null}"
+                                                GlyphIndices="41 76 79 72"
+                                                FontRenderingEmSize="12"
+                                                DeviceFontName="{x:Null}"
+                                                AdvanceWidths="5.859375 2.90625 2.90625 6.275390625">
+                                        <GlyphRun.GlyphTypeface>
+                                            <GlyphTypeface FontUri="C:\WINDOWS\Fonts\SEGOEUI.TTF"/>
+                                        </GlyphRun.GlyphTypeface>
+                                    </GlyphRun>
+                                </GlyphRunDrawing.GlyphRun>
+                            </GlyphRunDrawing>
+                        </DrawingImage.Drawing>
+                    </DrawingImage>
+                </r:RibbonApplicationMenu.SmallImageSource>
+                <r:RibbonApplicationMenuItem Header="New"/>
+                <r:RibbonApplicationMenuItem Header="Open"/>
+                <r:RibbonApplicationMenuItem Header="Save"/>
+                <r:RibbonApplicationMenuItem Header="Save as"/>
+                <r:RibbonSeparator />
+                <r:RibbonApplicationMenuItem Header="Exit"/>
+                <r:RibbonApplicationMenu.AuxiliaryPaneContent>
+                    <Grid MinHeight="500">
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto" />
+                            <RowDefinition Height="5" />
+                            <RowDefinition Height="*" />
+                        </Grid.RowDefinitions>
+                        <r:RibbonSeparator Grid.Row="0" Label="Recent Documents"/>
+                        <ItemsControl Grid.Row="2">
+                            <Border x:Name="MainBorder" 
+                                        BorderThickness="1"
+                                        Padding="5,2,5,2">
+                                <Grid>
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="Auto" />
+                                        <ColumnDefinition Width="5" />
+                                        <ColumnDefinition Width="*" />
+                                        <ColumnDefinition Width="Auto" />
+                                    </Grid.ColumnDefinitions>
+                                    <TextBlock Grid.Column="0" Text="{Binding Index}" TextDecorations="Underline" />
+                                    <TextBlock Grid.Column="2" Text="{Binding Label}" />
+                                </Grid>
+                            </Border>
+                        </ItemsControl>
+                    </Grid>
+                </r:RibbonApplicationMenu.AuxiliaryPaneContent>
+            </r:RibbonApplicationMenu>
+        </r:Ribbon.ApplicationMenu>
+        <r:RibbonTab Header="Home">
+            <r:RibbonGroup Header="Clipboard">
+                <r:RibbonButton Label="Paste" LargeImageSource="Images/Icons/x32/clipboard_paste.png" >
+                </r:RibbonButton>
+                <r:RibbonButton Label="Cut" SmallImageSource="Images/Icons/x16/clipboard_cut.png" />
+                <r:RibbonButton Label="Copy" SmallImageSource="Images/Icons/x16/clipboard_copy.png" />
+                <r:RibbonButton Label="Delete" SmallImageSource="Images/Icons/x16/clipboard_delete.png" />
+            </r:RibbonGroup>
+            <r:RibbonGroup Header="Alignment">
+                <r:RibbonControlGroup Margin="2,0,0,0">
+                    <r:RibbonButton SmallImageSource="Images/Icons/x16/alignment_align_horizontally.png" />
+                    <r:RibbonButton SmallImageSource="Images/Icons/x16/alignment_align_vertically.png" />
+                    <r:RibbonButton SmallImageSource="Images/Icons/x16/alignment_space_horizontally.png" />
+                    <r:RibbonButton SmallImageSource="Images/Icons/x16/alignment_space_vertically.png" />
+                </r:RibbonControlGroup>
+                <r:RibbonControlGroup BorderBrush="#00000000">
+                    <r:RibbonControlGroup Margin="0,0,1,0">
+                        <r:RibbonButton SmallImageSource="Images/Icons/x16/alignment_flip_horizontally.png" />
+                        <r:RibbonButton SmallImageSource="Images/Icons/x16/alignment_flip_vertically.png" />
+                    </r:RibbonControlGroup>
+                    <r:RibbonControlGroup>
+                        <r:RibbonButton SmallImageSource="Images/Icons/x16/alignment_rotate_acw.png" />
+                        <r:RibbonButton SmallImageSource="Images/Icons/x16/alignment_rotate_cw.png" />
+                    </r:RibbonControlGroup>
+                </r:RibbonControlGroup>
+            </r:RibbonGroup>
+            <r:RibbonGroup Header="Z Order">
+                <r:RibbonButton Label="Bring Forwards" LargeImageSource="Images/Icons/x32/zorder_bring_forward.png"/>
+                <r:RibbonButton Label="Send backwards" LargeImageSource="Images/Icons/x32/zorder_send_backward.png"/>
+                <r:RibbonButton Label="Bring to Front" LargeImageSource="Images/Icons/x32/zorder_bring_to_front.png"/>
+                <r:RibbonButton Label="Send to Back" LargeImageSource="Images/Icons/x32/zorder_send_to_back.png"/>
+            </r:RibbonGroup>
+            <r:RibbonGroup Header="Launch Peggle">
+                <r:RibbonButton Label="Deluxe" LargeImageSource="Images/Icons/x32/launch_peggle_deluxe.png"/>
+                <r:RibbonButton Label="Nights" LargeImageSource="Images/Icons/x32/launch_peggle_nights.png"/>
+            </r:RibbonGroup>
+        </r:RibbonTab>
+        <r:RibbonTab Header="Tools">
+            <r:RibbonGroup Header="Tools">
+                <r:RibbonButton Label="Select" LargeImageSource="Images/Icons/x32/tools_select.png"/>
+                <r:RibbonButton Label="Peg" LargeImageSource="Images/Icons/x32/tools_peg.png"/>
+                <r:RibbonButton Label="Brick" LargeImageSource="Images/Icons/x32/tools_brick.png"/>
+                <r:RibbonButton Label="Circle" LargeImageSource="Images/Icons/x32/tools_circle.png"/>
+                <r:RibbonButton Label="Polygon" LargeImageSource="Images/Icons/x32/tools_polygon.png"/>
+                <r:RibbonButton Label="Rod" LargeImageSource="Images/Icons/x32/tools_rod.png"/>
+                <r:RibbonButton Label="Teleport" LargeImageSource="Images/Icons/x32/tools_teleport.png"/>
+                <r:RibbonButton Label="Emitter" LargeImageSource="Images/Icons/x32/tools_emitter.png"/>
+                <r:RibbonMenuButton Label="Generator" LargeImageSource="Images/Icons/x32/tools_generator.png">
+                    <r:RibbonSplitMenuItem Header="Peg generator" ImageSource="Images/Icons/x16/tools_generator_peg.png" />
+                    <r:RibbonSplitMenuItem Header="Brick generator" ImageSource="Images/Icons/x16/tools_generator_brick.png" />
+                </r:RibbonMenuButton>
+            </r:RibbonGroup>
+            <r:RibbonGroup Header="Functions">
+                <r:RibbonButton Label="Apply" LargeImageSource="Images/Icons/x32/tools_apply.png"/>
+                <r:RibbonButton Label="Script" LargeImageSource="Images/Icons/x32/tools_script.png"/>
+            </r:RibbonGroup>
+            <r:RibbonGroup Header="Remove">
+                <r:RibbonMenuButton Label="Remove" LargeImageSource="Images/Icons/x32/remove_remove_peg.png">
+                    <r:RibbonSplitMenuItem Header="Duplicate pegs" />
+                    <r:RibbonSplitMenuItem Header="Offscreen pegs" />
+                </r:RibbonMenuButton>
+            </r:RibbonGroup>
+        </r:RibbonTab>
+        <r:RibbonTab Header="Object">
+            <r:RibbonGroup Header="Properties">
+                <r:RibbonButton Label="Relocate" LargeImageSource="Images/Icons/x32/properties_relocate.png"/>
+            </r:RibbonGroup>
+            <r:RibbonGroup Header="Movement">
+                <r:RibbonButton Label="Type" LargeImageSource="Images/Icons/x32/properties_relocate.png"/>
+                <r:RibbonButton Label="Phase" LargeImageSource="Images/Icons/x32/movement_phase.png"/>
+                <r:RibbonButton Label="Duplicate &amp; Phase" LargeImageSource="Images/Icons/x32/movement_duplicate_and_phase.png"/>
+                <r:RibbonButton Label="Link sub-movements" LargeImageSource="Images/Icons/x32/movement_link_sub_movements.png"/>
+            </r:RibbonGroup>
+        </r:RibbonTab>
+        <r:RibbonTab Header="View">
+            <r:RibbonGroup Header="Show / Hide">
+                <r:RibbonCheckBox Label="Background"/>
+                <r:RibbonCheckBox Label="Interface"/>
+                <r:RibbonCheckBox Label="Objects"/>
+                <r:RibbonCheckBox Label="Collision"/>
+                <r:RibbonCheckBox Label="Preview"/>
+            </r:RibbonGroup>
+            <r:RibbonGroup Header="Window">
+                <r:RibbonButton Label="Pack Explorer" LargeImageSource="Images/Icons/x32/window_pack_explorer.png"/>
+                <r:RibbonButton Label="Properties" LargeImageSource="Images/Icons/x32/window_properties.png"/>
+                <r:RibbonButton Label="Entry" LargeImageSource="Images/Icons/x32/window_entry.png"/>
+            </r:RibbonGroup>
+        </r:RibbonTab>
+        <r:RibbonTab Header="Help">
+            <r:RibbonGroup>
+                <r:RibbonButton Label="Readme" LargeImageSource="Images/Icons/x32/help_readme.png"/>
+                <r:RibbonButton Label="Website" LargeImageSource="Images/Icons/x32/help_about.png"/>
+                <r:RibbonButton Label="About" LargeImageSource="Images/Icons/x32/help_about.png"/>
+            </r:RibbonGroup>
+        </r:RibbonTab>
+    </r:Ribbon>
+</UserControl>

@@ -1,0 +1,211 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <Import Project="$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props" Condition="Exists('$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props')" />
+  <PropertyGroup>
+    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
+    <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
+    <ProjectGuid>{2C20142E-D2E7-4EC9-BDF2-8B46DD0E685C}</ProjectGuid>
+    <OutputType>WinExe</OutputType>
+    <AppDesignerFolder>Properties</AppDesignerFolder>
+    <RootNamespace>IntelOrca.PeggleEdit.Designer</RootNamespace>
+    <AssemblyName>IntelOrca.PeggleEdit.Designer</AssemblyName>
+    <TargetFrameworkVersion>v4.5</TargetFrameworkVersion>
+    <FileAlignment>512</FileAlignment>
+    <ProjectTypeGuids>{60dc8134-eba5-43b8-bcc9-bb4bc16c2548};{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}</ProjectTypeGuids>
+    <WarningLevel>4</WarningLevel>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
+    <PlatformTarget>AnyCPU</PlatformTarget>
+    <DebugSymbols>true</DebugSymbols>
+    <DebugType>full</DebugType>
+    <Optimize>false</Optimize>
+    <OutputPath>bin\Debug\</OutputPath>
+    <DefineConstants>DEBUG;TRACE</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+    <AllowUnsafeBlocks>false</AllowUnsafeBlocks>
+    <Prefer32Bit>true</Prefer32Bit>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
+    <PlatformTarget>AnyCPU</PlatformTarget>
+    <DebugType>pdbonly</DebugType>
+    <Optimize>true</Optimize>
+    <OutputPath>bin\Release\</OutputPath>
+    <DefineConstants>TRACE</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+  </PropertyGroup>
+  <ItemGroup>
+    <Reference Include="Microsoft.Windows.Shell, Version=3.5.41019.1, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL" />
+    <Reference Include="System" />
+    <Reference Include="System.Activities.Presentation" />
+    <Reference Include="System.Data" />
+    <Reference Include="System.Windows.Controls.Ribbon" />
+    <Reference Include="System.Xml" />
+    <Reference Include="Microsoft.CSharp" />
+    <Reference Include="System.Core" />
+    <Reference Include="System.Xml.Linq" />
+    <Reference Include="System.Data.DataSetExtensions" />
+    <Reference Include="System.Xaml">
+      <RequiredTargetFramework>4.0</RequiredTargetFramework>
+    </Reference>
+    <Reference Include="UIAutomationProvider" />
+    <Reference Include="UIAutomationTypes" />
+    <Reference Include="WindowsBase" />
+    <Reference Include="PresentationCore" />
+    <Reference Include="PresentationFramework" />
+  </ItemGroup>
+  <ItemGroup>
+    <ApplicationDefinition Include="App.xaml">
+      <Generator>MSBuild:Compile</Generator>
+      <SubType>Designer</SubType>
+    </ApplicationDefinition>
+    <Compile Include="DisplayOptions.cs" />
+    <Compile Include="Editor\BrickEditorObject.cs" />
+    <Compile Include="Editor\CircleEditorObject.cs" />
+    <Compile Include="EditorContext.cs" />
+    <Compile Include="Editor\EditorObject.cs" />
+    <Compile Include="Editor\EditorObjectFactory.cs" />
+    <Compile Include="Editor\PolygonEditorObject.cs" />
+    <Compile Include="LevelEditorPane.xaml.cs">
+      <DependentUpon>LevelEditorPane.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="StatusbarPane.xaml.cs">
+      <DependentUpon>StatusbarPane.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="ToolbarPane.xaml.cs">
+      <DependentUpon>ToolbarPane.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="WpfPropertyGrid.cs" />
+    <Page Include="LevelEditorPane.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="MainWindow.xaml">
+      <Generator>MSBuild:Compile</Generator>
+      <SubType>Designer</SubType>
+    </Page>
+    <Compile Include="App.xaml.cs">
+      <DependentUpon>App.xaml</DependentUpon>
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="MainWindow.xaml.cs">
+      <DependentUpon>MainWindow.xaml</DependentUpon>
+      <SubType>Code</SubType>
+    </Compile>
+    <Page Include="PackExplorerPane.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="PropertiesPane.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="StatusbarPane.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="ToolbarPane.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Include="PackExplorerPane.xaml.cs">
+      <DependentUpon>PackExplorerPane.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="PropertiesPane.xaml.cs">
+      <DependentUpon>PropertiesPane.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="Properties\AssemblyInfo.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Properties\Resources.Designer.cs">
+      <AutoGen>True</AutoGen>
+      <DesignTime>True</DesignTime>
+      <DependentUpon>Resources.resx</DependentUpon>
+    </Compile>
+    <Compile Include="Properties\Settings.Designer.cs">
+      <AutoGen>True</AutoGen>
+      <DependentUpon>Settings.settings</DependentUpon>
+      <DesignTimeSharedInput>True</DesignTimeSharedInput>
+    </Compile>
+    <EmbeddedResource Include="Properties\Resources.resx">
+      <Generator>ResXFileCodeGenerator</Generator>
+      <LastGenOutput>Resources.Designer.cs</LastGenOutput>
+    </EmbeddedResource>
+    <None Include="Images\Icons\x16\Thumbs.db" />
+    <None Include="Properties\Settings.settings">
+      <Generator>SettingsSingleFileGenerator</Generator>
+      <LastGenOutput>Settings.Designer.cs</LastGenOutput>
+    </None>
+    <AppDesigner Include="Properties\" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="App.config" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\IntelOrca.PeggleEdit.Tools\IntelOrca.PeggleEdit.Tools.csproj">
+      <Project>{02dfdf7c-8e6a-4c56-bb5c-804623270233}</Project>
+      <Name>IntelOrca.PeggleEdit.Tools</Name>
+    </ProjectReference>
+  </ItemGroup>
+  <ItemGroup>
+    <Resource Include="Images\Icons\x16\alignment_align_horizontally.png" />
+    <Resource Include="Images\Icons\x16\alignment_align_vertically.png" />
+    <Resource Include="Images\Icons\x16\alignment_flip_horizontally.png" />
+    <Resource Include="Images\Icons\x16\alignment_flip_vertically.png" />
+    <Resource Include="Images\Icons\x16\alignment_rotate_acw.png" />
+    <Resource Include="Images\Icons\x16\alignment_rotate_cw.png" />
+    <Resource Include="Images\Icons\x16\alignment_space_horizontally.png" />
+    <Resource Include="Images\Icons\x16\alignment_space_vertically.png" />
+    <Resource Include="Images\Icons\x16\clipboard_copy.png" />
+    <Resource Include="Images\Icons\x16\clipboard_cut.png" />
+    <Resource Include="Images\Icons\x16\clipboard_delete.png" />
+    <Resource Include="Images\Icons\x16\tools_generator_brick.png" />
+    <Resource Include="Images\Icons\x16\tools_generator_peg.png" />
+    <Resource Include="Images\Icons\x32\clipboard_paste.png" />
+    <Resource Include="Images\Icons\x32\help_about.png" />
+    <Resource Include="Images\Icons\x32\help_readme.png" />
+    <Resource Include="Images\Icons\x32\launch_peggle_nights.png" />
+    <Resource Include="Images\Icons\x32\movement_duplicate_and_phase.png" />
+    <Resource Include="Images\Icons\x32\movement_link_sub_movements.png" />
+    <Resource Include="Images\Icons\x32\movement_phase.png" />
+    <Resource Include="Images\Icons\x32\movement_type.png" />
+    <Resource Include="Images\Icons\x32\properties_relocate.png" />
+    <Resource Include="Images\Icons\x32\remove_remove_peg.png" />
+    <Resource Include="Images\Icons\x32\tools_apply.png" />
+    <Resource Include="Images\Icons\x32\tools_brick.png" />
+    <Resource Include="Images\Icons\x32\tools_circle.png" />
+    <Resource Include="Images\Icons\x32\tools_emitter.png" />
+    <Resource Include="Images\Icons\x32\tools_generator.png" />
+    <Resource Include="Images\Icons\x32\tools_peg.png" />
+    <Resource Include="Images\Icons\x32\tools_polygon.png" />
+    <Resource Include="Images\Icons\x32\tools_rod.png" />
+    <Resource Include="Images\Icons\x32\tools_script.png" />
+    <Resource Include="Images\Icons\x32\tools_select.png" />
+    <Resource Include="Images\Icons\x32\tools_teleport.png" />
+    <Resource Include="Images\Icons\x32\window_entry.png" />
+    <Resource Include="Images\Icons\x32\window_pack_explorer.png" />
+    <Resource Include="Images\Icons\x32\window_properties.png" />
+    <Resource Include="Images\Icons\x32\zorder_bring_forward.png" />
+    <Resource Include="Images\Icons\x32\zorder_bring_to_front.png" />
+    <Resource Include="Images\Icons\x32\zorder_send_backward.png" />
+    <Resource Include="Images\Icons\x32\zorder_send_to_back.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <Resource Include="Images\Icons\x32\launch_peggle_deluxe.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <Resource Include="Images\hud.png" />
+    <Resource Include="Images\hud_collision.png" />
+  </ItemGroup>
+  <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
+  <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
+       Other similar extension points exist, see Microsoft.Common.targets.
+  <Target Name="BeforeBuild">
+  </Target>
+  <Target Name="AfterBuild">
+  </Target>
+  -->
+</Project>
