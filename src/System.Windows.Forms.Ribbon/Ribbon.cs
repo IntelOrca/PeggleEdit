@@ -811,12 +811,24 @@ namespace System.Windows.Forms
         {
             if (!(Site != null && Site.DesignMode))
             {
-                _mouseHook = new GlobalHook(GlobalHook.HookTypes.Mouse);
-                _mouseHook.MouseWheel += new MouseEventHandler(_mouseHook_MouseWheel);
-                _mouseHook.MouseDown += new MouseEventHandler(_mouseHook_MouseDown);
+                try
+                {
+                    _mouseHook = new GlobalHook(GlobalHook.HookTypes.Mouse);
+                    _mouseHook.MouseWheel += new MouseEventHandler(_mouseHook_MouseWheel);
+                    _mouseHook.MouseDown += new MouseEventHandler(_mouseHook_MouseDown);
+                }
+                catch
+                {
+                }
+                try
+                {
 
-                _keyboardHook = new GlobalHook(GlobalHook.HookTypes.Keyboard);
-                _keyboardHook.KeyDown += new KeyEventHandler(_keyboardHook_KeyDown);
+                    _keyboardHook = new GlobalHook(GlobalHook.HookTypes.Keyboard);
+                    _keyboardHook.KeyDown += new KeyEventHandler(_keyboardHook_KeyDown);
+                }
+                catch
+                {
+                }
             }
         }
 
