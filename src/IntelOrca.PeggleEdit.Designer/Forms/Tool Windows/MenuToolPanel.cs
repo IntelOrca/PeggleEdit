@@ -1246,7 +1246,7 @@ namespace IntelOrca.PeggleEdit.Designer
 
 		private static string PathShortener(string path, int length)
 		{
-			StringBuilder sb = new StringBuilder();
+			StringBuilder sb = new StringBuilder(capacity: length);
 			PathCompactPathEx(sb, path, length, 0);
 			return sb.ToString();
 		}
