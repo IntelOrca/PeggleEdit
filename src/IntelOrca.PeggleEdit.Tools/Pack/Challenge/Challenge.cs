@@ -172,10 +172,12 @@ namespace IntelOrca.PeggleEdit.Tools.Pack.Challenge
 
 
 			CFGProperty plevels = block.GetFirstProperty("Levels");
-			foreach (string v in plevels.Values) {
-				ChallengeLevel level = new ChallengeLevel();
-				level.Level = v;
-				mLevels.Add(level);
+			if (plevels != null) {
+				foreach (string v in plevels.Values) {
+					ChallengeLevel level = new ChallengeLevel();
+					level.Level = v;
+					mLevels.Add(level);
+				}
 			}
 		}
 
