@@ -1,0 +1,1 @@
+Circles are used for pegs, obstacles, foreground images and linking movement info. If circles have PegInfo they will ignore the image property and have peg behaviour. Otherwise if they do not have an image set, then a default image will be used. Normally a border colour (configurable in PeggleEdit) with a large ball image in the centre.

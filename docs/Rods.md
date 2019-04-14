@@ -1,0 +1,1 @@
+Rods are objects which are set with two co-ordinates. They are used to add a thin barrier that balls will bound off. Since rods cannot contain an image, thin Polygons may be used to achieve the desired effect.

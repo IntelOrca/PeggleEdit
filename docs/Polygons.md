@@ -1,0 +1,4 @@
+Polygons are objects which have a shape defined by points. Although polygons are used to create irregular shapes that the ball can collide with, they are also used to display foreground images or link movement objects and teleports together. [Circles](Circles.md) can also be used to perform these functions.
+
+## Foreground Images ##
+To create a moving image, polygons can be used with the collision property set to false, and have movement info applied to them. Sometimes when emitters are placed on levels, they emit particles over the background. Polygons can be used to place a foreground image that mimics the background over the top to give particles a 3D perspective.

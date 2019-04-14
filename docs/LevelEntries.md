@@ -1,0 +1,1 @@
+A level entry is an entry or object that can be stored in a level. All level entries have a set of generic properties such as **Visible**.
