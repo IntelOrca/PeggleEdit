@@ -1,0 +1,23 @@
+version: 0.4.4.{build}
+image:
+- Visual Studio 2017
+environment:
+  version: 0.4.4
+configuration: Release
+after_build:
+- cmd: >-
+    cd src\IntelOrca.PeggleEdit.Designer\bin\Release
+
+    7z a -tzip -mx9 -mtc=off -r ..\..\..\..\artefacts\peggleedit-v%version%.zip *.dll *.exe *.config > nul
+artifacts:
+- path: 'artefacts\peggleedit-v$(version).zip'
+deploy:
+  provider: GitHub
+  auth_token:
+    secure: 49K/y43epwh5Sb8uY1l/TbIFRPcEq6fraQaYGS0bgWQJfONznd6hCqPUCg7WSX16
+  artifact: artefacts\peggleedit-v$(version).zip
+  draft: true
+  prerelease: true
+  on:
+    branch: master
+    appveyor_repo_tag: true
