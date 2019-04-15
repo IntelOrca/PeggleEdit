@@ -26,11 +26,11 @@ namespace IntelOrca.PeggleEdit.Designer
 	{
 		public const bool AppBetaRelease = true;
 		public const string AppTitle = "PeggleEdit";
-		public const string AppVersion = "0.4.3 Beta";
+		public const string AppVersion = "0.4.4 Beta";
 		public const string AppVersionName = "Buzzard";
 		public const string AppAuthor = "Ted John";
-		public const string AppYear = "2010 - 11";
-		public const string AppWebsite = "http://tedtycoon.co.uk";
+		public const string AppYear = "2010-2019";
+		public const string AppWebsite = "http://intelorca.co.uk/PeggleEdit";
 
 		private static string _tempPath;
 
