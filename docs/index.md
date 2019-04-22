@@ -18,4 +18,3 @@
   * [Application Design](ApplicationDesign)
   * [PAK Format](PakFormat)
   * [Level Format](LevelFormat)
-* [Help Wanted](HelpWanted)
