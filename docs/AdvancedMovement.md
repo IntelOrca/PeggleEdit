@@ -23,35 +23,35 @@ What will happen now is that the object you created to "override" the second mov
 ## Step 1 ##
 Create a peg and select it.
 
-![http://tedtycoon.co.uk/peggle/images/advanced_movement/step1.png](http://tedtycoon.co.uk/peggle/images/advanced_movement/step1.png)
+![img/advanced-movement/step1.png](img/advanced-movement/step1.png)
 
 ## Step 2 ##
 Click the Object tab on the ribbon menu at the top of the main window. Then press the type button and select a movement type.
 
-![http://tedtycoon.co.uk/peggle/images/advanced_movement/step2.png](http://tedtycoon.co.uk/peggle/images/advanced_movement/step2.png)
+![img/advanced-movement/step2.png](img/advanced-movement/step2.png)
 
 ## Step 3 ##
 Then on the properties movement, find base movement under the Movement Info property of the peg. Click the ellipsis button to create another set of movement info properties for the first movement info.
 
-![http://tedtycoon.co.uk/peggle/images/advanced_movement/step3.png](http://tedtycoon.co.uk/peggle/images/advanced_movement/step3.png)
+![img/advanced-movement/step3.png](img/advanced-movement/step3.png)
 
 ## Step 4 ##
 
 The peg may change it's current position so you may need to set the anchor location of the first movement info to a low value such as (50, 0). This this essentially an offset to the base movement anchor.
 
-![http://tedtycoon.co.uk/peggle/images/advanced_movement/step4.png](http://tedtycoon.co.uk/peggle/images/advanced_movement/step4.png)
+![img/advanced-movement/step4.png](img/advanced-movement/step4.png)
 
 ## Step 5 ##
 Set the properties for the base movement info. Remember to set the movement type, the radius and the time period.
 
-![http://tedtycoon.co.uk/peggle/images/advanced_movement/step5.png](http://tedtycoon.co.uk/peggle/images/advanced_movement/step5.png)
+![img/advanced-movement/step5.png](img/advanced-movement/step5.png)
 
 ## Step 6 ##
 Now with the peg still selected and still on the object tab of the ribbon at the top of the main window. Click Link sub-movements.
 
-![http://tedtycoon.co.uk/peggle/images/advanced_movement/step6.png](http://tedtycoon.co.uk/peggle/images/advanced_movement/step6.png)
+![img/advanced-movement/step6.png](img/advanced-movement/step6.png)
 
 ## Step 7 ##
 Doing this will produce a white circle above the level. Although the circle is at this location for now, when you next re-open the level, the circle will have a location reset to (0, 0). The circle has visible and collision set to false so that the ball does not collide with it and you cannot see the circle in the game.
 
-![http://tedtycoon.co.uk/peggle/images/advanced_movement/step7.png](http://tedtycoon.co.uk/peggle/images/advanced_movement/step7.png)
+![img/advanced-movement/step7.png](img/advanced-movement/step7.png)

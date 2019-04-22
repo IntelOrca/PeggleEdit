@@ -9,4 +9,4 @@ Curved bricks are defined by sectors of a circle. When hovering over bricks in P
 
 **Sector angle** defines how curved the brick is.
 
-![http://tedtycoon.co.uk/peggle/images/brick_concept.png](http://tedtycoon.co.uk/peggle/images/brick_concept.png)
+![img/brick-concept.png](img/brick-concept.png)
