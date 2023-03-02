@@ -234,7 +234,7 @@ namespace IntelOrca.PeggleEdit.Tools.Pack
 			byte[] buffer;
 
 			//Load file
-			FileStream fs = new FileStream(filename, FileMode.Open);
+			FileStream fs = new FileStream(filename, FileMode.Open, FileAccess.Read);
 			length = (int)fs.Length;
 
 			//Create buffer
