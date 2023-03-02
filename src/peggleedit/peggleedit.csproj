@@ -2,12 +2,9 @@
   <PropertyGroup>
     <RootNamespace>IntelOrca.PeggleEdit.Designer</RootNamespace>
     <OutputType>WinExe</OutputType>
-    <TargetFramework>net472</TargetFramework>
     <UseWindowsForms>true</UseWindowsForms>
     <ApplicationIcon>orca.ico</ApplicationIcon>
     <Description>Creates and edits levels / level packs for PopCap Games's Peggle Nights.</Description>
-    <Copyright>Copyright © Ted John 2010-2023</Copyright>
-    <AssemblyVersion>0.5.0</AssemblyVersion>
     <ApplicationManifest>app.manifest</ApplicationManifest>
   </PropertyGroup>
   <ItemGroup>

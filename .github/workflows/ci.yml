@@ -1,0 +1,37 @@
+name: CI
+on: [push, pull_request]
+jobs:
+  build:
+    name: Build peggleedit
+    runs-on: windows-latest
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v3
+    - name: Setup .NET Core SDK
+      uses: actions/setup-dotnet@v1
+      with:
+        dotnet-version: '6.0.x'
+    - name: Restore
+      run: dotnet restore
+    - name: Build
+      run: dotnet build -c Release --no-restore
+    - name: Test
+      run: dotnet test --no-restore
+    - name: Publish
+      run: |
+        dotnet publish src/peggleedit -c Release -o out
+        cd out
+        cp ../LICENSE .
+        cp ../README.md .
+        7z a -tzip -mx9 -mtc=off -r ../peggleedit.zip *.dll *.exe *.config
+    - name: Upload artifacts
+      uses: actions/upload-artifact@v2
+      with:
+        name: peggleedit
+        path: peggleedit.zip
+    - name: Create release
+      uses: softprops/action-gh-release@v1
+      if: startsWith(github.ref, 'refs/tags/v')
+      with:
+        fail_on_unmatched_files: true
+        files: peggleedit.zip
