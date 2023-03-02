@@ -4,7 +4,7 @@ PeggleEdit is written in CSharp uses the .NET Framework. This allows PeggleEdit 
 # Main Assemblies #
 **IntelOrca.PeggleEdit.Tools** contains all the classes need to read and save levels and level packs, display the level, supply any client that uses the assembly to all the properties of the level and the entries.
 
-**IntelOrca.PeggleEdit.Designer** is the executable build of PeggleEdit which includes all the classes for designing and developing the levels. It includes the LevelEditor control and all the MDI components.
+**peggleedit** is the executable build of PeggleEdit which includes all the classes for designing and developing the levels. It includes the LevelEditor control and all the MDI components.
 
 # Other Assemblies #
 Other libraries are used to create PeggleEdit. PeggleEdit needs to be functional but it doesn't hurt to make it look nice and supply it with some more up to date controls. Thus other open source libraries are used.

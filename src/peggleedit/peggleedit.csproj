@@ -1,0 +1,39 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <RootNamespace>IntelOrca.PeggleEdit.Designer</RootNamespace>
+    <OutputType>WinExe</OutputType>
+    <TargetFramework>net472</TargetFramework>
+    <UseWindowsForms>true</UseWindowsForms>
+    <ApplicationIcon>orca.ico</ApplicationIcon>
+    <Description>Creates and edits levels / level packs for PopCap Games's Peggle Nights.</Description>
+    <Copyright>Copyright © Ted John 2010-2023</Copyright>
+    <AssemblyVersion>0.5.0</AssemblyVersion>
+    <ApplicationManifest>app.manifest</ApplicationManifest>
+  </PropertyGroup>
+  <ItemGroup>
+    <PackageReference Include="System.Text.Json" Version="7.0.2" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\Crom.Controls\Crom.Controls.csproj" />
+    <ProjectReference Include="..\IntelOrca.PeggleEdit.Tools\IntelOrca.PeggleEdit.Tools.csproj" />
+    <ProjectReference Include="..\System.Windows.Forms.Ribbon\System.Windows.Forms.Ribbon.csproj" />
+  </ItemGroup>
+  <ItemGroup>
+    <EmbeddedResource Update="Forms\AboutForm.resx">
+      <DependentUpon>AboutForm.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Update="Forms\ChallengeDetailsForm.resx">
+      <DependentUpon>ChallengeDetailsForm.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Update="Properties\Resources.resx">
+      <Generator>ResXFileCodeGenerator</Generator>
+      <LastGenOutput>Resources.Designer.cs</LastGenOutput>
+      <SubType>Designer</SubType>
+    </EmbeddedResource>
+    <Compile Update="Properties\Resources.Designer.cs">
+      <AutoGen>True</AutoGen>
+      <DependentUpon>Resources.resx</DependentUpon>
+      <DesignTime>True</DesignTime>
+    </Compile>
+  </ItemGroup>
+</Project>

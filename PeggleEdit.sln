@@ -1,7 +1,7 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 11.00
 # Visual Studio 2010
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "IntelOrca.PeggleEdit.Designer", "src\IntelOrca.PeggleEdit.Designer\IntelOrca.PeggleEdit.Designer.csproj", "{D08BD3D0-93E3-4993-83DD-750C8EF7BB9F}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "peggleedit", "src\peggleedit\peggleedit.csproj", "{D08BD3D0-93E3-4993-83DD-750C8EF7BB9F}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "IntelOrca.PeggleEdit.Tools", "src\IntelOrca.PeggleEdit.Tools\IntelOrca.PeggleEdit.Tools.csproj", "{02DFDF7C-8E6A-4C56-BB5C-804623270233}"
 EndProject
