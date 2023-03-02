@@ -20,6 +20,7 @@ using System.Drawing;
 using System.Drawing.Imaging;
 using System.IO;
 using System.Windows.Forms;
+using CSJ2K.Util;
 using IntelOrca.PeggleEdit.Tools.Pack;
 
 namespace IntelOrca.PeggleEdit.Tools
@@ -99,19 +100,21 @@ namespace IntelOrca.PeggleEdit.Tools
 			}
 		}
 
+		private static bool _registered;
 		public static bool ConvertJPEG2(PakRecord record, out byte[] dest, ImageFormat format)
 		{
-			string filename = Path.GetFileName(record.FileName);
-			string src = Path.Combine(TempDirectory, filename);
+			if (!_registered)
+			{
+				BitmapImageCreator.Register();
+				_registered = true;
+			}
+			var outputImage = CSJ2K.J2kImage.FromBytes(record.Buffer);
+			var bitmapImage = outputImage.As<Bitmap>();
 
-			if (!Directory.Exists(TempDirectory))
-				Directory.CreateDirectory(TempDirectory);
-
-			File.WriteAllBytes(src, record.Buffer);
-			bool successful = ConvertJPEG2(src, out dest, format);
-			File.Delete(src);
-
-			return successful;
+			var ms = new MemoryStream();
+			bitmapImage.Save(ms, format);
+			dest = ms.ToArray();
+			return true;
 		}
 
 		private static void CallJ2K(string src, string dest)

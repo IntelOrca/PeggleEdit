@@ -1,240 +1,35 @@
-﻿<?xml version="1.0" encoding="utf-8"?>
-<Project ToolsVersion="12.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+﻿<Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
-    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
-    <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
-    <ProjectGuid>{D08BD3D0-93E3-4993-83DD-750C8EF7BB9F}</ProjectGuid>
     <OutputType>WinExe</OutputType>
-    <AppDesignerFolder>Properties</AppDesignerFolder>
-    <RootNamespace>IntelOrca.PeggleEdit.Designer</RootNamespace>
-    <AssemblyName>IntelOrca.PeggleEdit.Designer</AssemblyName>
-    <TargetFrameworkVersion>v4.7.2</TargetFrameworkVersion>
-    <FileAlignment>512</FileAlignment>
+    <TargetFramework>net472</TargetFramework>
+    <UseWindowsForms>true</UseWindowsForms>
     <ApplicationIcon>orca.ico</ApplicationIcon>
-  </PropertyGroup>
-  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
-    <DebugSymbols>true</DebugSymbols>
-    <DebugType>full</DebugType>
-    <Optimize>false</Optimize>
-    <OutputPath>bin\Debug\</OutputPath>
-    <DefineConstants>DEBUG;TRACE</DefineConstants>
-    <ErrorReport>prompt</ErrorReport>
-    <WarningLevel>4</WarningLevel>
-    <Prefer32Bit>false</Prefer32Bit>
-  </PropertyGroup>
-  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
-    <DebugSymbols>true</DebugSymbols>
-    <DebugType>pdbonly</DebugType>
-    <Optimize>true</Optimize>
-    <OutputPath>bin\Release\</OutputPath>
-    <DefineConstants>TRACE</DefineConstants>
-    <ErrorReport>prompt</ErrorReport>
-    <WarningLevel>4</WarningLevel>
-    <Prefer32Bit>false</Prefer32Bit>
+    <Description>Creates and edits levels / level packs for PopCap Games's Peggle Nights.</Description>
+    <Copyright>Copyright © Ted John 2010-2023</Copyright>
+    <AssemblyVersion>0.4.4.0</AssemblyVersion>
+    <ApplicationManifest>app.manifest</ApplicationManifest>
   </PropertyGroup>
   <ItemGroup>
-    <Reference Include="System" />
-    <Reference Include="System.Drawing" />
-    <Reference Include="System.Windows.Forms" />
+    <ProjectReference Include="..\Crom.Controls\Crom.Controls.csproj" />
+    <ProjectReference Include="..\IntelOrca.PeggleEdit.Tools\IntelOrca.PeggleEdit.Tools.csproj" />
+    <ProjectReference Include="..\System.Windows.Forms.Ribbon\System.Windows.Forms.Ribbon.csproj" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="Forms\AboutForm.cs">
-      <SubType>Form</SubType>
-    </Compile>
-    <Compile Include="Forms\AboutForm.Designer.cs">
-      <DependentUpon>AboutForm.cs</DependentUpon>
-    </Compile>
-    <Compile Include="Forms\ChallengePageDetailsForm.cs">
-      <SubType>Form</SubType>
-    </Compile>
-    <Compile Include="Forms\ChallengePageDetailsForm.Designer.cs">
-      <DependentUpon>ChallengePageDetailsForm.cs</DependentUpon>
-    </Compile>
-    <Compile Include="Forms\Tool Windows\EntryListToolWindow.cs">
-      <SubType>Form</SubType>
-    </Compile>
-    <Compile Include="Level Editor\DrawEditorTool.cs" />
-    <Compile Include="Level Editor\EditorTool.cs" />
-    <Compile Include="Level Editor\SelectEditorTool.cs" />
-    <Compile Include="Misc\RealTextBox.cs">
-      <SubType>Component</SubType>
-    </Compile>
-    <Compile Include="Misc\LevelGen.cs" />
-    <Compile Include="Misc\IShortcutContainer.cs" />
-    <Compile Include="Forms\MainMDIForm.cs">
-      <SubType>Form</SubType>
-    </Compile>
-    <Compile Include="Forms\OptionsForm.cs">
-      <SubType>Form</SubType>
-    </Compile>
-    <Compile Include="Forms\OptionsForm.Designer.cs">
-      <DependentUpon>OptionsForm.cs</DependentUpon>
-    </Compile>
-    <Compile Include="Forms\Tool Windows\MenuToolPanel.cs">
-      <SubType>Component</SubType>
-    </Compile>
-    <Compile Include="Forms\Tool Windows\LevelToolWindow.cs">
-      <SubType>Form</SubType>
-    </Compile>
-    <Compile Include="Forms\Tool Windows\PackExplorerToolWindow.cs">
-      <SubType>Form</SubType>
-    </Compile>
-    <Compile Include="Forms\Tool Windows\PropertiesToolWindow.cs">
-      <SubType>Form</SubType>
-    </Compile>
-    <Compile Include="Misc\NumericTextBox.cs">
-      <SubType>Component</SubType>
-    </Compile>
-    <Compile Include="Misc\PeggleNightsStoryExtractor.cs" />
-    <Compile Include="Misc\WinAPI.cs" />
-    <Compile Include="Misc\ShortcutAction.cs" />
-    <Compile Include="Forms\ChallengeDetailsForm.cs">
-      <SubType>Form</SubType>
-    </Compile>
-    <Compile Include="Forms\ChallengeDetailsForm.Designer.cs">
-      <DependentUpon>ChallengeDetailsForm.cs</DependentUpon>
-    </Compile>
-    <Compile Include="Forms\InputForm.cs">
-      <SubType>Form</SubType>
-    </Compile>
-    <Compile Include="Forms\LevelDetailsForm.cs">
-      <SubType>Form</SubType>
-    </Compile>
-    <Compile Include="Forms\LevelDetailsForm.Designer.cs">
-      <DependentUpon>LevelDetailsForm.cs</DependentUpon>
-    </Compile>
-    <Compile Include="Level Editor\LevelEditor.cs">
-      <SubType>Component</SubType>
-    </Compile>
-    <Compile Include="Forms\PackDetailsForm.cs">
-      <SubType>Form</SubType>
-    </Compile>
-    <Compile Include="Forms\PackDetailsForm.Designer.cs">
-      <DependentUpon>PackDetailsForm.cs</DependentUpon>
-    </Compile>
-    <Compile Include="Misc\Program.cs" />
-    <Compile Include="Misc\Settings.cs" />
-    <Compile Include="Properties\AssemblyInfo.cs" />
-    <EmbeddedResource Include="Forms\AboutForm.resx">
+    <EmbeddedResource Update="Forms\AboutForm.resx">
       <DependentUpon>AboutForm.cs</DependentUpon>
     </EmbeddedResource>
-    <EmbeddedResource Include="Forms\ChallengeDetailsForm.resx">
+    <EmbeddedResource Update="Forms\ChallengeDetailsForm.resx">
       <DependentUpon>ChallengeDetailsForm.cs</DependentUpon>
     </EmbeddedResource>
-    <EmbeddedResource Include="Properties\Resources.resx">
+    <EmbeddedResource Update="Properties\Resources.resx">
       <Generator>ResXFileCodeGenerator</Generator>
       <LastGenOutput>Resources.Designer.cs</LastGenOutput>
       <SubType>Designer</SubType>
     </EmbeddedResource>
-    <Compile Include="Properties\Resources.Designer.cs">
+    <Compile Update="Properties\Resources.Designer.cs">
       <AutoGen>True</AutoGen>
       <DependentUpon>Resources.resx</DependentUpon>
       <DesignTime>True</DesignTime>
     </Compile>
-    <None Include="app.config" />
   </ItemGroup>
-  <ItemGroup>
-    <Content Include="orca.ico" />
-    <Content Include="Resources\anchor_point.png" />
-    <Content Include="Resources\Icons\16\bring_to_front_16.png" />
-    <Content Include="Resources\Icons\16\challenge_remove_16.png" />
-    <Content Include="Resources\Icons\16\challenge_add_16.png" />
-    <Content Include="Resources\Icons\16\down_16.png" />
-    <Content Include="Resources\Icons\16\folder_challenges_16.png" />
-    <Content Include="Resources\Icons\16\folder_images_16.png" />
-    <Content Include="Resources\Icons\16\folder_levels_16.png" />
-    <Content Include="Resources\Icons\16\image_16.png" />
-    <Content Include="Resources\Icons\16\level_16.png" />
-    <Content Include="Resources\Icons\16\pack_explorer_16.png" />
-    <Content Include="Resources\Icons\16\properties_16.png" />
-    <Content Include="Resources\Icons\16\send_to_back_16.png" />
-    <Content Include="Resources\Icons\16\up_16.png" />
-    <Content Include="Resources\Icons\32\bring_forward_32.png" />
-    <Content Include="Resources\Icons\32\bring_to_front_32.png" />
-    <Content Include="Resources\Icons\32\challenge_32.png" />
-    <Content Include="Resources\Icons\32\duplicate_and_phase.png" />
-    <Content Include="Resources\Icons\32\emitter_32.png" />
-    <Content Include="Resources\Icons\32\execute_32.png" />
-    <Content Include="Resources\Icons\32\link_sub_movements_32.png" />
-    <Content Include="Resources\Icons\32\orca_32.png" />
-    <Content Include="Resources\Icons\32\pack_explorer_32.png" />
-    <Content Include="Resources\Icons\32\peg_move_type_32.png" />
-    <Content Include="Resources\Icons\32\polygon_32.png" />
-    <Content Include="Resources\Icons\32\readme_32.png" />
-    <Content Include="Resources\Icons\32\rod_32.png" />
-    <Content Include="Resources\Icons\32\send_backward_32.png" />
-    <Content Include="Resources\Icons\32\send_to_back_32.png" />
-    <Content Include="Resources\Icons\32\spread_phase_32.png" />
-    <Content Include="Resources\Icons\32\teleport_32.png" />
-    <Content Include="Resources\interface_collision.png" />
-    <Content Include="Resources\orca_orb.png" />
-    <Content Include="Resources\rotate_acw.png" />
-    <None Include="Resources\PeggleNightsIcon.png" />
-    <None Include="Resources\Icons\32\material_32.png" />
-    <None Include="Resources\Icons\16\settings_16.png" />
-    <None Include="Resources\Icons\16\exit_16.png" />
-    <None Include="Resources\Icons\32\peg_circle_32.png" />
-    <None Include="Resources\Icons\32\script_32.png" />
-    <None Include="Resources\Icons\32\background_32.png" />
-    <None Include="Resources\Icons\32\remove_peg_32.png" />
-    <None Include="Resources\Icons\32\properties_32.png" />
-    <None Include="Resources\Icons\32\brick_32.png" />
-    <None Include="Resources\Icons\32\pointer_32.png" />
-    <None Include="Resources\Icons\32\peg_32.png" />
-    <None Include="Resources\Icons\32\remove_32.png" />
-    <None Include="Resources\Icons\32\filesaveas_32.png" />
-    <None Include="Resources\Icons\32\filesave_32.png" />
-    <None Include="Resources\Icons\32\fileopen_32.png" />
-    <None Include="Resources\Icons\32\filenew_32.png" />
-    <None Include="Resources\Icons\32\fileclose_32.png" />
-    <None Include="Resources\Icons\32\editpaste_32.png" />
-    <None Include="Resources\Icons\32\add_32.png" />
-    <None Include="Resources\Icons\32\fileimport_32.png" />
-    <None Include="Resources\Icons\32\fileexport_32.png" />
-    <None Include="Resources\Icons\32\insert_image_32.png" />
-    <None Include="Resources\brickIcon.png" />
-    <None Include="Resources\pegIcon.png" />
-    <None Include="Resources\pointer.png" />
-    <None Include="Resources\flip_vertically.png" />
-    <None Include="Resources\flip_horizontally.png" />
-    <None Include="Resources\space_horizontally.png" />
-    <None Include="Resources\space_vertically.png" />
-    <None Include="Resources\align_horizontally.png" />
-    <None Include="Resources\align_vertically.png" />
-    <None Include="Resources\peg.png" />
-    <None Include="Resources\interface.png" />
-    <None Include="Resources\brick.png" />
-    <None Include="Resources\add.png" />
-    <None Include="Resources\remove.png" />
-    <None Include="Resources\filesave.png" />
-    <None Include="Resources\fileopen.png" />
-    <None Include="Resources\insert_image.png" />
-    <None Include="Resources\fileexport.png" />
-    <None Include="Resources\fileimport.png" />
-    <None Include="Resources\filesaveas.png" />
-    <None Include="Resources\filenew.png" />
-    <None Include="Resources\edit_undo.png" />
-    <None Include="Resources\rotate_cw.png" />
-    <None Include="Resources\edit_select_all.png" />
-    <None Include="Resources\editpaste.png" />
-    <None Include="Resources\editdelete.png" />
-    <None Include="Resources\editcopy.png" />
-    <None Include="Resources\editcut.png" />
-    <None Include="Resources\transform_move.png" />
-  </ItemGroup>
-  <ItemGroup>
-    <ProjectReference Include="..\Crom.Controls\Crom.Controls.csproj">
-      <Project>{F2999C1D-BED3-4D47-A8AC-8027334ECDC1}</Project>
-      <Name>Crom.Controls</Name>
-    </ProjectReference>
-    <ProjectReference Include="..\IntelOrca.PeggleEdit.Tools\IntelOrca.PeggleEdit.Tools.csproj">
-      <Project>{02DFDF7C-8E6A-4C56-BB5C-804623270233}</Project>
-      <Name>IntelOrca.PeggleEdit.Tools</Name>
-    </ProjectReference>
-    <ProjectReference Include="..\System.Windows.Forms.Ribbon\System.Windows.Forms.Ribbon.csproj">
-      <Project>{46A18A55-5AE8-49CE-91CD-C7421B642E7E}</Project>
-      <Name>System.Windows.Forms.Ribbon</Name>
-    </ProjectReference>
-  </ItemGroup>
-  <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>

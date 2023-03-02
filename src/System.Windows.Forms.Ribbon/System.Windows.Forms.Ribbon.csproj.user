@@ -3,4 +3,84 @@
   <PropertyGroup>
     <ProjectView>ProjectFiles</ProjectView>
   </PropertyGroup>
+  <ItemGroup>
+    <Compile Update="Ribbon.cs">
+      <SubType>Component</SubType>
+    </Compile>
+    <Compile Update="RibbonButton.cs">
+      <SubType>Component</SubType>
+    </Compile>
+    <Compile Update="RibbonButtonList.cs">
+      <SubType>Component</SubType>
+    </Compile>
+    <Compile Update="RibbonCaptionButton.cs">
+      <SubType>Component</SubType>
+    </Compile>
+    <Compile Update="RibbonCheckBox.cs">
+      <SubType>Component</SubType>
+    </Compile>
+    <Compile Update="RibbonColorChooser.cs">
+      <SubType>Component</SubType>
+    </Compile>
+    <Compile Update="RibbonComboBox.cs">
+      <SubType>Component</SubType>
+    </Compile>
+    <Compile Update="RibbonContext.cs">
+      <SubType>Component</SubType>
+    </Compile>
+    <Compile Update="RibbonDescriptionMenuItem.cs">
+      <SubType>Component</SubType>
+    </Compile>
+    <Compile Update="RibbonDropDown.cs">
+      <SubType>Component</SubType>
+    </Compile>
+    <Compile Update="RibbonForm.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Update="RibbonItem.cs">
+      <SubType>Component</SubType>
+    </Compile>
+    <Compile Update="RibbonItemGroup.cs">
+      <SubType>Component</SubType>
+    </Compile>
+    <Compile Update="RibbonOrbDropDown.cs">
+      <SubType>Component</SubType>
+    </Compile>
+    <Compile Update="RibbonOrbMenuItem.cs">
+      <SubType>Component</SubType>
+    </Compile>
+    <Compile Update="RibbonOrbOptionButton.cs">
+      <SubType>Component</SubType>
+    </Compile>
+    <Compile Update="RibbonOrbRecentItem.cs">
+      <SubType>Component</SubType>
+    </Compile>
+    <Compile Update="RibbonPanel.cs">
+      <SubType>Component</SubType>
+    </Compile>
+    <Compile Update="RibbonPanelPopup.cs">
+      <SubType>Component</SubType>
+    </Compile>
+    <Compile Update="RibbonPopup.cs">
+      <SubType>Component</SubType>
+    </Compile>
+    <Compile Update="RibbonQuickAccessToolbar.cs">
+      <SubType>Component</SubType>
+    </Compile>
+    <Compile Update="RibbonSeparator.cs">
+      <SubType>Component</SubType>
+    </Compile>
+    <Compile Update="RibbonTab.cs">
+      <SubType>Component</SubType>
+    </Compile>
+    <Compile Update="RibbonTextBox.cs">
+      <SubType>Component</SubType>
+    </Compile>
+    <Compile Update="RibbonToolTip.cs">
+      <SubType>Component</SubType>
+    </Compile>
+    <Compile Update="RibbonWrappedDropDown.cs">
+      <SubType>Component</SubType>
+    </Compile>
+  </ItemGroup>
 </Project>

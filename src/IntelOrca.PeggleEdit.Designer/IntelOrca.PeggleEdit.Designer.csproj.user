@@ -15,4 +15,54 @@
     <StartArguments>
     </StartArguments>
   </PropertyGroup>
+  <ItemGroup>
+    <Compile Update="Forms\AboutForm.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Update="Forms\ChallengeDetailsForm.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Update="Forms\ChallengePageDetailsForm.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Update="Forms\InputForm.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Update="Forms\LevelDetailsForm.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Update="Forms\MainMDIForm.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Update="Forms\OptionsForm.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Update="Forms\PackDetailsForm.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Update="Forms\Tool Windows\EntryListToolWindow.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Update="Forms\Tool Windows\LevelToolWindow.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Update="Forms\Tool Windows\MenuToolPanel.cs">
+      <SubType>Component</SubType>
+    </Compile>
+    <Compile Update="Forms\Tool Windows\PackExplorerToolWindow.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Update="Forms\Tool Windows\PropertiesToolWindow.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Update="Level Editor\LevelEditor.cs">
+      <SubType>Component</SubType>
+    </Compile>
+    <Compile Update="Misc\NumericTextBox.cs">
+      <SubType>Component</SubType>
+    </Compile>
+    <Compile Update="Misc\RealTextBox.cs">
+      <SubType>Component</SubType>
+    </Compile>
+  </ItemGroup>
 </Project>
