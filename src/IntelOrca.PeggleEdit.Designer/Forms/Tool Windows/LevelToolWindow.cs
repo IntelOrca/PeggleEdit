@@ -48,7 +48,7 @@ namespace IntelOrca.PeggleEdit.Designer
 			Rectangle bounds = mLevelEditor.Level.Bounds;
 			mLevelEditor.Size = new Size(bounds.Width, bounds.Height);
 
-			mLevelEditor.Level.ShowAnchorsAlways = Settings.ShowAnchorsAlways;
+			mLevelEditor.Level.ShowAnchorsAlways = Settings.Default.ShowAnchorsAlways;
 
 			mLevelEditor.UpdatedRedrawed += new EventHandler(mLevelEditor_UpdatedRedrawed);
 			mLevelEditor.SelectionChanged += new EventHandler(mLevelEditor_SelectionChanged);

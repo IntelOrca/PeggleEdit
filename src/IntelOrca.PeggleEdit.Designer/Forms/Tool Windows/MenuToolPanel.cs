@@ -754,10 +754,10 @@ namespace IntelOrca.PeggleEdit.Designer
 		private void peggleNightsRibbonButton_Click(object sender, EventArgs e)
 		{
 			var errorMessage = null as string;
-			var path = Settings.PeggleNightsExePath;
-			var psi = new ProcessStartInfo(Settings.PeggleNightsExePath)
+			var path = Settings.Default.PeggleNightsExePath;
+			var psi = new ProcessStartInfo(Settings.Default.PeggleNightsExePath)
 			{
-				WorkingDirectory = Path.GetDirectoryName(Settings.PeggleNightsExePath)
+				WorkingDirectory = Path.GetDirectoryName(Settings.Default.PeggleNightsExePath)
 			};
 			if (File.Exists(path))
 			{
@@ -1138,7 +1138,7 @@ namespace IntelOrca.PeggleEdit.Designer
 
 		private void showGridRibbonButton_Click(object sender, EventArgs e)
 		{
-			Settings.ShowGrid = !Settings.ShowGrid;
+			Settings.Default.ShowGrid = !Settings.Default.ShowGrid;
 			DoSettingUpdate();
 		}
 
@@ -1244,10 +1244,10 @@ namespace IntelOrca.PeggleEdit.Designer
 		{
 			RibbonItemCollection collection = mRibbon.OrbDropDown.RecentItems;
 			collection.Clear();
-			for (int i = 0; i < Settings.RecentPackFiles.Count; i++) {
+			for (int i = 0; i < Settings.Default.RecentPackFiles.Count; i++) {
 				RibbonButton item = new RibbonButton();
-				item.Text = PathShortener(Settings.RecentPackFiles[i], 40);
-				item.Tag = Settings.RecentPackFiles[i];
+				item.Text = PathShortener(Settings.Default.RecentPackFiles[i], 40);
+				item.Tag = Settings.Default.RecentPackFiles[i];
 
 				item.Click += new EventHandler(recentItem_Click);
 

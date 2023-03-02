@@ -27,26 +27,26 @@ namespace IntelOrca.PeggleEdit.Designer
 		{
 			InitializeComponent();
 
-			chkShowGrid.Checked = Settings.ShowGrid;
-			chkSnapToGrid.Checked = Settings.SnapToGrid;
-			nudGridSize.Value = Settings.GridSize;
-			nudSnapThreshold.Value = Settings.SnapThreshold;
+			chkShowGrid.Checked = Settings.Default.ShowGrid;
+			chkSnapToGrid.Checked = Settings.Default.SnapToGrid;
+			nudGridSize.Value = Settings.Default.GridSize;
+			nudSnapThreshold.Value = Settings.Default.SnapThreshold;
 
-			chkAlwaysShowAnchors.Checked = Settings.ShowAnchorsAlways;
+			chkAlwaysShowAnchors.Checked = Settings.Default.ShowAnchorsAlways;
 
-			txtPeggleNightsExePath.Text = Settings.PeggleNightsExePath;
+			txtPeggleNightsExePath.Text = Settings.Default.PeggleNightsExePath;
 		}
 
 		private void btnOK_Click(object sender, EventArgs e)
 		{
-			Settings.ShowGrid = chkShowGrid.Checked;
-			Settings.SnapToGrid = chkSnapToGrid.Checked;
-			Settings.GridSize = (int)nudGridSize.Value;
-			Settings.SnapThreshold = (int)nudSnapThreshold.Value;
+			Settings.Default.ShowGrid = chkShowGrid.Checked;
+			Settings.Default.SnapToGrid = chkSnapToGrid.Checked;
+			Settings.Default.GridSize = (int)nudGridSize.Value;
+			Settings.Default.SnapThreshold = (int)nudSnapThreshold.Value;
 
-			Settings.ShowAnchorsAlways = chkAlwaysShowAnchors.Checked;
+			Settings.Default.ShowAnchorsAlways = chkAlwaysShowAnchors.Checked;
 
-			Settings.PeggleNightsExePath = txtPeggleNightsExePath.Text;
+			Settings.Default.PeggleNightsExePath = txtPeggleNightsExePath.Text;
 
 			Settings.Save();
 

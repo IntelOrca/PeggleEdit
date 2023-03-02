@@ -66,7 +66,7 @@ namespace IntelOrca.PeggleEdit.Designer
 
 			//Snap
 			PointF le_location = location;
-			if (Settings.ShowGrid & Settings.SnapToGrid) {
+			if (Settings.Default.ShowGrid & Settings.Default.SnapToGrid) {
 				le_location = new PointF(Editor.SnapToGrid((float)location.X), Editor.SnapToGrid((float)location.Y));
 			}
 

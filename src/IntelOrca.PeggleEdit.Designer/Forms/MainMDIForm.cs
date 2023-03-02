@@ -56,13 +56,13 @@ namespace IntelOrca.PeggleEdit.Designer
 
 			//Set the form size
 			MinimumSize = new Size(700, 500);
-			ClientSize = Settings.MDIFormSize;
+			ClientSize = Settings.Default.MDIFormSize;
 			StartPosition = FormStartPosition.CenterScreen;
 
 			Width = Math.Min(Width, Screen.PrimaryScreen.WorkingArea.Width - 8);
 			Height = Math.Min(Height, Screen.PrimaryScreen.WorkingArea.Height - 8);
 
-			if (Settings.MDIMaximized)
+			if (Settings.Default.MDIMaximized)
 				WindowState = FormWindowState.Maximized;
 
 			//Other
@@ -147,12 +147,12 @@ namespace IntelOrca.PeggleEdit.Designer
 
 		protected override void OnClosing(System.ComponentModel.CancelEventArgs e)
 		{
-			Settings.MDIFormSize = ClientSize;
+			Settings.Default.MDIFormSize = ClientSize;
 
 			if (WindowState == FormWindowState.Maximized)
-				Settings.MDIMaximized = true;
+				Settings.Default.MDIMaximized = true;
 			else
-				Settings.MDIMaximized = false;
+				Settings.Default.MDIMaximized = false;
 			
 			base.OnClosing(e);
 		}
@@ -548,14 +548,14 @@ namespace IntelOrca.PeggleEdit.Designer
 			//Recent files
 			WinAPI.AddRecentDocument(filename);
 
-			int index = Settings.RecentPackFiles.IndexOf(filename);
+			int index = Settings.Default.RecentPackFiles.IndexOf(filename);
 			if (index != -1) {
-				Settings.RecentPackFiles.RemoveAt(index);
+				Settings.Default.RecentPackFiles.RemoveAt(index);
 			}
 				
-			Settings.RecentPackFiles.Insert(0, filename);
-			if (Settings.RecentPackFiles.Count > 10) {
-				Settings.RecentPackFiles.RemoveRange(10, Settings.RecentPackFiles.Count - 10);
+			Settings.Default.RecentPackFiles.Insert(0, filename);
+			if (Settings.Default.RecentPackFiles.Count > 10) {
+				Settings.Default.RecentPackFiles.RemoveRange(10, Settings.Default.RecentPackFiles.Count - 10);
 			}
 
 			mMenuToolPanel.UpdateRecentPackFiles();

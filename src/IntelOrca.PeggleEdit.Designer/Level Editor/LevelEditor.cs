@@ -178,10 +178,10 @@ namespace IntelOrca.PeggleEdit.Designer
 
 		public float SnapToGrid(float p)
 		{
-			float rindex = (float)Math.Round(p / (float)Settings.GridSize);
-			float remainder = p % Settings.GridSize;
-			if (remainder <= Settings.SnapThreshold || remainder >= (Settings.GridSize - Settings.SnapThreshold)) {
-				return rindex * Settings.GridSize;
+			float rindex = (float)Math.Round(p / (float)Settings.Default.GridSize);
+			float remainder = p % Settings.Default.GridSize;
+			if (remainder <= Settings.Default.SnapThreshold || remainder >= (Settings.Default.GridSize - Settings.Default.SnapThreshold)) {
+				return rindex * Settings.Default.GridSize;
 			}
 
 			return p;
@@ -766,27 +766,27 @@ namespace IntelOrca.PeggleEdit.Designer
 
 		private void DrawGrid(Graphics g)
 		{
-			if (!Settings.ShowGrid)
+			if (!Settings.Default.ShowGrid)
 				return;
 
-			int x_lines = Width / Settings.GridSize;
-			int y_lines = Height / Settings.GridSize;
+			int x_lines = Width / Settings.Default.GridSize;
+			int y_lines = Height / Settings.Default.GridSize;
 
 			Pen p = new Pen(Color.FromArgb(64, 0, 0, 255));
 
 			Point pnt = Level.GetActualXY(0, 0);
 
-			for (int y = pnt.Y; y >= 0; y -= Settings.GridSize) {
+			for (int y = pnt.Y; y >= 0; y -= Settings.Default.GridSize) {
 				g.DrawLine(p, 0, y, Width, y);
 			}
-			for (int y = pnt.Y; y < Height; y += Settings.GridSize) {
+			for (int y = pnt.Y; y < Height; y += Settings.Default.GridSize) {
 				g.DrawLine(p, 0, y, Width, y);
 			}
 
-			for (int x = pnt.X; x >= 0; x -= Settings.GridSize) {
+			for (int x = pnt.X; x >= 0; x -= Settings.Default.GridSize) {
 				g.DrawLine(p, x, 0, x, Height);
 			}
-			for (int x = pnt.X; x < Width; x += Settings.GridSize) {
+			for (int x = pnt.X; x < Width; x += Settings.Default.GridSize) {
 				g.DrawLine(p, x, 0, x, Height);
 			}
 		}

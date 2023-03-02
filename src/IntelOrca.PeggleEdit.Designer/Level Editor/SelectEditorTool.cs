@@ -167,7 +167,7 @@ namespace IntelOrca.PeggleEdit.Designer
 				float newY = mObjectPoints[i].Y + deltaY;
 
 				//Snap if it is the dragged object
-				if (snap && (Settings.SnapToGrid & Settings.ShowGrid) && obj == mDragObject) {
+				if (snap && (Settings.Default.SnapToGrid & Settings.Default.ShowGrid) && obj == mDragObject) {
 					float snapX = Editor.SnapToGrid(newX);
 					float snapY = Editor.SnapToGrid(newY);
 
