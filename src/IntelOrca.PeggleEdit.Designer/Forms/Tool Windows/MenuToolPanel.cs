@@ -753,9 +753,31 @@ namespace IntelOrca.PeggleEdit.Designer
 
 		private void peggleNightsRibbonButton_Click(object sender, EventArgs e)
 		{
-			ProcessStartInfo psi = new ProcessStartInfo(Settings.PeggleNightsExePath);
-			psi.WorkingDirectory = Path.GetDirectoryName(Settings.PeggleNightsExePath);
-			Process.Start(psi);
+			var errorMessage = null as string;
+			var path = Settings.PeggleNightsExePath;
+			var psi = new ProcessStartInfo(Settings.PeggleNightsExePath)
+			{
+				WorkingDirectory = Path.GetDirectoryName(Settings.PeggleNightsExePath)
+			};
+			if (File.Exists(path))
+			{
+				try
+				{
+					Process.Start(psi);
+				}
+				catch (Exception ex)
+				{
+					errorMessage = ex.Message;
+				}
+			}
+			else
+			{
+				errorMessage = $"Unable to find '{path}'.\nIf this path is wrong, you can change it in settings.";
+			}
+			if (errorMessage != null)
+			{
+				MessageBox.Show(errorMessage, "Unable To Launch Peggle Nights", MessageBoxButtons.OK, MessageBoxIcon.Error);
+			}
 		}
 
 		#endregion
