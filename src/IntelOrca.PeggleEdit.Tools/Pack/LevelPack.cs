@@ -19,11 +19,12 @@ using System.Collections.Generic;
 using System.Drawing;
 using System.Drawing.Imaging;
 using System.IO;
+using System.Linq;
 using System.Text;
 using System.Windows.Forms;
-using IntelOrca.PeggleEdit.Tools.Pack.Challenge;
 using IntelOrca.PeggleEdit.Tools.Levels;
 using IntelOrca.PeggleEdit.Tools.Pack.CFG;
+using IntelOrca.PeggleEdit.Tools.Pack.Challenge;
 
 namespace IntelOrca.PeggleEdit.Tools.Pack
 {
@@ -32,61 +33,60 @@ namespace IntelOrca.PeggleEdit.Tools.Pack
     /// </summary>
     public class LevelPack
     {
-        string mName = "Untitled Pack";
-        string mDescription = "Type your description here.";
-        List<Level> mLevels = new List<Level>();
-        List<ChallengePage> mChallengePages = new List<ChallengePage>();
-        Dictionary<string, Image> mImages = new Dictionary<string, Image>();
+        public static LevelPack Current { get; set; }
 
-        List<LevelInfo> mLevelInfos = new List<LevelInfo>();
+        private readonly List<LevelInfo> mLevelInfos = new List<LevelInfo>();
+
+        public List<Level> Levels { get; } = new List<Level>();
+        public List<ChallengePage> ChallengePages { get; } = new List<ChallengePage>();
+        public Dictionary<string, Image> Images { get; } = new Dictionary<string, Image>();
+        public string Name { get; set; } = "Untitled Pack";
+        public string Description { get; set; } = "Type your description here.";
 
         public bool Open(string path)
         {
-            bool successful = false;
+            var successful = false;
             try
             {
-                string pakFilename = Path.GetFileNameWithoutExtension(path);
+                var pakFilename = Path.GetFileNameWithoutExtension(path);
+                var pakFile = new PakCollection(path);
 
-                PakCollection pakFile = new PakCollection();
-                pakFile.Open(path);
-
-                PakRecord cfgRecord = GetCFGRecord(pakFilename, pakFile);
+                var cfgRecord = GetCFGRecord(pakFilename, pakFile);
                 if (cfgRecord == null)
                 {
                     throw new InvalidDataException("Unable to find a cfg file in the level pack.");
                 }
 
-                ParseCFG(UTF8Encoding.ASCII.GetString(cfgRecord.Buffer));
+                ParseCFG(Encoding.UTF8.GetString(cfgRecord.Buffer));
 
-                //Load levels
-                foreach (LevelInfo linfo in mLevelInfos)
+                // Load levels
+                foreach (var linfo in mLevelInfos)
                 {
-                    byte[] buffer = pakFile.GetRecord("levels\\" + linfo.Filename + ".dat").Buffer;
-
-                    LevelReader levelReader = new LevelReader(buffer);
-                    Level level = levelReader.Read();
-                    levelReader.Dispose();
-
-                    if (level == null)
+                    var buffer = pakFile.GetRecord(Path.Combine("levels", linfo.Filename + ".dat")).Buffer;
+                    using (var levelReader = new LevelReader(buffer))
                     {
-                        MessageBox.Show("Unable to open " + linfo.Name, "Open Level Pack", MessageBoxButtons.OK, MessageBoxIcon.Error);
-                        continue;
-                    }
+                        var level = levelReader.Read();
+                        if (level == null)
+                        {
+                            MessageBox.Show($"Unable to open {linfo.Name}", "Open Level Pack", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                            continue;
+                        }
 
-                    mLevels.Add(level);
-                    level.Info = linfo;
-                    level.Background = GetBackground(pakFile, linfo.Filename);
+                        level.Info = linfo;
+                        level.Background = GetBackground(pakFile, linfo.Filename);
+                        Levels.Add(level);
+                    }
                 }
 
-                //Load any images
-                foreach (PakRecord record in pakFile)
+                // Load any images
+                foreach (var record in pakFile)
                 {
                     if (record.FileName.StartsWith("levels\\"))
                         continue;
 
-                    if (Path.GetExtension(record.FileName) == ".png")
+                    if (record.FileName.EndsWith(".png", StringComparison.CurrentCultureIgnoreCase))
                     {
-                        mImages.Add(record.FileName, GetImageFromBuffer(record.Buffer));
+                        Images.Add(record.FileName, GetImageFromBuffer(record.Buffer));
                     }
                 }
 
@@ -96,51 +96,47 @@ namespace IntelOrca.PeggleEdit.Tools.Pack
             {
                 MessageBox.Show(ex.Message, "Open Level Pack", MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
-
             return successful;
         }
 
         public bool Save(string path)
         {
-            bool successful = false;
+            var successful = false;
             try
             {
+                var pakFilename = Path.GetFileNameWithoutExtension(path);
+                var pakFile = new PakCollection();
 
-                string pakFilename = Path.GetFileNameWithoutExtension(path);
-
-                PakCollection pakFile = new PakCollection();
-
-                //CFG
-                PakRecord cfgRecord = new PakRecord(pakFile, pakFilename + ".cfg", DateTime.Now);
+                // CFG
+                var cfgRecord = new PakRecord(pakFile, pakFilename + ".cfg", DateTime.Now);
                 cfgRecord.Buffer = Encoding.UTF8.GetBytes(WriteCFG());
                 pakFile.Records.Add(cfgRecord);
 
-                //Levels
-                foreach (Level lvl in mLevels)
+                // Levels
+                foreach (var lvl in Levels)
                 {
-                    PakRecord datRecord = new PakRecord(pakFile, String.Format("levels\\{0}.dat", lvl.Info.Filename), DateTime.Now);
+                    var datRecord = new PakRecord(pakFile, Path.Combine("levels", $"{lvl.Info.Filename}.dat"), DateTime.Now);
                     datRecord.Buffer = GetLevelData(lvl);
 
                     if (lvl.Background != null)
                     {
-                        PakRecord bgImageRecord = new PakRecord(pakFile, String.Format("levels\\{0}.png", lvl.Info.Filename), DateTime.Now);
+                        var bgImageRecord = new PakRecord(pakFile, Path.Combine("levels", $"{lvl.Info.Filename}.png"), DateTime.Now);
                         bgImageRecord.Buffer = GetImageData(lvl.Background);
                         pakFile.Records.Add(bgImageRecord);
                     }
 
-                    PakRecord tbRecord = new PakRecord(pakFile, String.Format("levels\\cached_thumbnails\\{0}.png", lvl.Info.Filename), DateTime.Now);
+                    var tbRecord = new PakRecord(pakFile, Path.Combine("levels", "cached_thumbnails", $"{lvl.Info.Filename}.png"), DateTime.Now);
                     tbRecord.Buffer = GetImageData(lvl.GetThumbnail());
 
                     pakFile.Records.Add(datRecord);
-
                     pakFile.Records.Add(tbRecord);
                 }
 
-                //Images
-                foreach (string s in mImages.Keys)
+                // Images
+                foreach (var kvp in Images)
                 {
-                    PakRecord iRecord = new PakRecord(pakFile, s, DateTime.Now);
-                    iRecord.Buffer = GetImageData(mImages[s]);
+                    var iRecord = new PakRecord(pakFile, kvp.Key, DateTime.Now);
+                    iRecord.Buffer = GetImageData(kvp.Value);
                     pakFile.Records.Add(iRecord);
                 }
 
@@ -158,107 +154,104 @@ namespace IntelOrca.PeggleEdit.Tools.Pack
 
         private PakRecord GetCFGRecord(string pakFilename, PakCollection pakFile)
         {
-            PakRecord cfgRecord = pakFile.GetRecord(pakFilename + ".cfg");
-            if (cfgRecord != null)
+            var cfgRecord = pakFile.GetRecord(pakFilename + ".cfg");
+            if (cfgRecord == null)
             {
-                return cfgRecord;
+                // Missing cfg or named wrong
+                cfgRecord = pakFile
+                    .GetRecords()
+                    .FirstOrDefault(x => x.FileName.EndsWith(".cfg", StringComparison.OrdinalIgnoreCase));
             }
-
-            //Missing cfg or named wrong
-            PakRecord[] records = pakFile.GetRecords(String.Empty);
-            foreach (PakRecord record in records)
-            {
-                if (Path.GetExtension(record.FileName) == ".cfg")
-                    return record;
-            }
-
-            return null;
+            return cfgRecord;
         }
 
         private byte[] GetLevelData(Level level)
         {
-            MemoryStream ms = new MemoryStream();
-            LevelWriter writer = new LevelWriter(ms);
+            var ms = new MemoryStream();
+            var writer = new LevelWriter(ms);
             writer.Write(level, LevelWriter.DefaultFileVersion);
             return ms.ToArray();
         }
 
         private void ParseCFG(string cfg)
         {
-            CFGDocument document = CFGDocument.Read(cfg);
-
-            CFGBlock[] stages = document.Blocks[0].GetBlocks("stage");
-            foreach (CFGBlock block in stages)
+            var document = CFGDocument.Read(cfg);
+            var stages = document.Blocks[0].GetBlocks("stage");
+            foreach (var block in stages)
             {
-                foreach (CFGProperty property in block)
+                foreach (var property in block)
                 {
                     switch (property.Name.ToLower())
                     {
                         case "name":
-                            mName = property[0];
+                            Name = property[0];
                             break;
                         case "desc":
-                            mDescription = property[0];
+                            Description = property[0];
                             break;
                         case "level":
-                            LevelInfo levelInfo = new LevelInfo();
-                            levelInfo.Filename = property[0];
-                            levelInfo.Name = property[1];
-                            levelInfo.AceScore = Convert.ToInt32(property[2]);
-                            levelInfo.MinStage = Convert.ToInt32(property[3]);
+                            var levelInfo = new LevelInfo
+                            {
+                                Filename = property[0],
+                                Name = property[1],
+                                AceScore = Convert.ToInt32(property[2]),
+                                MinStage = Convert.ToInt32(property[3])
+                            };
                             mLevelInfos.Add(levelInfo);
                             break;
                     }
                 }
             }
 
-            CFGBlock[] challenge_pages = document.Blocks[0].GetBlocks("page");
-            foreach (CFGBlock block in challenge_pages)
+            var challengePages = document.Blocks[0].GetBlocks("page");
+            foreach (var block in challengePages)
             {
-                mChallengePages.Add(new ChallengePage(block));
+                ChallengePages.Add(new ChallengePage(block));
             }
         }
 
         private string WriteCFG()
         {
-            CFGDocument document = new CFGDocument();
-            CFGBlock docblock = new CFGBlock();
+            var document = new CFGDocument();
+            var docblock = new CFGBlock();
 
-            //Number of stages needed
-            int numStages = (int)Math.Ceiling((float)mLevels.Count / 5.0f);
-            for (int i = 0; i < numStages; i++)
+            // Number of stages needed
+            var numStages = (int)Math.Ceiling(Levels.Count / 5.0f);
+            for (var i = 0; i < numStages; i++)
             {
-                CFGBlock block = new CFGBlock();
+                var block = new CFGBlock();
                 block.Name = "Stage";
 
-                block.Properties.Add(new CFGProperty("Name", mName));
-                block.Properties.Add(new CFGProperty("Desc", mDescription));
+                block.Properties.Add(new CFGProperty("Name", Name));
+                block.Properties.Add(new CFGProperty("Desc", Description));
 
-                for (int j = i * 5; j < Math.Min(mLevels.Count, (i + 1) * 5); j++)
+                var lowerBound = i * 5;
+                var upperBound = Math.Min(Levels.Count, (i + 1) * 5);
+                for (var j = lowerBound; j < upperBound; j++)
                 {
-                    Level lvl = mLevels[j];
+                    var lvl = Levels[j];
                     block.Properties.Add(new CFGProperty("Level", lvl.Info.Filename, lvl.Info.Name, lvl.Info.AceScore.ToString(), lvl.Info.MinStage.ToString()));
                 }
 
                 docblock.Blocks.Add(block);
             }
 
-            //Challenges
-            foreach (ChallengePage page in mChallengePages)
+            // Challenges
+            foreach (var page in ChallengePages)
             {
                 docblock.Blocks.Add(page.GetCFGBlock());
             }
 
             document.Blocks.Add(docblock);
 
-            CFGWriter writer = new CFGWriter(document);
+            var writer = new CFGWriter(document);
             return writer.GetText();
         }
 
         private byte[] GetImageData(Image img)
         {
-            MemoryStream ms = new MemoryStream();
-            img.Save(ms, System.Drawing.Imaging.ImageFormat.Png);
+            var ms = new MemoryStream();
+            img.Save(ms, ImageFormat.Png);
             return ms.ToArray();
         }
 
@@ -267,106 +260,38 @@ namespace IntelOrca.PeggleEdit.Tools.Pack
             Image img;
             try
             {
-                MemoryStream ms = new MemoryStream(buffer);
+                var ms = new MemoryStream(buffer);
                 img = Image.FromStream(ms);
-                //ms.Close();
             }
             catch
             {
                 img = null;
             }
-
             return img;
         }
 
         private Image GetBackground(PakCollection collection, string levelFilename)
         {
-            string filename = "levels\\" + levelFilename;
-            string jp2 = Path.ChangeExtension(filename, ".jp2");
-            string jpg = Path.ChangeExtension(filename, ".jpg");
-            string png = Path.ChangeExtension(filename, ".png");
-
-            PakRecord record;
-            record = collection.GetRecord(jp2);
-            if (record != null)
+            try
             {
-                byte[] buffer;
-                OpenJPEG.ConvertJPEG2(record, out buffer, ImageFormat.Jpeg);
-                return Image.FromStream(new MemoryStream(buffer));
+                var fileName = Path.Combine("levels", levelFilename);
+                var record = collection.FindFirstRecordWithExtension(fileName, ".jp2", ".jpg", ".png");
+                if (record != null)
+                {
+                    return GetImageFromRecord(record);
+                }
             }
-            else
+            catch
             {
-                record = collection.GetRecord(jpg);
-                if (record != null)
-                    return GetImageFromBuffer(record.Buffer);
-
-                record = collection.GetRecord(png);
-                if (record != null)
-                    return GetImageFromBuffer(record.Buffer);
             }
-
             return null;
         }
 
-        public string Name
+        private static Image GetImageFromRecord(PakRecord record)
         {
-            get
-            {
-                return mName;
-            }
-            set
-            {
-                mName = value;
-            }
-        }
-
-        public string Description
-        {
-            get
-            {
-                return mDescription;
-            }
-            set
-            {
-                mDescription = value;
-            }
-        }
-
-        public List<Level> Levels
-        {
-            get
-            {
-                return mLevels;
-            }
-        }
-
-        public List<ChallengePage> ChallengePages
-        {
-            get
-            {
-                return mChallengePages;
-            }
-        }
-
-        public Dictionary<string, Image> Images
-        {
-            get
-            {
-                return mImages;
-            }
-        }
-
-        private static LevelPack mCurrentPack;
-        public static LevelPack Current
-        {
-            get
-            {
-                return mCurrentPack;
-            }
-            set
-            {
-                mCurrentPack = value;
-            }
+            return record.FileName.EndsWith(".jp2", StringComparison.OrdinalIgnoreCase) ?
+                J2K.ConvertJPEG2(record) :
+                Image.FromStream(new MemoryStream(record.Buffer));
         }
     }
 }

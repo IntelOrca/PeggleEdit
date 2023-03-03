@@ -42,6 +42,13 @@ namespace IntelOrca.PeggleEdit.Tools.Pack
             mFilename = null;
         }
 
+        public PakCollection(string path)
+            : this()
+        {
+            if (!Open(path))
+                throw new Exception($"Failed to open {path}");
+        }
+
         public void New()
         {
             mRecords.Clear();
@@ -318,7 +325,7 @@ namespace IntelOrca.PeggleEdit.Tools.Pack
             }
         }
 
-        public PakRecord[] GetRecords(string directory)
+        public PakRecord[] GetRecords(string directory = "")
         {
             List<PakRecord> records = new List<PakRecord>();
 
@@ -343,6 +350,20 @@ namespace IntelOrca.PeggleEdit.Tools.Pack
                 }
             }
 
+            return null;
+        }
+
+        public PakRecord FindFirstRecordWithExtension(string path, params string[] extensionOrder)
+        {
+            foreach (var extension in extensionOrder)
+            {
+                var path2 = Path.ChangeExtension(path, extension);
+                var record = GetRecord(path2);
+                if (record != null)
+                {
+                    return record;
+                }
+            }
             return null;
         }
 

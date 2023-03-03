@@ -387,9 +387,7 @@ namespace IntelOrca.PeggleEdit.Designer
 
             if (File.Exists(jp2))
             {
-                byte[] buffer;
-                OpenJPEG.ConvertJPEG2(jp2, out buffer, ImageFormat.Png);
-                return Image.FromStream(new MemoryStream(buffer));
+                return J2K.ConvertJPEG2(jp2);
             }
             else if (File.Exists(jpg))
             {
