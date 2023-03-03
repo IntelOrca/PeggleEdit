@@ -19,150 +19,155 @@ using System.IO;
 
 namespace IntelOrca.PeggleEdit.Tools.Pack
 {
-	/// <summary>
-	/// Represents a record (file) in a pak collection.
-	/// </summary>
-	public class PakRecord
-	{
-		private PakCollection mCollection;
-		private string mFileName;
-		private DateTime mFileTime;
-		private byte[] mBuffer;
+    /// <summary>
+    /// Represents a record (file) in a pak collection.
+    /// </summary>
+    public class PakRecord
+    {
+        private PakCollection mCollection;
+        private string mFileName;
+        private DateTime mFileTime;
+        private byte[] mBuffer;
 
-		public PakRecord(PakCollection collection)
-		{
-			mCollection = collection;
-			mFileName = String.Empty;
-			mFileTime = DateTime.MinValue;
-			mBuffer = null;
-		}
+        public PakRecord(PakCollection collection)
+        {
+            mCollection = collection;
+            mFileName = String.Empty;
+            mFileTime = DateTime.MinValue;
+            mBuffer = null;
+        }
 
-		public PakRecord(PakCollection collection, string filename, DateTime filetime)
-		{
-			mCollection = collection;
-			mFileName = filename;
-			mFileTime = filetime;
-			mBuffer = null;
-		}
+        public PakRecord(PakCollection collection, string filename, DateTime filetime)
+        {
+            mCollection = collection;
+            mFileName = filename;
+            mFileTime = filetime;
+            mBuffer = null;
+        }
 
-		public static PakRecord FromFile(PakCollection collection, string filename)
-		{
-			PakRecord record = new PakRecord(collection);
-			record.FileName = Path.GetFileName(filename);
-			record.FileTime = File.GetLastWriteTime(filename);
-			record.Buffer = File.ReadAllBytes(filename);
-			return record;
-		}
+        public static PakRecord FromFile(PakCollection collection, string filename)
+        {
+            PakRecord record = new PakRecord(collection);
+            record.FileName = Path.GetFileName(filename);
+            record.FileTime = File.GetLastWriteTime(filename);
+            record.Buffer = File.ReadAllBytes(filename);
+            return record;
+        }
 
-		public bool SaveFileIn(string directory, out string path)
-		{
-			return SaveFileIn(directory, out path, false);
-		}
+        public bool SaveFileIn(string directory, out string path)
+        {
+            return SaveFileIn(directory, out path, false);
+        }
 
-		public bool SaveFileIn(string directory, out string path, bool temporary)
-		{
-			
-			if (mBuffer == null)
-				throw new NullReferenceException("Buffer was null!");
+        public bool SaveFileIn(string directory, out string path, bool temporary)
+        {
 
-			//Combind the filename and the path
-			path = Path.Combine(directory, mFileName);
+            if (mBuffer == null)
+                throw new NullReferenceException("Buffer was null!");
 
-			//Collect only the path, if it needs creating
-			string dir = Path.GetDirectoryName(path);
+            //Combind the filename and the path
+            path = Path.Combine(directory, mFileName);
 
-			try {
-				//Create directory if not existant
-				if (!Directory.Exists(dir)) {
-					Directory.CreateDirectory(dir);
-				}
+            //Collect only the path, if it needs creating
+            string dir = Path.GetDirectoryName(path);
 
-				//Write the file
-				File.WriteAllBytes(path, mBuffer);
+            try
+            {
+                //Create directory if not existant
+                if (!Directory.Exists(dir))
+                {
+                    Directory.CreateDirectory(dir);
+                }
 
-				//If temporary set the file to temporary and read-only
-				if (temporary) {
-					File.SetAttributes(path, FileAttributes.Temporary | FileAttributes.ReadOnly);
-				}
+                //Write the file
+                File.WriteAllBytes(path, mBuffer);
 
-				//Return the path of the created file
-				return true;
-			} catch {
-				//Error
-				return false;
-			}
-		}
+                //If temporary set the file to temporary and read-only
+                if (temporary)
+                {
+                    File.SetAttributes(path, FileAttributes.Temporary | FileAttributes.ReadOnly);
+                }
 
-		public void SaveFileAs(string path)
-		{
-			if (mBuffer == null)
-				throw new NullReferenceException("Buffer was null!");
-			File.WriteAllBytes(path, mBuffer);
-		}
+                //Return the path of the created file
+                return true;
+            }
+            catch
+            {
+                //Error
+                return false;
+            }
+        }
 
-		public override string ToString()
-		{
-			return mFileName;
-		}
+        public void SaveFileAs(string path)
+        {
+            if (mBuffer == null)
+                throw new NullReferenceException("Buffer was null!");
+            File.WriteAllBytes(path, mBuffer);
+        }
 
-		#region Properties
+        public override string ToString()
+        {
+            return mFileName;
+        }
 
-		public PakCollection Collection
-		{
-			get
-			{
-				return mCollection;
-			}
-			set
-			{
-				mCollection = value;
-			}
-		}
+        #region Properties
 
-		public string FileName
-		{
-			get
-			{
-				return mFileName;
-			}
-			set
-			{
-				mFileName = value;
-			}
-		}
+        public PakCollection Collection
+        {
+            get
+            {
+                return mCollection;
+            }
+            set
+            {
+                mCollection = value;
+            }
+        }
 
-		public DateTime FileTime
-		{
-			get
-			{
-				return mFileTime;
-			}
-			set
-			{
-				mFileTime = value;
-			}
-		}
+        public string FileName
+        {
+            get
+            {
+                return mFileName;
+            }
+            set
+            {
+                mFileName = value;
+            }
+        }
 
-		public byte[] Buffer
-		{
-			get
-			{
-				return mBuffer;
-			}
-			set
-			{
-				mBuffer = value;
-			}
-		}
+        public DateTime FileTime
+        {
+            get
+            {
+                return mFileTime;
+            }
+            set
+            {
+                mFileTime = value;
+            }
+        }
 
-		public int FileSize
-		{
-			get
-			{
-				return mBuffer.Length;
-			}
-		}
+        public byte[] Buffer
+        {
+            get
+            {
+                return mBuffer;
+            }
+            set
+            {
+                mBuffer = value;
+            }
+        }
 
-	#endregion
-	}
+        public int FileSize
+        {
+            get
+            {
+                return mBuffer.Length;
+            }
+        }
+
+        #endregion
+    }
 }

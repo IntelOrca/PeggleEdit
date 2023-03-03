@@ -16,30 +16,30 @@
 
 namespace IntelOrca.PeggleEdit.Tools.Levels.Children
 {
-	/// <summary>
-	/// Represents a level entry which can't be read.
-	/// </summary>
-	public class UnknownEntry : LevelEntry
-	{
-		int mType;
+    /// <summary>
+    /// Represents a level entry which can't be read.
+    /// </summary>
+    public class UnknownEntry : LevelEntry
+    {
+        int mType;
 
-		public UnknownEntry(Level level, int type)
-			: base(level)
-		{
-			mType = type;
-		}
+        public UnknownEntry(Level level, int type)
+            : base(level)
+        {
+            mType = type;
+        }
 
-		public override object Clone()
-		{
-			return new UnknownEntry(Level, mType);
-		}
+        public override object Clone()
+        {
+            return new UnknownEntry(Level, mType);
+        }
 
-		public override int Type
-		{
-			get
-			{
-				return mType;
-			}
-		}
-	}
+        public override int Type
+        {
+            get
+            {
+                return mType;
+            }
+        }
+    }
 }

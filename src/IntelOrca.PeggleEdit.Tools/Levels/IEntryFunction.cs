@@ -16,11 +16,11 @@
 
 namespace IntelOrca.PeggleEdit.Tools.Levels
 {
-	/// <summary>
-	/// Defines methods required for an entry with function capabilities.
-	/// </summary>
-	public interface IEntryFunction
-	{
-		void Execute();
-	}
+    /// <summary>
+    /// Defines methods required for an entry with function capabilities.
+    /// </summary>
+    public interface IEntryFunction
+    {
+        void Execute();
+    }
 }

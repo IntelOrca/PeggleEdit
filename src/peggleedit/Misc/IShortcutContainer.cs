@@ -16,8 +16,8 @@
 
 namespace IntelOrca.PeggleEdit.Designer
 {
-	interface IShortcutContainer
-	{
-		ShortcutAction[] GetShortcuts();
-	}
+    interface IShortcutContainer
+    {
+        ShortcutAction[] GetShortcuts();
+    }
 }

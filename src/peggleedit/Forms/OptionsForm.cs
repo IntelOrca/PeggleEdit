@@ -21,64 +21,64 @@ using System.Windows.Forms;
 
 namespace IntelOrca.PeggleEdit.Designer
 {
-	partial class OptionsForm : Form
-	{
-		public OptionsForm()
-		{
-			InitializeComponent();
+    partial class OptionsForm : Form
+    {
+        public OptionsForm()
+        {
+            InitializeComponent();
 
-			chkShowGrid.Checked = Settings.Default.ShowGrid;
-			chkSnapToGrid.Checked = Settings.Default.SnapToGrid;
-			nudGridSize.Value = Settings.Default.GridSize;
-			nudSnapThreshold.Value = Settings.Default.SnapThreshold;
+            chkShowGrid.Checked = Settings.Default.ShowGrid;
+            chkSnapToGrid.Checked = Settings.Default.SnapToGrid;
+            nudGridSize.Value = Settings.Default.GridSize;
+            nudSnapThreshold.Value = Settings.Default.SnapThreshold;
 
-			chkAlwaysShowAnchors.Checked = Settings.Default.ShowAnchorsAlways;
+            chkAlwaysShowAnchors.Checked = Settings.Default.ShowAnchorsAlways;
 
-			txtPeggleNightsExePath.Text = Settings.Default.PeggleNightsExePath;
-		}
+            txtPeggleNightsExePath.Text = Settings.Default.PeggleNightsExePath;
+        }
 
-		private void btnOK_Click(object sender, EventArgs e)
-		{
-			Settings.Default.ShowGrid = chkShowGrid.Checked;
-			Settings.Default.SnapToGrid = chkSnapToGrid.Checked;
-			Settings.Default.GridSize = (int)nudGridSize.Value;
-			Settings.Default.SnapThreshold = (int)nudSnapThreshold.Value;
+        private void btnOK_Click(object sender, EventArgs e)
+        {
+            Settings.Default.ShowGrid = chkShowGrid.Checked;
+            Settings.Default.SnapToGrid = chkSnapToGrid.Checked;
+            Settings.Default.GridSize = (int)nudGridSize.Value;
+            Settings.Default.SnapThreshold = (int)nudSnapThreshold.Value;
 
-			Settings.Default.ShowAnchorsAlways = chkAlwaysShowAnchors.Checked;
+            Settings.Default.ShowAnchorsAlways = chkAlwaysShowAnchors.Checked;
 
-			Settings.Default.PeggleNightsExePath = txtPeggleNightsExePath.Text;
+            Settings.Default.PeggleNightsExePath = txtPeggleNightsExePath.Text;
 
-			Settings.Save();
+            Settings.Save();
 
-			DialogResult = DialogResult.OK;
-			Close();
-		}
+            DialogResult = DialogResult.OK;
+            Close();
+        }
 
-		private void btnCancel_Click(object sender, EventArgs e)
-		{
-			Close();
-		}
+        private void btnCancel_Click(object sender, EventArgs e)
+        {
+            Close();
+        }
 
-		private void nudGridSize_ValueChanged(object sender, EventArgs e)
-		{
-			int newMax = (int)nudGridSize.Value / 2;
-			if (nudSnapThreshold.Value > newMax)
-				nudSnapThreshold.Value = newMax;
-			nudSnapThreshold.Maximum = newMax;
-		}
+        private void nudGridSize_ValueChanged(object sender, EventArgs e)
+        {
+            int newMax = (int)nudGridSize.Value / 2;
+            if (nudSnapThreshold.Value > newMax)
+                nudSnapThreshold.Value = newMax;
+            nudSnapThreshold.Maximum = newMax;
+        }
 
-		private void txtPeggleNightsExePath_TextChanged(object sender, EventArgs e)
-		{
-			string path = txtPeggleNightsExePath.Text;
-			if (File.Exists(path))
-				txtPeggleNightsExePath.ForeColor = Color.Green;
-			else
-				txtPeggleNightsExePath.ForeColor = Color.Red;
-		}
+        private void txtPeggleNightsExePath_TextChanged(object sender, EventArgs e)
+        {
+            string path = txtPeggleNightsExePath.Text;
+            if (File.Exists(path))
+                txtPeggleNightsExePath.ForeColor = Color.Green;
+            else
+                txtPeggleNightsExePath.ForeColor = Color.Red;
+        }
 
-		private void btnSetFileAssociation_Click(object sender, EventArgs e)
-		{
-			Settings.SetupFileAssociation();
-		}
-	}
+        private void btnSetFileAssociation_Click(object sender, EventArgs e)
+        {
+            Settings.SetupFileAssociation();
+        }
+    }
 }

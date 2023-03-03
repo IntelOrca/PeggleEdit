@@ -21,66 +21,70 @@ using IntelOrca.PeggleEdit.Tools.Levels.Children;
 
 namespace IntelOrca.PeggleEdit.Tools.Levels
 {
-	/// <summary>
-	/// Represents a writer that can write levels.
-	/// </summary>
-	public class LevelWriter : IDisposable
-	{
-		public const int DefaultFileVersion = 0x52;
+    /// <summary>
+    /// Represents a writer that can write levels.
+    /// </summary>
+    public class LevelWriter : IDisposable
+    {
+        public const int DefaultFileVersion = 0x52;
 
-		Stream mBaseStream;
-		Level mLevel;
-		int mFileVersion;
+        Stream mBaseStream;
+        Level mLevel;
+        int mFileVersion;
 
-		public LevelWriter(string path)
-			: this(new FileStream(path, FileMode.Create))
-		{
-		}
+        public LevelWriter(string path)
+            : this(new FileStream(path, FileMode.Create))
+        {
+        }
 
-		public LevelWriter(Stream stream)
-		{
-			mBaseStream = stream;
-		}
+        public LevelWriter(Stream stream)
+        {
+            mBaseStream = stream;
+        }
 
-		public bool Write(Level level, int version)
-		{
-			mLevel = level;
-			mFileVersion = version;
+        public bool Write(Level level, int version)
+        {
+            mLevel = level;
+            mFileVersion = version;
 
-			BinaryWriter bw = new BinaryWriter(mBaseStream);
+            BinaryWriter bw = new BinaryWriter(mBaseStream);
 
-			//Level version
-			bw.Write(version);
+            //Level version
+            bw.Write(version);
 
-			//1
-			bw.Write((byte)1);
+            //1
+            bw.Write((byte)1);
 
-			//Num. entries
-			bw.Write(mLevel.Entries.Count);
+            //Num. entries
+            bw.Write(mLevel.Entries.Count);
 
-			//Entry loop
-			foreach (LevelEntry le in mLevel.Entries) {
-				le.Write(bw, version);
-			}
+            //Entry loop
+            foreach (LevelEntry le in mLevel.Entries)
+            {
+                le.Write(bw, version);
+            }
 
-			bw.Close();
+            bw.Close();
 
-			return true;
-		}
+            return true;
+        }
 
-		public static void WritePopcapString(BinaryWriter bw, string sz)
-		{
-			if (String.IsNullOrEmpty(sz)) {
-				bw.Write((short)0);
-			} else {
-				bw.Write((short)sz.Length);
-				bw.Write(Encoding.UTF8.GetBytes(sz));
-			}
-		}
+        public static void WritePopcapString(BinaryWriter bw, string sz)
+        {
+            if (String.IsNullOrEmpty(sz))
+            {
+                bw.Write((short)0);
+            }
+            else
+            {
+                bw.Write((short)sz.Length);
+                bw.Write(Encoding.UTF8.GetBytes(sz));
+            }
+        }
 
-		public void Dispose()
-		{
-			mBaseStream.Dispose();
-		}
-	}
+        public void Dispose()
+        {
+            mBaseStream.Dispose();
+        }
+    }
 }

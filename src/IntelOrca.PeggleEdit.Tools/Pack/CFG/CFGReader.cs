@@ -19,160 +19,189 @@ using System.IO;
 
 namespace IntelOrca.PeggleEdit.Tools.Pack.CFG
 {
-	/// <summary>
-	/// Represents a reader for CFGDocuments.
-	/// </summary>
-	public class CFGReader
-	{
-		CFGDocument mDocument;
+    /// <summary>
+    /// Represents a reader for CFGDocuments.
+    /// </summary>
+    public class CFGReader
+    {
+        CFGDocument mDocument;
 
-		public CFGReader()
-		{
-			mDocument = new CFGDocument();
-		}
+        public CFGReader()
+        {
+            mDocument = new CFGDocument();
+        }
 
-		public CFGReader(string inputText)
-			: this()
-		{
-			//try {
-				Stack<CFGBlock> blockStack = new Stack<CFGBlock>();
-				blockStack.Push(new CFGBlock());
+        public CFGReader(string inputText)
+            : this()
+        {
+            //try {
+            Stack<CFGBlock> blockStack = new Stack<CFGBlock>();
+            blockStack.Push(new CFGBlock());
 
-				StringReader reader = new StringReader(inputText);
-				for (; ; ) {
-					string line = reader.ReadLine();
+            StringReader reader = new StringReader(inputText);
+            for (; ; )
+            {
+                string line = reader.ReadLine();
 
-					if (line == null)
-						break;
+                if (line == null)
+                    break;
 
-					line = ParseLine(line);
+                line = ParseLine(line);
 
-					if (line.Length == 0)
-						continue;
+                if (line.Length == 0)
+                    continue;
 
-					int colonIndex = SpecialIndexOf(line, ':');
-					if (colonIndex != -1) {
-						//Its a property
-						blockStack.Peek().Properties.Add(new CFGProperty(line));
-					} else if (line.StartsWith("{")) {
-						continue;
-					} else if (line.StartsWith("}")) {
-						CFGBlock block = blockStack.Pop();
+                int colonIndex = SpecialIndexOf(line, ':');
+                if (colonIndex != -1)
+                {
+                    //Its a property
+                    blockStack.Peek().Properties.Add(new CFGProperty(line));
+                }
+                else if (line.StartsWith("{"))
+                {
+                    continue;
+                }
+                else if (line.StartsWith("}"))
+                {
+                    CFGBlock block = blockStack.Pop();
 
-						if (blockStack.Count > 0) {
-							blockStack.Peek().Blocks.Add(block);
-						} else {
-							mDocument.Blocks.Add(block);
-						}
+                    if (blockStack.Count > 0)
+                    {
+                        blockStack.Peek().Blocks.Add(block);
+                    }
+                    else
+                    {
+                        mDocument.Blocks.Add(block);
+                    }
 
-					} else {
-						//Block
-						int space = SpecialIndexOf(line, ' ');
-						int tab = SpecialIndexOf(line, '\t');
+                }
+                else
+                {
+                    //Block
+                    int space = SpecialIndexOf(line, ' ');
+                    int tab = SpecialIndexOf(line, '\t');
 
-						int firstGap = space;
-						if (tab != -1 && tab < space)
-							firstGap = tab;
+                    int firstGap = space;
+                    if (tab != -1 && tab < space)
+                        firstGap = tab;
 
-						if (firstGap != -1) {
-							CFGBlock block = new CFGBlock();
-							block.Name = line.Substring(0, firstGap);
-							block.Value = Dequote(line.Substring(firstGap, line.Length - firstGap).Trim());
+                    if (firstGap != -1)
+                    {
+                        CFGBlock block = new CFGBlock();
+                        block.Name = line.Substring(0, firstGap);
+                        block.Value = Dequote(line.Substring(firstGap, line.Length - firstGap).Trim());
 
-							blockStack.Push(block);
-						} else {
-							CFGBlock block = new CFGBlock();
-							block.Name = line;
+                        blockStack.Push(block);
+                    }
+                    else
+                    {
+                        CFGBlock block = new CFGBlock();
+                        block.Name = line;
 
-							blockStack.Push(block);
-						}
-					}
-				}
+                        blockStack.Push(block);
+                    }
+                }
+            }
 
-				mDocument.Blocks.Add(blockStack.Pop());
+            mDocument.Blocks.Add(blockStack.Pop());
 
-			//} catch (Exception ex) {
-			//    System.Diagnostics.StackTrace trace = new System.Diagnostics.StackTrace(ex, true);
+            //} catch (Exception ex) {
+            //    System.Diagnostics.StackTrace trace = new System.Diagnostics.StackTrace(ex, true);
 
-			//    MessageBox.Show(trace.GetFrame(0).GetMethod().Name);
-			//    MessageBox.Show("Line: " + trace.GetFrame(0).GetFileLineNumber());
-			//    MessageBox.Show("Column: " + trace.GetFrame(0).GetFileColumnNumber());
-			//}
-		}
+            //    MessageBox.Show(trace.GetFrame(0).GetMethod().Name);
+            //    MessageBox.Show("Line: " + trace.GetFrame(0).GetFileLineNumber());
+            //    MessageBox.Show("Column: " + trace.GetFrame(0).GetFileColumnNumber());
+            //}
+        }
 
-		public static int SpecialIndexOf(string str, char find)
-		{
-			return SpecialIndexOf(str, find, 0);
-		}
+        public static int SpecialIndexOf(string str, char find)
+        {
+            return SpecialIndexOf(str, find, 0);
+        }
 
-		public static int SpecialIndexOf(string str, char find, int startIndex)
-		{
-			bool inQuotes = false;
-			for (int i = startIndex; i < str.Length; i++) {
-				char c = str[i];
-				if (c == '"') {
-					inQuotes = !inQuotes;
-					continue;
-				} else if (inQuotes && c == '\\') {
-					i++;
-					continue;
-				} else if (!inQuotes && c == find) {
-					return i;
-				}
-			}
+        public static int SpecialIndexOf(string str, char find, int startIndex)
+        {
+            bool inQuotes = false;
+            for (int i = startIndex; i < str.Length; i++)
+            {
+                char c = str[i];
+                if (c == '"')
+                {
+                    inQuotes = !inQuotes;
+                    continue;
+                }
+                else if (inQuotes && c == '\\')
+                {
+                    i++;
+                    continue;
+                }
+                else if (!inQuotes && c == find)
+                {
+                    return i;
+                }
+            }
 
-			return -1;
-		}
+            return -1;
+        }
 
-		private string ParseLine(string line)
-		{
-			int commentStart = -1;
-			bool inQuotes = false;
-			for (int i = 0; i < line.Length; i++) {
-				char c = line[i];
-				if (c == '"') {
-					inQuotes = !inQuotes;
-					continue;
-				} else if (inQuotes && c == '\\') {
-					i++;
-					continue;
-				} else if (!inQuotes && c == '/') {
-					if (i == line.Length - 1)
-						continue;
+        private string ParseLine(string line)
+        {
+            int commentStart = -1;
+            bool inQuotes = false;
+            for (int i = 0; i < line.Length; i++)
+            {
+                char c = line[i];
+                if (c == '"')
+                {
+                    inQuotes = !inQuotes;
+                    continue;
+                }
+                else if (inQuotes && c == '\\')
+                {
+                    i++;
+                    continue;
+                }
+                else if (!inQuotes && c == '/')
+                {
+                    if (i == line.Length - 1)
+                        continue;
 
-					if (line[i + 1] != '/')
-						continue;
+                    if (line[i + 1] != '/')
+                        continue;
 
-					commentStart = i;
-					break;
-				}
-			}
+                    commentStart = i;
+                    break;
+                }
+            }
 
-			if (commentStart != -1) {
-				line = line.Remove(commentStart);
-			}
+            if (commentStart != -1)
+            {
+                line = line.Remove(commentStart);
+            }
 
-			return line.Trim();
-		}
+            return line.Trim();
+        }
 
-		public static string Dequote(string value)
-		{
-			if (value.StartsWith("\"")) {
-				value = value.Remove(0, 1);
-				if (value.EndsWith("\"")) {
-					value = value.Remove(value.Length - 1, 1);
-				}
-			}
+        public static string Dequote(string value)
+        {
+            if (value.StartsWith("\""))
+            {
+                value = value.Remove(0, 1);
+                if (value.EndsWith("\""))
+                {
+                    value = value.Remove(value.Length - 1, 1);
+                }
+            }
 
-			return value;
-		}
+            return value;
+        }
 
-		public CFGDocument Document
-		{
-			get
-			{
-				return mDocument;
-			}
-		}
-	}
+        public CFGDocument Document
+        {
+            get
+            {
+                return mDocument;
+            }
+        }
+    }
 }

@@ -20,75 +20,75 @@ using System.Windows.Forms;
 
 namespace IntelOrca.PeggleEdit.Designer
 {
-	abstract class EditorTool : ICloneable
-	{
-		private CallbackMethod mFinishCallback;
-		private LevelEditor mEditor;
+    abstract class EditorTool : ICloneable
+    {
+        private CallbackMethod mFinishCallback;
+        private LevelEditor mEditor;
 
-		public void Finish()
-		{
-			Deactivate();
+        public void Finish()
+        {
+            Deactivate();
 
-			if (mFinishCallback != null)
-				mFinishCallback.Invoke();
-		}
+            if (mFinishCallback != null)
+                mFinishCallback.Invoke();
+        }
 
-		public virtual void Activate()
-		{
-		}
+        public virtual void Activate()
+        {
+        }
 
-		public virtual void Deactivate()
-		{
-		}
+        public virtual void Deactivate()
+        {
+        }
 
-		public virtual void Draw(Graphics g)
-		{
-		}
+        public virtual void Draw(Graphics g)
+        {
+        }
 
-		public virtual void MouseDown(MouseButtons button, Point location, Keys modifierKeys)
-		{
-		}
+        public virtual void MouseDown(MouseButtons button, Point location, Keys modifierKeys)
+        {
+        }
 
-		public virtual void MouseMove(MouseButtons button, Point location, Keys modifierKeys)
-		{
-		}
+        public virtual void MouseMove(MouseButtons button, Point location, Keys modifierKeys)
+        {
+        }
 
-		public virtual void MouseUp(MouseButtons button, Point location, Keys modifierKeys)
-		{
-		}
+        public virtual void MouseUp(MouseButtons button, Point location, Keys modifierKeys)
+        {
+        }
 
-		public virtual object Clone()
-		{
-			return null;
-		}
+        public virtual object Clone()
+        {
+            return null;
+        }
 
-		protected void CloneTo(EditorTool tool)
-		{
-			tool.mEditor = mEditor;
-		}
+        protected void CloneTo(EditorTool tool)
+        {
+            tool.mEditor = mEditor;
+        }
 
-		public virtual LevelEditor Editor
-		{
-			get
-			{
-				return mEditor;
-			}
-			set
-			{
-				mEditor = value;
-			}
-		}
+        public virtual LevelEditor Editor
+        {
+            get
+            {
+                return mEditor;
+            }
+            set
+            {
+                mEditor = value;
+            }
+        }
 
-		public CallbackMethod FinishCallback
-		{
-			get
-			{
-				return mFinishCallback;
-			}
-			set
-			{
-				mFinishCallback = value;
-			}
-		}
-	}
+        public CallbackMethod FinishCallback
+        {
+            get
+            {
+                return mFinishCallback;
+            }
+            set
+            {
+                mFinishCallback = value;
+            }
+        }
+    }
 }

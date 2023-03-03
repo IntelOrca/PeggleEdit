@@ -25,115 +25,128 @@ using IntelOrca.PeggleEdit.Tools.Levels.Children;
 
 namespace IntelOrca.PeggleEdit.Designer
 {
-	[GuidAttribute("1A01E050-F11A-47C5-B62B-000000000008")]
-	class EntryListToolWindow : Form
-	{
-		MainMDIForm mParent;
-		LevelEditor mEditor;
-		ListBox mList;
-		bool mSuspendChangeEvent;
+    [GuidAttribute("1A01E050-F11A-47C5-B62B-000000000008")]
+    class EntryListToolWindow : Form
+    {
+        MainMDIForm mParent;
+        LevelEditor mEditor;
+        ListBox mList;
+        bool mSuspendChangeEvent;
 
-		LevelEntryCollection mEntries = new LevelEntryCollection();
-		LevelEntryCollection mSelectedEntries = new LevelEntryCollection();
+        LevelEntryCollection mEntries = new LevelEntryCollection();
+        LevelEntryCollection mSelectedEntries = new LevelEntryCollection();
 
-		public EntryListToolWindow(MainMDIForm parent)
-		{
-			mParent = parent;
+        public EntryListToolWindow(MainMDIForm parent)
+        {
+            mParent = parent;
 
-			this.Icon = Icon.FromHandle(Resources.properties_32.GetHicon());
-			this.DoubleBuffered = true;
-			this.FormBorderStyle = FormBorderStyle.SizableToolWindow;
-			this.Text = "Entry List";
+            this.Icon = Icon.FromHandle(Resources.properties_32.GetHicon());
+            this.DoubleBuffered = true;
+            this.FormBorderStyle = FormBorderStyle.SizableToolWindow;
+            this.Text = "Entry List";
 
-			mList = new ListBox();
-			mList.Dock = DockStyle.Fill;
-			mList.IntegralHeight = false;
-			mList.SelectionMode = SelectionMode.MultiExtended;
+            mList = new ListBox();
+            mList.Dock = DockStyle.Fill;
+            mList.IntegralHeight = false;
+            mList.SelectionMode = SelectionMode.MultiExtended;
 
-			mList.SelectedIndexChanged += new System.EventHandler(mList_SelectedIndexChanged);
+            mList.SelectedIndexChanged += new System.EventHandler(mList_SelectedIndexChanged);
 
-			this.Controls.Add(mList);
-		}
+            this.Controls.Add(mList);
+        }
 
-		public void UpdateView(LevelEditor editor)
-		{
-			mEditor = editor;
+        public void UpdateView(LevelEditor editor)
+        {
+            mEditor = editor;
 
-			//Check if there are any changes
-			bool changes = false;
-			if (mEditor.Level.Entries.Count == mEntries.Count) {
-				for (int i = 0; i < mEntries.Count; i++) {
-					if (mEditor.Level.Entries[i] != mEntries[i]) {
-						changes = true;
-						break;
-					}
-				}
-			} else {
-				changes = true;
-			}
+            //Check if there are any changes
+            bool changes = false;
+            if (mEditor.Level.Entries.Count == mEntries.Count)
+            {
+                for (int i = 0; i < mEntries.Count; i++)
+                {
+                    if (mEditor.Level.Entries[i] != mEntries[i])
+                    {
+                        changes = true;
+                        break;
+                    }
+                }
+            }
+            else
+            {
+                changes = true;
+            }
 
-			if (mEditor.SelectedEntries.Count == mSelectedEntries.Count) {
-				for (int i = 0; i < mSelectedEntries.Count; i++) {
-					if (mEditor.SelectedEntries[i] != mSelectedEntries[i]) {
-						changes = true;
-						break;
-					}
-				}
-			} else {
-				changes = true;
-			}
+            if (mEditor.SelectedEntries.Count == mSelectedEntries.Count)
+            {
+                for (int i = 0; i < mSelectedEntries.Count; i++)
+                {
+                    if (mEditor.SelectedEntries[i] != mSelectedEntries[i])
+                    {
+                        changes = true;
+                        break;
+                    }
+                }
+            }
+            else
+            {
+                changes = true;
+            }
 
-			if (!changes)
-				return;
+            if (!changes)
+                return;
 
-			UpdateList();
-		}
+            UpdateList();
+        }
 
-		private void UpdateList()
-		{
-			mSuspendChangeEvent = true;
+        private void UpdateList()
+        {
+            mSuspendChangeEvent = true;
 
-			int topIndex = mList.TopIndex;
+            int topIndex = mList.TopIndex;
 
-			mList.BeginUpdate();
-			mList.Items.Clear();
-			List<string> items = new List<string>();
-			for (int i = 0; i < mEditor.Level.Entries.Count; i++) {
-				LevelEntry le = mEditor.Level.Entries[i];
-				items.Add(String.Format("{0}. {1}", i, le.ToString()));
-			}
+            mList.BeginUpdate();
+            mList.Items.Clear();
+            List<string> items = new List<string>();
+            for (int i = 0; i < mEditor.Level.Entries.Count; i++)
+            {
+                LevelEntry le = mEditor.Level.Entries[i];
+                items.Add(String.Format("{0}. {1}", i, le.ToString()));
+            }
 
-			mList.Items.AddRange(items.ToArray());
+            mList.Items.AddRange(items.ToArray());
 
-			foreach (LevelEntry le in mEditor.SelectedEntries) {
-				int index = mEditor.Level.Entries.IndexOf(le);
-				mList.SelectedIndices.Add(index);
-			}
+            foreach (LevelEntry le in mEditor.SelectedEntries)
+            {
+                int index = mEditor.Level.Entries.IndexOf(le);
+                mList.SelectedIndices.Add(index);
+            }
 
-			mList.EndUpdate();
+            mList.EndUpdate();
 
-			mEntries.Clear();
-			mSelectedEntries.Clear();
+            mEntries.Clear();
+            mSelectedEntries.Clear();
 
-			mEntries.AddRange(mEditor.Level.Entries);
-			mSelectedEntries.AddRange(mEditor.SelectedEntries);
+            mEntries.AddRange(mEditor.Level.Entries);
+            mSelectedEntries.AddRange(mEditor.SelectedEntries);
 
-			mList.TopIndex = Math.Min(topIndex, mEntries.Count);
+            mList.TopIndex = Math.Min(topIndex, mEntries.Count);
 
-			mSuspendChangeEvent = false;
-		}
+            mSuspendChangeEvent = false;
+        }
 
-		private void mList_SelectedIndexChanged(object sender, EventArgs e)
-		{
-			if (mSuspendChangeEvent)
-				return;
+        private void mList_SelectedIndexChanged(object sender, EventArgs e)
+        {
+            if (mSuspendChangeEvent)
+                return;
 
-			mEditor.SelectedEntries.Clear();
-			foreach (int i in mList.SelectedIndices) {
-				mEditor.SelectedEntries.Add(mEditor.Level.Entries[i]);
-			}
+            mEditor.SelectedEntries.Clear();
+            foreach (int i in mList.SelectedIndices)
+            {
+                mEditor.SelectedEntries.Add(mEditor.Level.Entries[i]);
+            }
 
-			mEditor.UpdateRedraw();
-		}
-	}
+            mEditor.UpdateRedraw();
+        }
+    }
 }

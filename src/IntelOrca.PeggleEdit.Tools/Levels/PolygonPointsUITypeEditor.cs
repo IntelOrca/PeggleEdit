@@ -23,32 +23,33 @@ using IntelOrca.PeggleEdit.Tools.Levels.Children;
 
 namespace IntelOrca.PeggleEdit.Tools.Levels
 {
-	/// <summary>
-	/// Represents the user interface when editing the collision points property of a polygon.
-	/// </summary>
-	class PolygonPointsUITypeEditor : UITypeEditor
-	{
-		public override UITypeEditorEditStyle GetEditStyle(ITypeDescriptorContext context)
-		{
-			return UITypeEditorEditStyle.Modal;
-		}
+    /// <summary>
+    /// Represents the user interface when editing the collision points property of a polygon.
+    /// </summary>
+    class PolygonPointsUITypeEditor : UITypeEditor
+    {
+        public override UITypeEditorEditStyle GetEditStyle(ITypeDescriptorContext context)
+        {
+            return UITypeEditorEditStyle.Modal;
+        }
 
-		public override object EditValue(ITypeDescriptorContext context, IServiceProvider provider, object value)
-		{
-			Polygon lc = context.Instance as Polygon;
-			if (lc == null)
-				return value;
+        public override object EditValue(ITypeDescriptorContext context, IServiceProvider provider, object value)
+        {
+            Polygon lc = context.Instance as Polygon;
+            if (lc == null)
+                return value;
 
-			if (value == null)
-				value = new PointF[0];
+            if (value == null)
+                value = new PointF[0];
 
-			PolygonEditor form = new PolygonEditor(lc.GetPolygonImage());
-			form.PointsFromPolygon((PointF[])value);
-			if (form.ShowDialog() == DialogResult.OK) {
-				return form.GetFinalPoints();
-			}
+            PolygonEditor form = new PolygonEditor(lc.GetPolygonImage());
+            form.PointsFromPolygon((PointF[])value);
+            if (form.ShowDialog() == DialogResult.OK)
+            {
+                return form.GetFinalPoints();
+            }
 
-			return value;
-		}
-	}
+            return value;
+        }
+    }
 }

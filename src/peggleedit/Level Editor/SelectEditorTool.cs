@@ -24,264 +24,293 @@ using IntelOrca.PeggleEdit.Tools.Levels.Children;
 
 namespace IntelOrca.PeggleEdit.Designer
 {
-	class SelectEditorTool : EditorTool
-	{
-		Point mSelectionStart;
-		Rectangle mSelectionRect;
-		List<PointF> mObjectPoints = new List<PointF>();
-		LevelEntry mDragObject;
-		bool mFirstObjectMovement;
-		bool mMovingObjects;
-		bool mSelecting;
+    class SelectEditorTool : EditorTool
+    {
+        Point mSelectionStart;
+        Rectangle mSelectionRect;
+        List<PointF> mObjectPoints = new List<PointF>();
+        LevelEntry mDragObject;
+        bool mFirstObjectMovement;
+        bool mMovingObjects;
+        bool mSelecting;
 
-		public override void MouseDown(MouseButtons button, Point location, Keys modifierKeys)
-		{
-			Level level = Editor.Level;
+        public override void MouseDown(MouseButtons button, Point location, Keys modifierKeys)
+        {
+            Level level = Editor.Level;
 
-			Point vl = Editor.Level.GetVirtualXY(location);
+            Point vl = Editor.Level.GetVirtualXY(location);
 
-			//Get the pegs at this point
-			LevelEntry[] les = level.GetObjectsIn(new RectangleF(vl.X, vl.Y, 1, 1));
+            //Get the pegs at this point
+            LevelEntry[] les = level.GetObjectsIn(new RectangleF(vl.X, vl.Y, 1, 1));
 
-			//Get top most object
-			LevelEntry top_le = null;
-			if (les.Length > 0) {
-				top_le = les[les.Length - 1];
-			}
+            //Get top most object
+            LevelEntry top_le = null;
+            if (les.Length > 0)
+            {
+                top_le = les[les.Length - 1];
+            }
 
-			//Select the one thats already selected if possible
-			LevelEntry le = null;
-			foreach (LevelEntry entry in les) {
-				if (Editor.SelectedEntries.Contains(entry)) {
-					le = entry;
-					break;
-				}
-			}
+            //Select the one thats already selected if possible
+            LevelEntry le = null;
+            foreach (LevelEntry entry in les)
+            {
+                if (Editor.SelectedEntries.Contains(entry))
+                {
+                    le = entry;
+                    break;
+                }
+            }
 
-			if (top_le != le)
-				le = null;
+            if (top_le != le)
+                le = null;
 
-			//Select whatever one is there
-			if (le == null && les.Length > 0)
-				le = top_le;
+            //Select whatever one is there
+            if (le == null && les.Length > 0)
+                le = top_le;
 
-			//Did we click on an object
-			if (le != null) {
-				if (Editor.SelectedEntries.Contains(le)) {
+            //Did we click on an object
+            if (le != null)
+            {
+                if (Editor.SelectedEntries.Contains(le))
+                {
 
-				} else {
-					//Unless control is down, clear selection
-					if ((modifierKeys & Keys.Control) == 0)
-						Editor.SelectedEntries.Clear();
+                }
+                else
+                {
+                    //Unless control is down, clear selection
+                    if ((modifierKeys & Keys.Control) == 0)
+                        Editor.SelectedEntries.Clear();
 
-					//Add the new peg to the selection
-					Editor.SelectedEntries.Add(le);
-				}
+                    //Add the new peg to the selection
+                    Editor.SelectedEntries.Add(le);
+                }
 
-				if (button == MouseButtons.Left) {
-					//Set the selection start to here
-					mSelectionStart = location;
+                if (button == MouseButtons.Left)
+                {
+                    //Set the selection start to here
+                    mSelectionStart = location;
 
-					//Store all the original poisitons of the objects
-					mObjectPoints.Clear();
-					for (int i = 0; i < Editor.SelectedEntries.Count; i++) {
-						LevelEntry objs = Editor.SelectedEntries[i];
-						mObjectPoints.Add(new PointF(objs.X, objs.Y));
-					}
+                    //Store all the original poisitons of the objects
+                    mObjectPoints.Clear();
+                    for (int i = 0; i < Editor.SelectedEntries.Count; i++)
+                    {
+                        LevelEntry objs = Editor.SelectedEntries[i];
+                        mObjectPoints.Add(new PointF(objs.X, objs.Y));
+                    }
 
-					//We are moving the pegs
-					mDragObject = le;
-					mMovingObjects = true;
-					mFirstObjectMovement = true;
-				}
-			} else {
-				Editor.SelectedEntries.Clear();
+                    //We are moving the pegs
+                    mDragObject = le;
+                    mMovingObjects = true;
+                    mFirstObjectMovement = true;
+                }
+            }
+            else
+            {
+                Editor.SelectedEntries.Clear();
 
-				//Start selection rectangle
-				mSelectionStart = location;
-				mSelecting = true;
-			}
+                //Start selection rectangle
+                mSelectionStart = location;
+                mSelecting = true;
+            }
 
-			Editor.UpdateRedraw();
+            Editor.UpdateRedraw();
 
-			Editor.CheckSelectionChanged();
-		}
+            Editor.CheckSelectionChanged();
+        }
 
 
-		public override void MouseMove(MouseButtons button, Point location, Keys modifierKeys)
-		{
-			if (button != MouseButtons.Left)
-				return;
+        public override void MouseMove(MouseButtons button, Point location, Keys modifierKeys)
+        {
+            if (button != MouseButtons.Left)
+                return;
 
-			if (mSelecting) {
-				if (location.X < mSelectionStart.X) {
-					mSelectionRect.X = location.X;
-					mSelectionRect.Width = mSelectionStart.X - location.X;
-				} else {
-					mSelectionRect.X = mSelectionStart.X;
-					mSelectionRect.Width = location.X - mSelectionStart.X;
-				}
+            if (mSelecting)
+            {
+                if (location.X < mSelectionStart.X)
+                {
+                    mSelectionRect.X = location.X;
+                    mSelectionRect.Width = mSelectionStart.X - location.X;
+                }
+                else
+                {
+                    mSelectionRect.X = mSelectionStart.X;
+                    mSelectionRect.Width = location.X - mSelectionStart.X;
+                }
 
-				if (location.Y < mSelectionStart.Y) {
-					mSelectionRect.Y = location.Y;
-					mSelectionRect.Height = mSelectionStart.Y - location.Y;
-				} else {
-					mSelectionRect.Y = mSelectionStart.Y;
-					mSelectionRect.Height = location.Y - mSelectionStart.Y;
-				}
+                if (location.Y < mSelectionStart.Y)
+                {
+                    mSelectionRect.Y = location.Y;
+                    mSelectionRect.Height = mSelectionStart.Y - location.Y;
+                }
+                else
+                {
+                    mSelectionRect.Y = mSelectionStart.Y;
+                    mSelectionRect.Height = location.Y - mSelectionStart.Y;
+                }
 
-				Editor.SelectedEntries.Clear();
+                Editor.SelectedEntries.Clear();
 
-				Point vl = Editor.Level.GetVirtualXY(mSelectionRect.Location);
+                Point vl = Editor.Level.GetVirtualXY(mSelectionRect.Location);
 
-				Editor.SelectedEntries.AddRange(Editor.Level.GetObjectsIn(new RectangleF(
-					 vl.X, vl.Y,
-					 mSelectionRect.Width, mSelectionRect.Height)));
+                Editor.SelectedEntries.AddRange(Editor.Level.GetObjectsIn(new RectangleF(
+                     vl.X, vl.Y,
+                     mSelectionRect.Width, mSelectionRect.Height)));
 
-				Editor.UpdateRedraw();
-				Editor.CheckSelectionChanged();
-			} else if (mMovingObjects) {
-				//Create undo point if first call
-				if (mFirstObjectMovement) {
-					Editor.CreateUndoPoint();
-					mFirstObjectMovement = false;
-				}
+                Editor.UpdateRedraw();
+                Editor.CheckSelectionChanged();
+            }
+            else if (mMovingObjects)
+            {
+                //Create undo point if first call
+                if (mFirstObjectMovement)
+                {
+                    Editor.CreateUndoPoint();
+                    mFirstObjectMovement = false;
+                }
 
-				//Calculate the delta by how much the mouse has moved
-				int dx = location.X - mSelectionStart.X;
-				int dy = location.Y - mSelectionStart.Y;
+                //Calculate the delta by how much the mouse has moved
+                int dx = location.X - mSelectionStart.X;
+                int dy = location.Y - mSelectionStart.Y;
 
-				MoveSelectingObjectsBy(dx, dy, true);
+                MoveSelectingObjectsBy(dx, dy, true);
 
-				Editor.UpdateRedraw();
-			}
-		}
+                Editor.UpdateRedraw();
+            }
+        }
 
-		private void MoveSelectingObjectsBy(int deltaX, int deltaY, bool snap)
-		{
-			for (int i = 0; i < Editor.SelectedEntries.Count; i++) {
-				LevelEntry obj = Editor.SelectedEntries[i];
+        private void MoveSelectingObjectsBy(int deltaX, int deltaY, bool snap)
+        {
+            for (int i = 0; i < Editor.SelectedEntries.Count; i++)
+            {
+                LevelEntry obj = Editor.SelectedEntries[i];
 
-				//Calculate the new x and y with the delta
-				float newX = mObjectPoints[i].X + deltaX;
-				float newY = mObjectPoints[i].Y + deltaY;
+                //Calculate the new x and y with the delta
+                float newX = mObjectPoints[i].X + deltaX;
+                float newY = mObjectPoints[i].Y + deltaY;
 
-				//Snap if it is the dragged object
-				if (snap && (Settings.Default.SnapToGrid & Settings.Default.ShowGrid) && obj == mDragObject) {
-					float snapX = Editor.SnapToGrid(newX);
-					float snapY = Editor.SnapToGrid(newY);
+                //Snap if it is the dragged object
+                if (snap && (Settings.Default.SnapToGrid & Settings.Default.ShowGrid) && obj == mDragObject)
+                {
+                    float snapX = Editor.SnapToGrid(newX);
+                    float snapY = Editor.SnapToGrid(newY);
 
-					//Check if there was a snap
-					if (snapX != newX || snapY != newY) {
-						//Calculate delta
-						deltaX = (int)(snapX - mObjectPoints[i].X);
-						deltaY = (int)(snapY - mObjectPoints[i].Y);
+                    //Check if there was a snap
+                    if (snapX != newX || snapY != newY)
+                    {
+                        //Calculate delta
+                        deltaX = (int)(snapX - mObjectPoints[i].X);
+                        deltaY = (int)(snapY - mObjectPoints[i].Y);
 
-						//Move the selected objects by delta
-						MoveSelectingObjectsBy(deltaX, deltaY, false);
+                        //Move the selected objects by delta
+                        MoveSelectingObjectsBy(deltaX, deltaY, false);
 
-						//Finish
-						return;
-					}
-				}
+                        //Finish
+                        return;
+                    }
+                }
 
-				obj.X = newX;
-				obj.Y = newY;
-			}
-		}
+                obj.X = newX;
+                obj.Y = newY;
+            }
+        }
 
-		public override void MouseUp(MouseButtons button, Point location, Keys modifierKeys)
-		{
-			if (button == MouseButtons.Right) {
-				ShowContextMenu(location);
-				return;
-			}
+        public override void MouseUp(MouseButtons button, Point location, Keys modifierKeys)
+        {
+            if (button == MouseButtons.Right)
+            {
+                ShowContextMenu(location);
+                return;
+            }
 
-			mMovingObjects = false;
-			mSelecting = false;
-			mSelectionRect = Rectangle.Empty;
+            mMovingObjects = false;
+            mSelecting = false;
+            mSelectionRect = Rectangle.Empty;
 
-			Editor.UpdateRedraw();
-			Editor.InvokeSelectionChangedEvent();
-		}
+            Editor.UpdateRedraw();
+            Editor.InvokeSelectionChangedEvent();
+        }
 
-		public override void Draw(Graphics g)
-		{
-			Rectangle rect;
+        public override void Draw(Graphics g)
+        {
+            Rectangle rect;
 
-			//Draw the mouse selection
-			if (mSelecting) {
-				rect = mSelectionRect;
-				g.FillRectangle(new SolidBrush(Color.FromArgb(40, 255, 255, 255)), rect);
-				g.DrawRectangle(Pens.CornflowerBlue, rect);
+            //Draw the mouse selection
+            if (mSelecting)
+            {
+                rect = mSelectionRect;
+                g.FillRectangle(new SolidBrush(Color.FromArgb(40, 255, 255, 255)), rect);
+                g.DrawRectangle(Pens.CornflowerBlue, rect);
 
-				rect.Inflate(-1, -1);
-				g.DrawRectangle(Pens.SkyBlue, rect);
-			}
-		}
+                rect.Inflate(-1, -1);
+                g.DrawRectangle(Pens.SkyBlue, rect);
+            }
+        }
 
-		public override object Clone()
-		{
-			EditorTool tool = new SelectEditorTool();
-			CloneTo(tool);
+        public override object Clone()
+        {
+            EditorTool tool = new SelectEditorTool();
+            CloneTo(tool);
 
-			return tool;
-		}
+            return tool;
+        }
 
-		#region Context Menu
+        #region Context Menu
 
-		private void ShowContextMenu(Point location)
-		{
-			ContextMenuStrip menu = new ContextMenuStrip();
+        private void ShowContextMenu(Point location)
+        {
+            ContextMenuStrip menu = new ContextMenuStrip();
 
-			if (Editor.SelectedEntries.Count > 0) {
-				menu.Items.Add(new ToolStripMenuItem("Bring to Front", Resources.bring_to_front_16, new EventHandler(mnuBringToFront)));
-				menu.Items.Add(new ToolStripMenuItem("Send to Back", Resources.send_to_back_16, new EventHandler(mnuSendToBack)));
-				menu.Items.Add(new ToolStripSeparator());
-			}
+            if (Editor.SelectedEntries.Count > 0)
+            {
+                menu.Items.Add(new ToolStripMenuItem("Bring to Front", Resources.bring_to_front_16, new EventHandler(mnuBringToFront)));
+                menu.Items.Add(new ToolStripMenuItem("Send to Back", Resources.send_to_back_16, new EventHandler(mnuSendToBack)));
+                menu.Items.Add(new ToolStripSeparator());
+            }
 
-			if (Editor.SelectedEntries.Count > 0) {
-				menu.Items.Add(new ToolStripMenuItem("Cut", Resources.cut_16, new EventHandler(mnuCut)));
-				menu.Items.Add(new ToolStripMenuItem("Copy", Resources.copy_16, new EventHandler(mnuCopy)));
-			}
-			menu.Items.Add(new ToolStripMenuItem("Paste", Resources.paste_16, new EventHandler(mnuPaste)));
-			if (Editor.SelectedEntries.Count > 0) {
-				menu.Items.Add(new ToolStripMenuItem("Delete", Resources.delete_16, new EventHandler(mnuDelete)));
-			}
+            if (Editor.SelectedEntries.Count > 0)
+            {
+                menu.Items.Add(new ToolStripMenuItem("Cut", Resources.cut_16, new EventHandler(mnuCut)));
+                menu.Items.Add(new ToolStripMenuItem("Copy", Resources.copy_16, new EventHandler(mnuCopy)));
+            }
+            menu.Items.Add(new ToolStripMenuItem("Paste", Resources.paste_16, new EventHandler(mnuPaste)));
+            if (Editor.SelectedEntries.Count > 0)
+            {
+                menu.Items.Add(new ToolStripMenuItem("Delete", Resources.delete_16, new EventHandler(mnuDelete)));
+            }
 
-			menu.Show(Editor, location);
-		}
+            menu.Show(Editor, location);
+        }
 
-		private void mnuBringToFront(object sender, EventArgs e)
-		{
-			Editor.BringObjectsToFront();
-		}
+        private void mnuBringToFront(object sender, EventArgs e)
+        {
+            Editor.BringObjectsToFront();
+        }
 
-		private void mnuSendToBack(object sender, EventArgs e)
-		{
-			Editor.SendObjectsToBack();
-		}
+        private void mnuSendToBack(object sender, EventArgs e)
+        {
+            Editor.SendObjectsToBack();
+        }
 
-		private void mnuCut(object sender, EventArgs e)
-		{
-			Editor.CutObjects();
-		}
+        private void mnuCut(object sender, EventArgs e)
+        {
+            Editor.CutObjects();
+        }
 
-		private void mnuCopy(object sender, EventArgs e)
-		{
-			Editor.CopyObjects();
-		}
+        private void mnuCopy(object sender, EventArgs e)
+        {
+            Editor.CopyObjects();
+        }
 
-		private void mnuPaste(object sender, EventArgs e)
-		{
-			Editor.PasteObjects();
-		}
+        private void mnuPaste(object sender, EventArgs e)
+        {
+            Editor.PasteObjects();
+        }
 
-		private void mnuDelete(object sender, EventArgs e)
-		{
-			Editor.DeleteObjects();
-		}
+        private void mnuDelete(object sender, EventArgs e)
+        {
+            Editor.DeleteObjects();
+        }
 
-		#endregion
-	}
+        #endregion
+    }
 }

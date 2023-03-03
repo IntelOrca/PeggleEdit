@@ -19,123 +19,123 @@ using System.Collections.Generic;
 
 namespace IntelOrca.PeggleEdit.Tools.Pack.CFG
 {
-	/// <summary>
-	/// Represents a block in a CFGDocument.
-	/// </summary>
-	public class CFGBlock : IEnumerable<CFGProperty>
-	{
-		private string mName;
-		private string mValue;
-		private List<CFGBlock> mBlocks;
-		private List<CFGProperty> mProperties;
+    /// <summary>
+    /// Represents a block in a CFGDocument.
+    /// </summary>
+    public class CFGBlock : IEnumerable<CFGProperty>
+    {
+        private string mName;
+        private string mValue;
+        private List<CFGBlock> mBlocks;
+        private List<CFGProperty> mProperties;
 
-		public CFGBlock()
-		{
-			mBlocks = new List<CFGBlock>();
-			mProperties = new List<CFGProperty>();
-		}
+        public CFGBlock()
+        {
+            mBlocks = new List<CFGBlock>();
+            mProperties = new List<CFGProperty>();
+        }
 
-		public CFGBlock(string szBlock)
-		{
+        public CFGBlock(string szBlock)
+        {
 
-		}
+        }
 
-		public CFGProperty GetFirstProperty(string name)
-		{
-			List<CFGProperty> properties = new List<CFGProperty>();
-			foreach (CFGProperty p in mProperties)
-				if (String.Compare(p.Name, name, true) == 0)
-					return p;
+        public CFGProperty GetFirstProperty(string name)
+        {
+            List<CFGProperty> properties = new List<CFGProperty>();
+            foreach (CFGProperty p in mProperties)
+                if (String.Compare(p.Name, name, true) == 0)
+                    return p;
 
-			return null;
-		}
+            return null;
+        }
 
-		public CFGProperty[] GetProperties(string name)
-		{
-			List<CFGProperty> properties = new List<CFGProperty>();
-			foreach (CFGProperty p in mProperties)
-				if (String.Compare(p.Name, name, true) == 0)
-					properties.Add(p);
+        public CFGProperty[] GetProperties(string name)
+        {
+            List<CFGProperty> properties = new List<CFGProperty>();
+            foreach (CFGProperty p in mProperties)
+                if (String.Compare(p.Name, name, true) == 0)
+                    properties.Add(p);
 
-			return properties.ToArray();
-		}
+            return properties.ToArray();
+        }
 
-		public CFGBlock GetFirstBlock(string name)
-		{
-			List<CFGBlock> blocks = new List<CFGBlock>();
-			foreach (CFGBlock b in mBlocks)
-				if (String.Compare(b.Name, name, true) == 0)
-					return b;
+        public CFGBlock GetFirstBlock(string name)
+        {
+            List<CFGBlock> blocks = new List<CFGBlock>();
+            foreach (CFGBlock b in mBlocks)
+                if (String.Compare(b.Name, name, true) == 0)
+                    return b;
 
-			return null;
-		}
+            return null;
+        }
 
-		public CFGBlock[] GetBlocks(string name)
-		{
-			List<CFGBlock> blocks = new List<CFGBlock>();
-			foreach (CFGBlock b in mBlocks)
-				if (String.Compare(b.Name, name, true) == 0)
-					blocks.Add(b);
+        public CFGBlock[] GetBlocks(string name)
+        {
+            List<CFGBlock> blocks = new List<CFGBlock>();
+            foreach (CFGBlock b in mBlocks)
+                if (String.Compare(b.Name, name, true) == 0)
+                    blocks.Add(b);
 
-			return blocks.ToArray();
-		}
+            return blocks.ToArray();
+        }
 
-		public bool HasValue
-		{
-			get
-			{
-				return (mValue != null);
-			}
-		}
+        public bool HasValue
+        {
+            get
+            {
+                return (mValue != null);
+            }
+        }
 
-		public string Name
-		{
-			get
-			{
-				return mName;
-			}
-			set
-			{
-				mName = value;
-			}
-		}
+        public string Name
+        {
+            get
+            {
+                return mName;
+            }
+            set
+            {
+                mName = value;
+            }
+        }
 
-		public string Value
-		{
-			get
-			{
-				return mValue;
-			}
-			set
-			{
-				mValue = value;
-			}
-		}
+        public string Value
+        {
+            get
+            {
+                return mValue;
+            }
+            set
+            {
+                mValue = value;
+            }
+        }
 
-		public List<CFGBlock> Blocks
-		{
-			get
-			{
-				return mBlocks;
-			}
-		}
+        public List<CFGBlock> Blocks
+        {
+            get
+            {
+                return mBlocks;
+            }
+        }
 
-		public List<CFGProperty> Properties
-		{
-			get
-			{
-				return mProperties;
-			}
-		}
+        public List<CFGProperty> Properties
+        {
+            get
+            {
+                return mProperties;
+            }
+        }
 
-		public IEnumerator<CFGProperty> GetEnumerator()
-		{
-			return mProperties.GetEnumerator();
-		}
+        public IEnumerator<CFGProperty> GetEnumerator()
+        {
+            return mProperties.GetEnumerator();
+        }
 
-		System.Collections.IEnumerator System.Collections.IEnumerable.GetEnumerator()
-		{
-			return mProperties.GetEnumerator();
-		}
-	}
+        System.Collections.IEnumerator System.Collections.IEnumerable.GetEnumerator()
+        {
+            return mProperties.GetEnumerator();
+        }
+    }
 }

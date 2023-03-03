@@ -20,84 +20,87 @@ using System.Windows.Forms;
 
 namespace IntelOrca.PeggleEdit.Designer
 {
-	class InputForm : Form
-	{
-		TextBox txtInput;
+    class InputForm : Form
+    {
+        TextBox txtInput;
 
-		private InputForm(string title, string caption, string defaultText)
-		{
-			Text = title;
-			ShowIcon = false;
-			ClientSize = new Size(280, 141);
-			StartPosition = FormStartPosition.CenterScreen;
-			FormBorderStyle = FormBorderStyle.FixedToolWindow;
-			MaximizeBox = false;
-			ControlBox = false;
+        private InputForm(string title, string caption, string defaultText)
+        {
+            Text = title;
+            ShowIcon = false;
+            ClientSize = new Size(280, 141);
+            StartPosition = FormStartPosition.CenterScreen;
+            FormBorderStyle = FormBorderStyle.FixedToolWindow;
+            MaximizeBox = false;
+            ControlBox = false;
 
-			Label lblCaption = new Label();
-			lblCaption.Name = "lblCaption";
-			lblCaption.Location = new Point(12, 9);
-			lblCaption.Text = caption;
-			lblCaption.AutoSize = true;
+            Label lblCaption = new Label();
+            lblCaption.Name = "lblCaption";
+            lblCaption.Location = new Point(12, 9);
+            lblCaption.Text = caption;
+            lblCaption.AutoSize = true;
 
-			txtInput = new TextBox();
-			txtInput.Name = "txtInput";
-			txtInput.Location = new Point(15, 41);
-			txtInput.Size = new Size(ClientSize.Width - (txtInput.Left * 2), 20);
-			txtInput.Text = defaultText;
-			txtInput.Select(txtInput.TextLength, 0);
-			txtInput.Focus();
+            txtInput = new TextBox();
+            txtInput.Name = "txtInput";
+            txtInput.Location = new Point(15, 41);
+            txtInput.Size = new Size(ClientSize.Width - (txtInput.Left * 2), 20);
+            txtInput.Text = defaultText;
+            txtInput.Select(txtInput.TextLength, 0);
+            txtInput.Focus();
 
-			Button btnOK = new Button();
-			btnOK.Name = "btnOK";
-			btnOK.Size = new Size(75, 23);
-			btnOK.Location = new Point(txtInput.Right - btnOK.Width, 70);
-			btnOK.Text = "OK";
-			btnOK.Click += new EventHandler(btnOK_Click);
+            Button btnOK = new Button();
+            btnOK.Name = "btnOK";
+            btnOK.Size = new Size(75, 23);
+            btnOK.Location = new Point(txtInput.Right - btnOK.Width, 70);
+            btnOK.Text = "OK";
+            btnOK.Click += new EventHandler(btnOK_Click);
 
-			ClientSize = new Size(ClientSize.Width, btnOK.Bottom + 15);
+            ClientSize = new Size(ClientSize.Width, btnOK.Bottom + 15);
 
-			AcceptButton = btnOK;
+            AcceptButton = btnOK;
 
-			Controls.Add(lblCaption);
-			Controls.Add(txtInput);
-			Controls.Add(btnOK);
-		}
+            Controls.Add(lblCaption);
+            Controls.Add(txtInput);
+            Controls.Add(btnOK);
+        }
 
-		void btnOK_Click(object sender, EventArgs e)
-		{
-			DialogResult = DialogResult.OK;
-			Close();
-		}
+        void btnOK_Click(object sender, EventArgs e)
+        {
+            DialogResult = DialogResult.OK;
+            Close();
+        }
 
-		private string InputText
-		{
-			get
-			{
-				return txtInput.Text;
-			}
-		}
+        private string InputText
+        {
+            get
+            {
+                return txtInput.Text;
+            }
+        }
 
-		public static string Show(string title, string caption, string defaultText)
-		{
-			InputForm frm = new InputForm(title, caption, defaultText);
-			if (frm.ShowDialog() == DialogResult.OK) {
-				return frm.InputText;
-			} else {
-				return defaultText;
-			}
-		}
+        public static string Show(string title, string caption, string defaultText)
+        {
+            InputForm frm = new InputForm(title, caption, defaultText);
+            if (frm.ShowDialog() == DialogResult.OK)
+            {
+                return frm.InputText;
+            }
+            else
+            {
+                return defaultText;
+            }
+        }
 
-		private void InitializeComponent()
-		{
-			this.SuspendLayout();
-			// 
-			// InputForm
-			// 
-			this.ClientSize = new System.Drawing.Size(284, 262);
-			this.Name = "InputForm";
-			this.ResumeLayout(false);
+        private void InitializeComponent()
+        {
+            this.SuspendLayout();
+            // 
+            // InputForm
+            // 
+            this.ClientSize = new System.Drawing.Size(284, 262);
+            this.Name = "InputForm";
+            this.ResumeLayout(false);
 
-		}
-	}
+        }
+    }
 }

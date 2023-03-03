@@ -21,118 +21,124 @@ using IntelOrca.PeggleEdit.Tools.Levels.Children;
 
 namespace IntelOrca.PeggleEdit.Tools.Levels
 {
-	/// <summary>
-	/// Represents a writer that can write levels in XML form.
-	/// </summary>
-	class LevelXMLWriter
-	{
-		Level mLevel;
+    /// <summary>
+    /// Represents a writer that can write levels in XML form.
+    /// </summary>
+    class LevelXMLWriter
+    {
+        Level mLevel;
 
-		public LevelXMLWriter(Level level)
-		{
-			mLevel = level;
-		}
+        public LevelXMLWriter(Level level)
+        {
+            mLevel = level;
+        }
 
-		public string GetXML()
-		{
-			StringBuilder sb = new StringBuilder();
-			XmlWriter xmlWriter = XmlWriter.Create(sb, GetXMLSettings());
+        public string GetXML()
+        {
+            StringBuilder sb = new StringBuilder();
+            XmlWriter xmlWriter = XmlWriter.Create(sb, GetXMLSettings());
 
-			xmlWriter.WriteStartDocument();
+            xmlWriter.WriteStartDocument();
 
-			WriteLevel(xmlWriter);
+            WriteLevel(xmlWriter);
 
-			xmlWriter.WriteEndDocument();
+            xmlWriter.WriteEndDocument();
 
-			xmlWriter.Close();
+            xmlWriter.Close();
 
-			return sb.ToString();
-		}
+            return sb.ToString();
+        }
 
-		private XmlWriterSettings GetXMLSettings()
-		{
-			XmlWriterSettings settings = new XmlWriterSettings();
-			settings.Indent = true;
-			settings.IndentChars = ("\t");
-			return settings;
-		}
+        private XmlWriterSettings GetXMLSettings()
+        {
+            XmlWriterSettings settings = new XmlWriterSettings();
+            settings.Indent = true;
+            settings.IndentChars = ("\t");
+            return settings;
+        }
 
-		private void WriteLevel(XmlWriter xmlWriter)
-		{
-			xmlWriter.WriteStartElement("Level");
-			xmlWriter.WriteAttributeString("name", mLevel.Info.Name);
+        private void WriteLevel(XmlWriter xmlWriter)
+        {
+            xmlWriter.WriteStartElement("Level");
+            xmlWriter.WriteAttributeString("name", mLevel.Info.Name);
 
-			//Write the entries
-			foreach (LevelEntry le in mLevel.Entries)
-				WriteEntry(xmlWriter, le);
+            //Write the entries
+            foreach (LevelEntry le in mLevel.Entries)
+                WriteEntry(xmlWriter, le);
 
-			xmlWriter.WriteEndElement();
-		}
+            xmlWriter.WriteEndElement();
+        }
 
-		private void WriteEntry(XmlWriter xmlWriter, LevelEntry entry)
-		{
-			xmlWriter.WriteStartElement("Entry");
+        private void WriteEntry(XmlWriter xmlWriter, LevelEntry entry)
+        {
+            xmlWriter.WriteStartElement("Entry");
 
-			xmlWriter.WriteAttributeString("type", entry.Type.ToString());
+            xmlWriter.WriteAttributeString("type", entry.Type.ToString());
 
-			WriteLevelChild(xmlWriter, entry);
+            WriteLevelChild(xmlWriter, entry);
 
 
-			//Write properties
+            //Write properties
 
-			xmlWriter.WriteEndElement();
-		}
+            xmlWriter.WriteEndElement();
+        }
 
-		private void WriteLevelChild(XmlWriter xmlWriter, object child)
-		{
-			WriteObjectProperties(xmlWriter, EntryPropertyType.Attribute, child);
-			WriteObjectProperties(xmlWriter, EntryPropertyType.Element, child);
-		}
+        private void WriteLevelChild(XmlWriter xmlWriter, object child)
+        {
+            WriteObjectProperties(xmlWriter, EntryPropertyType.Attribute, child);
+            WriteObjectProperties(xmlWriter, EntryPropertyType.Element, child);
+        }
 
-		private void WriteObjectProperties(XmlWriter xmlWriter, EntryPropertyType type, object obj)
-		{
-			PropertyInfo[] properties = obj.GetType().GetProperties();
-			foreach (PropertyInfo p in properties) {
-				//Check to see if the property has an entry property attribute
-				object[] attributes = p.GetCustomAttributes(typeof(EntryPropertyAttribute), true);
-				if (attributes.Length == 0)
-					continue;
+        private void WriteObjectProperties(XmlWriter xmlWriter, EntryPropertyType type, object obj)
+        {
+            PropertyInfo[] properties = obj.GetType().GetProperties();
+            foreach (PropertyInfo p in properties)
+            {
+                //Check to see if the property has an entry property attribute
+                object[] attributes = p.GetCustomAttributes(typeof(EntryPropertyAttribute), true);
+                if (attributes.Length == 0)
+                    continue;
 
-				//Check to see if the property is an attribute
-				EntryPropertyAttribute ep = (EntryPropertyAttribute)attributes[0];
-				if (type == EntryPropertyType.Attribute) {
-					if (ep.Type != type)
-						continue;
-				} else if (type == EntryPropertyType.Element) {
-					if (ep.Type != EntryPropertyType.Element && ep.Type != EntryPropertyType.SubElement)
-						continue;
-				}
+                //Check to see if the property is an attribute
+                EntryPropertyAttribute ep = (EntryPropertyAttribute)attributes[0];
+                if (type == EntryPropertyType.Attribute)
+                {
+                    if (ep.Type != type)
+                        continue;
+                }
+                else if (type == EntryPropertyType.Element)
+                {
+                    if (ep.Type != EntryPropertyType.Element && ep.Type != EntryPropertyType.SubElement)
+                        continue;
+                }
 
-				//Get value
-				object value = p.GetValue(obj, null);
-				if (value == null)
-					continue;
+                //Get value
+                object value = p.GetValue(obj, null);
+                if (value == null)
+                    continue;
 
-				//Check to see if the value is different from the default value
-				if (ep.DefaultValue != null) {
-					if (ep.DefaultValue.Equals(value))
-						continue;
-				}
+                //Check to see if the value is different from the default value
+                if (ep.DefaultValue != null)
+                {
+                    if (ep.DefaultValue.Equals(value))
+                        continue;
+                }
 
-				switch (ep.Type) {
-					case EntryPropertyType.Attribute:
-						xmlWriter.WriteAttributeString(p.Name, value.ToString());
-						break;
-					case EntryPropertyType.Element:
-						xmlWriter.WriteElementString(p.Name, value.ToString());
-						break;
-					case EntryPropertyType.SubElement:
-						xmlWriter.WriteStartElement(p.Name);
-						WriteLevelChild(xmlWriter, value);
-						xmlWriter.WriteEndElement();
-						break;
-				}
-			}
-		}
-	}
+                switch (ep.Type)
+                {
+                    case EntryPropertyType.Attribute:
+                        xmlWriter.WriteAttributeString(p.Name, value.ToString());
+                        break;
+                    case EntryPropertyType.Element:
+                        xmlWriter.WriteElementString(p.Name, value.ToString());
+                        break;
+                    case EntryPropertyType.SubElement:
+                        xmlWriter.WriteStartElement(p.Name);
+                        WriteLevelChild(xmlWriter, value);
+                        xmlWriter.WriteEndElement();
+                        break;
+                }
+            }
+        }
+    }
 }

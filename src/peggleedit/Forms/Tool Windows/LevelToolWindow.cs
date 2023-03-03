@@ -24,123 +24,127 @@ using IntelOrca.PeggleEdit.Tools.Levels.Children;
 
 namespace IntelOrca.PeggleEdit.Designer
 {
-	[GuidAttribute("1A01E050-F11A-47C5-B62B-000000000001")]
-	class LevelToolWindow : Form
-	{
-		MainMDIForm mParent;
-		LevelEditor mLevelEditor;
-		Timer mTimer;
+    [GuidAttribute("1A01E050-F11A-47C5-B62B-000000000001")]
+    class LevelToolWindow : Form
+    {
+        MainMDIForm mParent;
+        LevelEditor mLevelEditor;
+        Timer mTimer;
 
-		public LevelToolWindow(MainMDIForm parent, Level level)
-		{
-			mParent = parent;
+        public LevelToolWindow(MainMDIForm parent, Level level)
+        {
+            mParent = parent;
 
-			this.FormBorderStyle = FormBorderStyle.SizableToolWindow;
-			this.Text = level.Info.Name;
-			this.KeyPreview = true;
+            this.FormBorderStyle = FormBorderStyle.SizableToolWindow;
+            this.Text = level.Info.Name;
+            this.KeyPreview = true;
 
-			this.Icon = Icon.FromHandle(Resources.level_16.GetHicon());
+            this.Icon = Icon.FromHandle(Resources.level_16.GetHicon());
 
-			mLevelEditor = new LevelEditor();
-			mLevelEditor.Level = level;
-			
-			mLevelEditor.Location = new Point(0, 0);
-			Rectangle bounds = mLevelEditor.Level.Bounds;
-			mLevelEditor.Size = new Size(bounds.Width, bounds.Height);
+            mLevelEditor = new LevelEditor();
+            mLevelEditor.Level = level;
 
-			mLevelEditor.Level.ShowAnchorsAlways = Settings.Default.ShowAnchorsAlways;
+            mLevelEditor.Location = new Point(0, 0);
+            Rectangle bounds = mLevelEditor.Level.Bounds;
+            mLevelEditor.Size = new Size(bounds.Width, bounds.Height);
 
-			mLevelEditor.UpdatedRedrawed += new EventHandler(mLevelEditor_UpdatedRedrawed);
-			mLevelEditor.SelectionChanged += new EventHandler(mLevelEditor_SelectionChanged);
-			mLevelEditor.MouseMove += new MouseEventHandler(mLevelEditor_MouseMove);
+            mLevelEditor.Level.ShowAnchorsAlways = Settings.Default.ShowAnchorsAlways;
 
-			mTimer = new Timer();
-			mTimer.Interval = 10;
-			mTimer.Enabled = true;
-			mTimer.Tick += new EventHandler(mTimer_Tick);
+            mLevelEditor.UpdatedRedrawed += new EventHandler(mLevelEditor_UpdatedRedrawed);
+            mLevelEditor.SelectionChanged += new EventHandler(mLevelEditor_SelectionChanged);
+            mLevelEditor.MouseMove += new MouseEventHandler(mLevelEditor_MouseMove);
 
-			this.Controls.Add(mLevelEditor);
+            mTimer = new Timer();
+            mTimer.Interval = 10;
+            mTimer.Enabled = true;
+            mTimer.Tick += new EventHandler(mTimer_Tick);
 
-			this.AutoScroll = true;
-		}
+            this.Controls.Add(mLevelEditor);
 
-		protected override void OnShown(EventArgs e)
-		{
-			//Centre the scroll position
-			int x = (mLevelEditor.Width / 2) - (Width / 2);
-			int y = (mLevelEditor.Height / 2) - (Height / 2);
+            this.AutoScroll = true;
+        }
 
-			this.AutoScrollPosition = new Point(x, y);
-			mLevelEditor.AutoScrollOffset = new Point(-x, -y);
+        protected override void OnShown(EventArgs e)
+        {
+            //Centre the scroll position
+            int x = (mLevelEditor.Width / 2) - (Width / 2);
+            int y = (mLevelEditor.Height / 2) - (Height / 2);
 
-			base.OnShown(e);
-		}
+            this.AutoScrollPosition = new Point(x, y);
+            mLevelEditor.AutoScrollOffset = new Point(-x, -y);
 
-		void mTimer_Tick(object sender, EventArgs e)
-		{
-			if (mLevelEditor.Level.ShowPreview) {
-				mLevelEditor.Level.UpdatePreview();
-				mLevelEditor.Invalidate();
-			}
-		}
+            base.OnShown(e);
+        }
 
-		void mLevelEditor_MouseMove(object sender, MouseEventArgs e)
-		{
-			this.Cursor = Cursors.Default;
+        void mTimer_Tick(object sender, EventArgs e)
+        {
+            if (mLevelEditor.Level.ShowPreview)
+            {
+                mLevelEditor.Level.UpdatePreview();
+                mLevelEditor.Invalidate();
+            }
+        }
 
-			mParent.SetStatusLocation(mLevelEditor.Level.GetVirtualXY(e.Location));
-		}
+        void mLevelEditor_MouseMove(object sender, MouseEventArgs e)
+        {
+            this.Cursor = Cursors.Default;
 
-		void mLevelEditor_UpdatedRedrawed(object sender, EventArgs e)
-		{
-			if (mParent.GetFocusedLevelEditor() == mLevelEditor) {
-				//Update entry list
-				mParent.UpdateEntryList(mLevelEditor);
-			}
-		}
+            mParent.SetStatusLocation(mLevelEditor.Level.GetVirtualXY(e.Location));
+        }
 
-		private void mLevelEditor_SelectionChanged(object sender, EventArgs e)
-		{
-			UpdateToolWindows();
+        void mLevelEditor_UpdatedRedrawed(object sender, EventArgs e)
+        {
+            if (mParent.GetFocusedLevelEditor() == mLevelEditor)
+            {
+                //Update entry list
+                mParent.UpdateEntryList(mLevelEditor);
+            }
+        }
 
-			if (mLevelEditor.SelectedEntries.Count == 0)
-				mParent.SetStatus(String.Empty);
-			else if (mLevelEditor.SelectedEntries.Count == 1) {
-				LevelEntry selentry = mLevelEditor.SelectedEntries[0];
-				mParent.SetStatus("Entry: {0} ({1})", selentry.GetEntryIndex(), selentry.ToString());
-			} else
-				mParent.SetStatus("{0} / {1} pegs selected", mLevelEditor.SelectedEntries.Count, mLevelEditor.Level.Entries.Count);
-		}
+        private void mLevelEditor_SelectionChanged(object sender, EventArgs e)
+        {
+            UpdateToolWindows();
 
-		private void UpdateToolWindows()
-		{
-			//Update properties
-			mParent.UpdateProperties(mLevelEditor.SelectedEntries.ToArray());
-		}
+            if (mLevelEditor.SelectedEntries.Count == 0)
+                mParent.SetStatus(String.Empty);
+            else if (mLevelEditor.SelectedEntries.Count == 1)
+            {
+                LevelEntry selentry = mLevelEditor.SelectedEntries[0];
+                mParent.SetStatus("Entry: {0} ({1})", selentry.GetEntryIndex(), selentry.ToString());
+            }
+            else
+                mParent.SetStatus("{0} / {1} pegs selected", mLevelEditor.SelectedEntries.Count, mLevelEditor.Level.Entries.Count);
+        }
 
-		protected override void OnGotFocus(EventArgs e)
-		{
-			mLevelEditor.AutoScrollOffset = new Point(this.AutoScrollPosition.X, this.AutoScrollPosition.Y);
+        private void UpdateToolWindows()
+        {
+            //Update properties
+            mParent.UpdateProperties(mLevelEditor.SelectedEntries.ToArray());
+        }
 
-			mParent.LevelWindowHasFocus(this);
+        protected override void OnGotFocus(EventArgs e)
+        {
+            mLevelEditor.AutoScrollOffset = new Point(this.AutoScrollPosition.X, this.AutoScrollPosition.Y);
 
-			base.OnGotFocus(e);
-		}
+            mParent.LevelWindowHasFocus(this);
 
-		public LevelEditor LevelEditor
-		{
-			get
-			{
-				return mLevelEditor;
-			}
-		}
+            base.OnGotFocus(e);
+        }
 
-		public Level Level
-		{
-			get
-			{
-				return mLevelEditor.Level;
-			}
-		}
-	}
+        public LevelEditor LevelEditor
+        {
+            get
+            {
+                return mLevelEditor;
+            }
+        }
+
+        public Level Level
+        {
+            get
+            {
+                return mLevelEditor.Level;
+            }
+        }
+    }
 }

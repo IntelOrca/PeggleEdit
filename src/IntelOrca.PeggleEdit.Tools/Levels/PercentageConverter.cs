@@ -20,50 +20,55 @@ using System.Globalization;
 
 namespace IntelOrca.PeggleEdit.Tools.Levels
 {
-	/// <summary>
-	/// Represents the type converter used to convert from strings to percentages and visa versa.
-	/// </summary>
-	public class PercentageConverter : TypeConverter
-	{
-		public override bool CanConvertFrom(ITypeDescriptorContext context, Type sourceType)
-		{
-			return ((sourceType == typeof(string)) || base.CanConvertFrom(context, sourceType));
-		}
+    /// <summary>
+    /// Represents the type converter used to convert from strings to percentages and visa versa.
+    /// </summary>
+    public class PercentageConverter : TypeConverter
+    {
+        public override bool CanConvertFrom(ITypeDescriptorContext context, Type sourceType)
+        {
+            return ((sourceType == typeof(string)) || base.CanConvertFrom(context, sourceType));
+        }
 
-		public override object ConvertFrom(ITypeDescriptorContext context, CultureInfo culture, object value)
-		{
-			if (!(value is string)) {
-				return base.ConvertFrom(context, culture, value);
-			}
+        public override object ConvertFrom(ITypeDescriptorContext context, CultureInfo culture, object value)
+        {
+            if (!(value is string))
+            {
+                return base.ConvertFrom(context, culture, value);
+            }
 
-			string s = ((string)value).Replace('%', ' ').Trim();
-			
-			float num;
-			if (!float.TryParse(s, out num)) {
-				throw new FormatException("Input string was not in a correct format.");
-			}
+            string s = ((string)value).Replace('%', ' ').Trim();
 
-			num /= 100.0f;
+            float num;
+            if (!float.TryParse(s, out num))
+            {
+                throw new FormatException("Input string was not in a correct format.");
+            }
 
-			if ((num < 0.0f) || (num > 1.0f)) {
-				throw new FormatException(String.Format("Value of '{0}' is not a valid percentage. Percentages should be between 0% and 100%.", s));
-			}
+            num /= 100.0f;
 
-			return num;
-		}
+            if ((num < 0.0f) || (num > 1.0f))
+            {
+                throw new FormatException(String.Format("Value of '{0}' is not a valid percentage. Percentages should be between 0% and 100%.", s));
+            }
 
-		public override object ConvertTo(ITypeDescriptorContext context, CultureInfo culture, object value, Type destinationType)
-		{
-			if (destinationType == null) {
-				throw new ArgumentNullException("destinationType");
-			}
-			if (destinationType == typeof(string)) {
-				float num = (float)value;
-				float num2 = num * 100.0f;
-				return (num2.ToString() + "%");
-			}
-			return base.ConvertTo(context, culture, value, destinationType);
-		}
+            return num;
+        }
 
-	}
+        public override object ConvertTo(ITypeDescriptorContext context, CultureInfo culture, object value, Type destinationType)
+        {
+            if (destinationType == null)
+            {
+                throw new ArgumentNullException("destinationType");
+            }
+            if (destinationType == typeof(string))
+            {
+                float num = (float)value;
+                float num2 = num * 100.0f;
+                return (num2.ToString() + "%");
+            }
+            return base.ConvertTo(context, culture, value, destinationType);
+        }
+
+    }
 }

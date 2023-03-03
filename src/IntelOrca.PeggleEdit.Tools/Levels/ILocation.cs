@@ -18,15 +18,15 @@ using System.Drawing;
 
 namespace IntelOrca.PeggleEdit.Tools.Levels
 {
-	/// <summary>
-	/// Defines a PointF which represents the current location.
-	/// </summary>
-	interface ILocation
-	{
-		PointF Location
-		{
-			get;
-			set;
-		}
-	}
+    /// <summary>
+    /// Defines a PointF which represents the current location.
+    /// </summary>
+    interface ILocation
+    {
+        PointF Location
+        {
+            get;
+            set;
+        }
+    }
 }

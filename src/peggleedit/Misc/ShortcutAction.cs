@@ -19,48 +19,48 @@ using System.Windows.Forms;
 
 namespace IntelOrca.PeggleEdit.Designer
 {
-	delegate void CallbackMethod();
+    delegate void CallbackMethod();
 
-	class ShortcutAction
-	{
-		public Keys Key;
-		public bool Ctrl;
-		public bool EditorMustBeFocused;
-		EventHandler fEventHandler;
-		MethodInvoker fMethodInvoker;
+    class ShortcutAction
+    {
+        public Keys Key;
+        public bool Ctrl;
+        public bool EditorMustBeFocused;
+        EventHandler fEventHandler;
+        MethodInvoker fMethodInvoker;
 
-		public ShortcutAction(Keys k, bool ctrl, EventHandler func) :
-			this(k, ctrl, false, func)
-		{
-		}
+        public ShortcutAction(Keys k, bool ctrl, EventHandler func) :
+            this(k, ctrl, false, func)
+        {
+        }
 
-		public ShortcutAction(Keys k, bool ctrl, bool editorMustBeFocused, EventHandler func)
-		{
-			Key = k;
-			Ctrl = ctrl;
-			EditorMustBeFocused = editorMustBeFocused;
-			fEventHandler = func;
-		}
+        public ShortcutAction(Keys k, bool ctrl, bool editorMustBeFocused, EventHandler func)
+        {
+            Key = k;
+            Ctrl = ctrl;
+            EditorMustBeFocused = editorMustBeFocused;
+            fEventHandler = func;
+        }
 
-		public ShortcutAction(Keys k, bool ctrl, MethodInvoker func) :
-			this(k, ctrl, false, func)
-		{
-		}
+        public ShortcutAction(Keys k, bool ctrl, MethodInvoker func) :
+            this(k, ctrl, false, func)
+        {
+        }
 
-		public ShortcutAction(Keys k, bool ctrl, bool editorMustBeFocused, MethodInvoker func)
-		{
-			Key = k;
-			Ctrl = ctrl;
-			EditorMustBeFocused = editorMustBeFocused;
-			fMethodInvoker = func;
-		}
+        public ShortcutAction(Keys k, bool ctrl, bool editorMustBeFocused, MethodInvoker func)
+        {
+            Key = k;
+            Ctrl = ctrl;
+            EditorMustBeFocused = editorMustBeFocused;
+            fMethodInvoker = func;
+        }
 
-		public void CallMethod()
-		{
-			if (fEventHandler != null)
-				fEventHandler.Invoke(this, EventArgs.Empty);
-			else if (fMethodInvoker != null)
-				fMethodInvoker.Invoke();
-		}
-	}
+        public void CallMethod()
+        {
+            if (fEventHandler != null)
+                fEventHandler.Invoke(this, EventArgs.Empty);
+            else if (fMethodInvoker != null)
+                fMethodInvoker.Invoke();
+        }
+    }
 }

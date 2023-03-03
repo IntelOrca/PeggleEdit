@@ -16,15 +16,15 @@
 
 namespace IntelOrca.PeggleEdit.Tools.Levels.Children
 {
-	/// <summary>
-	/// Defines a Movement property for objects which contain information about it's movement path.
-	/// </summary>
-	public interface IMovementContainer : ILevelChild
-	{
-		Movement MovementInfo
-		{
-			get;
-			set;
-		}
-	}
+    /// <summary>
+    /// Defines a Movement property for objects which contain information about it's movement path.
+    /// </summary>
+    public interface IMovementContainer : ILevelChild
+    {
+        Movement MovementInfo
+        {
+            get;
+            set;
+        }
+    }
 }

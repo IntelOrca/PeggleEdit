@@ -22,41 +22,41 @@ using IntelOrca.PeggleEdit.Tools.Levels.Children;
 
 namespace IntelOrca.PeggleEdit.Designer
 {
-	[GuidAttribute("1A01E050-F11A-47C5-B62B-000000000002")]
-	class PropertiesToolWindow : Form
-	{
-		MainMDIForm mParent;
-		PropertyGrid mPropertyGrid;
+    [GuidAttribute("1A01E050-F11A-47C5-B62B-000000000002")]
+    class PropertiesToolWindow : Form
+    {
+        MainMDIForm mParent;
+        PropertyGrid mPropertyGrid;
 
-		public PropertiesToolWindow(MainMDIForm parent)
-		{
-			mParent = parent;
+        public PropertiesToolWindow(MainMDIForm parent)
+        {
+            mParent = parent;
 
-			this.Icon = Icon.FromHandle(Resources.properties_16.GetHicon());
+            this.Icon = Icon.FromHandle(Resources.properties_16.GetHicon());
 
-			FormBorderStyle = FormBorderStyle.SizableToolWindow;
-			Text = "Properties";
+            FormBorderStyle = FormBorderStyle.SizableToolWindow;
+            Text = "Properties";
 
-			mPropertyGrid = new PropertyGrid();
-			mPropertyGrid.Dock = DockStyle.Fill;
+            mPropertyGrid = new PropertyGrid();
+            mPropertyGrid.Dock = DockStyle.Fill;
 
-			mPropertyGrid.PropertyValueChanged += new PropertyValueChangedEventHandler(mPropertyGrid_PropertyValueChanged);
+            mPropertyGrid.PropertyValueChanged += new PropertyValueChangedEventHandler(mPropertyGrid_PropertyValueChanged);
 
-			Controls.Add(mPropertyGrid);
-		}
+            Controls.Add(mPropertyGrid);
+        }
 
-		void mPropertyGrid_PropertyValueChanged(object s, PropertyValueChangedEventArgs e)
-		{
-			if (mPropertyGrid.SelectedObjects.Length == 0)
-				return;
+        void mPropertyGrid_PropertyValueChanged(object s, PropertyValueChangedEventArgs e)
+        {
+            if (mPropertyGrid.SelectedObjects.Length == 0)
+                return;
 
-			mParent.GetFocusedLevelEditor().UpdateRedraw();
-		}
+            mParent.GetFocusedLevelEditor().UpdateRedraw();
+        }
 
-		public void UpdatePropertyGrid(LevelEntry[] objects)
-		{
-			mPropertyGrid.SelectedObjects = objects;
-			mPropertyGrid.ExpandAllGridItems();
-		}
-	}
+        public void UpdatePropertyGrid(LevelEntry[] objects)
+        {
+            mPropertyGrid.SelectedObjects = objects;
+            mPropertyGrid.ExpandAllGridItems();
+        }
+    }
 }

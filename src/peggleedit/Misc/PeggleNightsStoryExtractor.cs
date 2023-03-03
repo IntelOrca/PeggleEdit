@@ -28,98 +28,107 @@ using System.Drawing.Imaging;
 
 namespace IntelOrca.PeggleEdit.Designer
 {
-	class PeggleNightsStoryExtractor
-	{
-		PakCollection mPakCollection;
+    class PeggleNightsStoryExtractor
+    {
+        PakCollection mPakCollection;
 
-		LevelPack mPack;
+        LevelPack mPack;
 
-		public PeggleNightsStoryExtractor(string path)
-		{
-			mPakCollection = new PakCollection();
-			mPakCollection.Open(path);
+        public PeggleNightsStoryExtractor(string path)
+        {
+            mPakCollection = new PakCollection();
+            mPakCollection.Open(path);
 
-			mPack = new LevelPack();
+            mPack = new LevelPack();
 
-			AddLevels();
-		}
+            AddLevels();
+        }
 
-		public LevelPack Extract()
-		{
-			return mPack;
-		}
+        public LevelPack Extract()
+        {
+            return mPack;
+        }
 
-		private void AddLevels()
-		{
-			CFGReader reader = new CFGReader(Encoding.ASCII.GetString(mPakCollection.GetRecord("levels\\stages.cfg").Buffer));
-			CFGBlock[] stages = reader.Document.Blocks[0].GetBlocks("stage");
-			foreach (CFGBlock block in stages) {
-				foreach (CFGProperty property in block) {
-					if (property.Name.ToLower() == "level") {
-						AddLevel(property[0], property[1], Convert.ToInt32(property[2]));
-					}
-				}
-			}
-		}
+        private void AddLevels()
+        {
+            CFGReader reader = new CFGReader(Encoding.ASCII.GetString(mPakCollection.GetRecord("levels\\stages.cfg").Buffer));
+            CFGBlock[] stages = reader.Document.Blocks[0].GetBlocks("stage");
+            foreach (CFGBlock block in stages)
+            {
+                foreach (CFGProperty property in block)
+                {
+                    if (property.Name.ToLower() == "level")
+                    {
+                        AddLevel(property[0], property[1], Convert.ToInt32(property[2]));
+                    }
+                }
+            }
+        }
 
-		private void AddLevel(string name, string displayname, int acescore)
-		{
-			PakRecord record = mPakCollection.GetRecord("levels\\" + name + ".dat");
+        private void AddLevel(string name, string displayname, int acescore)
+        {
+            PakRecord record = mPakCollection.GetRecord("levels\\" + name + ".dat");
 
-			LevelReader reader = new LevelReader(record.Buffer);
-			Level level = reader.Read();
-			reader.Dispose();
+            LevelReader reader = new LevelReader(record.Buffer);
+            Level level = reader.Read();
+            reader.Dispose();
 
-			if (level == null)
-				throw new Exception("Unable to read " + name);
+            if (level == null)
+                throw new Exception("Unable to read " + name);
 
-			LevelInfo info = new LevelInfo(name, displayname, acescore, -3);
-			level.Info = info;
+            LevelInfo info = new LevelInfo(name, displayname, acescore, -3);
+            level.Info = info;
 
-			Image bgImage = GetBackground(name);
-			level.Background = bgImage;
+            Image bgImage = GetBackground(name);
+            level.Background = bgImage;
 
-			mPack.Levels.Add(level);
-		}
+            mPack.Levels.Add(level);
+        }
 
-		private Image GetBackground(string levelFilename)
-		{
-			string filename = "levels\\" + levelFilename;
-			string jp2 = Path.ChangeExtension(filename, ".jp2");
-			string jpg = Path.ChangeExtension(filename, ".jpg");
-			string png = Path.ChangeExtension(filename, ".png");
+        private Image GetBackground(string levelFilename)
+        {
+            string filename = "levels\\" + levelFilename;
+            string jp2 = Path.ChangeExtension(filename, ".jp2");
+            string jpg = Path.ChangeExtension(filename, ".jpg");
+            string png = Path.ChangeExtension(filename, ".png");
 
-			PakRecord record;
-			record = mPakCollection.GetRecord(jp2);
-			if (record != null) {
-				byte[] buffer;
-				OpenJPEG.ConvertJPEG2(record, out buffer, ImageFormat.Jpeg);
-				return Image.FromStream(new MemoryStream(buffer));
-			} else {
-				record = mPakCollection.GetRecord(jpg);
-				if (record != null)
-					return GetImageFromBuffer(record.Buffer);
+            PakRecord record;
+            record = mPakCollection.GetRecord(jp2);
+            if (record != null)
+            {
+                byte[] buffer;
+                OpenJPEG.ConvertJPEG2(record, out buffer, ImageFormat.Jpeg);
+                return Image.FromStream(new MemoryStream(buffer));
+            }
+            else
+            {
+                record = mPakCollection.GetRecord(jpg);
+                if (record != null)
+                    return GetImageFromBuffer(record.Buffer);
 
-				record = mPakCollection.GetRecord(png);
-				if (record != null)
-					return GetImageFromBuffer(record.Buffer);
-			}
+                record = mPakCollection.GetRecord(png);
+                if (record != null)
+                    return GetImageFromBuffer(record.Buffer);
+            }
 
-			return null;
-		}
+            return null;
+        }
 
-		private Image GetImageFromBuffer(byte[] buffer)
-		{
-			Image img;
-			try {
-				MemoryStream ms = new MemoryStream(buffer);
-				img = Image.FromStream(ms);
-				//ms.Close();
-			} catch {
-				img = null;
-			}
+        private Image GetImageFromBuffer(byte[] buffer)
+        {
+            Image img;
+            try
+            {
+                MemoryStream ms = new MemoryStream(buffer);
+                img = Image.FromStream(ms);
+                //ms.Close();
+            }
+            catch
+            {
+                img = null;
+            }
 
-			return img;
-		}
-	}
+            return img;
+        }
+    }
 }

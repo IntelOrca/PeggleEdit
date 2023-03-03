@@ -16,78 +16,78 @@
 
 namespace IntelOrca.PeggleEdit.Tools.Levels
 {
-	/// <summary>
-	/// Represents the information held about a level when in a level pack.
-	/// </summary>
-	public struct LevelInfo
-	{
-		string mFilename;
-		string mName;
-		int mAceScore;
-		int mMinStage;
+    /// <summary>
+    /// Represents the information held about a level when in a level pack.
+    /// </summary>
+    public struct LevelInfo
+    {
+        string mFilename;
+        string mName;
+        int mAceScore;
+        int mMinStage;
 
-		public LevelInfo(string filename, string name, int aceScore, int minStage)
-		{
-			mFilename = filename;
-			mName = name;
-			mAceScore = aceScore;
-			mMinStage = minStage;
-		}
+        public LevelInfo(string filename, string name, int aceScore, int minStage)
+        {
+            mFilename = filename;
+            mName = name;
+            mAceScore = aceScore;
+            mMinStage = minStage;
+        }
 
-		public static LevelInfo DefaultInfo
-		{
-			get
-			{
-				return new LevelInfo("untitled_level", "Untitled Level", 100000, -3);
-			}
-		}
+        public static LevelInfo DefaultInfo
+        {
+            get
+            {
+                return new LevelInfo("untitled_level", "Untitled Level", 100000, -3);
+            }
+        }
 
-		public string Filename
-		{
-			get
-			{
-				return mFilename;
-			}
-			set
-			{
-				mFilename = value;
-			}
-		}
+        public string Filename
+        {
+            get
+            {
+                return mFilename;
+            }
+            set
+            {
+                mFilename = value;
+            }
+        }
 
-		public string Name
-		{
-			get
-			{
-				return mName;
-			}
-			set
-			{
-				mName = value;
-			}
-		}
+        public string Name
+        {
+            get
+            {
+                return mName;
+            }
+            set
+            {
+                mName = value;
+            }
+        }
 
-		public int AceScore
-		{
-			get
-			{
-				return mAceScore;
-			}
-			set
-			{
-				mAceScore = value;
-			}
-		}
+        public int AceScore
+        {
+            get
+            {
+                return mAceScore;
+            }
+            set
+            {
+                mAceScore = value;
+            }
+        }
 
-		public int MinStage
-		{
-			get
-			{
-				return mMinStage;
-			}
-			set
-			{
-				mMinStage = value;
-			}
-		}
-	}
+        public int MinStage
+        {
+            get
+            {
+                return mMinStage;
+            }
+            set
+            {
+                mMinStage = value;
+            }
+        }
+    }
 }

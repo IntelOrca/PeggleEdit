@@ -23,218 +23,225 @@ using IntelOrca.PeggleEdit.Tools.Pack.Challenge;
 
 namespace IntelOrca.PeggleEdit.Designer
 {
-	partial class ChallengeDetailsForm : Form
-	{
-		private LevelPack mLevelPack;
-		private Challenge mChallenge;
+    partial class ChallengeDetailsForm : Form
+    {
+        private LevelPack mLevelPack;
+        private Challenge mChallenge;
 
-		public ChallengeDetailsForm(LevelPack levelPack, Challenge challenge)
-		{
-			mLevelPack = levelPack;
+        public ChallengeDetailsForm(LevelPack levelPack, Challenge challenge)
+        {
+            mLevelPack = levelPack;
 
-			InitializeComponent();
+            InitializeComponent();
 
-			mChallenge = challenge;
+            mChallenge = challenge;
 
-			//Character
-			cmbCharacter.Items.Add("Any");
-			foreach (string c in Challenge.Characters) {
-				cmbCharacter.Items.Add(c);
-			}
-			cmbCharacter.SelectedIndex = 0;
+            //Character
+            cmbCharacter.Items.Add("Any");
+            foreach (string c in Challenge.Characters)
+            {
+                cmbCharacter.Items.Add(c);
+            }
+            cmbCharacter.SelectedIndex = 0;
 
-			SetNumLevels();
+            SetNumLevels();
 
-			SetForm();
-		}
+            SetForm();
+        }
 
-		private void SetForm()
-		{
-			//General
-			txtID.Value = mChallenge.ID;
-			txtName.Text = mChallenge.Name;
-			txtSmallDescription.Text = mChallenge.SmallDesc;
-			txtDescription.Text = mChallenge.Desc;
+        private void SetForm()
+        {
+            //General
+            txtID.Value = mChallenge.ID;
+            txtName.Text = mChallenge.Name;
+            txtSmallDescription.Text = mChallenge.SmallDesc;
+            txtDescription.Text = mChallenge.Desc;
 
-			txtOrangePegs.Value = mChallenge.ReqOrangePegs;
-			txtScore.Value = mChallenge.ReqScore;
-			txtStyleScore.Value = mChallenge.ReqStyleScore;
-			txtUniqueStyleShots.Value = mChallenge.ReqUniqueStyleShots;
-			chkClearLevel.Checked = mChallenge.ReqClearLevel;
+            txtOrangePegs.Value = mChallenge.ReqOrangePegs;
+            txtScore.Value = mChallenge.ReqScore;
+            txtStyleScore.Value = mChallenge.ReqStyleScore;
+            txtUniqueStyleShots.Value = mChallenge.ReqUniqueStyleShots;
+            chkClearLevel.Checked = mChallenge.ReqClearLevel;
 
-			cmbCharacter.Text = mChallenge.Character;
-			if (cmbCharacter.SelectedIndex == -1)
-				cmbCharacter.SelectedIndex = 0;
-			txtBalls.Value = mChallenge.Balls;
+            cmbCharacter.Text = mChallenge.Character;
+            if (cmbCharacter.SelectedIndex == -1)
+                cmbCharacter.SelectedIndex = 0;
+            txtBalls.Value = mChallenge.Balls;
 
-			//Levels
-			chkAgainstOpponents.Checked = mChallenge.AgainstOpponents;
-			nudNumLevels.Value = mChallenge.Levels.Count;
-			for (int i = 0; i < mChallenge.Levels.Count; i++) {
-				ComboBox levelTextbox = (ComboBox)pnlLevels.Controls["cmbLevel" + i];
-				ComboBox opponentTextbox = (ComboBox)pnlLevels.Controls["cmbOpponent" + i];
-				ComboBox opponentDifficultyTextbox = (ComboBox)pnlLevels.Controls["cmbOpponentDifficulty" + i];
+            //Levels
+            chkAgainstOpponents.Checked = mChallenge.AgainstOpponents;
+            nudNumLevels.Value = mChallenge.Levels.Count;
+            for (int i = 0; i < mChallenge.Levels.Count; i++)
+            {
+                ComboBox levelTextbox = (ComboBox)pnlLevels.Controls["cmbLevel" + i];
+                ComboBox opponentTextbox = (ComboBox)pnlLevels.Controls["cmbOpponent" + i];
+                ComboBox opponentDifficultyTextbox = (ComboBox)pnlLevels.Controls["cmbOpponentDifficulty" + i];
 
-				Challenge.ChallengeLevel challengeLevel = mChallenge.Levels[i];
-				levelTextbox.Text = challengeLevel.Level;
-				opponentTextbox.Text = (challengeLevel.Opponent == null ? "Rand" : challengeLevel.Opponent);
-				opponentDifficultyTextbox.SelectedIndex = challengeLevel.OpponentDifficulty;
-			}
+                Challenge.ChallengeLevel challengeLevel = mChallenge.Levels[i];
+                levelTextbox.Text = challengeLevel.Level;
+                opponentTextbox.Text = (challengeLevel.Opponent == null ? "Rand" : challengeLevel.Opponent);
+                opponentDifficultyTextbox.SelectedIndex = challengeLevel.OpponentDifficulty;
+            }
 
-			//Powerups
-			txtGuide.Value = mChallenge.PowerupGuide;
-			txtPyramid.Value = mChallenge.PowerupPyramid;
-			txtFlippers.Value = mChallenge.PowerupFlippers;
-			txtMagicHat.Value = mChallenge.PowerupMagicHat;
-			txtTripleScore.Value = mChallenge.PowerupTripleScore;
-			txtFireball.Value = mChallenge.PowerupFireball;
-			txtZenBall.Value = mChallenge.PowerupZenball;
-			txtChainLightning.Value = mChallenge.PowerupChainLightning;
-			txtMultiball.Value = mChallenge.PowerupMultiball;
-			txtSpaceBlast.Value = mChallenge.PowerupSpaceBlast;
-			txtSpookyBall.Value = mChallenge.PowerupSpookyBall;
-			txtFlowerPower.Value = mChallenge.PowerupFlowerPower;
-			txtLuckySpin.Value = mChallenge.PowerupLuckySpin;
-			txtShotExtender.Value = mChallenge.PowerupShotExtender;
+            //Powerups
+            txtGuide.Value = mChallenge.PowerupGuide;
+            txtPyramid.Value = mChallenge.PowerupPyramid;
+            txtFlippers.Value = mChallenge.PowerupFlippers;
+            txtMagicHat.Value = mChallenge.PowerupMagicHat;
+            txtTripleScore.Value = mChallenge.PowerupTripleScore;
+            txtFireball.Value = mChallenge.PowerupFireball;
+            txtZenBall.Value = mChallenge.PowerupZenball;
+            txtChainLightning.Value = mChallenge.PowerupChainLightning;
+            txtMultiball.Value = mChallenge.PowerupMultiball;
+            txtSpaceBlast.Value = mChallenge.PowerupSpaceBlast;
+            txtSpookyBall.Value = mChallenge.PowerupSpookyBall;
+            txtFlowerPower.Value = mChallenge.PowerupFlowerPower;
+            txtLuckySpin.Value = mChallenge.PowerupLuckySpin;
+            txtShotExtender.Value = mChallenge.PowerupShotExtender;
 
-			//Other
-			chkScoreReset.Checked = mChallenge.ScoreReset;
-			chkNoFreeballs.Checked = mChallenge.NoFreeballs;
-			chkNoGreens.Checked = mChallenge.NoGreenPegs;
-			chkNoForceWin.Checked = mChallenge.NoForceWin;
-			chkFreeballAlwaysCovered.Checked = mChallenge.FreeballBucketCovered;
-			chkNoEndOnWin.Checked = mChallenge.NoEndOnWin;
+            //Other
+            chkScoreReset.Checked = mChallenge.ScoreReset;
+            chkNoFreeballs.Checked = mChallenge.NoFreeballs;
+            chkNoGreens.Checked = mChallenge.NoGreenPegs;
+            chkNoForceWin.Checked = mChallenge.NoForceWin;
+            chkFreeballAlwaysCovered.Checked = mChallenge.FreeballBucketCovered;
+            chkNoEndOnWin.Checked = mChallenge.NoEndOnWin;
 
-			txtGravityMod.Value = Math.Round(Convert.ToDouble(mChallenge.GravityMod), 3);
-			txtProjSpeedMod.Value = Math.Round(Convert.ToDouble(mChallenge.ProjectileSpeedMod), 3);
-		}
+            txtGravityMod.Value = Math.Round(Convert.ToDouble(mChallenge.GravityMod), 3);
+            txtProjSpeedMod.Value = Math.Round(Convert.ToDouble(mChallenge.ProjectileSpeedMod), 3);
+        }
 
-		private void SetNumLevels()
-		{
-			int numLevels = (int)nudNumLevels.Value;
+        private void SetNumLevels()
+        {
+            int numLevels = (int)nudNumLevels.Value;
 
-			Panel panel = new Panel();
-			panel.Name = "pnlLevels";
-			panel.Location = pnlLevels.Location;
-			panel.Size = pnlLevels.Size;
+            Panel panel = new Panel();
+            panel.Name = "pnlLevels";
+            panel.Location = pnlLevels.Location;
+            panel.Size = pnlLevels.Size;
 
-			for (int i = 0; i < numLevels; i++) {
-				int y = i * 24;
+            for (int i = 0; i < numLevels; i++)
+            {
+                int y = i * 24;
 
-				//Level name
-				ComboBox cmbLevel = new ComboBox();
-				cmbLevel.Name = "cmbLevel" + i;
-				cmbLevel.Location = new Point(0, y);
-				cmbLevel.Size = new Size(130, 21);
+                //Level name
+                ComboBox cmbLevel = new ComboBox();
+                cmbLevel.Name = "cmbLevel" + i;
+                cmbLevel.Location = new Point(0, y);
+                cmbLevel.Size = new Size(130, 21);
 
-				cmbLevel.Items.Add("pick");
-				cmbLevel.Items.Add("rand2");
-				foreach (Level level in mLevelPack.Levels) {
-					cmbLevel.Items.Add(level.Info.Filename);
-				}
+                cmbLevel.Items.Add("pick");
+                cmbLevel.Items.Add("rand2");
+                foreach (Level level in mLevelPack.Levels)
+                {
+                    cmbLevel.Items.Add(level.Info.Filename);
+                }
 
-				panel.Controls.Add(cmbLevel);
+                panel.Controls.Add(cmbLevel);
 
-				//Opponent
-				ComboBox cmbOpponent = new ComboBox();
-				cmbOpponent.Name = "cmbOpponent" + i;
-				cmbOpponent.DropDownStyle = ComboBoxStyle.DropDownList;
-				cmbOpponent.Items.Add("Rand");
-				foreach (string c in Challenge.Characters) {
-					cmbOpponent.Items.Add(c);
-				}
-				cmbOpponent.SelectedIndex = 0;
-				cmbOpponent.Location = new Point(136, y);
-				cmbOpponent.Size = new Size(105, 21);
-				panel.Controls.Add(cmbOpponent);
+                //Opponent
+                ComboBox cmbOpponent = new ComboBox();
+                cmbOpponent.Name = "cmbOpponent" + i;
+                cmbOpponent.DropDownStyle = ComboBoxStyle.DropDownList;
+                cmbOpponent.Items.Add("Rand");
+                foreach (string c in Challenge.Characters)
+                {
+                    cmbOpponent.Items.Add(c);
+                }
+                cmbOpponent.SelectedIndex = 0;
+                cmbOpponent.Location = new Point(136, y);
+                cmbOpponent.Size = new Size(105, 21);
+                panel.Controls.Add(cmbOpponent);
 
-				//Opponent difficulty
-				ComboBox cmbOpponentDifficulty = new ComboBox();
-				cmbOpponentDifficulty.Name = "cmbOpponentDifficulty" + i;
-				cmbOpponentDifficulty.DropDownStyle = ComboBoxStyle.DropDownList;
-				foreach (string d in Challenge.OpponentDifficulty) {
-					cmbOpponentDifficulty.Items.Add(d);
-				}
-				cmbOpponentDifficulty.SelectedIndex = 0;
-				cmbOpponentDifficulty.Location = new Point(247, y);
-				cmbOpponentDifficulty.Size = new Size(113, 21);
-				panel.Controls.Add(cmbOpponentDifficulty);
-			}
+                //Opponent difficulty
+                ComboBox cmbOpponentDifficulty = new ComboBox();
+                cmbOpponentDifficulty.Name = "cmbOpponentDifficulty" + i;
+                cmbOpponentDifficulty.DropDownStyle = ComboBoxStyle.DropDownList;
+                foreach (string d in Challenge.OpponentDifficulty)
+                {
+                    cmbOpponentDifficulty.Items.Add(d);
+                }
+                cmbOpponentDifficulty.SelectedIndex = 0;
+                cmbOpponentDifficulty.Location = new Point(247, y);
+                cmbOpponentDifficulty.Size = new Size(113, 21);
+                panel.Controls.Add(cmbOpponentDifficulty);
+            }
 
-			tabLevels.Controls.Add(panel);
-			tabLevels.Controls.Remove(pnlLevels);
-			pnlLevels = panel;
-		}
+            tabLevels.Controls.Add(panel);
+            tabLevels.Controls.Remove(pnlLevels);
+            pnlLevels = panel;
+        }
 
-		private void nudNumLevels_ValueChanged(object sender, EventArgs e)
-		{
-			SetNumLevels();
-		}
+        private void nudNumLevels_ValueChanged(object sender, EventArgs e)
+        {
+            SetNumLevels();
+        }
 
-		private void btnOK_Click(object sender, EventArgs e)
-		{
-			//General
-			mChallenge.ID = txtID.Value;
-			mChallenge.Name = txtName.Text;
-			mChallenge.SmallDesc = txtSmallDescription.Text;
-			mChallenge.Desc = txtDescription.Text;
+        private void btnOK_Click(object sender, EventArgs e)
+        {
+            //General
+            mChallenge.ID = txtID.Value;
+            mChallenge.Name = txtName.Text;
+            mChallenge.SmallDesc = txtSmallDescription.Text;
+            mChallenge.Desc = txtDescription.Text;
 
-			mChallenge.ReqOrangePegs = txtOrangePegs.Value;
-			mChallenge.ReqScore = txtScore.Value;
-			mChallenge.ReqStyleScore = txtStyleScore.Value;
-			mChallenge.ReqUniqueStyleShots = txtUniqueStyleShots.Value;
-			mChallenge.ReqClearLevel = chkClearLevel.Checked;
+            mChallenge.ReqOrangePegs = txtOrangePegs.Value;
+            mChallenge.ReqScore = txtScore.Value;
+            mChallenge.ReqStyleScore = txtStyleScore.Value;
+            mChallenge.ReqUniqueStyleShots = txtUniqueStyleShots.Value;
+            mChallenge.ReqClearLevel = chkClearLevel.Checked;
 
-			//Character
-			mChallenge.Character = (cmbCharacter.SelectedIndex == 0 || cmbCharacter.SelectedIndex == -1 ? null : cmbCharacter.SelectedItem.ToString());
-			mChallenge.Balls = Convert.ToInt32(txtBalls.Text);
+            //Character
+            mChallenge.Character = (cmbCharacter.SelectedIndex == 0 || cmbCharacter.SelectedIndex == -1 ? null : cmbCharacter.SelectedItem.ToString());
+            mChallenge.Balls = Convert.ToInt32(txtBalls.Text);
 
-			//Levels
-			mChallenge.AgainstOpponents = chkAgainstOpponents.Checked;
-			mChallenge.Levels.Clear();
-			for (int i = 0; i < nudNumLevels.Value; i++) {
-				Challenge.ChallengeLevel challengeLevel = new Challenge.ChallengeLevel();
-				challengeLevel.Level = ((ComboBox)pnlLevels.Controls["cmbLevel" + i]).Text.ToString();
-				challengeLevel.Opponent = ((ComboBox)pnlLevels.Controls["cmbOpponent" + i]).SelectedItem.ToString();
-				challengeLevel.OpponentDifficulty = ((ComboBox)pnlLevels.Controls["cmbOpponentDifficulty" + i]).SelectedIndex;
-				mChallenge.Levels.Add(challengeLevel);
-			}
+            //Levels
+            mChallenge.AgainstOpponents = chkAgainstOpponents.Checked;
+            mChallenge.Levels.Clear();
+            for (int i = 0; i < nudNumLevels.Value; i++)
+            {
+                Challenge.ChallengeLevel challengeLevel = new Challenge.ChallengeLevel();
+                challengeLevel.Level = ((ComboBox)pnlLevels.Controls["cmbLevel" + i]).Text.ToString();
+                challengeLevel.Opponent = ((ComboBox)pnlLevels.Controls["cmbOpponent" + i]).SelectedItem.ToString();
+                challengeLevel.OpponentDifficulty = ((ComboBox)pnlLevels.Controls["cmbOpponentDifficulty" + i]).SelectedIndex;
+                mChallenge.Levels.Add(challengeLevel);
+            }
 
-			//Powerups
-			mChallenge.PowerupGuide = txtGuide.Value;
-			mChallenge.PowerupPyramid = txtPyramid.Value;
-			mChallenge.PowerupFlippers = txtFlippers.Value;
-			mChallenge.PowerupMagicHat = txtMagicHat.Value;
-			mChallenge.PowerupTripleScore = txtTripleScore.Value;
-			mChallenge.PowerupFireball = txtFireball.Value;
-			mChallenge.PowerupZenball = txtZenBall.Value;
-			mChallenge.PowerupChainLightning = txtChainLightning.Value;
-			mChallenge.PowerupMultiball = txtMultiball.Value;
-			mChallenge.PowerupSpaceBlast = txtSpaceBlast.Value;
-			mChallenge.PowerupSpookyBall = txtSpookyBall.Value;
-			mChallenge.PowerupFlowerPower = txtFlowerPower.Value;
-			mChallenge.PowerupLuckySpin = txtLuckySpin.Value;
-			mChallenge.PowerupShotExtender = txtShotExtender.Value;
+            //Powerups
+            mChallenge.PowerupGuide = txtGuide.Value;
+            mChallenge.PowerupPyramid = txtPyramid.Value;
+            mChallenge.PowerupFlippers = txtFlippers.Value;
+            mChallenge.PowerupMagicHat = txtMagicHat.Value;
+            mChallenge.PowerupTripleScore = txtTripleScore.Value;
+            mChallenge.PowerupFireball = txtFireball.Value;
+            mChallenge.PowerupZenball = txtZenBall.Value;
+            mChallenge.PowerupChainLightning = txtChainLightning.Value;
+            mChallenge.PowerupMultiball = txtMultiball.Value;
+            mChallenge.PowerupSpaceBlast = txtSpaceBlast.Value;
+            mChallenge.PowerupSpookyBall = txtSpookyBall.Value;
+            mChallenge.PowerupFlowerPower = txtFlowerPower.Value;
+            mChallenge.PowerupLuckySpin = txtLuckySpin.Value;
+            mChallenge.PowerupShotExtender = txtShotExtender.Value;
 
-			//Other
-			mChallenge.ScoreReset = chkScoreReset.Checked;
-			mChallenge.NoFreeballs = chkNoFreeballs.Checked;
-			mChallenge.NoGreenPegs = chkNoGreens.Checked;
-			mChallenge.NoForceWin = chkNoForceWin.Checked;
-			mChallenge.FreeballBucketCovered = chkFreeballAlwaysCovered.Checked;
-			mChallenge.NoEndOnWin = chkNoEndOnWin.Checked;
+            //Other
+            mChallenge.ScoreReset = chkScoreReset.Checked;
+            mChallenge.NoFreeballs = chkNoFreeballs.Checked;
+            mChallenge.NoGreenPegs = chkNoGreens.Checked;
+            mChallenge.NoForceWin = chkNoForceWin.Checked;
+            mChallenge.FreeballBucketCovered = chkFreeballAlwaysCovered.Checked;
+            mChallenge.NoEndOnWin = chkNoEndOnWin.Checked;
 
-			mChallenge.GravityMod = Convert.ToSingle(Math.Round(txtGravityMod.Value, 3));
-			mChallenge.ProjectileSpeedMod = Convert.ToSingle(Math.Round(txtProjSpeedMod.Value, 3));
+            mChallenge.GravityMod = Convert.ToSingle(Math.Round(txtGravityMod.Value, 3));
+            mChallenge.ProjectileSpeedMod = Convert.ToSingle(Math.Round(txtProjSpeedMod.Value, 3));
 
-			this.DialogResult = DialogResult.OK;
-			Close();
-		}
+            this.DialogResult = DialogResult.OK;
+            Close();
+        }
 
-		private void btnCancel_Click(object sender, EventArgs e)
-		{
-			this.DialogResult = DialogResult.Cancel;
-			Close();
-		}
-	}
+        private void btnCancel_Click(object sender, EventArgs e)
+        {
+            this.DialogResult = DialogResult.Cancel;
+            Close();
+        }
+    }
 }

@@ -19,50 +19,50 @@ using System.ComponentModel;
 
 namespace IntelOrca.PeggleEdit.Tools.Levels
 {
-	/// <summary>
-	/// Specifies the type of property for the entry.
-	/// </summary>
-	enum EntryPropertyType
-	{
-		Attribute,
-		Element,
-		SubElement,
-	}
+    /// <summary>
+    /// Specifies the type of property for the entry.
+    /// </summary>
+    enum EntryPropertyType
+    {
+        Attribute,
+        Element,
+        SubElement,
+    }
 
-	/// <summary>
-	/// Specifies an entry property type and a default value for an entry property.
-	/// </summary>
-	[AttributeUsage(AttributeTargets.Property)]
-	class EntryPropertyAttribute : Attribute
-	{
-		EntryPropertyType mType;
-		object mDefaultValue;
+    /// <summary>
+    /// Specifies an entry property type and a default value for an entry property.
+    /// </summary>
+    [AttributeUsage(AttributeTargets.Property)]
+    class EntryPropertyAttribute : Attribute
+    {
+        EntryPropertyType mType;
+        object mDefaultValue;
 
-		public EntryPropertyAttribute(EntryPropertyType type, object defaultValue)
-		{
-			mType = type;
-			mDefaultValue = defaultValue;
-		}
+        public EntryPropertyAttribute(EntryPropertyType type, object defaultValue)
+        {
+            mType = type;
+            mDefaultValue = defaultValue;
+        }
 
-		public EntryPropertyAttribute(EntryPropertyType type, Type valueType, string value)
-		{
-			mDefaultValue = TypeDescriptor.GetConverter(valueType).ConvertFromInvariantString(value);
-		}
+        public EntryPropertyAttribute(EntryPropertyType type, Type valueType, string value)
+        {
+            mDefaultValue = TypeDescriptor.GetConverter(valueType).ConvertFromInvariantString(value);
+        }
 
-		public EntryPropertyType Type
-		{
-			get
-			{
-				return mType;
-			}
-		}
+        public EntryPropertyType Type
+        {
+            get
+            {
+                return mType;
+            }
+        }
 
-		public object DefaultValue
-		{
-			get
-			{
-				return mDefaultValue;
-			}
-		}
-	}
+        public object DefaultValue
+        {
+            get
+            {
+                return mDefaultValue;
+            }
+        }
+    }
 }

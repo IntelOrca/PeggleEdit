@@ -21,107 +21,108 @@ using IntelOrca.PeggleEdit.Tools.Pack.CFG;
 
 namespace IntelOrca.PeggleEdit.Tools.Pack.Challenge
 {
-	/// <summary>
-	/// Represents information about a page containing challenges.
-	/// </summary>
-	public class ChallengePage : IEnumerable<Challenge>
-	{
-		string mTitle;
-		string mDesc;
-		string mSmallDesc;
-		List<Challenge> mChallenges;
+    /// <summary>
+    /// Represents information about a page containing challenges.
+    /// </summary>
+    public class ChallengePage : IEnumerable<Challenge>
+    {
+        string mTitle;
+        string mDesc;
+        string mSmallDesc;
+        List<Challenge> mChallenges;
 
-		public ChallengePage()
-		{
-			mChallenges = new List<Challenge>();
-		}
+        public ChallengePage()
+        {
+            mChallenges = new List<Challenge>();
+        }
 
-		public ChallengePage(CFGBlock block) :
-			this()
-		{
-			//Read title
-			mTitle = block.Value;
+        public ChallengePage(CFGBlock block) :
+            this()
+        {
+            //Read title
+            mTitle = block.Value;
 
-			//Read description
-			CFGProperty cfgp = block.GetFirstProperty("desc");
-			if (cfgp != null)
-				mDesc = cfgp.Values[0];
+            //Read description
+            CFGProperty cfgp = block.GetFirstProperty("desc");
+            if (cfgp != null)
+                mDesc = cfgp.Values[0];
 
-			CFGBlock[] blocks = block.GetBlocks("trophy");
-			foreach (CFGBlock b in blocks)
-				mChallenges.Add(new Challenge(b));
-		}
+            CFGBlock[] blocks = block.GetBlocks("trophy");
+            foreach (CFGBlock b in blocks)
+                mChallenges.Add(new Challenge(b));
+        }
 
-		public CFGBlock GetCFGBlock()
-		{
-			CFGBlock block = new CFGBlock();
-			block.Name = "Page";
-			block.Value = mTitle;
+        public CFGBlock GetCFGBlock()
+        {
+            CFGBlock block = new CFGBlock();
+            block.Name = "Page";
+            block.Value = mTitle;
 
-			if (!String.IsNullOrEmpty(mDesc))
-				block.Properties.Add(new CFGProperty("Desc", mDesc));
-			if (!String.IsNullOrEmpty(mSmallDesc))
-				block.Properties.Add(new CFGProperty("SmallDesc", mSmallDesc));
+            if (!String.IsNullOrEmpty(mDesc))
+                block.Properties.Add(new CFGProperty("Desc", mDesc));
+            if (!String.IsNullOrEmpty(mSmallDesc))
+                block.Properties.Add(new CFGProperty("SmallDesc", mSmallDesc));
 
-			foreach (Challenge challenge in mChallenges) {
-				block.Blocks.Add(challenge.GetCFGBlock());
-			}
+            foreach (Challenge challenge in mChallenges)
+            {
+                block.Blocks.Add(challenge.GetCFGBlock());
+            }
 
-			return block;
-		}
+            return block;
+        }
 
-		public string Title
-		{
-			get
-			{
-				return mTitle;
-			}
-			set
-			{
-				mTitle = value;
-			}
-		}
+        public string Title
+        {
+            get
+            {
+                return mTitle;
+            }
+            set
+            {
+                mTitle = value;
+            }
+        }
 
-		public string Description
-		{
-			get
-			{
-				return mDesc;
-			}
-			set
-			{
-				mDesc = value;
-			}
-		}
+        public string Description
+        {
+            get
+            {
+                return mDesc;
+            }
+            set
+            {
+                mDesc = value;
+            }
+        }
 
-		public string SmallDescription
-		{
-			get
-			{
-				return mSmallDesc;
-			}
-			set
-			{
-				mSmallDesc = value;
-			}
-		}
+        public string SmallDescription
+        {
+            get
+            {
+                return mSmallDesc;
+            }
+            set
+            {
+                mSmallDesc = value;
+            }
+        }
 
-		public List<Challenge> Challenges
-		{
-			get
-			{
-				return mChallenges;
-			}
-		}
+        public List<Challenge> Challenges
+        {
+            get
+            {
+                return mChallenges;
+            }
+        }
 
-		public IEnumerator<Challenge> GetEnumerator()
-		{
-			return mChallenges.GetEnumerator();
-		}
+        public IEnumerator<Challenge> GetEnumerator()
+        {
+            return mChallenges.GetEnumerator();
+        }
 
-		IEnumerator IEnumerable.GetEnumerator()
-		{
-			return mChallenges.GetEnumerator();
-		}
-	}
+        IEnumerator IEnumerable.GetEnumerator()
+        {
+            return mChallenges.GetEnumerator();
+        }
+    }
 }

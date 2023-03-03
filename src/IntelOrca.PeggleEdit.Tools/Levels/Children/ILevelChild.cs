@@ -16,14 +16,14 @@
 
 namespace IntelOrca.PeggleEdit.Tools.Levels.Children
 {
-	/// <summary>
-	/// Defines a Level property for objects that are part of a level.
-	/// </summary>
-	public interface ILevelChild
-	{
-		Level Level
-		{
-			get;
-		}
-	}
+    /// <summary>
+    /// Defines a Level property for objects that are part of a level.
+    /// </summary>
+    public interface ILevelChild
+    {
+        Level Level
+        {
+            get;
+        }
+    }
 }

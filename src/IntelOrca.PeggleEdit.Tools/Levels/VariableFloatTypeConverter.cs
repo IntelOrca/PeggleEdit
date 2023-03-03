@@ -23,31 +23,34 @@ using System.Globalization;
 
 namespace IntelOrca.PeggleEdit.Tools.Levels
 {
-	/// <summary>
-	/// Represents the type converter for converting between strings, floats and variable floats.
-	/// </summary>
-	class VariableFloatTypeConverter : TypeConverter
-	{
-		public override bool CanConvertFrom(ITypeDescriptorContext context, Type sourceType)
-		{
-			if (sourceType == typeof(float))
-				return true;
+    /// <summary>
+    /// Represents the type converter for converting between strings, floats and variable floats.
+    /// </summary>
+    class VariableFloatTypeConverter : TypeConverter
+    {
+        public override bool CanConvertFrom(ITypeDescriptorContext context, Type sourceType)
+        {
+            if (sourceType == typeof(float))
+                return true;
 
-			if (sourceType == typeof(string))
-				return true;
+            if (sourceType == typeof(string))
+                return true;
 
-			return base.CanConvertFrom(context, sourceType);
-		}
+            return base.CanConvertFrom(context, sourceType);
+        }
 
-		public override object ConvertFrom(ITypeDescriptorContext context, CultureInfo culture, object value)
-		{
-			if (value is float) {
-				return new VariableFloat((float)value);
-			} else if (value is string) {
-				return new VariableFloat((string)value);
-			}
+        public override object ConvertFrom(ITypeDescriptorContext context, CultureInfo culture, object value)
+        {
+            if (value is float)
+            {
+                return new VariableFloat((float)value);
+            }
+            else if (value is string)
+            {
+                return new VariableFloat((string)value);
+            }
 
-			return base.ConvertFrom(context, culture, value);
-		}
-	}
+            return base.ConvertFrom(context, culture, value);
+        }
+    }
 }

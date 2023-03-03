@@ -20,26 +20,26 @@ using System.Windows.Forms;
 
 namespace IntelOrca.PeggleEdit.Designer
 {
-	partial class AboutForm : Form
-	{
-		public AboutForm()
-		{
-			InitializeComponent();
+    partial class AboutForm : Form
+    {
+        public AboutForm()
+        {
+            InitializeComponent();
 
-			Text = String.Format("{0} {1} ({2})", Program.AppTitle, Program.AppVersion, Program.AppVersionName);
-			lblTitle.Text = String.Format("{0} {1} ({2})", Program.AppTitle, Program.AppVersion, Program.AppVersionName);
-			lblAuthor.Text = String.Format("Written by {0} {1}", Program.AppAuthor, Program.AppYear);
-			lblWebsite.Text = Program.AppWebsite;
-		}
+            Text = String.Format("{0} {1} ({2})", Program.AppTitle, Program.AppVersion, Program.AppVersionName);
+            lblTitle.Text = String.Format("{0} {1} ({2})", Program.AppTitle, Program.AppVersion, Program.AppVersionName);
+            lblAuthor.Text = String.Format("Written by {0} {1}", Program.AppAuthor, Program.AppYear);
+            lblWebsite.Text = Program.AppWebsite;
+        }
 
-		private void btnOK_Click(object sender, EventArgs e)
-		{
-			Close();
-		}
+        private void btnOK_Click(object sender, EventArgs e)
+        {
+            Close();
+        }
 
-		private void lblWebsite_LinkClicked(object sender, LinkLabelLinkClickedEventArgs e)
-		{
-			Process.Start(Program.AppWebsite);
-		}
-	}
+        private void lblWebsite_LinkClicked(object sender, LinkLabelLinkClickedEventArgs e)
+        {
+            Process.Start(Program.AppWebsite);
+        }
+    }
 }

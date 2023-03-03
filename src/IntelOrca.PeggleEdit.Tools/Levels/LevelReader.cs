@@ -21,103 +21,112 @@ using IntelOrca.PeggleEdit.Tools.Levels.Children;
 
 namespace IntelOrca.PeggleEdit.Tools.Levels
 {
-	/// <summary>
-	/// Represents a reader that can read levels.
-	/// </summary>
-	public class LevelReader : IDisposable
-	{
-		Stream mBaseStream;
-		int mFileVersion;
-		int mNumEntries;
-		Level mLevel;
-		string mError;
+    /// <summary>
+    /// Represents a reader that can read levels.
+    /// </summary>
+    public class LevelReader : IDisposable
+    {
+        Stream mBaseStream;
+        int mFileVersion;
+        int mNumEntries;
+        Level mLevel;
+        string mError;
 
-		public LevelReader(string path)
-			: this(new FileStream(path, FileMode.Open))
-		{
-		}
+        public LevelReader(string path)
+            : this(new FileStream(path, FileMode.Open))
+        {
+        }
 
-		public LevelReader(byte[] buffer)
-			: this(new MemoryStream(buffer))
-		{
-		}
+        public LevelReader(byte[] buffer)
+            : this(new MemoryStream(buffer))
+        {
+        }
 
-		public LevelReader(Stream s)
-		{
-			mBaseStream = s;
-		}
+        public LevelReader(Stream s)
+        {
+            mBaseStream = s;
+        }
 
-		public Level Read()
-		{
-			int entry_index = -1;
+        public Level Read()
+        {
+            int entry_index = -1;
 
-			mLevel = new Level();
+            mLevel = new Level();
 
-			try {
-				BinaryReader br = new BinaryReader(mBaseStream);
+            try
+            {
+                BinaryReader br = new BinaryReader(mBaseStream);
 
-				//Read file version
-				mFileVersion = br.ReadInt32();
+                //Read file version
+                mFileVersion = br.ReadInt32();
 
-				//Read byte
-				br.ReadByte();
+                //Read byte
+                br.ReadByte();
 
-				mNumEntries = br.ReadInt32();
+                mNumEntries = br.ReadInt32();
 
-				//Read entries
-				for (entry_index = 0; entry_index < mNumEntries; entry_index++) {
-					LevelEntry entry = LevelEntryFactory.CreateLevelEntry(br, mFileVersion);
-					entry.Level = mLevel;
-					mLevel.Entries.Add(entry);
-				}
+                //Read entries
+                for (entry_index = 0; entry_index < mNumEntries; entry_index++)
+                {
+                    LevelEntry entry = LevelEntryFactory.CreateLevelEntry(br, mFileVersion);
+                    entry.Level = mLevel;
+                    mLevel.Entries.Add(entry);
+                }
 
-				return mLevel;
-			} catch (Exception ex) {
-				if (entry_index != -1) {
-					mError = String.Format("Entry {0}: {1}", entry_index, ex.Message);
-				} else {
-					mError = ex.Message;
-				}
+                return mLevel;
+            }
+            catch (Exception ex)
+            {
+                if (entry_index != -1)
+                {
+                    mError = String.Format("Entry {0}: {1}", entry_index, ex.Message);
+                }
+                else
+                {
+                    mError = ex.Message;
+                }
 
-				return null;
-			}
-		}
+                return null;
+            }
+        }
 
-		private void SeekToNextEntry(BinaryReader br)
-		{
-			for (; ; ) {
-				if (br.BaseStream.Position > br.BaseStream.Length - 8)
-					return;
+        private void SeekToNextEntry(BinaryReader br)
+        {
+            for (; ; )
+            {
+                if (br.BaseStream.Position > br.BaseStream.Length - 8)
+                    return;
 
-				uint int1 = br.ReadUInt32();
-				uint int2 = br.ReadUInt32();
+                uint int1 = br.ReadUInt32();
+                uint int2 = br.ReadUInt32();
 
-				if (int1 == 1 && int2 < 10 && int2 > 0) {
-					br.BaseStream.Position -= 8;
-					return;
-				}
+                if (int1 == 1 && int2 < 10 && int2 > 0)
+                {
+                    br.BaseStream.Position -= 8;
+                    return;
+                }
 
-				br.BaseStream.Position -= 7;
-			}
-		}
+                br.BaseStream.Position -= 7;
+            }
+        }
 
-		public static string ReadPopcapString(BinaryReader br)
-		{
-			short l = br.ReadInt16();
-			return Encoding.UTF8.GetString(br.ReadBytes(l));
-		}
+        public static string ReadPopcapString(BinaryReader br)
+        {
+            short l = br.ReadInt16();
+            return Encoding.UTF8.GetString(br.ReadBytes(l));
+        }
 
-		public void Dispose()
-		{
-			mBaseStream.Dispose();
-		}
+        public void Dispose()
+        {
+            mBaseStream.Dispose();
+        }
 
-		public string Error
-		{
-			get
-			{
-				return mError;
-			}
-		}
-	}
+        public string Error
+        {
+            get
+            {
+                return mError;
+            }
+        }
+    }
 }

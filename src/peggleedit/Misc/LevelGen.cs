@@ -20,54 +20,56 @@ using IntelOrca.PeggleEdit.Tools.Levels.Children;
 
 namespace IntelOrca.PeggleEdit.Tools.Levels
 {
-	/// <summary>
-	/// Random level generator
-	/// </summary>
-	class LevelGen
-	{
-		Random mRandom;
-		Level mLevel;
+    /// <summary>
+    /// Random level generator
+    /// </summary>
+    class LevelGen
+    {
+        Random mRandom;
+        Level mLevel;
 
-		public LevelGen()
-		{
-			mLevel = new Level();
-		}
+        public LevelGen()
+        {
+            mLevel = new Level();
+        }
 
-		public void Generate()
-		{
-			Generate(Environment.TickCount);
-		}
+        public void Generate()
+        {
+            Generate(Environment.TickCount);
+        }
 
-		public void Generate(int seed)
-		{
-			mRandom = new Random(seed);
+        public void Generate(int seed)
+        {
+            mRandom = new Random(seed);
 
-			for (int i = 0; i < 40; i++) {
-				AddSparePeg();
-			}
-		}
+            for (int i = 0; i < 40; i++)
+            {
+                AddSparePeg();
+            }
+        }
 
-		public Level GetLevel()
-		{
-			return mLevel;
-		}
+        public Level GetLevel()
+        {
+            return mLevel;
+        }
 
-		private void AddSparePeg()
-		{
-			Point spot;
-			LevelEntry[] entries;
+        private void AddSparePeg()
+        {
+            Point spot;
+            LevelEntry[] entries;
 
-			do {
-				spot = new Point(mRandom.Next(20, 600), mRandom.Next(150, 500));
-				entries = mLevel.GetObjectsIn(new RectangleF(spot.X - 10, spot.Y - 10, 20, 20));
-			} while (entries.Length > 0);
+            do
+            {
+                spot = new Point(mRandom.Next(20, 600), mRandom.Next(150, 500));
+                entries = mLevel.GetObjectsIn(new RectangleF(spot.X - 10, spot.Y - 10, 20, 20));
+            } while (entries.Length > 0);
 
-			Circle peg = new Circle(mLevel);
-			peg.X = spot.X;
-			peg.Y = spot.Y;
-			peg.PegInfo = new PegInfo(peg, true, false);
-			mLevel.Entries.Add(peg);
-		}
+            Circle peg = new Circle(mLevel);
+            peg.X = spot.X;
+            peg.Y = spot.Y;
+            peg.PegInfo = new PegInfo(peg, true, false);
+            mLevel.Entries.Add(peg);
+        }
 
-	}
+    }
 }

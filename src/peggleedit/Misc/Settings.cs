@@ -24,105 +24,105 @@ using Microsoft.Win32;
 
 namespace IntelOrca.PeggleEdit.Designer
 {
-	public class Settings
-	{
-		public static Settings Default { get; private set; } = new Settings();
+    public class Settings
+    {
+        public static Settings Default { get; private set; } = new Settings();
 
-		public string PeggleNightsExePath { get; set; } = @"C:\Program Files\PopCap Games\Peggle Nights\PeggleNights.exe";
-		public bool ShowGrid { get; set; }
-		public bool SnapToGrid { get; set; } = true;
-		public int GridSize { get; set; } = 20;
-		public int SnapThreshold { get; set; } = 5;
+        public string PeggleNightsExePath { get; set; } = @"C:\Program Files\PopCap Games\Peggle Nights\PeggleNights.exe";
+        public bool ShowGrid { get; set; }
+        public bool SnapToGrid { get; set; } = true;
+        public int GridSize { get; set; } = 20;
+        public int SnapThreshold { get; set; } = 5;
 
-		public bool ShowAnchorsAlways { get; set; }
+        public bool ShowAnchorsAlways { get; set; }
 
-		public Size MDIFormSize { get; set; } = new Size(800, 600);
-		public bool MDIMaximized { get; set; }
+        public Size MDIFormSize { get; set; } = new Size(800, 600);
+        public bool MDIMaximized { get; set; }
 
-		public List<string> RecentPackFiles { get; set; } = new List<string>();
+        public List<string> RecentPackFiles { get; set; } = new List<string>();
 
-		private static string GetConfigPath()
-		{
-			var appDataPath = Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData);
-			var configPath = Path.Combine(appDataPath, "peggleedit", "config.json");
-			return configPath;
-		}
+        private static string GetConfigPath()
+        {
+            var appDataPath = Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData);
+            var configPath = Path.Combine(appDataPath, "peggleedit", "config.json");
+            return configPath;
+        }
 
-		public static void Load()
-		{
-			try
-			{
-				var configPath = GetConfigPath();
-				if (!File.Exists(configPath))
-					return;
+        public static void Load()
+        {
+            try
+            {
+                var configPath = GetConfigPath();
+                if (!File.Exists(configPath))
+                    return;
 
-				var json = File.ReadAllText(configPath);
-				Default = JsonSerializer.Deserialize<Settings>(json, new JsonSerializerOptions()
-				{
-					PropertyNameCaseInsensitive = true
-				});
+                var json = File.ReadAllText(configPath);
+                Default = JsonSerializer.Deserialize<Settings>(json, new JsonSerializerOptions()
+                {
+                    PropertyNameCaseInsensitive = true
+                });
 
-				if (Default.RecentPackFiles == null)
-					Default.RecentPackFiles = new List<string>();
-			}
-			catch (Exception ex)
-			{
-				MessageBox.Show(
-					ex.Message,
-					"Failed to open configuration file.",
-					MessageBoxButtons.OK,
-					MessageBoxIcon.Error);
-			}
-		}
+                if (Default.RecentPackFiles == null)
+                    Default.RecentPackFiles = new List<string>();
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show(
+                    ex.Message,
+                    "Failed to open configuration file.",
+                    MessageBoxButtons.OK,
+                    MessageBoxIcon.Error);
+            }
+        }
 
-		public static void Save()
-		{
-			var configPath = GetConfigPath();
-			try
-			{
-				var configDirectory = Path.GetDirectoryName(configPath);
-				Directory.CreateDirectory(configDirectory);
-				var json = JsonSerializer.Serialize(Default, new JsonSerializerOptions()
-				{
-					PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
-					WriteIndented = true
-				});
-				File.WriteAllText(configPath, json);
-			}
-			catch (Exception ex)
-			{
-				MessageBox.Show(
-					ex.Message,
-					"Failed to write configuration file.",
-					MessageBoxButtons.OK,
-					MessageBoxIcon.Error);
-			}
-		}
+        public static void Save()
+        {
+            var configPath = GetConfigPath();
+            try
+            {
+                var configDirectory = Path.GetDirectoryName(configPath);
+                Directory.CreateDirectory(configDirectory);
+                var json = JsonSerializer.Serialize(Default, new JsonSerializerOptions()
+                {
+                    PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
+                    WriteIndented = true
+                });
+                File.WriteAllText(configPath, json);
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show(
+                    ex.Message,
+                    "Failed to write configuration file.",
+                    MessageBoxButtons.OK,
+                    MessageBoxIcon.Error);
+            }
+        }
 
-		public static void SetupFileAssociation()
-		{
-			try
-			{
-				// Setup application
-				var keyPeggleEdit = Registry.ClassesRoot.CreateSubKey("PeggleEdit");
-				var keyShell = keyPeggleEdit.CreateSubKey("Shell");
-				var keyOpen = keyShell.CreateSubKey("Open");
-				var keyCommand = keyOpen.CreateSubKey("Command");
-				keyOpen.SetValue(string.Empty, "Open with PeggleEdit");
-				keyCommand.SetValue(string.Empty, $"\"{Application.ExecutablePath}\" \"%1\"");
+        public static void SetupFileAssociation()
+        {
+            try
+            {
+                // Setup application
+                var keyPeggleEdit = Registry.ClassesRoot.CreateSubKey("PeggleEdit");
+                var keyShell = keyPeggleEdit.CreateSubKey("Shell");
+                var keyOpen = keyShell.CreateSubKey("Open");
+                var keyCommand = keyOpen.CreateSubKey("Command");
+                keyOpen.SetValue(string.Empty, "Open with PeggleEdit");
+                keyCommand.SetValue(string.Empty, $"\"{Application.ExecutablePath}\" \"%1\"");
 
-				// Setup file extension
-				var keyPak = Registry.ClassesRoot.CreateSubKey(".pak");
-				keyPak.SetValue(string.Empty, "PeggleEdit");
-			}
-			catch (Exception ex)
-			{
-				MessageBox.Show(
-					ex.Message,
-					"Failed to edit registry for file association.",
-					MessageBoxButtons.OK,
-					MessageBoxIcon.Error);
-			}
-		}
-	}
+                // Setup file extension
+                var keyPak = Registry.ClassesRoot.CreateSubKey(".pak");
+                keyPak.SetValue(string.Empty, "PeggleEdit");
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show(
+                    ex.Message,
+                    "Failed to edit registry for file association.",
+                    MessageBoxButtons.OK,
+                    MessageBoxIcon.Error);
+            }
+        }
+    }
 }

@@ -19,60 +19,60 @@ using System.Collections.Generic;
 
 namespace IntelOrca.PeggleEdit.Tools.Pack.CFG
 {
-	/// <summary>
-	/// Represents a cfg file containing cfg blocks.
-	/// </summary>
-	public class CFGDocument : IEnumerable<CFGBlock>
-	{
-		private List<CFGBlock> mBlocks;
+    /// <summary>
+    /// Represents a cfg file containing cfg blocks.
+    /// </summary>
+    public class CFGDocument : IEnumerable<CFGBlock>
+    {
+        private List<CFGBlock> mBlocks;
 
-		public CFGDocument()
-		{
-			mBlocks = new List<CFGBlock>();
-		}
+        public CFGDocument()
+        {
+            mBlocks = new List<CFGBlock>();
+        }
 
-		public static CFGDocument Read(string cfg)
-		{
-			CFGReader reader = new CFGReader(cfg);
-			return reader.Document;
-		}
+        public static CFGDocument Read(string cfg)
+        {
+            CFGReader reader = new CFGReader(cfg);
+            return reader.Document;
+        }
 
-		public IEnumerator<CFGBlock> GetEnumerator()
-		{
-			return mBlocks.GetEnumerator();
-		}
+        public IEnumerator<CFGBlock> GetEnumerator()
+        {
+            return mBlocks.GetEnumerator();
+        }
 
-		System.Collections.IEnumerator System.Collections.IEnumerable.GetEnumerator()
-		{
-			return mBlocks.GetEnumerator();
-		}
+        System.Collections.IEnumerator System.Collections.IEnumerable.GetEnumerator()
+        {
+            return mBlocks.GetEnumerator();
+        }
 
-		public CFGBlock GetFirstBlock(string name)
-		{
-			List<CFGBlock> blocks = new List<CFGBlock>();
-			foreach (CFGBlock b in mBlocks)
-				if (String.Compare(b.Name, name, true) == 0)
-					return b;
+        public CFGBlock GetFirstBlock(string name)
+        {
+            List<CFGBlock> blocks = new List<CFGBlock>();
+            foreach (CFGBlock b in mBlocks)
+                if (String.Compare(b.Name, name, true) == 0)
+                    return b;
 
-			return null;
-		}
+            return null;
+        }
 
-		public CFGBlock[] GetBlocks(string name)
-		{
-			List<CFGBlock> blocks = new List<CFGBlock>();
-			foreach (CFGBlock b in mBlocks)
-				if (String.Compare(b.Name, name, true) == 0)
-					blocks.Add(b);
+        public CFGBlock[] GetBlocks(string name)
+        {
+            List<CFGBlock> blocks = new List<CFGBlock>();
+            foreach (CFGBlock b in mBlocks)
+                if (String.Compare(b.Name, name, true) == 0)
+                    blocks.Add(b);
 
-			return blocks.ToArray();
-		}
+            return blocks.ToArray();
+        }
 
-		public List<CFGBlock> Blocks
-		{
-			get
-			{
-				return mBlocks;
-			}
-		}
-	}
+        public List<CFGBlock> Blocks
+        {
+            get
+            {
+                return mBlocks;
+            }
+        }
+    }
 }

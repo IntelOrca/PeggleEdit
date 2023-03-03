@@ -21,199 +21,201 @@ using System.IO;
 
 namespace IntelOrca.PeggleEdit.Tools.Levels.Children
 {
-	/// <summary>
-	/// Represents the rod level entry.
-	/// </summary>
-	public class Rod : LevelEntry
-	{
-		PointF mPointA;
-		PointF mPointB;
+    /// <summary>
+    /// Represents the rod level entry.
+    /// </summary>
+    public class Rod : LevelEntry
+    {
+        PointF mPointA;
+        PointF mPointB;
 
-		public Rod(Level level)
-			: base(level)
-		{
+        public Rod(Level level)
+            : base(level)
+        {
 
-		}
+        }
 
-		public override void ReadData(BinaryReader br, int version)
-		{
-			FlagGroup fA = new FlagGroup(br.ReadByte());
+        public override void ReadData(BinaryReader br, int version)
+        {
+            FlagGroup fA = new FlagGroup(br.ReadByte());
 
-			mPointA = new PointF(br.ReadSingle(), br.ReadSingle());
-			mPointB = new PointF(br.ReadSingle(), br.ReadSingle());
+            mPointA = new PointF(br.ReadSingle(), br.ReadSingle());
+            mPointB = new PointF(br.ReadSingle(), br.ReadSingle());
 
-			if (fA[0]) {
-				float e = br.ReadSingle();
-			}
+            if (fA[0])
+            {
+                float e = br.ReadSingle();
+            }
 
-			if (fA[1]) {
-				float f = br.ReadSingle();
-			}
-		}
+            if (fA[1])
+            {
+                float f = br.ReadSingle();
+            }
+        }
 
-		public override void WriteData(BinaryWriter bw, int version)
-		{
-			FlagGroup fA = new FlagGroup();
-			bw.Write(fA.Int8);
+        public override void WriteData(BinaryWriter bw, int version)
+        {
+            FlagGroup fA = new FlagGroup();
+            bw.Write(fA.Int8);
 
-			bw.Write(mPointA.X);
-			bw.Write(mPointA.Y);
-			bw.Write(mPointB.X);
-			bw.Write(mPointB.Y);
-		}
+            bw.Write(mPointA.X);
+            bw.Write(mPointA.Y);
+            bw.Write(mPointB.X);
+            bw.Write(mPointB.Y);
+        }
 
-		public override void Draw(Graphics g)
-		{
-			if (Level.ShowCollision && !Collision)
-				return;
+        public override void Draw(Graphics g)
+        {
+            if (Level.ShowCollision && !Collision)
+                return;
 
-			Pen p = new Pen(Color.White, 2);
-			g.DrawLine(p, mPointA, mPointB);
-		}
+            Pen p = new Pen(Color.White, 2);
+            g.DrawLine(p, mPointA, mPointB);
+        }
 
-		public override object Clone()
-		{
-			Rod cpyRod = new Rod(Level);
-			cpyRod.mPointA = mPointA;
-			cpyRod.mPointB = mPointB;
+        public override object Clone()
+        {
+            Rod cpyRod = new Rod(Level);
+            cpyRod.mPointA = mPointA;
+            cpyRod.mPointB = mPointB;
 
-			return cpyRod;
-		}
+            return cpyRod;
+        }
 
-		[DisplayName("Point A, X")]
-		[Description("The X co-ordinate of point A.")]
-		[Category("Layout")]
-		public float PointAX
-		{
-			get
-			{
-				return mPointA.X;
-			}
-			set
-			{
-				mPointA.X = value;
-			}
-		}
+        [DisplayName("Point A, X")]
+        [Description("The X co-ordinate of point A.")]
+        [Category("Layout")]
+        public float PointAX
+        {
+            get
+            {
+                return mPointA.X;
+            }
+            set
+            {
+                mPointA.X = value;
+            }
+        }
 
-		[DisplayName("Point A, Y")]
-		[Description("The Y co-ordinate of point A.")]
-		[Category("Layout")]
-		public float PointAY
-		{
-			get
-			{
-				return mPointA.Y;
-			}
-			set
-			{
-				mPointA.Y = value;
-			}
-		}
+        [DisplayName("Point A, Y")]
+        [Description("The Y co-ordinate of point A.")]
+        [Category("Layout")]
+        public float PointAY
+        {
+            get
+            {
+                return mPointA.Y;
+            }
+            set
+            {
+                mPointA.Y = value;
+            }
+        }
 
-		[DisplayName("Point B, X")]
-		[Description("The X co-ordinate of point B.")]
-		[Category("Layout")]
-		public float PointBX
-		{
-			get
-			{
-				return mPointB.X;
-			}
-			set
-			{
-				mPointB.X = value;
-			}
-		}
+        [DisplayName("Point B, X")]
+        [Description("The X co-ordinate of point B.")]
+        [Category("Layout")]
+        public float PointBX
+        {
+            get
+            {
+                return mPointB.X;
+            }
+            set
+            {
+                mPointB.X = value;
+            }
+        }
 
-		[DisplayName("Point B, Y")]
-		[Description("The Y co-ordinate of point B.")]
-		[Category("Layout")]
-		public float PointBY
-		{
-			get
-			{
-				return mPointB.Y;
-			}
-			set
-			{
-				mPointB.Y = value;
-			}
-		}
+        [DisplayName("Point B, Y")]
+        [Description("The Y co-ordinate of point B.")]
+        [Category("Layout")]
+        public float PointBY
+        {
+            get
+            {
+                return mPointB.Y;
+            }
+            set
+            {
+                mPointB.Y = value;
+            }
+        }
 
-		[Browsable(false)]
-		public PointF PointA
-		{
-			get
-			{
-				return mPointA;
-			}
-			set
-			{
-				mPointA = value;
-			}
-		}
+        [Browsable(false)]
+        public PointF PointA
+        {
+            get
+            {
+                return mPointA;
+            }
+            set
+            {
+                mPointA = value;
+            }
+        }
 
-		[Browsable(false)]
-		public PointF PointB
-		{
-			get
-			{
-				return mPointB;
-			}
-			set
-			{
-				mPointB = value;
-			}
-		}
+        [Browsable(false)]
+        public PointF PointB
+        {
+            get
+            {
+                return mPointB;
+            }
+            set
+            {
+                mPointB = value;
+            }
+        }
 
-		public override float X
-		{
-			get
-			{
-				return mPointA.X + ((mPointB.X - mPointA.X) / 2);
-			}
-			set
-			{
-				float d = (mPointB.X - mPointA.X) / 2;
-				mPointA.X = value - d;
-				mPointB.X = value + d;
-			}
-		}
+        public override float X
+        {
+            get
+            {
+                return mPointA.X + ((mPointB.X - mPointA.X) / 2);
+            }
+            set
+            {
+                float d = (mPointB.X - mPointA.X) / 2;
+                mPointA.X = value - d;
+                mPointB.X = value + d;
+            }
+        }
 
-		public override float Y
-		{
-			get
-			{
-				return mPointA.Y + ((mPointB.Y - mPointA.Y) / 2);
-			}
-			set
-			{
-				float d = (mPointB.Y - mPointA.Y) / 2;
-				mPointA.Y = value - d;
-				mPointB.Y = value + d;
-			}
-		}
+        public override float Y
+        {
+            get
+            {
+                return mPointA.Y + ((mPointB.Y - mPointA.Y) / 2);
+            }
+            set
+            {
+                float d = (mPointB.Y - mPointA.Y) / 2;
+                mPointA.Y = value - d;
+                mPointB.Y = value + d;
+            }
+        }
 
-		public override RectangleF Bounds
-		{
-			get
-			{
-				float minX = Math.Min(mPointA.X, mPointB.X);
-				float minY = Math.Min(mPointA.Y, mPointB.Y);
-				float maxX = Math.Max(mPointA.X, mPointB.X);
-				float maxY = Math.Max(mPointA.Y, mPointB.Y);
-				RectangleF b = new RectangleF(minX, minY, maxX - minX, maxY - minY);
-				b.Inflate(2.0f, 2.0f);
-				return b;
-			}
-		}
+        public override RectangleF Bounds
+        {
+            get
+            {
+                float minX = Math.Min(mPointA.X, mPointB.X);
+                float minY = Math.Min(mPointA.Y, mPointB.Y);
+                float maxX = Math.Max(mPointA.X, mPointB.X);
+                float maxY = Math.Max(mPointA.Y, mPointB.Y);
+                RectangleF b = new RectangleF(minX, minY, maxX - minX, maxY - minY);
+                b.Inflate(2.0f, 2.0f);
+                return b;
+            }
+        }
 
-		public override int Type
-		{
-			get
-			{
-				return 2;
-			}
-		}
-	}
+        public override int Type
+        {
+            get
+            {
+                return 2;
+            }
+        }
+    }
 }

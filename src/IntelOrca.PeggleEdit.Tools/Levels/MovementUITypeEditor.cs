@@ -22,38 +22,42 @@ using IntelOrca.PeggleEdit.Tools.Levels.Children;
 
 namespace IntelOrca.PeggleEdit.Tools.Levels
 {
-	/// <summary>
-	/// Represents the user interface when editing a Movement property.
-	/// </summary>
-	class MovementUITypeEditor : UITypeEditor
-	{
-		public override UITypeEditorEditStyle GetEditStyle(ITypeDescriptorContext context)
-		{
-			return UITypeEditorEditStyle.Modal;
-		}
+    /// <summary>
+    /// Represents the user interface when editing a Movement property.
+    /// </summary>
+    class MovementUITypeEditor : UITypeEditor
+    {
+        public override UITypeEditorEditStyle GetEditStyle(ITypeDescriptorContext context)
+        {
+            return UITypeEditorEditStyle.Modal;
+        }
 
-		public override object EditValue(ITypeDescriptorContext context, IServiceProvider provider, object value)
-		{
-			if (value == null) {
-				ILevelChild lc = context.Instance as ILevelChild;
-				if (lc == null)
-					return null;
+        public override object EditValue(ITypeDescriptorContext context, IServiceProvider provider, object value)
+        {
+            if (value == null)
+            {
+                ILevelChild lc = context.Instance as ILevelChild;
+                if (lc == null)
+                    return null;
 
-				Movement movement = new Movement(lc.Level);
+                Movement movement = new Movement(lc.Level);
 
-				ILocation location = context.Instance as ILocation;
-				if (location != null) {
-					movement.Location = location.Location;
-				}
+                ILocation location = context.Instance as ILocation;
+                if (location != null)
+                {
+                    movement.Location = location.Location;
+                }
 
-				return movement;
-			} else {
-				DialogResult result = MessageBox.Show("Do you want to delete this movement information?", "Delete Movement", MessageBoxButtons.OKCancel, MessageBoxIcon.Question);
-				if (result == DialogResult.OK)
-					return null;
-				else
-					return value;
-			}
-		}
-	}
+                return movement;
+            }
+            else
+            {
+                DialogResult result = MessageBox.Show("Do you want to delete this movement information?", "Delete Movement", MessageBoxButtons.OKCancel, MessageBoxIcon.Question);
+                if (result == DialogResult.OK)
+                    return null;
+                else
+                    return value;
+            }
+        }
+    }
 }

@@ -20,40 +20,40 @@ using IntelOrca.PeggleEdit.Tools.Pack;
 
 namespace IntelOrca.PeggleEdit.Designer
 {
-	partial class PackDetailsForm : Form
-	{
-		private LevelPack mPack;
+    partial class PackDetailsForm : Form
+    {
+        private LevelPack mPack;
 
-		public PackDetailsForm(LevelPack pack)
-		{
-			mPack = pack;
+        public PackDetailsForm(LevelPack pack)
+        {
+            mPack = pack;
 
-			InitializeComponent();
+            InitializeComponent();
 
-			txtName.Text = pack.Name;
-			txtDescription.Text = pack.Description;
-		}
+            txtName.Text = pack.Name;
+            txtDescription.Text = pack.Description;
+        }
 
-		private void btnOK_Click(object sender, EventArgs e)
-		{
-			mPack.Name = txtName.Text;
-			mPack.Description = txtDescription.Text;
+        private void btnOK_Click(object sender, EventArgs e)
+        {
+            mPack.Name = txtName.Text;
+            mPack.Description = txtDescription.Text;
 
-			DialogResult = DialogResult.OK;
-			Close();
-		}
+            DialogResult = DialogResult.OK;
+            Close();
+        }
 
-		private void btnCancel_Click(object sender, EventArgs e)
-		{
-			Close();
-		}
+        private void btnCancel_Click(object sender, EventArgs e)
+        {
+            Close();
+        }
 
-		public LevelPack Pack
-		{
-			get
-			{
-				return mPack;
-			}
-		}
-	}
+        public LevelPack Pack
+        {
+            get
+            {
+                return mPack;
+            }
+        }
+    }
 }

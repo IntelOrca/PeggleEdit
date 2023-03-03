@@ -21,132 +21,147 @@ using System.Windows.Forms;
 
 namespace IntelOrca.PeggleEdit.Designer
 {
-	class RealTextBox : TextBox
-	{
-		private double mValue;
-		private double mMin;
-		private double mMax;
+    class RealTextBox : TextBox
+    {
+        private double mValue;
+        private double mMin;
+        private double mMax;
 
-		public RealTextBox()
-		{
-			mMin = Double.MinValue;
-			mMax = Double.MaxValue;
-			mValue = 0;
-			base.Text = mValue.ToString();
-		}
+        public RealTextBox()
+        {
+            mMin = Double.MinValue;
+            mMax = Double.MaxValue;
+            mValue = 0;
+            base.Text = mValue.ToString();
+        }
 
-		protected override void OnKeyPress(KeyPressEventArgs e)
-		{
-			base.OnKeyPress(e);
+        protected override void OnKeyPress(KeyPressEventArgs e)
+        {
+            base.OnKeyPress(e);
 
-			NumberFormatInfo numberFormatInfo = System.Globalization.CultureInfo.CurrentCulture.NumberFormat;
-			string decimalSeparator = numberFormatInfo.NumberDecimalSeparator;
-			string groupSeparator = numberFormatInfo.NumberGroupSeparator;
-			string negativeSign = numberFormatInfo.NegativeSign;
+            NumberFormatInfo numberFormatInfo = System.Globalization.CultureInfo.CurrentCulture.NumberFormat;
+            string decimalSeparator = numberFormatInfo.NumberDecimalSeparator;
+            string groupSeparator = numberFormatInfo.NumberGroupSeparator;
+            string negativeSign = numberFormatInfo.NegativeSign;
 
-			string keyInput = e.KeyChar.ToString();
+            string keyInput = e.KeyChar.ToString();
 
-			if (keyInput.Equals(negativeSign)) {
-			} else if (Char.IsDigit(e.KeyChar)) {
-			} else if (e.KeyChar == '-') {
-			} else if (e.KeyChar == '\b') {
-			} else if (keyInput.Equals(decimalSeparator)) {
-			} else {
-				e.Handled = true;
-			}
-		}
+            if (keyInput.Equals(negativeSign))
+            {
+            }
+            else if (Char.IsDigit(e.KeyChar))
+            {
+            }
+            else if (e.KeyChar == '-')
+            {
+            }
+            else if (e.KeyChar == '\b')
+            {
+            }
+            else if (keyInput.Equals(decimalSeparator))
+            {
+            }
+            else
+            {
+                e.Handled = true;
+            }
+        }
 
-		protected override void OnLeave(EventArgs e)
-		{
-			base.OnLeave(e);
+        protected override void OnLeave(EventArgs e)
+        {
+            base.OnLeave(e);
 
-			if (IsValid(base.Text)) {
-				mValue = Convert.ToDouble(base.Text);
-			}
+            if (IsValid(base.Text))
+            {
+                mValue = Convert.ToDouble(base.Text);
+            }
 
-			base.Text = mValue.ToString();
-		}
+            base.Text = mValue.ToString();
+        }
 
-		private void UpdateText()
-		{
-			base.Text = mValue.ToString();
-		}
+        private void UpdateText()
+        {
+            base.Text = mValue.ToString();
+        }
 
-		private bool IsValid(double value)
-		{
-			return (value >= mMin && value <= mMax);
-		}
+        private bool IsValid(double value)
+        {
+            return (value >= mMin && value <= mMax);
+        }
 
-		private bool IsValid(string text)
-		{
-			double v;
-			if (Double.TryParse(text, out v))
-				return IsValid(v);
-			else
-				return false;
-		}
+        private bool IsValid(string text)
+        {
+            double v;
+            if (Double.TryParse(text, out v))
+                return IsValid(v);
+            else
+                return false;
+        }
 
-		[Browsable(false)]
-		[DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
-		public new string Text
-		{
-			get
-			{
-				return base.Text;
-			}
-		}
+        [Browsable(false)]
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
+        public new string Text
+        {
+            get
+            {
+                return base.Text;
+            }
+        }
 
-		[Category("Appearance")]
-		[DefaultValue(0)]
-		public double Value
-		{
-			get
-			{
-				return Convert.ToDouble(Text);
-			}
-			set
-			{
-				if (IsValid(value)) {
-					mValue = value;
-					UpdateText();
-				} else {
-					throw new FormatException("Number specified must be a valid real between the set minimum and maximum.");
-				}
-			}
-		}
+        [Category("Appearance")]
+        [DefaultValue(0)]
+        public double Value
+        {
+            get
+            {
+                return Convert.ToDouble(Text);
+            }
+            set
+            {
+                if (IsValid(value))
+                {
+                    mValue = value;
+                    UpdateText();
+                }
+                else
+                {
+                    throw new FormatException("Number specified must be a valid real between the set minimum and maximum.");
+                }
+            }
+        }
 
-		[Category("Behavior")]
-		[DefaultValue(Double.MinValue)]
-		public double Minimum
-		{
-			get
-			{
-				return mMin;
-			}
-			set
-			{
-				if (value > mMax)
-					throw new FormatException("Minimum value must be less than the maximum value.");
-				else
-					mMin = value;
-			}
-		}
+        [Category("Behavior")]
+        [DefaultValue(Double.MinValue)]
+        public double Minimum
+        {
+            get
+            {
+                return mMin;
+            }
+            set
+            {
+                if (value > mMax)
+                    throw new FormatException("Minimum value must be less than the maximum value.");
+                else
+                    mMin = value;
+            }
+        }
 
-		[Category("Behavior")]
-		[DefaultValue(Double.MaxValue)]
-		public double Maximum
-		{
-			get
-			{
-				return mMax;
-			}
-			set
-			{
-				if (value < mMin)
-					throw new FormatException("Maximum value must be greater than the minimum value.");
-				else
-					mMax = value;
-			}
-		}
-	}
+        [Category("Behavior")]
+        [DefaultValue(Double.MaxValue)]
+        public double Maximum
+        {
+            get
+            {
+                return mMax;
+            }
+            set
+            {
+                if (value < mMin)
+                    throw new FormatException("Maximum value must be greater than the minimum value.");
+                else
+                    mMax = value;
+            }
+        }
+    }
 }

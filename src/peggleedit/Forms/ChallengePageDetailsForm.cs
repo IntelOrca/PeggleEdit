@@ -22,42 +22,42 @@ using IntelOrca.PeggleEdit.Tools.Pack.Challenge;
 
 namespace IntelOrca.PeggleEdit.Designer
 {
-	partial class ChallengePageForm : Form
-	{
-		private ChallengePage mPage;
+    partial class ChallengePageForm : Form
+    {
+        private ChallengePage mPage;
 
-		public ChallengePageForm(ChallengePage page)
-		{
-			mPage = page;
+        public ChallengePageForm(ChallengePage page)
+        {
+            mPage = page;
 
-			InitializeComponent();
+            InitializeComponent();
 
-			txtTitle.Text = page.Title;
-			txtDescription.Text = page.Description;
-			txtSmallDesc.Text = page.SmallDescription;
-		}
+            txtTitle.Text = page.Title;
+            txtDescription.Text = page.Description;
+            txtSmallDesc.Text = page.SmallDescription;
+        }
 
-		private void btnOK_Click(object sender, EventArgs e)
-		{
-			mPage.Title = txtTitle.Text;
-			mPage.Description = txtDescription.Text;
-			mPage.SmallDescription = txtSmallDesc.Text;
+        private void btnOK_Click(object sender, EventArgs e)
+        {
+            mPage.Title = txtTitle.Text;
+            mPage.Description = txtDescription.Text;
+            mPage.SmallDescription = txtSmallDesc.Text;
 
-			DialogResult = DialogResult.OK;
-			Close();
-		}
+            DialogResult = DialogResult.OK;
+            Close();
+        }
 
-		private void btnCancel_Click(object sender, EventArgs e)
-		{
-			Close();
-		}
+        private void btnCancel_Click(object sender, EventArgs e)
+        {
+            Close();
+        }
 
-		public ChallengePage Page
-		{
-			get
-			{
-				return mPage;
-			}
-		}
-	}
+        public ChallengePage Page
+        {
+            get
+            {
+                return mPage;
+            }
+        }
+    }
 }

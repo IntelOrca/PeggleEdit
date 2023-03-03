@@ -21,87 +21,91 @@ using IntelOrca.PeggleEdit.Tools.Levels.Children;
 
 namespace IntelOrca.PeggleEdit.Designer
 {
-	class DrawEditorTool : EditorTool
-	{
-		LevelEntry mEntry;
-		bool mDraw;
-		bool mAvoidOverlapping;
-		int mWidth;
-		int mHeight;
+    class DrawEditorTool : EditorTool
+    {
+        LevelEntry mEntry;
+        bool mDraw;
+        bool mAvoidOverlapping;
+        int mWidth;
+        int mHeight;
 
-		public DrawEditorTool(LevelEntry le, bool draw)
-		{
-			mEntry = le;
-			mDraw = draw;
-		}
+        public DrawEditorTool(LevelEntry le, bool draw)
+        {
+            mEntry = le;
+            mDraw = draw;
+        }
 
-		public DrawEditorTool(LevelEntry le, bool draw, int width, int height)
-		{
-			mEntry = le;
-			mDraw = draw;
-			mAvoidOverlapping = true;
-			mWidth = width;
-			mHeight = height;
-		}
+        public DrawEditorTool(LevelEntry le, bool draw, int width, int height)
+        {
+            mEntry = le;
+            mDraw = draw;
+            mAvoidOverlapping = true;
+            mWidth = width;
+            mHeight = height;
+        }
 
-		public override void Activate()
-		{
-			base.Activate();
+        public override void Activate()
+        {
+            base.Activate();
 
-			Editor.ClearSelection();
-			Editor.UpdateRedraw();
-		}
+            Editor.ClearSelection();
+            Editor.UpdateRedraw();
+        }
 
-		public override void MouseDown(MouseButtons button, Point location, Keys modifierKeys)
-		{
-			MouseMove(button, location, modifierKeys);
-		}
+        public override void MouseDown(MouseButtons button, Point location, Keys modifierKeys)
+        {
+            MouseMove(button, location, modifierKeys);
+        }
 
-		public override void MouseMove(MouseButtons button, Point location, Keys modifierKeys)
-		{
-			if (button != MouseButtons.Left)
-				return;
+        public override void MouseMove(MouseButtons button, Point location, Keys modifierKeys)
+        {
+            if (button != MouseButtons.Left)
+                return;
 
-			location = Editor.Level.GetVirtualXY(location);
+            location = Editor.Level.GetVirtualXY(location);
 
-			//Snap
-			PointF le_location = location;
-			if (Settings.Default.ShowGrid & Settings.Default.SnapToGrid) {
-				le_location = new PointF(Editor.SnapToGrid((float)location.X), Editor.SnapToGrid((float)location.Y));
-			}
+            //Snap
+            PointF le_location = location;
+            if (Settings.Default.ShowGrid & Settings.Default.SnapToGrid)
+            {
+                le_location = new PointF(Editor.SnapToGrid((float)location.X), Editor.SnapToGrid((float)location.Y));
+            }
 
-			RectangleF lookRange = new RectangleF(le_location.X - (mWidth / 2), le_location.Y - (mHeight / 2), mWidth, mHeight);
+            RectangleF lookRange = new RectangleF(le_location.X - (mWidth / 2), le_location.Y - (mHeight / 2), mWidth, mHeight);
 
-			if ((!Editor.Level.IsObjectIn(lookRange)) || (!mAvoidOverlapping)) {
-				Editor.CreateUndoPoint();
+            if ((!Editor.Level.IsObjectIn(lookRange)) || (!mAvoidOverlapping))
+            {
+                Editor.CreateUndoPoint();
 
-				LevelEntry entry = (LevelEntry)mEntry.Clone();
-				entry.Level = Editor.Level;
-				entry.X = le_location.X;
-				entry.Y = le_location.Y;
+                LevelEntry entry = (LevelEntry)mEntry.Clone();
+                entry.Level = Editor.Level;
+                entry.X = le_location.X;
+                entry.Y = le_location.Y;
 
-				Editor.Level.Entries.Add(entry);
+                Editor.Level.Entries.Add(entry);
 
-				Editor.UpdateRedraw();
+                Editor.UpdateRedraw();
 
-				//Have we finished
-				if (!mDraw) {
-					if ((modifierKeys & Keys.Control) == 0) {
-						Finish();
-					}
-				}
-			}
-		}
+                //Have we finished
+                if (!mDraw)
+                {
+                    if ((modifierKeys & Keys.Control) == 0)
+                    {
+                        Finish();
+                    }
+                }
+            }
+        }
 
-		public override object Clone()
-		{
-			DrawEditorTool tool = new DrawEditorTool(mEntry, mDraw);
-			CloneTo(tool);
-			tool.mAvoidOverlapping = mAvoidOverlapping;
-			tool.mWidth = mWidth;
-			tool.mHeight = mHeight;
+        public override object Clone()
+        {
+            DrawEditorTool tool = new DrawEditorTool(mEntry, mDraw);
+            CloneTo(tool);
+            tool.mAvoidOverlapping = mAvoidOverlapping;
+            tool.mWidth = mWidth;
+            tool.mHeight = mHeight;
 
-			return tool;
-		}
-	}
+            return tool;
+        }
+    }
 }

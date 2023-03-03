@@ -22,50 +22,50 @@ using IntelOrca.PeggleEdit.Designer.Properties;
 
 namespace IntelOrca.PeggleEdit.Designer
 {
-	static class Program
-	{
-		public const bool AppBetaRelease = true;
-		public const string AppTitle = "PeggleEdit";
-		public const string AppVersion = "0.5.0";
-		public const string AppVersionName = "Crow";
-		public const string AppAuthor = "Ted John";
-		public const string AppYear = "2010-2023";
-		public const string AppWebsite = "http://intelorca.co.uk/PeggleEdit";
+    static class Program
+    {
+        public const bool AppBetaRelease = true;
+        public const string AppTitle = "PeggleEdit";
+        public const string AppVersion = "0.5.0";
+        public const string AppVersionName = "Crow";
+        public const string AppAuthor = "Ted John";
+        public const string AppYear = "2010-2023";
+        public const string AppWebsite = "http://intelorca.co.uk/PeggleEdit";
 
-		private static string _tempPath;
+        private static string _tempPath;
 
-		/// <summary>
-		/// The main entry point for the application.
-		/// </summary>
-		[STAThread]
-		static void Main()
-		{
-			_tempPath = Path.Combine(Path.GetTempPath(), Application.ProductName);
+        /// <summary>
+        /// The main entry point for the application.
+        /// </summary>
+        [STAThread]
+        static void Main()
+        {
+            _tempPath = Path.Combine(Path.GetTempPath(), Application.ProductName);
 
-			Settings.Load();
+            Settings.Load();
 
-			Application.EnableVisualStyles();
-			Application.SetCompatibleTextRenderingDefault(false);
-			Application.Run(new MainMDIForm());
-			//Application.Run(new MainForm());
+            Application.EnableVisualStyles();
+            Application.SetCompatibleTextRenderingDefault(false);
+            Application.Run(new MainMDIForm());
+            //Application.Run(new MainForm());
 
-			Settings.Save();
-		}
+            Settings.Save();
+        }
 
-		public static Icon AppIcon
-		{
-			get
-			{
-				return Resources.orca;
-			}
-		}
+        public static Icon AppIcon
+        {
+            get
+            {
+                return Resources.orca;
+            }
+        }
 
-		public static string TempPath
-		{
-			get
-			{
-				return _tempPath;
-			}
-		}
-	}
+        public static string TempPath
+        {
+            get
+            {
+                return _tempPath;
+            }
+        }
+    }
 }

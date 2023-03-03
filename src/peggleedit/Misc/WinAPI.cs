@@ -19,32 +19,32 @@ using System.Runtime.InteropServices;
 
 namespace IntelOrca.PeggleEdit.Designer
 {
-	/// <summary>
-	/// Defines wrapper methods for using the windows api.
-	/// </summary>
-	static class WinAPI
-	{
-		[DllImport("shell32.dll")]
-		static extern void SHAddToRecentDocs(UInt32 uFlags, IntPtr pv);
+    /// <summary>
+    /// Defines wrapper methods for using the windows api.
+    /// </summary>
+    static class WinAPI
+    {
+        [DllImport("shell32.dll")]
+        static extern void SHAddToRecentDocs(UInt32 uFlags, IntPtr pv);
 
-		[DllImport("shell32.dll")]
-		static extern void SHAddToRecentDocs(UInt32 uFlags, [MarshalAs(UnmanagedType.LPWStr)] String pv);
+        [DllImport("shell32.dll")]
+        static extern void SHAddToRecentDocs(UInt32 uFlags, [MarshalAs(UnmanagedType.LPWStr)] String pv);
 
-		enum ShellAddRecentDocs
-		{
-			SHARD_PIDL  = 0x00000001,
-			SHARD_PATHA = 0x00000002,
-			SHARD_PATHW = 0x00000003,
-		}
+        enum ShellAddRecentDocs
+        {
+            SHARD_PIDL = 0x00000001,
+            SHARD_PATHA = 0x00000002,
+            SHARD_PATHW = 0x00000003,
+        }
 
-		public static void AddRecentDocument(String path)
-		{
-			SHAddToRecentDocs((uint)ShellAddRecentDocs.SHARD_PATHW, path);
-		}
- 
-		public static void ClearRecentDocuments()
-		{
-			SHAddToRecentDocs((uint)ShellAddRecentDocs.SHARD_PIDL, IntPtr.Zero);
-		}
-	}
+        public static void AddRecentDocument(String path)
+        {
+            SHAddToRecentDocs((uint)ShellAddRecentDocs.SHARD_PATHW, path);
+        }
+
+        public static void ClearRecentDocuments()
+        {
+            SHAddToRecentDocs((uint)ShellAddRecentDocs.SHARD_PIDL, IntPtr.Zero);
+        }
+    }
 }
