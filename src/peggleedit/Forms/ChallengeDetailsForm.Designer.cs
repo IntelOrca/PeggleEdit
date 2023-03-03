@@ -830,7 +830,7 @@
             // txtLuckySpin
             // 
             this.txtLuckySpin.Location = new System.Drawing.Point(285, 131);
-            this.txtLuckySpin.Maximum = 999;
+            this.txtLuckySpin.Maximum = 1000;
             this.txtLuckySpin.Minimum = 0;
             this.txtLuckySpin.Name = "txtLuckySpin";
             this.txtLuckySpin.Size = new System.Drawing.Size(80, 20);
@@ -840,7 +840,7 @@
             // txtSpookyBall
             // 
             this.txtSpookyBall.Location = new System.Drawing.Point(285, 79);
-            this.txtSpookyBall.Maximum = 999;
+            this.txtSpookyBall.Maximum = 1000;
             this.txtSpookyBall.Minimum = 0;
             this.txtSpookyBall.Name = "txtSpookyBall";
             this.txtSpookyBall.Size = new System.Drawing.Size(80, 20);
@@ -850,7 +850,7 @@
             // txtFlowerPower
             // 
             this.txtFlowerPower.Location = new System.Drawing.Point(285, 105);
-            this.txtFlowerPower.Maximum = 999;
+            this.txtFlowerPower.Maximum = 1000;
             this.txtFlowerPower.Minimum = 0;
             this.txtFlowerPower.Name = "txtFlowerPower";
             this.txtFlowerPower.Size = new System.Drawing.Size(80, 20);
@@ -860,7 +860,7 @@
             // txtShotExtender
             // 
             this.txtShotExtender.Location = new System.Drawing.Point(285, 157);
-            this.txtShotExtender.Maximum = 999;
+            this.txtShotExtender.Maximum = 1000;
             this.txtShotExtender.Minimum = 0;
             this.txtShotExtender.Name = "txtShotExtender";
             this.txtShotExtender.Size = new System.Drawing.Size(80, 20);
@@ -870,7 +870,7 @@
             // txtSpaceBlast
             // 
             this.txtSpaceBlast.Location = new System.Drawing.Point(285, 53);
-            this.txtSpaceBlast.Maximum = 999;
+            this.txtSpaceBlast.Maximum = 1000;
             this.txtSpaceBlast.Minimum = 0;
             this.txtSpaceBlast.Name = "txtSpaceBlast";
             this.txtSpaceBlast.Size = new System.Drawing.Size(80, 20);
@@ -880,7 +880,7 @@
             // txtMultiball
             // 
             this.txtMultiball.Location = new System.Drawing.Point(285, 27);
-            this.txtMultiball.Maximum = 999;
+            this.txtMultiball.Maximum = 1000;
             this.txtMultiball.Minimum = 0;
             this.txtMultiball.Name = "txtMultiball";
             this.txtMultiball.Size = new System.Drawing.Size(80, 20);
@@ -890,7 +890,7 @@
             // txtTripleScore
             // 
             this.txtTripleScore.Location = new System.Drawing.Point(99, 131);
-            this.txtTripleScore.Maximum = 999;
+            this.txtTripleScore.Maximum = 1000;
             this.txtTripleScore.Minimum = 0;
             this.txtTripleScore.Name = "txtTripleScore";
             this.txtTripleScore.Size = new System.Drawing.Size(80, 20);
@@ -900,7 +900,7 @@
             // txtFlippers
             // 
             this.txtFlippers.Location = new System.Drawing.Point(99, 79);
-            this.txtFlippers.Maximum = 999;
+            this.txtFlippers.Maximum = 1000;
             this.txtFlippers.Minimum = 0;
             this.txtFlippers.Name = "txtFlippers";
             this.txtFlippers.Size = new System.Drawing.Size(80, 20);
@@ -910,7 +910,7 @@
             // txtChainLightning
             // 
             this.txtChainLightning.Location = new System.Drawing.Point(99, 209);
-            this.txtChainLightning.Maximum = 999;
+            this.txtChainLightning.Maximum = 1000;
             this.txtChainLightning.Minimum = 0;
             this.txtChainLightning.Name = "txtChainLightning";
             this.txtChainLightning.Size = new System.Drawing.Size(80, 20);
@@ -920,7 +920,7 @@
             // txtMagicHat
             // 
             this.txtMagicHat.Location = new System.Drawing.Point(99, 105);
-            this.txtMagicHat.Maximum = 999;
+            this.txtMagicHat.Maximum = 1000;
             this.txtMagicHat.Minimum = 0;
             this.txtMagicHat.Name = "txtMagicHat";
             this.txtMagicHat.Size = new System.Drawing.Size(80, 20);
@@ -930,7 +930,7 @@
             // txtZenBall
             // 
             this.txtZenBall.Location = new System.Drawing.Point(99, 183);
-            this.txtZenBall.Maximum = 999;
+            this.txtZenBall.Maximum = 1000;
             this.txtZenBall.Minimum = 0;
             this.txtZenBall.Name = "txtZenBall";
             this.txtZenBall.Size = new System.Drawing.Size(80, 20);
@@ -940,7 +940,7 @@
             // txtFireball
             // 
             this.txtFireball.Location = new System.Drawing.Point(99, 157);
-            this.txtFireball.Maximum = 999;
+            this.txtFireball.Maximum = 1000;
             this.txtFireball.Minimum = 0;
             this.txtFireball.Name = "txtFireball";
             this.txtFireball.Size = new System.Drawing.Size(80, 20);
@@ -950,7 +950,7 @@
             // txtPyramid
             // 
             this.txtPyramid.Location = new System.Drawing.Point(99, 53);
-            this.txtPyramid.Maximum = 999;
+            this.txtPyramid.Maximum = 1000;
             this.txtPyramid.Minimum = 0;
             this.txtPyramid.Name = "txtPyramid";
             this.txtPyramid.Size = new System.Drawing.Size(80, 20);
@@ -960,7 +960,7 @@
             // txtGuide
             // 
             this.txtGuide.Location = new System.Drawing.Point(99, 27);
-            this.txtGuide.Maximum = 999;
+            this.txtGuide.Maximum = 1000;
             this.txtGuide.Minimum = 0;
             this.txtGuide.Name = "txtGuide";
             this.txtGuide.Size = new System.Drawing.Size(80, 20);
