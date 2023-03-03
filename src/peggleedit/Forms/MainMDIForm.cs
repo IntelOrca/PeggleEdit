@@ -19,6 +19,7 @@ using System.Collections.Generic;
 using System.Drawing;
 using System.IO;
 using System.Runtime.InteropServices;
+using System.Runtime.InteropServices.ComTypes;
 using System.Windows.Forms;
 using Crom.Controls.Docking;
 using IntelOrca.PeggleEdit.Designer.Properties;
@@ -568,23 +569,7 @@ namespace IntelOrca.PeggleEdit.Designer
                 return;
             }
 
-            //Recent files
-            WinAPI.AddRecentDocument(filename);
-
-            int index = Settings.Default.RecentPackFiles.IndexOf(filename);
-            if (index != -1)
-            {
-                Settings.Default.RecentPackFiles.RemoveAt(index);
-            }
-
-            Settings.Default.RecentPackFiles.Insert(0, filename);
-            if (Settings.Default.RecentPackFiles.Count > 10)
-            {
-                Settings.Default.RecentPackFiles.RemoveRange(10, Settings.Default.RecentPackFiles.Count - 10);
-            }
-
-            mMenuToolPanel.UpdateRecentPackFiles();
-
+            UpdateRecentList(filename);
             OpenPack(pack);
         }
 
@@ -600,6 +585,7 @@ namespace IntelOrca.PeggleEdit.Designer
 
         public bool SavePack(string filename)
         {
+            UpdateRecentList(filename);
             return mPack.Save(filename);
         }
 
@@ -663,6 +649,28 @@ namespace IntelOrca.PeggleEdit.Designer
         {
             DialogResult result = MessageBox.Show("Close this project without saving?", "Close Project", MessageBoxButtons.OKCancel, MessageBoxIcon.Question);
             return (result == DialogResult.OK);
+        }
+
+        private void UpdateRecentList(string path)
+        {
+            WinAPI.AddRecentDocument(path);
+
+            var recentPackFiles = Settings.Default.RecentPackFiles;
+            var index = recentPackFiles.IndexOf(path);
+            if (index != -1)
+            {
+                recentPackFiles.RemoveAt(index);
+            }
+
+            recentPackFiles.Insert(0, path);
+            if (recentPackFiles.Count > 10)
+            {
+                recentPackFiles.RemoveRange(10, recentPackFiles.Count - 10);
+            }
+
+            Settings.Save();
+
+            mMenuToolPanel.UpdateRecentPackFiles();
         }
 
         public LevelPack LevelPack
