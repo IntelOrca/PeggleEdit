@@ -33,6 +33,7 @@ namespace IntelOrca.PeggleEdit.Designer
         bool mFirstObjectMovement;
         bool mMovingObjects;
         bool mSelecting;
+        List<LevelEntry> mPreviousSelection = new List<LevelEntry>();
 
         public override void MouseDown(MouseButtons button, Point location, Keys modifierKeys)
         {
@@ -73,7 +74,8 @@ namespace IntelOrca.PeggleEdit.Designer
             {
                 if (Editor.SelectedEntries.Contains(le))
                 {
-
+                    if ((modifierKeys & Keys.Control) != 0)
+                        Editor.SelectedEntries.Remove(le);
                 }
                 else
                 {
@@ -85,7 +87,7 @@ namespace IntelOrca.PeggleEdit.Designer
                     Editor.SelectedEntries.Add(le);
                 }
 
-                if (button == MouseButtons.Left)
+                if (button == MouseButtons.Left && (modifierKeys & Keys.Control) == 0)
                 {
                     //Set the selection start to here
                     mSelectionStart = location;
@@ -106,7 +108,17 @@ namespace IntelOrca.PeggleEdit.Designer
             }
             else
             {
-                Editor.SelectedEntries.Clear();
+                //Unless control is down, clear selection
+                if ((modifierKeys & Keys.Control) == 0)
+                {
+                    mPreviousSelection.Clear();
+                    Editor.SelectedEntries.Clear();
+                }
+                else
+                {
+                    mPreviousSelection.Clear();
+                    mPreviousSelection.AddRange(Editor.SelectedEntries.ToArray());
+                }
 
                 //Start selection rectangle
                 mSelectionStart = location;
@@ -149,6 +161,7 @@ namespace IntelOrca.PeggleEdit.Designer
                 }
 
                 Editor.SelectedEntries.Clear();
+                Editor.SelectedEntries.AddRange(mPreviousSelection);
 
                 Point vl = Editor.Level.GetVirtualXY(mSelectionRect.Location);
 
