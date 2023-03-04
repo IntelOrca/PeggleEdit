@@ -80,6 +80,7 @@ namespace IntelOrca.PeggleEdit.Designer
 
         public void CreateUndoPoint()
         {
+            mLevel.UpdateMovementLinksWrite();
             LevelEntryCollection copies = new LevelEntryCollection();
             foreach (LevelEntry le in mLevel.Entries)
             {
@@ -108,6 +109,7 @@ namespace IntelOrca.PeggleEdit.Designer
                 mLevel.Entries.Clear();
                 mLevel.Entries.AddRange(entries);
 
+                mLevel.UpdateMovementLinksRead();
                 UpdateRedraw();
             }
         }

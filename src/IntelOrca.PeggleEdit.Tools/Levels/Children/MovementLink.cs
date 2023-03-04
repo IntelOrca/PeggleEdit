@@ -67,7 +67,7 @@ namespace IntelOrca.PeggleEdit.Tools.Levels.Children
         {
             var result = new MovementLink(Level);
             result.InternalLinkId = InternalLinkId;
-            result.InternalMovement = InternalMovement;
+            result.InternalMovement = InternalMovement.Clone();
             return result;
         }
 
