@@ -331,6 +331,10 @@ namespace IntelOrca.PeggleEdit.Tools.Levels.Children
                                 anchor.X, anchor.Y - GetYRadius());
                         }
                         break;
+                    case MovementType.RetraceCircle:
+                        g.DrawEllipse(pen, anchor.X - GetXRadius(), anchor.Y - GetYRadius(),
+                            GetXRadius() * 2, GetYRadius() * 2);
+                        break;
                 }
 
             }
@@ -436,6 +440,12 @@ namespace IntelOrca.PeggleEdit.Tools.Levels.Children
                         return TransformPoint(matrix, new PointF(mAnchorPoint.X, mAnchorPoint.Y + angle));
                     else
                         return TransformPoint(matrix, new PointF(mAnchorPoint.X, mAnchorPoint.Y - angle));
+                case MovementType.RetraceCircle:
+                    var phase2 = (float)Math.Sin(phase * 2 * Math.PI);
+                    angle = (float)(phase2 * Math.PI - (mStartPhase * 2 * Math.PI));
+                    circle_x = (float)Math.Cos(angle) * GetXRadius();
+                    circle_y = (float)Math.Sin(angle) * GetYRadius();
+                    return TransformPoint(matrix, new PointF(mAnchorPoint.X + circle_x, mAnchorPoint.Y + circle_y));
                 default:
                     return new PointF(mAnchorPoint.X, mAnchorPoint.Y);
             }
@@ -456,6 +466,9 @@ namespace IntelOrca.PeggleEdit.Tools.Levels.Children
                     return (initialAngle + Rotation) - (phase * 360.0f);
                 case MovementType.RotateBackAndForth:
                     return (initialAngle) - (((float)Math.Sin(MathExt.ToRadians(phase * 360.0f))) * 180.0f);
+                case MovementType.RetraceCircle:
+                    var phase2 = (float)Math.Sin(phase * 2 * Math.PI);
+                    return initialAngle + Rotation + (mStartPhase * 360) - (phase2 * 180);
                 default:
                     return initialAngle;
             }
@@ -463,6 +476,9 @@ namespace IntelOrca.PeggleEdit.Tools.Levels.Children
 
         private float GetCurrentPhase()
         {
+            var startPhrase = mStartPhase;
+            if (mType == MovementType.RetraceCircle)
+                startPhrase = 0;
             if (mLevel.ShowPreview)
             {
                 ulong previewTime = mLevel.PreviewTime;
@@ -487,7 +503,7 @@ namespace IntelOrca.PeggleEdit.Tools.Levels.Children
                     pa2 = (double)mPause2;
                 }
 
-                double ph_offset = (double)mStartPhase % 1.0;
+                double ph_offset = startPhrase % 1.0;
                 double remainder_time = 0;
 
 
@@ -543,7 +559,7 @@ namespace IntelOrca.PeggleEdit.Tools.Levels.Children
             }
             else
             {
-                return mStartPhase;
+                return startPhrase;
             }
         }
 
@@ -604,6 +620,7 @@ namespace IntelOrca.PeggleEdit.Tools.Levels.Children
                 case MovementType.RotateAroundCircle:
                 case MovementType.VerticalArc:
                 case MovementType.HorizontalArc:
+                case MovementType.RetraceCircle:
                     return GetEllipseCircumference(mRadius1 * 2, mRadius2 * 2) / time;
                 case MovementType.HorizontalInfinity:
                 case MovementType.VericalInfinity:
