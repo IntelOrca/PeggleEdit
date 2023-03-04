@@ -389,6 +389,58 @@ namespace IntelOrca.PeggleEdit.Tools.Levels
             return false;
         }
 
+        public LevelEntry GetFirstLevelEntryWithMovement(Movement movement)
+        {
+            foreach (LevelEntry entry in Entries)
+            {
+                if (entry.MovementLink?.Movement == movement)
+                {
+                    return entry;
+                }
+            }
+            return null;
+        }
+
+        public void UpdateMovementLinksRead()
+        {
+            foreach (LevelEntry entry in Entries)
+            {
+                var link = entry.MovementLink;
+                while (link != null)
+                {
+                    if (!link.OwnsMovement)
+                    {
+                        link.InternalMovement = GetMovementFromId(link.InternalLinkId);
+                        break;
+                    }
+                    else
+                    {
+                        link = link.Movement?.MovementLink;
+                    }
+                }
+            }
+        }
+
+        public void UpdateMovementLinksWrite()
+        {
+            foreach (LevelEntry entry in Entries)
+            {
+                var link = entry.MovementLink;
+                while (link != null)
+                {
+                    if (!link.OwnsMovement)
+                    {
+                        link.InternalLinkId = GetMovementId(link.Movement);
+                        break;
+                    }
+                    else
+                    {
+                        link = link.Movement?.MovementLink;
+                    }
+                }
+            }
+        }
+
         public Movement GetMovementFromId(int id)
         {
             int mi = 2;
@@ -399,7 +451,7 @@ namespace IntelOrca.PeggleEdit.Tools.Levels
                     return null;
 
                 var link = entry.MovementLink;
-                while (link != null && (link.LinkId == 0 || link.LinkId == 1))
+                while (link != null && (link.InternalLinkId == 0 || link.InternalLinkId == 1))
                 {
                     mi++;
                     if (id == mi)
@@ -418,7 +470,7 @@ namespace IntelOrca.PeggleEdit.Tools.Levels
             {
                 mi++;
                 var link = le.MovementLink;
-                while (link != null && (link.LinkId == 0 || link.LinkId == 1))
+                while (link != null && (link.InternalLinkId == 0 || link.InternalLinkId == 1))
                 {
                     mi++;
                     if (link.Movement == movement)

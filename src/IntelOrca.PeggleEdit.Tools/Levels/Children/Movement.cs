@@ -344,11 +344,23 @@ namespace IntelOrca.PeggleEdit.Tools.Levels.Children
             }
         }
 
+        public bool HasEntryParent()
+        {
+            foreach (LevelEntry entry in mLevel.Entries)
+            {
+                if (entry.MovementLink?.Movement == this)
+                {
+                    return true;
+                }
+            }
+            return false;
+        }
+
         public PointF GetEstimatedMovePosition()
         {
             PointF locationA = PointF.Empty;
-            if (MovementLink?.Movement is Movement movement)
-                locationA = movement.GetEstimatedMovePosition();
+            if (MovementLink?.Movement is Movement subMovement)
+                locationA = subMovement.GetEstimatedMovePosition();
 
             PointF locationB = GetMyEstimatedMovePosition();
 
@@ -357,7 +369,7 @@ namespace IntelOrca.PeggleEdit.Tools.Levels.Children
 
         public PointF GetMyEstimatedMovePosition()
         {
-            if (mTimePeriod == 0)
+            if (mTimePeriod == 0 || !HasEntryParent())
                 return mAnchorPoint;
 
             float angle, circle_x, circle_y;

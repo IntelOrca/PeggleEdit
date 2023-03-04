@@ -73,6 +73,7 @@ namespace IntelOrca.PeggleEdit.Tools.Levels
                     mLevel.Entries.Add(entry);
                 }
 
+                mLevel.UpdateMovementLinksRead();
                 return mLevel;
             }
             catch (Exception ex)

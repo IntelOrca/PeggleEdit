@@ -1050,38 +1050,36 @@ namespace IntelOrca.PeggleEdit.Designer
 
         private void linkSubMovementsRibbonButton_Click(object sender, EventArgs e)
         {
-            MessageBox.Show("Currently disabled");
-            /*
-            var links = new List<int>();
-            foreach (LevelEntry le in LevelEditor.GetSelectedObjects())
+            var selectedObjects = LevelEditor.GetSelectedObjects();
+            if (selectedObjects.Count < 2)
             {
-                if (le.MovementLink == null)
-                    continue;
+                MessageBox.Show("First select the origin object that moves, then all the others you want to set their sub-movement of.");
+                return;
+            }
 
-                var m = le.MovementLink.MovementInfo;
-                while (m != null)
+            var primary = selectedObjects[0];
+            if (!(primary.MovementLink?.Movement is Movement primaryMovement))
+            {
+                MessageBox.Show("First selected object must have movement information.");
+                return;
+            }
+            var muid = primaryMovement.MUID;
+
+            for (int i = 1; i < selectedObjects.Count; i++)
+            {
+                var secondary = selectedObjects[i];
+                if (secondary.MovementLink?.Movement is Movement movement)
                 {
-                    links.Add(m.MUID);
-                    m = m.MovementInfo;
+                    if (movement.MovementLink == null)
+                        movement.MovementLink = new MovementLink(LevelEditor.Level);
+                    movement.MovementLink.InternalLinkId = muid;
+                    movement.MovementLink.InternalMovement = primaryMovement;
+                    movement.AnchorPointX = 0;
+                    movement.AnchorPointY = 0;
                 }
             }
 
-            foreach (int lidx in links)
-            {
-                Circle lcircle = new Circle(LevelEditor.Level);
-                lcircle.Collision = false;
-                lcircle.Visible = false;
-                lcircle.Radius = 10.0f;
-                lcircle.MovementLink = new Movement(LevelEditor.Level);
-                lcircle.MovementLink.MovementLinkIDX = lidx;
-
-                lcircle.Y = -Level.DrawAdjustY - 50;
-
-                LevelEditor.Level.Entries.Add(lcircle);
-            }
-
             LevelEditor.UpdateRedraw();
-            */
         }
 
         private void movementTypeRibbonButton_Click(object sender, EventArgs e)

@@ -27,15 +27,15 @@ namespace IntelOrca.PeggleEdit.Tools.Levels.Children
     public class MovementLink : ICloneable
     {
         private Level mLevel;
-        private Movement mMovement;
-
-        [DisplayName("Link ID")]
-        [Description("If this is set, the object will take the movement properties of the object with this MUID.")]
-        [DefaultValue(1)]
-        public int LinkId { get; set; }
 
         [Browsable(false)]
-        public bool OwnsMovement => mMovement != null;
+        public int InternalLinkId { get; set; }
+
+        [Browsable(false)]
+        public Movement InternalMovement { get; set; }
+
+        [Browsable(false)]
+        public bool OwnsMovement => InternalLinkId == 1;
 
         public MovementLink(Level level)
         {
@@ -44,20 +44,20 @@ namespace IntelOrca.PeggleEdit.Tools.Levels.Children
 
         public void ReadData(BinaryReader br, int version)
         {
-            LinkId = br.ReadInt32();
-            if (LinkId == 1)
+            InternalLinkId = br.ReadInt32();
+            if (InternalLinkId == 1)
             {
-                mMovement = new Movement(Level);
-                mMovement.ReadData(br, version);
+                InternalMovement = new Movement(Level);
+                InternalMovement.ReadData(br, version);
             }
         }
 
         public void WriteData(BinaryWriter bw, int version)
         {
-            bw.Write(LinkId);
-            if (LinkId == 1)
+            bw.Write(InternalLinkId);
+            if (InternalLinkId == 1)
             {
-                mMovement.WriteData(bw, version);
+                InternalMovement.WriteData(bw, version);
             }
         }
 
@@ -66,9 +66,8 @@ namespace IntelOrca.PeggleEdit.Tools.Levels.Children
         public MovementLink Clone()
         {
             var result = new MovementLink(Level);
-            result.LinkId = LinkId;
-            if (LinkId == 1)
-                result.Movement = mMovement.Clone();
+            result.InternalLinkId = InternalLinkId;
+            result.InternalMovement = InternalMovement;
             return result;
         }
 
@@ -79,21 +78,52 @@ namespace IntelOrca.PeggleEdit.Tools.Levels.Children
             set
             {
                 mLevel = value;
-                if (mMovement != null)
-                    mMovement.Level = value;
+                if (InternalMovement != null)
+                    InternalMovement.Level = value;
+            }
+        }
+
+        [DisplayName("Link ID")]
+        [Description("If this is set, the object will take the movement properties of the object with this MUID.")]
+        [DefaultValue(1)]
+        public int LinkId
+        {
+            get
+            {
+                if (InternalLinkId == 0 || InternalLinkId == 1)
+                    return InternalLinkId;
+                return mLevel.GetMovementId(InternalMovement);
+            }
+            set
+            {
+                if (value == 0)
+                {
+                    InternalLinkId = value;
+                    InternalMovement = null;
+                }
+                if (value == 1)
+                {
+                    InternalLinkId = value;
+                    InternalMovement = new Movement(mLevel);
+                }
+                else if (value != InternalLinkId && InternalMovement?.MUID != value)
+                {
+                    InternalMovement = Level.GetMovementFromId(value);
+                    if (InternalMovement != null)
+                    {
+                        InternalLinkId = value;
+                    }
+                    else
+                    {
+                        InternalLinkId = 0;
+                    }
+                }
             }
         }
 
         public Movement Movement
         {
-            get
-            {
-                if (LinkId == 0)
-                    return null;
-                if (LinkId == 1)
-                    return mMovement;
-                return Level.GetMovementFromId(LinkId);
-            }
+            get => InternalMovement;
             set
             {
                 if (value == null)
@@ -103,7 +133,7 @@ namespace IntelOrca.PeggleEdit.Tools.Levels.Children
                 else
                 {
                     LinkId = 1;
-                    mMovement = value;
+                    InternalMovement = value;
                 }
             }
         }

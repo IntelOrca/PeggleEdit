@@ -277,6 +277,53 @@ namespace IntelOrca.PeggleEdit.Tools.Levels.Children
             return mb;
         }
 
+        public Movement GetMovement()
+        {
+            return MovementLink?.Movement;
+        }
+
+        private Movement GetHighestSelectedMovement()
+        {
+            Movement mb = null;
+            var m = MovementLink?.Movement;
+            while (m != null)
+            {
+                mb = m;
+                m = m.MovementLink?.Movement;
+                var entry = mLevel.GetFirstLevelEntryWithMovement(m);
+                if (entry == null || !entry.Selected)
+                {
+                    break;
+                }
+            }
+            return mb;
+        }
+
+        public PointF GetSelectedMovePosition()
+        {
+            var movement = GetHighestSelectedMovement();
+            if (movement != null)
+            {
+                return new PointF(movement.AnchorPointX, movement.AnchorPointY);
+            }
+            return new PointF(mX, mY);
+        }
+        
+        public void SetSelectedMovePosition(PointF value)
+        {
+            var movement = GetHighestSelectedMovement();
+            if (movement != null)
+            {
+                movement.AnchorPointX = value.X;
+                movement.AnchorPointY = value.Y;
+            }
+            else
+            {
+                mX = value.X;
+                mY = value.Y;
+            }
+        }
+
         public int GetEntryIndex()
         {
             return mLevel.Entries.IndexOf(this);
@@ -352,21 +399,12 @@ namespace IntelOrca.PeggleEdit.Tools.Levels.Children
         [Category("Layout")]
         public virtual float X
         {
-            get
-            {
-                Movement m = GetBaseMovement();
-                if (m != null)
-                    return m.AnchorPointX;
-
-                return mX;
-            }
+            get => GetSelectedMovePosition().X;
             set
             {
-                Movement m = GetBaseMovement();
-                if (m != null)
-                    m.AnchorPointX = value;
-                else
-                    mX = value;
+                var pos = GetSelectedMovePosition();
+                pos.X = value;
+                SetSelectedMovePosition(pos);
             }
         }
 
@@ -375,21 +413,12 @@ namespace IntelOrca.PeggleEdit.Tools.Levels.Children
         [Category("Layout")]
         public virtual float Y
         {
-            get
-            {
-                Movement m = GetBaseMovement();
-                if (m != null)
-                    return m.AnchorPointY;
-
-                return mY;
-            }
+            get => GetSelectedMovePosition().Y;
             set
             {
-                Movement m = GetBaseMovement();
-                if (m != null)
-                    m.AnchorPointY = value;
-                else
-                    mY = value;
+                var pos = GetSelectedMovePosition();
+                pos.Y = value;
+                SetSelectedMovePosition(pos);
             }
         }
 
