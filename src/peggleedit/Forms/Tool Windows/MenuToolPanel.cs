@@ -976,8 +976,10 @@ namespace IntelOrca.PeggleEdit.Designer
             List<Movement> movements = new List<Movement>();
             foreach (LevelEntry m in LevelEditor.GetSelectedObjects())
             {
-                if (m.MovementInfo != null)
-                    movements.Add(m.MovementInfo);
+                if (m.MovementLink.OwnsMovement)
+                {
+                    movements.Add(m.MovementLink.Movement);
+                }
             }
 
             for (int i = 0; i < movements.Count; i++)
@@ -1011,10 +1013,9 @@ namespace IntelOrca.PeggleEdit.Designer
             }
 
             //Check if the peg has moving details
-            Movement movement = movementPeg.MovementInfo;
-            if (movement == null)
+            if (movementPeg.MovementLink?.OwnsMovement != true)
             {
-                MessageBox.Show("The peg must have movement properties.");
+                MessageBox.Show("The peg must have unshared movement properties.");
                 return;
             }
 
@@ -1049,13 +1050,15 @@ namespace IntelOrca.PeggleEdit.Designer
 
         private void linkSubMovementsRibbonButton_Click(object sender, EventArgs e)
         {
-            List<int> links = new List<int>();
+            MessageBox.Show("Currently disabled");
+            /*
+            var links = new List<int>();
             foreach (LevelEntry le in LevelEditor.GetSelectedObjects())
             {
-                if (le.MovementInfo == null)
+                if (le.MovementLink == null)
                     continue;
 
-                Movement m = le.MovementInfo.MovementInfo;
+                var m = le.MovementLink.MovementInfo;
                 while (m != null)
                 {
                     links.Add(m.MUID);
@@ -1069,8 +1072,8 @@ namespace IntelOrca.PeggleEdit.Designer
                 lcircle.Collision = false;
                 lcircle.Visible = false;
                 lcircle.Radius = 10.0f;
-                lcircle.MovementInfo = new Movement(LevelEditor.Level);
-                lcircle.MovementInfo.MovementLinkIDX = lidx;
+                lcircle.MovementLink = new Movement(LevelEditor.Level);
+                lcircle.MovementLink.MovementLinkIDX = lidx;
 
                 lcircle.Y = -Level.DrawAdjustY - 50;
 
@@ -1078,6 +1081,7 @@ namespace IntelOrca.PeggleEdit.Designer
             }
 
             LevelEditor.UpdateRedraw();
+            */
         }
 
         private void movementTypeRibbonButton_Click(object sender, EventArgs e)
@@ -1098,19 +1102,22 @@ namespace IntelOrca.PeggleEdit.Designer
 
             foreach (LevelEntry m in LevelEditor.GetSelectedObjects())
             {
-                if (m.MovementInfo != null)
+                if (m.MovementLink?.Movement is Movement movement)
                 {
-                    m.MovementInfo.Type = movementType;
+                    movement.Type = movementType;
                 }
                 else
                 {
-                    PointF location = m.Location;
-
-                    m.MovementInfo = new Movement(LevelEditor.Level);
-                    m.MovementInfo.Location = location;
-                    m.MovementInfo.Type = movementType;
-                    m.MovementInfo.TimePeriod = 400;
-                    m.MovementInfo.Radius1 = 90;
+                    m.MovementLink = new MovementLink(LevelEditor.Level)
+                    {
+                        Movement = new Movement(LevelEditor.Level)
+                        {
+                            Location = m.Location,
+                            Type = movementType,
+                            TimePeriod = 400,
+                            Radius1 = 90
+                        }
+                    };
                 }
             }
 

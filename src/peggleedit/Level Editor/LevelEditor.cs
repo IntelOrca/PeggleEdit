@@ -697,7 +697,7 @@ namespace IntelOrca.PeggleEdit.Designer
                     if (obj1 == obj2)
                         continue;
 
-                    if (obj1.MovementInfo != null || obj2.MovementInfo != null)
+                    if (obj1.MovementLink != null || obj2.MovementLink != null)
                         continue;
 
                     if (obj1.X == obj2.X && obj1.Y == obj2.Y)

@@ -19,6 +19,7 @@ using System.Drawing;
 using System.IO;
 using System.Windows.Forms;
 using IntelOrca.PeggleEdit.Designer.Properties;
+using IntelOrca.PeggleEdit.Tools.Pack;
 
 namespace IntelOrca.PeggleEdit.Designer
 {

@@ -49,13 +49,10 @@ namespace IntelOrca.PeggleEdit.Tools.Levels.Children
     /// <summary>
     /// Represents information about the movement path of a level entry and contains methods for calculating and drawing the path.
     /// </summary>
-    [TypeConverterAttribute(typeof(ExpandableObjectConverter))]
-    public class Movement : ICloneable, ILocation, IMovementContainer, ILevelChild
+    [TypeConverter(typeof(ExpandableObjectConverter))]
+    public class Movement : ICloneable, ILocation, IMovable, ILevelChild
     {
         Level mLevel;
-
-        IMovementContainer mMovementLink;
-        int mMovementLinkREQUIRED;
 
         MovementType mType;
         short mRadius1;
@@ -72,79 +69,35 @@ namespace IntelOrca.PeggleEdit.Tools.Levels.Children
         float mMaxAngle;
         float mRotation;
 
-
         bool mReverse;
 
         PointF mAnchorPoint;
 
-        Movement mBaseMovement;
-
         float mUnknown8;
-        float mUnknown10;
-        float mUnknown11;
 
         float mObjectX;
         float mObjectY;
+
+        [DefaultValue(0.0f)]
+        [DisplayName("Sub-movement X Offset")]
+        public float SubMovementOffsetX { get; set; }
+
+        [DefaultValue(0.0f)]
+        [DisplayName("Sub-movement Y Offset")]
+        public float SubMovementOffsetY { get; set; }
+
+        [DisplayName("Sub Movement")]
+        [Description("The movement properties of the movement properties.")]
+        [Editor(typeof(MovementUITypeEditor), typeof(UITypeEditor))]
+        public MovementLink MovementLink { get; set; }
 
         public Movement(Level level)
         {
             mLevel = level;
         }
 
-        private int GetMovementLinkIndex(object dml)
-        {
-            int mi = 2;
-            foreach (LevelEntry le in mLevel.Entries)
-            {
-                mi++;
-                if (le == dml)
-                    return mi;
-                Movement m = le.MovementInfo;
-                while (m != null)
-                {
-                    mi++;
-                    if (m == dml)
-                        return mi;
-                    m = m.MovementInfo;
-                }
-            }
-            return 0;
-        }
-
-        private IMovementContainer GetMovementLink(int dmi)
-        {
-            int mi = 2;
-            foreach (LevelEntry le in mLevel.Entries)
-            {
-                mi++;
-                if (dmi == mi)
-                    return le;
-                Movement m = le.MovementInfo;
-                while (m != null)
-                {
-                    mi++;
-                    if (dmi == mi)
-                        return m;
-                    m = m.MovementInfo;
-                }
-            }
-            return null;
-        }
-
         public void ReadData(BinaryReader br, int version)
         {
-            int mlink = br.ReadInt32();
-            if (mlink == 0)
-                return;
-            if (mlink != 1)
-            {
-                if (mLevel == null)
-                    mMovementLinkREQUIRED = mlink;
-                else
-                    mMovementLink = GetMovementLink(mlink);
-                return;
-            }
-
             sbyte movementShape = br.ReadSByte();
             mType = (MovementType)Math.Abs(movementShape);
             if (movementShape < 0)
@@ -191,12 +144,10 @@ namespace IntelOrca.PeggleEdit.Tools.Levels.Children
                 mRotation = MathExt.ToDegrees(br.ReadSingle());
             if (fA[12])
             {
-                mUnknown10 = br.ReadSingle();
-                mUnknown11 = br.ReadSingle();
-                //Another movement
-                mBaseMovement = new Movement(mLevel);
-                mBaseMovement.ReadData(br, version);
-                //mBaseMovement = null;
+                SubMovementOffsetX = br.ReadSingle();
+                SubMovementOffsetY = br.ReadSingle();
+                MovementLink = new MovementLink(mLevel);
+                MovementLink.ReadData(br, version);
             }
             if (fA[13])
             {
@@ -222,21 +173,11 @@ namespace IntelOrca.PeggleEdit.Tools.Levels.Children
             fA[10] = (mMaxAngle != 0.0f);
             fA[11] = (mUnknown8 != 0.0f);
             fA[14] = (mRotation != 0.0f);
-            fA[12] = (mUnknown10 != 0.0f || mUnknown11 != 0.0f);
+            fA[12] = (SubMovementOffsetX != 0.0f || SubMovementOffsetY != 0.0f);
             fA[13] = (mObjectX != 0.0f || mObjectY != 0.0f);
 
-            if (mBaseMovement != null)
+            if (MovementLink != null)
                 fA[12] = true;
-
-            //Write data
-
-            if (mMovementLink == null)
-                bw.Write(1);
-            else
-            {
-                bw.Write(GetMovementLinkIndex(mMovementLink));
-                return;
-            }
 
             int type = (int)mType;
             if (mReverse)
@@ -278,9 +219,13 @@ namespace IntelOrca.PeggleEdit.Tools.Levels.Children
                 bw.Write(MathExt.ToRadians(mRotation));
             if (fA[12])
             {
-                bw.Write(mUnknown10);
-                bw.Write(mUnknown11);
-                mBaseMovement.WriteData(bw, version);
+                bw.Write(SubMovementOffsetX);
+                bw.Write(SubMovementOffsetY);
+
+                var movementLink = MovementLink;
+                if (MovementLink == null)
+                    movementLink = new MovementLink(mLevel);
+                movementLink.WriteData(bw, version);
             }
             if (fA[13])
             {
@@ -294,24 +239,19 @@ namespace IntelOrca.PeggleEdit.Tools.Levels.Children
             PointF position = GetAnchorPoint();
             level.DrawAnchorPoint(g, position.X, position.Y);
 
-            if (mBaseMovement != null)
-                mBaseMovement.DrawAnchors(g, level);
+            MovementLink?.Movement?.DrawAnchors(g, level);
         }
 
         public void DrawPath(Graphics g)
         {
-            //if (mBaseMovement != null)
-            //	mBaseMovement.DrawPath(g);
-
-            if (mBaseMovement != null)
-                mBaseMovement.DrawPath(g);
+            MovementLink?.Movement?.DrawPath(g);
 
             PointF anchor = GetAnchorPoint();
 
             try
             {
-
                 Matrix mx = new Matrix();
+                mx.Translate(-SubMovementOffsetX, -SubMovementOffsetY);
                 mx.RotateAt(-mMoveRotation, new PointF(anchor.X, anchor.Y));
 
                 g.Transform = mx;
@@ -407,12 +347,12 @@ namespace IntelOrca.PeggleEdit.Tools.Levels.Children
         public PointF GetEstimatedMovePosition()
         {
             PointF locationA = PointF.Empty;
-            if (mBaseMovement != null)
-                locationA = mBaseMovement.GetEstimatedMovePosition();
+            if (MovementLink?.Movement is Movement movement)
+                locationA = movement.GetEstimatedMovePosition();
 
             PointF locationB = GetMyEstimatedMovePosition();
 
-            return AddPoints(locationA, locationB);
+            return AddPoints(new PointF(-SubMovementOffsetX, -SubMovementOffsetY), AddPoints(locationA, locationB));
         }
 
         public PointF GetMyEstimatedMovePosition()
@@ -609,9 +549,9 @@ namespace IntelOrca.PeggleEdit.Tools.Levels.Children
 
         private PointF GetAnchorPoint()
         {
-            if (mBaseMovement != null)
+            if (MovementLink?.Movement is Movement subMovement)
             {
-                return AddPoints(mBaseMovement.GetEstimatedMovePosition(), mAnchorPoint);
+                return AddPoints(subMovement.GetEstimatedMovePosition(), mAnchorPoint);
             }
             else
             {
@@ -811,28 +751,13 @@ namespace IntelOrca.PeggleEdit.Tools.Levels.Children
             }
         }
 
-        [DisplayName("Base Movement")]
-        [Description("The movement properties of the movement properties.")]
-        [EditorAttribute(typeof(MovementUITypeEditor), typeof(UITypeEditor))]
-        public Movement MovementInfo
-        {
-            get
-            {
-                return mBaseMovement;
-            }
-            set
-            {
-                mBaseMovement = value;
-            }
-        }
+        object ICloneable.Clone() => Clone();
 
-        public object Clone()
+        public Movement Clone()
         {
             Movement cpyMovement = new Movement(mLevel);
 
-            if (mBaseMovement != null)
-                cpyMovement.mBaseMovement = (Movement)mBaseMovement.Clone();
-
+            cpyMovement.MovementLink = MovementLink?.Clone();
             cpyMovement.mType = mType;
             cpyMovement.mReverse = mReverse;
             cpyMovement.mTimePeriod = mTimePeriod;
@@ -851,8 +776,8 @@ namespace IntelOrca.PeggleEdit.Tools.Levels.Children
             cpyMovement.mMaxAngle = mMaxAngle;
             cpyMovement.mUnknown8 = mUnknown8;
             cpyMovement.mRotation = mRotation;
-            cpyMovement.mUnknown10 = mUnknown10;
-            cpyMovement.mUnknown11 = mUnknown11;
+            cpyMovement.SubMovementOffsetX = SubMovementOffsetX;
+            cpyMovement.SubMovementOffsetY = SubMovementOffsetY;
             cpyMovement.mObjectX = mObjectX;
             cpyMovement.mObjectY = mObjectY;
 
@@ -869,24 +794,6 @@ namespace IntelOrca.PeggleEdit.Tools.Levels.Children
             set
             {
                 mAnchorPoint = value;
-            }
-        }
-
-        [DisplayName("Movement Link IDX")]
-        [Description("If this is set, the object will take the movement properties of the object with this MUID.")]
-        public int MovementLinkIDX
-        {
-            get
-            {
-                return GetMovementLinkIndex(mMovementLink);
-            }
-            set
-            {
-                IMovementContainer mc = GetMovementLink(value);
-                if (mc == null)
-                    throw new Exception("This link index doesn't exist.");
-                else
-                    mMovementLink = mc;
             }
         }
 
@@ -1012,32 +919,6 @@ namespace IntelOrca.PeggleEdit.Tools.Levels.Children
             }
         }
 
-        [DefaultValue(0.0f)]
-        public float Unknown10
-        {
-            get
-            {
-                return mUnknown10;
-            }
-            set
-            {
-                mUnknown10 = value;
-            }
-        }
-
-        [DefaultValue(0.0f)]
-        public float Unknown11
-        {
-            get
-            {
-                return mUnknown11;
-            }
-            set
-            {
-                mUnknown11 = value;
-            }
-        }
-
         public float ObjectX
         {
             get
@@ -1072,22 +953,14 @@ namespace IntelOrca.PeggleEdit.Tools.Levels.Children
             set
             {
                 mLevel = value;
-
-                if (mMovementLinkREQUIRED != 0)
-                {
-                    mMovementLink = GetMovementLink(mMovementLinkREQUIRED);
-                    mMovementLinkREQUIRED = 0;
-                }
+                if (MovementLink != null)
+                    MovementLink.Level = value;
             }
         }
 
         [Description("The movement link IDX of this object. Other objects can reference this object's movement information by setting their Movement Link IDX to this number.")]
-        public int MUID
-        {
-            get
-            {
-                return GetMovementLinkIndex(this);
-            }
-        }
+        public int MUID => mLevel.GetMovementId(this);
+
+        public override string ToString() => $"Movement #{MUID}";
     }
 }

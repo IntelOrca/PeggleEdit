@@ -194,9 +194,9 @@ namespace IntelOrca.PeggleEdit.Tools.Levels.Children
             //Get location and angle
             PointF location = DrawLocation;
             float angle = mAngle;
-            if (MovementInfo != null)
+            if (MovementLink?.Movement is Movement movement)
             {
-                angle = MovementInfo.GetEstimatedMoveAngle(mAngle);
+                angle = movement.GetEstimatedMoveAngle(mAngle);
             }
 
             //Calculate the brick destination rectangle

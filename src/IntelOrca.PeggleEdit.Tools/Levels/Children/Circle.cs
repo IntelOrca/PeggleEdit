@@ -87,9 +87,9 @@ namespace IntelOrca.PeggleEdit.Tools.Levels.Children
                 return;
 
             PointF location = DrawLocation;
-            if (MovementInfo != null)
+            if (MovementLink?.Movement is Movement movement)
             {
-                location = MovementInfo.GetEstimatedMovePosition();
+                location = movement.GetEstimatedMovePosition();
             }
 
             g.FillEllipse(new SolidBrush(Level.ShadowColour), location.X - mRadius + Level.ShadowOffset.X, location.Y - mRadius + Level.ShadowOffset.Y, mRadius * 2, mRadius * 2);
@@ -118,7 +118,7 @@ namespace IntelOrca.PeggleEdit.Tools.Levels.Children
 
             if (Level.ShowCollision || (!HasPegInfo && circleImage == null))
             {
-                if (!Level.ShowPreview)
+                if (Collision)
                 {
                     //Draw the collision white circle
                     g.FillEllipse(Brushes.White, drawbounds);

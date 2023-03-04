@@ -389,6 +389,47 @@ namespace IntelOrca.PeggleEdit.Tools.Levels
             return false;
         }
 
+        public Movement GetMovementFromId(int id)
+        {
+            int mi = 2;
+            foreach (LevelEntry entry in Entries)
+            {
+                mi++;
+                if (mi == id)
+                    return null;
+
+                var link = entry.MovementLink;
+                while (link != null && (link.LinkId == 0 || link.LinkId == 1))
+                {
+                    mi++;
+                    if (id == mi)
+                        return link.Movement;
+
+                    link = link.Movement?.MovementLink;
+                }
+            }
+            return null;
+        }
+
+        public int GetMovementId(Movement movement)
+        {
+            int mi = 2;
+            foreach (LevelEntry le in Entries)
+            {
+                mi++;
+                var link = le.MovementLink;
+                while (link != null && (link.LinkId == 0 || link.LinkId == 1))
+                {
+                    mi++;
+                    if (link.Movement == movement)
+                        return mi;
+
+                    link = link.Movement?.MovementLink;
+                }
+            }
+            return 0;
+        }
+
         #endregion
 
         #region Previewing

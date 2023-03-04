@@ -27,7 +27,7 @@ namespace IntelOrca.PeggleEdit.Tools.Levels.Children
     /// The base class for all level entries which are stored in levels.
     /// </summary>
     [TypeConverterAttribute(typeof(ExpandableObjectConverter))]
-    public abstract class LevelEntry : ICloneable, ILocation, IMovementContainer, ILevelChild
+    public abstract class LevelEntry : ICloneable, ILocation, IMovable, ILevelChild
     {
         Level mLevel;
 
@@ -41,7 +41,6 @@ namespace IntelOrca.PeggleEdit.Tools.Levels.Children
 
 
         PegInfo mPegInfo;
-        Movement mMovement;
 
         string mID;
         string mLogic;
@@ -67,6 +66,12 @@ namespace IntelOrca.PeggleEdit.Tools.Levels.Children
         int mSubID;
         byte mFlipperFlags;
         bool mShadow = true;
+
+        [EntryProperty(EntryPropertyType.SubElement, null)]
+        [Description("The movement properties of the object.")]
+        [Category("Behaviour")]
+        [Editor(typeof(MovementUITypeEditor), typeof(UITypeEditor))]
+        public MovementLink MovementLink { get; set; }
 
         public LevelEntry(Level level)
         {
@@ -138,8 +143,8 @@ namespace IntelOrca.PeggleEdit.Tools.Levels.Children
             }
             if (f[3])
             {
-                mMovement = new Movement(mLevel);
-                mMovement.ReadData(br, version);
+                MovementLink = new MovementLink(mLevel);
+                MovementLink.ReadData(br, version);
             }
 
             if (f[30] && version >= 0x50)
@@ -219,7 +224,7 @@ namespace IntelOrca.PeggleEdit.Tools.Levels.Children
             if (f[2])
                 mPegInfo.WriteData(bw, version);
             if (f[3])
-                mMovement.WriteData(bw, version);
+                MovementLink.WriteData(bw, version);
         }
 
         public virtual void ReadData(BinaryReader br, int version)
@@ -242,12 +247,16 @@ namespace IntelOrca.PeggleEdit.Tools.Levels.Children
             if (Level.ShowPreview && !mVisible)
                 return;
 
-            if (MovementInfo != null && (MouseOver || Selected))
-                MovementInfo.DrawPath(g);
-
-            if (MovementInfo != null && !mLevel.ShowCollision && (MouseOver || Selected || Level.ShowAnchorsAlways))
+            if (MovementLink?.Movement is Movement movement)
             {
-                MovementInfo.DrawAnchors(g, mLevel);
+                if (MouseOver || Selected)
+                {
+                    movement.DrawPath(g);
+                }
+                if (!mLevel.ShowCollision && (MouseOver || Selected || Level.ShowAnchorsAlways))
+                {
+                    movement.DrawAnchors(g, mLevel);
+                }
             }
         }
 
@@ -259,11 +268,11 @@ namespace IntelOrca.PeggleEdit.Tools.Levels.Children
         public Movement GetBaseMovement()
         {
             Movement mb = null;
-            Movement m = mMovement;
+            var m = MovementLink?.Movement;
             while (m != null)
             {
                 mb = m;
-                m = m.MovementInfo;
+                m = m.MovementLink?.Movement;
             }
             return mb;
         }
@@ -318,7 +327,7 @@ namespace IntelOrca.PeggleEdit.Tools.Levels.Children
         {
             get
             {
-                return (mMovement != null);
+                return (MovementLink != null);
             }
         }
 
@@ -335,22 +344,6 @@ namespace IntelOrca.PeggleEdit.Tools.Levels.Children
             set
             {
                 mPegInfo = value;
-            }
-        }
-
-        [EntryProperty(EntryPropertyType.SubElement, null)]
-        [Description("The movement properties of the object.")]
-        [Category("Behaviour")]
-        [EditorAttribute(typeof(MovementUITypeEditor), typeof(UITypeEditor))]
-        public Movement MovementInfo
-        {
-            get
-            {
-                return mMovement;
-            }
-            set
-            {
-                mMovement = value;
             }
         }
 
@@ -401,40 +394,20 @@ namespace IntelOrca.PeggleEdit.Tools.Levels.Children
         }
 
         [Browsable(false)]
-        public virtual float DrawX
-        {
-            get
-            {
-                Movement m = MovementInfo;
-                if (m != null)
-                    return m.GetEstimatedMovePosition().X;
-
-                return mX;
-            }
-        }
+        public virtual float DrawX => DrawLocation.X;
 
         [Browsable(false)]
-        public virtual float DrawY
-        {
-            get
-            {
-                Movement m = MovementInfo;
-                if (m != null)
-                    return m.GetEstimatedMovePosition().Y;
-
-                return mY;
-            }
-        }
+        public virtual float DrawY => DrawLocation.Y;
 
         [Browsable(false)]
         public virtual PointF DrawLocation
         {
             get
             {
-                Movement m = MovementInfo;
-                if (m != null)
-                    return m.GetEstimatedMovePosition();
-
+                if (MovementLink?.Movement is Movement movement)
+                {
+                    return movement.GetEstimatedMovePosition();
+                }
                 return Location;
             }
         }
@@ -481,9 +454,7 @@ namespace IntelOrca.PeggleEdit.Tools.Levels.Children
                 dest.mPegInfo.Parent = dest;
             }
 
-            if (HasMovementInfo)
-                dest.mMovement = (Movement)mMovement.Clone();
-
+            dest.MovementLink = MovementLink?.Clone();
             dest.mImageFilename = mImageFilename;
             dest.mID = mID;
             dest.mLogic = mLogic;
@@ -926,14 +897,8 @@ namespace IntelOrca.PeggleEdit.Tools.Levels.Children
             set
             {
                 mLevel = value;
-
-                //Set all the movements
-                Movement m = mMovement;
-                while (m != null)
-                {
-                    m.Level = value;
-                    m = m.MovementInfo;
-                }
+                if (MovementLink != null)
+                    MovementLink.Level = Level;
             }
         }
     }

@@ -36,23 +36,23 @@ namespace IntelOrca.PeggleEdit.Tools.Levels
         {
             if (value == null)
             {
-                ILevelChild lc = context.Instance as ILevelChild;
-                if (lc == null)
+                if (!(context.Instance is ILevelChild lc))
                     return null;
 
-                Movement movement = new Movement(lc.Level);
+                if (!(context.Instance is ILocation location))
+                    return null;
 
-                ILocation location = context.Instance as ILocation;
-                if (location != null)
+                return new MovementLink(lc.Level)
                 {
-                    movement.Location = location.Location;
-                }
-
-                return movement;
+                    Movement = new Movement(lc.Level)
+                    {
+                        Location = location.Location
+                    }
+                };
             }
             else
             {
-                DialogResult result = MessageBox.Show("Do you want to delete this movement information?", "Delete Movement", MessageBoxButtons.OKCancel, MessageBoxIcon.Question);
+                var result = MessageBox.Show("Do you want to delete this movement link?", "Delete Movement Link", MessageBoxButtons.OKCancel, MessageBoxIcon.Question);
                 if (result == DialogResult.OK)
                     return null;
                 else
