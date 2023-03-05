@@ -103,6 +103,11 @@ namespace IntelOrca.PeggleEdit.Tools.Pack.CFG
                 }
             }
 
+            while (blockStack.Count > 1)
+            {
+                var block = blockStack.Pop();
+                blockStack.Peek().Blocks.Add(block);
+            }
             mDocument.Blocks.Add(blockStack.Pop());
 
             //} catch (Exception ex) {
