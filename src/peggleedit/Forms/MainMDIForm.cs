@@ -18,8 +18,8 @@ using System;
 using System.Collections.Generic;
 using System.Drawing;
 using System.IO;
+using System.Reflection;
 using System.Runtime.InteropServices;
-using System.Runtime.InteropServices.ComTypes;
 using System.Windows.Forms;
 using Crom.Controls.Docking;
 using IntelOrca.PeggleEdit.Designer.Properties;
@@ -34,6 +34,7 @@ namespace IntelOrca.PeggleEdit.Designer
     {
         public MainMDIForm()
         {
+            InitIdentifierMap();
             InitForm();
 
             DefaultStartupPack();
@@ -41,11 +42,13 @@ namespace IntelOrca.PeggleEdit.Designer
 
         #region MDI Form
 
-        MenuToolPanel mMenuToolPanel;
-        DockContainer mDockContainer;
-        StatusStrip mStatusStrip;
-        ToolStripStatusLabel mStatusLabel;
-        ToolStripStatusLabel mLocationLabel;
+        private Dictionary<Guid, Type> mWindowIdentifierMap = new Dictionary<Guid, Type>();
+        private DockStateSerializer mSerializer;
+        private MenuToolPanel mMenuToolPanel;
+        private DockContainer mDockContainer;
+        private StatusStrip mStatusStrip;
+        private ToolStripStatusLabel mStatusLabel;
+        private ToolStripStatusLabel mLocationLabel;
 
         private void InitForm()
         {
@@ -108,6 +111,23 @@ namespace IntelOrca.PeggleEdit.Designer
 
             //Load the docking layout
             LoadDefaultDockLayout();
+            LoadLayout();
+        }
+
+        private void InitIdentifierMap()
+        {
+            var assembly = Assembly.GetExecutingAssembly();
+            foreach (var type in assembly.DefinedTypes)
+            {
+                if (!type.IsSubclassOf(typeof(Form)))
+                    continue;
+
+                var identifier = GetIdentifier(type);
+                if (identifier != Guid.Empty)
+                {
+                    mWindowIdentifierMap.Add(identifier, type);
+                }
+            }
         }
 
         private void InitMenu()
@@ -119,6 +139,8 @@ namespace IntelOrca.PeggleEdit.Designer
         private void InitDockContainer()
         {
             mDockContainer = new DockContainer();
+            mSerializer = new DockStateSerializer(mDockContainer);
+            mSerializer.SavePath = Settings.GetLayoutPath();
 
             mDockContainer.TitleBarGradientColor1 = Color.FromArgb(225, 237, 252);
             mDockContainer.TitleBarGradientColor2 = Color.FromArgb(191, 219, 255);
@@ -155,6 +177,7 @@ namespace IntelOrca.PeggleEdit.Designer
             else
                 Settings.Default.MDIMaximized = false;
 
+            SaveLayout();
             base.OnClosing(e);
         }
 
@@ -217,6 +240,52 @@ namespace IntelOrca.PeggleEdit.Designer
             ShowPropertiesWindow();
             //ShowEntryListWindow();
         }
+
+        private void LoadLayout()
+        {
+            try
+            {
+                var dummyForms = new List<Form>();
+
+                mSerializer.Load(true, guid =>
+                {
+                    if (mWindowIdentifierMap.TryGetValue(guid, out var type))
+                    {
+                        if (type == typeof(LevelToolWindow))
+                        {
+                            // We can't restore level windows (might not have level pack open)
+                            // Crom.Controls does not let us return null, so create a dummy form and close it
+                            // at the end of the load sequence
+                            var form = new Form();
+                            dummyForms.Add(form);
+                            return form;
+                        }
+                        return (Form)Activator.CreateInstance(type, this);
+                    }
+                    return null;
+                });
+
+                mPackExplorerToolWindowInfo = GetWindowInfo(typeof(PackExplorerToolWindow));
+                mPropertiesToolWindowInfo = GetWindowInfo(typeof(PropertiesToolWindow));
+                mEntryListToolWindowInfo = GetWindowInfo(typeof(EntryListToolWindow));
+
+                foreach (var form in dummyForms)
+                {
+                    form.Close();
+                }
+            }
+            catch
+            {
+                LoadDefaultDockLayout();
+            }
+        }
+
+        private void SaveLayout()
+        {
+            mSerializer.Save();
+        }
+
+        private DockableFormInfo GetWindowInfo(Type formType) => mDockContainer.GetFormInfo(GetIdentifier(formType));
 
         private void RemoveDisposedLevelToolWindows()
         {
@@ -337,14 +406,15 @@ namespace IntelOrca.PeggleEdit.Designer
             return mDockContainer.Add(form, zAllowedDock.All, GetIdentifier(form));
         }
 
-        private Guid GetIdentifier(Form form)
+        private Guid GetIdentifier(Form form) => GetIdentifier(form.GetType());
+
+        private Guid GetIdentifier(Type formType)
         {
-            System.Reflection.MemberInfo info = form.GetType();
-            object[] attributes = info.GetCustomAttributes(typeof(GuidAttribute), false);
-            if (attributes.Length > 0)
-                return new Guid(((GuidAttribute)attributes[0]).Value);
-            else
-                return Guid.Empty;
+            var info = formType;
+            var attributes = info.GetCustomAttributes(typeof(GuidAttribute), false);
+            return attributes.Length > 0 ?
+                new Guid(((GuidAttribute)attributes[0]).Value) :
+                Guid.Empty;
         }
 
         public void LevelWindowHasFocus(LevelToolWindow window)

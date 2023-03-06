@@ -41,12 +41,15 @@ namespace IntelOrca.PeggleEdit.Designer
 
         public List<string> RecentPackFiles { get; set; } = new List<string>();
 
-        private static string GetConfigPath()
+        private static string GetDataPath(string fileName)
         {
             var appDataPath = Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData);
-            var configPath = Path.Combine(appDataPath, "peggleedit", "config.json");
+            var configPath = Path.Combine(appDataPath, "peggleedit", fileName);
             return configPath;
         }
+
+        private static string GetConfigPath() => GetDataPath("config.json");
+        public static string GetLayoutPath() => GetDataPath("layout.xml");
 
         public static void Load()
         {
