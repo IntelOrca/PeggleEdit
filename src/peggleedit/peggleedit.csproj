@@ -6,6 +6,7 @@
     <ApplicationIcon>orca.ico</ApplicationIcon>
     <Description>Creates and edits levels / level packs for PopCap Games's Peggle Nights.</Description>
     <ApplicationManifest>app.manifest</ApplicationManifest>
+    <Prefer32Bit>true</Prefer32Bit>
   </PropertyGroup>
   <ItemGroup>
     <PackageReference Include="System.Text.Json" Version="7.0.2" />

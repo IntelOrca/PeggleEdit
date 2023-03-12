@@ -387,6 +387,7 @@ namespace IntelOrca.PeggleEdit.Designer
 
             if (File.Exists(jp2))
             {
+                J2K.RegisterPegglePath(Settings.Default.PeggleNightsExePath);
                 return J2K.ConvertJPEG2(jp2);
             }
             else if (File.Exists(jpg))

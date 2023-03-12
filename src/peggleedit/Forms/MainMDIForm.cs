@@ -23,6 +23,7 @@ using System.Runtime.InteropServices;
 using System.Windows.Forms;
 using Crom.Controls.Docking;
 using IntelOrca.PeggleEdit.Designer.Properties;
+using IntelOrca.PeggleEdit.Tools;
 using IntelOrca.PeggleEdit.Tools.Levels;
 using IntelOrca.PeggleEdit.Tools.Levels.Children;
 using IntelOrca.PeggleEdit.Tools.Pack;
@@ -628,6 +629,7 @@ namespace IntelOrca.PeggleEdit.Designer
             SetStatus("Opening '{0}'...", Path.GetFileName(filename));
 
             LevelPack pack = new LevelPack();
+            J2K.RegisterPegglePath(Settings.Default.PeggleNightsExePath);
             if (pack.Open(filename))
             {
                 mPackFilename = filename;
