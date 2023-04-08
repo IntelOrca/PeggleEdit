@@ -41,6 +41,10 @@ namespace IntelOrca.PeggleEdit.Designer
 
         public List<string> RecentPackFiles { get; set; } = new List<string>();
 
+        public bool HideVersionNotification { get; set; }
+        public string CurrentVersion { get; set; }
+        public string LatestVersionAvailable { get; set; }
+
         private static string GetDataPath(string fileName)
         {
             var appDataPath = Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData);

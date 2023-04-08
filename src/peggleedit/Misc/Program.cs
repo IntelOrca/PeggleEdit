@@ -17,9 +17,9 @@
 using System;
 using System.Drawing;
 using System.IO;
+using System.Reflection;
 using System.Windows.Forms;
 using IntelOrca.PeggleEdit.Designer.Properties;
-using IntelOrca.PeggleEdit.Tools.Pack;
 
 namespace IntelOrca.PeggleEdit.Designer
 {
@@ -33,13 +33,15 @@ namespace IntelOrca.PeggleEdit.Designer
         public const string AppYear = "2010-2023";
         public const string AppWebsite = "http://intelorca.co.uk/PeggleEdit";
 
+        public static Version CurrentVersion = GetVersion();
+
         private static string _tempPath;
 
         /// <summary>
         /// The main entry point for the application.
         /// </summary>
         [STAThread]
-        static void Main()
+        private static void Main()
         {
             _tempPath = Path.Combine(Path.GetTempPath(), Application.ProductName);
 
@@ -48,9 +50,14 @@ namespace IntelOrca.PeggleEdit.Designer
             Application.EnableVisualStyles();
             Application.SetCompatibleTextRenderingDefault(false);
             Application.Run(new MainMDIForm());
-            //Application.Run(new MainForm());
 
             Settings.Save();
+        }
+
+        private static Version GetVersion()
+        {
+            var version = Assembly.GetEntryAssembly().GetName().Version;
+            return new Version(version.Major, version.Minor, version.Build);
         }
 
         public static Icon AppIcon

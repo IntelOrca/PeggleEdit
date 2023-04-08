@@ -18,10 +18,15 @@ using System;
 using System.Collections.Generic;
 using System.Drawing;
 using System.IO;
+using System.Net.Http;
+using System.Net.Http.Headers;
 using System.Reflection;
 using System.Runtime.InteropServices;
+using System.Text.Json;
+using System.Threading.Tasks;
 using System.Windows.Forms;
 using Crom.Controls.Docking;
+using IntelOrca.PeggleEdit.Designer.Forms;
 using IntelOrca.PeggleEdit.Designer.Properties;
 using IntelOrca.PeggleEdit.Tools;
 using IntelOrca.PeggleEdit.Tools.Levels;
@@ -30,7 +35,7 @@ using IntelOrca.PeggleEdit.Tools.Pack;
 
 namespace IntelOrca.PeggleEdit.Designer
 {
-    [GuidAttribute("1A01E050-F11A-47C5-B62B-25678916F209")]
+    [Guid("1A01E050-F11A-47C5-B62B-25678916F209")]
     partial class MainMDIForm : Form
     {
         public MainMDIForm()
@@ -39,6 +44,10 @@ namespace IntelOrca.PeggleEdit.Designer
             InitForm();
 
             DefaultStartupPack();
+
+#if !DEBUG
+            CheckForNewVersion();
+#endif
         }
 
         #region MDI Form
@@ -248,23 +257,26 @@ namespace IntelOrca.PeggleEdit.Designer
             {
                 var dummyForms = new List<Form>();
 
-                mSerializer.Load(true, guid =>
+                if (File.Exists(mSerializer.SavePath))
                 {
-                    if (mWindowIdentifierMap.TryGetValue(guid, out var type))
+                    mSerializer.Load(true, guid =>
                     {
-                        if (type == typeof(LevelToolWindow))
+                        if (mWindowIdentifierMap.TryGetValue(guid, out var type))
                         {
-                            // We can't restore level windows (might not have level pack open)
-                            // Crom.Controls does not let us return null, so create a dummy form and close it
-                            // at the end of the load sequence
-                            var form = new Form();
-                            dummyForms.Add(form);
-                            return form;
+                            if (type == typeof(LevelToolWindow))
+                            {
+                                // We can't restore level windows (might not have level pack open)
+                                // Crom.Controls does not let us return null, so create a dummy form and close it
+                                // at the end of the load sequence
+                                var form = new Form();
+                                dummyForms.Add(form);
+                                return form;
+                            }
+                            return (Form)Activator.CreateInstance(type, this);
                         }
-                        return (Form)Activator.CreateInstance(type, this);
-                    }
-                    return null;
-                });
+                        return null;
+                    });
+                }
 
                 mPackExplorerToolWindowInfo = GetWindowInfo(typeof(PackExplorerToolWindow));
                 mPropertiesToolWindowInfo = GetWindowInfo(typeof(PropertiesToolWindow));
@@ -770,5 +782,64 @@ namespace IntelOrca.PeggleEdit.Designer
         }
 
         #endregion
+
+        #region Update check
+
+        private void CheckForNewVersion()
+        {
+            CheckForNewVersionAsync();
+        }
+
+        private async void CheckForNewVersionAsync()
+        {
+            // Update current version in settings file
+            var currentVersionString = Settings.Default.CurrentVersion;
+            if (!Version.TryParse(currentVersionString, out var currentVersion) || currentVersion != Program.CurrentVersion)
+            {
+                Settings.Default.CurrentVersion = Program.CurrentVersion.ToString();
+                Settings.Default.LatestVersionAvailable = null;
+                Settings.Default.HideVersionNotification = false;
+                Settings.Save();
+            }
+
+            // Check GitHub for latest version if necessary
+            var latestVersionString = Settings.Default.LatestVersionAvailable;
+            if (!Version.TryParse(latestVersionString, out var latestVersion) || latestVersion <= Program.CurrentVersion)
+            {
+                latestVersion = await GetLatestVersionAsync();
+                Settings.Default.LatestVersionAvailable = latestVersion.ToString();
+                Settings.Save();
+            }
+
+            if (latestVersion > Program.CurrentVersion)
+            {
+                if (!Settings.Default.HideVersionNotification)
+                {
+                    NewUpdateForm.Show(this);
+                }
+            }
+        }
+
+        private async Task<Version> GetLatestVersionAsync()
+        {
+            var client = new HttpClient();
+            client.DefaultRequestHeaders.UserAgent.Add(new ProductInfoHeaderValue(Program.AppTitle, Program.AppVersion.ToString()));
+            var response = await client.GetAsync("https://api.github.com/repos/IntelOrca/PeggleEdit/releases/latest");
+            if (response.IsSuccessStatusCode)
+            {
+                var jsonResponse = await response.Content.ReadAsStringAsync();
+                var body = JsonSerializer.Deserialize<VersionCheckBody>(jsonResponse);
+                var tagName = body.tag_name;
+                return Version.Parse(tagName.Substring(1));
+            }
+            throw new Exception("Unable to get latest version");
+        }
+
+        #endregion
+    }
+
+    public class VersionCheckBody
+    {
+        public string tag_name { get; set; }
     }
 }
