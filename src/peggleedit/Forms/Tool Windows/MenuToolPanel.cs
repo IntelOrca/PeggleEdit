@@ -19,6 +19,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Drawing;
 using System.IO;
+using System.Reflection;
 using System.Runtime.InteropServices;
 using System.Text;
 using System.Windows.Forms;
@@ -496,9 +497,13 @@ namespace IntelOrca.PeggleEdit.Designer
 
         private void InitHelpTab()
         {
-            RibbonButton btnReadme = new RibbonButton("Readme.txt");
+            RibbonButton btnReadme = new RibbonButton("README.md");
             btnReadme.Image = Resources.readme_32;
             btnReadme.Click += new EventHandler(readmeRibbonButton_Click);
+
+            RibbonButton btnGitHub = new RibbonButton("GitHub");
+            btnGitHub.Image = Resources.github_32;
+            btnGitHub.Click += new EventHandler(githubRibbonButton_Click);
 
             RibbonButton btnAbout = new RibbonButton("About");
             btnAbout.Image = Resources.orca_32;
@@ -506,6 +511,7 @@ namespace IntelOrca.PeggleEdit.Designer
 
             RibbonPanel panelHelp = new RibbonPanel();
             panelHelp.Items.Add(btnReadme);
+            panelHelp.Items.Add(btnGitHub);
             panelHelp.Items.Add(btnAbout);
 
             RibbonTab tabHelp = new RibbonTab(mRibbon, "Help");
@@ -1195,11 +1201,18 @@ namespace IntelOrca.PeggleEdit.Designer
 
         #region Help
 
+        private void githubRibbonButton_Click(object sender, EventArgs e)
+        {
+            Process.Start("https://github.com/IntelOrca/PeggleEdit");
+        }
+
         private void readmeRibbonButton_Click(object sender, EventArgs e)
         {
-            if (File.Exists("readme.txt"))
+            var peggleEditPath = Assembly.GetExecutingAssembly().Location;
+            var readmePath = Path.Combine(peggleEditPath, "README.md");
+            if (File.Exists(readmePath))
             {
-                Process.Start("readme.txt");
+                Process.Start(readmePath);
             }
         }
 

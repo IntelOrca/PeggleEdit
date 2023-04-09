@@ -23,7 +23,7 @@ jobs:
         cd out
         cp ../LICENSE .
         cp ../README.md .
-        7z a -tzip -mx9 -mtc=off -r ../peggleedit.zip *.dll *.exe *.config
+        7z a -tzip -mx9 -mtc=off -r ../peggleedit.zip *.dll *.exe *.config README.md LICENSE
     - name: Upload artifacts
       uses: actions/upload-artifact@v2
       with:
