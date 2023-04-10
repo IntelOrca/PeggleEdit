@@ -1208,7 +1208,7 @@ namespace IntelOrca.PeggleEdit.Designer
 
         private void readmeRibbonButton_Click(object sender, EventArgs e)
         {
-            var peggleEditPath = Assembly.GetExecutingAssembly().Location;
+            var peggleEditPath = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);
             var readmePath = Path.Combine(peggleEditPath, "README.md");
             if (File.Exists(readmePath))
             {
