@@ -1,19 +1,18 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Drawing;
 using System.Windows.Forms;
 using IntelOrca.PeggleEdit.Tools;
+using IntelOrca.PeggleEdit.Tools.Levels;
 using IntelOrca.PeggleEdit.Tools.Levels.Children;
-using static System.Windows.Forms.VisualStyles.VisualStyleElement.TrackBar;
-using static CSJ2K.j2k.codestream.HeaderInfo;
+using static IntelOrca.PeggleEdit.Tools.Levels.BezierPath;
 
 namespace IntelOrca.PeggleEdit.Designer.Level_Editor
 {
     internal class PenEditorTool : EditorTool
     {
-        private List<PointF> _points = new List<PointF>();
-        private List<PointKind> _pointKinds = new List<PointKind>();
-        private PenState _state;
+        private BrickCurveGenerator _entry;
+
+        public BezierPath Path => _entry?.BezierPath;
 
         public PenEditorTool()
         {
@@ -34,20 +33,22 @@ namespace IntelOrca.PeggleEdit.Designer.Level_Editor
         public override void MouseDown(MouseButtons button, Point location, Keys modifierKeys)
         {
             var virtualLocation = GetVirtualLocation(location, modifierKeys);
-            switch (_state)
+            switch (Path?.State)
             {
+                case null:
                 case PenState.Initial:
-                    _state = PenState.MoveDown;
-                    _points.Add(virtualLocation);
-                    _pointKinds.Add(PointKind.MoveTo);
-                    _points.Add(virtualLocation);
-                    _pointKinds.Add(PointKind.CurveVia);
+                    _entry = new BrickCurveGenerator(Editor.Level);
+                    Editor.Level.Entries.Add(_entry);
+
+                    Path.State = PenState.MoveDown;
+                    Path.PushPoint(PointKind.MoveTo, virtualLocation);
+                    Path.PushPoint(PointKind.CurveVia, virtualLocation);
                     break;
                 case PenState.LineUp:
-                    _state = PenState.LineDown;
+                    Path.State = PenState.LineDown;
                     break;
                 case PenState.CurveUp:
-                    _state = PenState.CurveDown2;
+                    Path.State = PenState.CurveDown2;
                     break;
             }
             MouseMove(button, location, modifierKeys);
@@ -55,48 +56,47 @@ namespace IntelOrca.PeggleEdit.Designer.Level_Editor
 
         public override void MouseMove(MouseButtons button, Point location, Keys modifierKeys)
         {
+            if (_entry == null)
+                return;
+
             var virtualLocation = GetVirtualLocation(location, modifierKeys);
-            switch (_state)
+            switch (Path.State)
             {
                 case PenState.Initial:
                     break;
                 case PenState.MoveDown:
-                    _points[_points.Count - 1] = virtualLocation;
+                    Path.SetPosition(-1, virtualLocation);
                     break;
                 case PenState.LineUp:
-                    _points[_points.Count - 1] = virtualLocation;
+                    Path.SetPosition(-1, virtualLocation);
                     break;
                 case PenState.LineDown:
-                    if (_points[_points.Count - 1] != virtualLocation)
+                    if (Path.GetPosition(-1) != virtualLocation)
                     {
-                        _pointKinds[_pointKinds.Count - 1] = PointKind.CurveVia;
-                        _points.Add(virtualLocation);
-                        _pointKinds.Add(PointKind.CurveTo);
-                        _points.Add(virtualLocation);
-                        _pointKinds.Add(PointKind.CurveVia);
-                        _state = PenState.CurveDown;
+                        Path.SetKind(-1, PointKind.CurveVia);
+                        Path.PushPoint(PointKind.CurveTo, virtualLocation);
+                        Path.PushPoint(PointKind.CurveVia, virtualLocation);
+                        Path.State = PenState.CurveDown;
                     }
                     break;
                 case PenState.CurveDown:
-                    var toPoint = _points[_points.Count - 2];
-                    _points[_points.Count - 1] = virtualLocation;
+                    var toPoint = Path.GetPosition(-2);
+                    Path.SetPosition(-1, virtualLocation);
                     var delta = new PointF(virtualLocation.X - toPoint.X, virtualLocation.Y - toPoint.Y);
-                    _points[_points.Count - 3] = new PointF(
+                    Path.SetPosition(-3, new PointF(
                         toPoint.X - delta.X,
-                        toPoint.Y - delta.Y);
+                        toPoint.Y - delta.Y));
                     break;
                 case PenState.CurveUp:
-                    _points[_points.Count - 1] = virtualLocation;
+                    Path.SetPosition(-1, virtualLocation);
                     break;
                 case PenState.CurveDown2:
-                    if (_points[_points.Count - 1] != virtualLocation)
+                    if (Path.GetPosition(-1) != virtualLocation)
                     {
-                        _pointKinds[_pointKinds.Count - 1] = PointKind.CurveVia;
-                        _points.Add(virtualLocation);
-                        _pointKinds.Add(PointKind.CurveTo);
-                        _points.Add(virtualLocation);
-                        _pointKinds.Add(PointKind.CurveVia);
-                        _state = PenState.CurveDown;
+                        Path.SetKind(-1, PointKind.CurveVia);
+                        Path.PushPoint(PointKind.CurveTo, virtualLocation);
+                        Path.PushPoint(PointKind.CurveVia, virtualLocation);
+                        Path.State = PenState.CurveDown;
                     }
                     break;
             }
@@ -105,43 +105,44 @@ namespace IntelOrca.PeggleEdit.Designer.Level_Editor
 
         public override void MouseUp(MouseButtons button, Point location, Keys modifierKeys)
         {
+            if (_entry == null)
+                return;
+
             if (button == MouseButtons.Right)
             {
                 EndDraw();
+                Editor.UpdateRedraw();
                 return;
             }
 
             MouseMove(button, location, modifierKeys);
 
             var virtualLocation = GetVirtualLocation(location, modifierKeys);
-            switch (_state)
+            switch (Path.State)
             {
                 case PenState.MoveDown:
-                    if (virtualLocation == _points[_points.Count - 2])
+                    if (virtualLocation == Path.GetPosition(-2))
                     {
                         // Line to
-                        _pointKinds[_points.Count - 1] = PointKind.LineTo;
+                        Path.SetKind(-1, PointKind.LineTo);
                     }
                     else
                     {
                         // Curve half
                     }
-                    _state = PenState.LineUp;
+                    Path.State = PenState.LineUp;
                     break;
                 case PenState.LineDown:
-                    _pointKinds.Add(PointKind.LineTo);
-                    _points.Add(virtualLocation);
-                    _state = PenState.LineUp;
+                    Path.PushPoint(PointKind.LineTo, virtualLocation);
+                    Path.State = PenState.LineUp;
                     break;
                 case PenState.CurveDown:
-                    _points.Add(virtualLocation);
-                    _pointKinds.Add(PointKind.CurveTo);
-                    _state = PenState.CurveUp;
+                    Path.PushPoint(PointKind.CurveTo, virtualLocation);
+                    Path.State = PenState.CurveUp;
                     break;
                 case PenState.CurveDown2:
-                    _pointKinds.Add(PointKind.LineTo);
-                    _points.Add(virtualLocation);
-                    _state = PenState.LineUp;
+                    Path.PushPoint(PointKind.LineTo, virtualLocation);
+                    Path.State = PenState.LineUp;
                     break;
             }
             Editor.UpdateRedraw();
@@ -149,31 +150,33 @@ namespace IntelOrca.PeggleEdit.Designer.Level_Editor
 
         private void EndDraw()
         {
-            switch (_state)
+            switch (Path.State)
             {
                 case PenState.LineDown:
-                    _points.RemoveAt(_points.Count - 1);
-                    _pointKinds.RemoveAt(_pointKinds.Count - 1);
+                    Path.PopPoint();
+                    break;
+                case PenState.CurveDown:
+                    Path.PopPoint();
+                    Path.PopPoint();
+                    Path.PopPoint();
+                    Path.PopPoint();
                     break;
                 case PenState.CurveDown2:
-                    _points.RemoveAt(_points.Count - 1);
-                    _pointKinds.RemoveAt(_pointKinds.Count - 1);
-                    _points.RemoveAt(_points.Count - 1);
-                    _pointKinds.RemoveAt(_pointKinds.Count - 1);
+                    Path.PopPoint();
+                    Path.PopPoint();
                     break;
             }
 
-            var lastPosition = new PointF(float.MinValue, float.MinValue);
-            var lastAngle = 0.0f;
-            var elements = GetElements();
-            for (var i = 0; i < elements.Length; i++)
-            {
-                PegCurve(in elements[i], ref lastPosition, ref lastAngle);
-            }
+            // var lastPosition = new PointF(float.MinValue, float.MinValue);
+            // var lastAngle = 0.0f;
+            // var elements = GetElements();
+            // for (var i = 0; i < elements.Length; i++)
+            // {
+            //     PegCurve(in elements[i], ref lastPosition, ref lastAngle);
+            // }
 
-            _points.Clear();
-            _pointKinds.Clear();
-            _state = PenState.Initial;
+            Path.State = PenState.Initial;
+            _entry = null;
         }
 
         private void PegCurve(in PenPathElement element, ref PointF lastPoint, ref float lastAngle)
@@ -309,6 +312,7 @@ namespace IntelOrca.PeggleEdit.Designer.Level_Editor
 
         public override void Draw(Graphics g)
         {
+            /*
             var elements = GetElements();
             for (int i = 0; i < elements.Length; i++)
             {
@@ -376,58 +380,12 @@ namespace IntelOrca.PeggleEdit.Designer.Level_Editor
             //     var p = GetVisualLocation(_points[i]);
             //     g.FillEllipse(b, p.X - 4, p.Y - 4, 8, 8);
             // }
+            */
         }
 
         public override object Clone()
         {
             return new PenEditorTool(this);
-        }
-
-        private PenPathElement[] GetElements()
-        {
-            var result = new List<PenPathElement>();
-            var lastPosition = new PointF();
-            var bezier1 = default(PointF?);
-            var bezier2 = default(PointF?);
-            for (int i = 0; i < _points.Count; i++)
-            {
-                var pos = _points[i];
-                var kind = _pointKinds[i];
-                switch (kind)
-                {
-                    case PointKind.MoveTo:
-                        lastPosition = pos;
-                        break;
-                    case PointKind.CurveVia:
-                        if (bezier1 == null)
-                        {
-                            bezier1 = pos;
-                        }
-                        else
-                        {
-                            bezier2 = pos;
-                        }
-                        break;
-                    case PointKind.LineTo:
-                        result.Add(new PenPathElement(lastPosition, pos));
-                        lastPosition = pos;
-                        break;
-                    case PointKind.CurveTo:
-                        if (bezier2 == null)
-                        {
-                            result.Add(new PenPathElement(lastPosition, bezier1.Value, pos));
-                        }
-                        else
-                        {
-                            result.Add(new PenPathElement(lastPosition, bezier1.Value, bezier2.Value, pos));
-                        }
-                        lastPosition = pos;
-                        bezier1 = null;
-                        bezier2 = null;
-                        break;
-                }
-            }
-            return result.ToArray();
         }
 
         private PointF GetVisualLocation(PointF location)
@@ -446,14 +404,14 @@ namespace IntelOrca.PeggleEdit.Designer.Level_Editor
 
             if ((modifierKeys & Keys.Control) != 0)
             {
-                switch (_state)
+                switch (Path?.State)
                 {
                     case PenState.LineDown:
                     case PenState.LineUp:
-                        result = SnapAngle(result, _points[_points.Count - 2]);
+                        result = SnapAngle(result, Path.GetPosition(-2));
                         break;
                     case PenState.CurveDown:
-                        result = SnapAngle(result, _points[_points.Count - 2]);
+                        result = SnapAngle(result, Path.GetPosition(-2));
                         break;
                 }
             }
@@ -474,25 +432,6 @@ namespace IntelOrca.PeggleEdit.Designer.Level_Editor
             var newY = origin.Y + delta.Y;
             return new PointF((int)Math.Round(newX), (int)Math.Round(newY));
         }
-
-        private enum PenState
-        {
-            Initial,    //
-            MoveDown,   //       M  Cv
-            LineUp,     // ?? ?? ?? Lt
-            LineDown,   // ?? ?? ?? Lt
-            CurveDown,  // ?? Cv Ct Cv
-            CurveUp,    // ?? Cv Cv Ct
-            CurveDown2, // ?? Cv Cv Ct
-        }
-
-        private enum PointKind : byte
-        {
-            MoveTo,
-            LineTo,
-            CurveVia,
-            CurveTo,
-        }
     }
 
     static class GraphicsExtensions
@@ -505,77 +444,6 @@ namespace IntelOrca.PeggleEdit.Designer.Level_Editor
             var newP2 = new PointF(p1.X * 2 / 3 + p2.X * 1 / 3, p1.Y * 2 / 3 + p2.Y * 1 / 3);
             var newP3 = p2;
             g.DrawBezier(pen, newP0, newP1, newP2, newP3);
-        }
-    }
-
-    internal static class PointExtensions
-    {
-        public static PointF Add(this PointF lhs, PointF rhs) => new PointF(lhs.X + rhs.X, lhs.Y + rhs.Y);
-        public static PointF Subtract(this PointF lhs, PointF rhs) => new PointF(lhs.X - rhs.X, lhs.Y - rhs.Y);
-        public static float GetLength(this PointF a, PointF b) => b.Subtract(a).GetLength();
-        public static float GetLength(this PointF p) => (float)Math.Sqrt((p.X * p.X) + (p.Y * p.Y));
-    }
-
-    internal struct PenPathElement
-    {
-        public bool IsLine { get; }
-        public PointF P0 { get; }
-        public PointF P1 { get; }
-        public PointF P2 { get; }
-        public PointF P3 { get; }
-
-        public PenPathElement(PointF p0, PointF p1)
-        {
-            IsLine = true;
-            P0 = p0;
-            P1 = p1;
-            P2 = default(PointF);
-            P3 = default(PointF);
-        }
-
-        public PenPathElement(PointF p0, PointF p1, PointF p2)
-            : this(
-                  p0,
-                  new PointF(p1.X * 2 / 3 + p0.X * 1 / 3, p1.Y * 2 / 3 + p0.Y * 1 / 3),
-                  new PointF(p1.X * 2 / 3 + p2.X * 1 / 3, p1.Y * 2 / 3 + p2.Y * 1 / 3),
-                  p2)
-        {
-        }
-
-        public PenPathElement(PointF p0, PointF p1, PointF p2, PointF p3)
-        {
-            IsLine = false;
-            P0 = p0;
-            P1 = p1;
-            P2 = p2;
-            P3 = p3;
-        }
-
-        public PointF GetPoint(double t)
-        {
-            if (IsLine)
-            {
-                var delta = P1.Subtract(P0);
-                var x = P0.X + (delta.X * t);
-                var y = P0.Y + (delta.Y * t);
-                return new PointF((float)x, (float)y);
-            }
-            else
-            {
-                var xA = Math.Pow(1 - t, 3) * P0.X;
-                var xB = 3 * t * Math.Pow(1 - t, 2) * P1.X;
-                var xC = 3 * Math.Pow(t, 2) * (1 - t) * P2.X;
-                var xD = Math.Pow(t, 3) * P3.X;
-                var x = xA + xB + xC + xD;
-
-                var yA = Math.Pow(1 - t, 3) * P0.Y;
-                var yB = 3 * t * Math.Pow(1 - t, 2) * P1.Y;
-                var yC = 3 * Math.Pow(t, 2) * (1 - t) * P2.Y;
-                var yD = Math.Pow(t, 3) * P3.Y;
-                var y = yA + yB + yC + yD;
-
-                return new PointF((float)x, (float)y);
-            }
         }
     }
 }
