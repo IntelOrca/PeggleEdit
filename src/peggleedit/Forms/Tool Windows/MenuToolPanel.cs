@@ -23,6 +23,7 @@ using System.Reflection;
 using System.Runtime.InteropServices;
 using System.Text;
 using System.Windows.Forms;
+using IntelOrca.PeggleEdit.Designer.Level_Editor;
 using IntelOrca.PeggleEdit.Designer.Properties;
 using IntelOrca.PeggleEdit.Tools.Levels;
 using IntelOrca.PeggleEdit.Tools.Levels.Children;
@@ -81,6 +82,7 @@ namespace IntelOrca.PeggleEdit.Designer
         RibbonButton btnSelectTool;
         RibbonButton btnPegTool;
         RibbonButton btnBrickTool;
+        RibbonButton btnBrickPenTool;
         RibbonButton btnCircle;
         RibbonButton btnPolygon;
         RibbonButton btnRod;
@@ -315,6 +317,10 @@ namespace IntelOrca.PeggleEdit.Designer
             btnBrickTool.Image = Resources.brick_32;
             btnBrickTool.Click += new EventHandler(brickRibbonButton_Click);
 
+            btnBrickPenTool = new RibbonButton("Brick Pen");
+            btnBrickPenTool.Image = Resources.brick_32;
+            btnBrickPenTool.Click += new EventHandler(brickPenRibbonButton_Click);
+
             btnCircle = new RibbonButton("Circle");
             btnCircle.Image = Resources.material_32;
             btnCircle.Click += new EventHandler(circleRibbonButton_Click);
@@ -354,6 +360,7 @@ namespace IntelOrca.PeggleEdit.Designer
             panelInsert.Items.Add(btnSelectTool);
             panelInsert.Items.Add(btnPegTool);
             panelInsert.Items.Add(btnBrickTool);
+            panelInsert.Items.Add(btnBrickPenTool);
             panelInsert.Items.Add(btnCircle);
             panelInsert.Items.Add(btnPolygon);
             panelInsert.Items.Add(btnRod);
@@ -822,6 +829,14 @@ namespace IntelOrca.PeggleEdit.Designer
             mParent.SetEditorTool(new DrawEditorTool(brick, true, 38, 38));
         }
 
+        private void brickPenRibbonButton_Click(object sender, EventArgs e)
+        {
+            UnselectAllTools();
+            btnBrickPenTool.Checked = true;
+
+            mParent.SetEditorTool(new PenEditorTool());
+        }
+
         private void circleRibbonButton_Click(object sender, EventArgs e)
         {
             UnselectAllTools();
@@ -1243,6 +1258,7 @@ namespace IntelOrca.PeggleEdit.Designer
             btnSelectTool.Checked = false;
             btnPegTool.Checked = false;
             btnBrickTool.Checked = false;
+            btnBrickPenTool.Checked = false;
             btnCircle.Checked = false;
             btnPolygon.Checked = false;
             btnRod.Checked = false;
