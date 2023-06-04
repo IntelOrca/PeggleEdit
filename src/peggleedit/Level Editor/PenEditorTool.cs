@@ -2,7 +2,9 @@
 using System.Collections.Generic;
 using System.Drawing;
 using System.Windows.Forms;
+using IntelOrca.PeggleEdit.Tools;
 using IntelOrca.PeggleEdit.Tools.Levels.Children;
+using static System.Windows.Forms.VisualStyles.VisualStyleElement.TrackBar;
 using static CSJ2K.j2k.codestream.HeaderInfo;
 
 namespace IntelOrca.PeggleEdit.Designer.Level_Editor
@@ -161,19 +163,12 @@ namespace IntelOrca.PeggleEdit.Designer.Level_Editor
                     break;
             }
 
-            var lastPeg = new PointF(float.MinValue, float.MinValue);
+            var lastPosition = new PointF(float.MinValue, float.MinValue);
+            var lastAngle = 0.0f;
             var elements = GetElements();
             for (var i = 0; i < elements.Length; i++)
             {
-                var element = elements[i];
-                if (element.IsLine)
-                {
-                    PegLine(element.P0, element.P1, ref lastPeg);
-                }
-                else
-                {
-                    PegCurve(element.P0, element.P1, element.P2, element.P3, ref lastPeg);
-                }
+                PegCurve(in elements[i], ref lastPosition, ref lastAngle);
             }
 
             _points.Clear();
@@ -181,59 +176,63 @@ namespace IntelOrca.PeggleEdit.Designer.Level_Editor
             _state = PenState.Initial;
         }
 
-        private void PegLine(PointF from, PointF to, ref PointF lastPeg)
+        private void PegCurve(in PenPathElement element, ref PointF lastPoint, ref float lastAngle)
         {
-            var delta = to.Subtract(from);
-            var count = (int)(delta.GetLength() / 30) + 1;
-            var stepX = delta.X / (count - 1);
-            var stepY = delta.Y / (count - 1);
-            var posX = (double)from.X;
-            var posY = (double)from.Y;
-
-            for (int i = 0; i < count; i++)
+            var tStep = 0.005;
+            if (lastPoint == new PointF(float.MinValue, float.MinValue))
             {
-                var p = new PointF((float)posX, (float)posY);
-                if (p.GetLength(lastPeg) > 30)
-                {
-                    CreatePeg(p);
-                    lastPeg = p;
-                }
-                posX += stepX;
-                posY += stepY;
+                lastPoint = element.GetPoint(0);
+                lastAngle = GetAngle(element.GetPoint(0), element.GetPoint(tStep));
             }
+            var lastPointBackup = lastPoint;
+
+            var lengthDiff = 30;
+
+            {
+                var t = 0.0;
+                while (t <= 1)
+                {
+                    var pPrev = element.GetPoint(t - tStep);
+                    var p = element.GetPoint(t);
+                    var pNext = element.GetPoint(t + tStep);
+                    var lengthFromLastPeg = p.GetLength(lastPoint);
+                    if (lengthFromLastPeg > lengthDiff)
+                    {
+                        // var delta = pNext.Subtract(p);
+                        // var rotation = (float)(-Math.Atan2(delta.Y, delta.X) + (Math.PI / 2));
+
+                        // CreatePeg(p);
+                        // CreateBrick(p, rotation);
+                        var currentAngle = GetAngle(p, pNext);
+                        CreateBrick(lastPoint, lastAngle, p, currentAngle);
+                        lastPoint = p;
+                        lastAngle = currentAngle;
+                    }
+                    t += tStep;
+                }
+            }
+            // {
+            //     var lp = lastPointBackup;
+            //     var t = 0.0;
+            //     while (t <= 1)
+            //     {
+            //         var p = element.GetPoint(t);
+            //         var lengthFromLastPeg = p.GetLength(lp);
+            //         if (lengthFromLastPeg > lengthDiff)
+            //         {
+            //             CreateMarker(lp);
+            //             lp = p;
+            //         }
+            //         t += 0.01;
+            //     }
+            // }
         }
 
-        private void PegCurve(PointF p0, PointF p1, PointF p2, PointF p3, ref PointF lastPeg)
+        private static float GetAngle(PointF p0, PointF p1)
         {
-            var t = 0.0;
-            while (t <= 1)
-            {
-                var p = CalculateCurvePoint(t, p0, p1, p2, p3);
-                var lengthFromLastPeg = p.GetLength(lastPeg);
-                if (lengthFromLastPeg > 30)
-                {
-                    CreatePeg(p);
-                    lastPeg = p;
-                }
-                t += 0.01;
-            }
-        }
-
-        private PointF CalculateCurvePoint(double t, PointF p0, PointF p1, PointF p2, PointF p3)
-        {
-            var xA = Math.Pow(1 - t, 3) * p0.X;
-            var xB = 3 * t * Math.Pow(1 - t, 2) * p1.X;
-            var xC = 3 * Math.Pow(t, 2) * (1 - t) * p2.X;
-            var xD = Math.Pow(t, 3) * p3.X;
-            var x = xA + xB + xC + xD;
-
-            var yA = Math.Pow(1 - t, 3) * p0.Y;
-            var yB = 3 * t * Math.Pow(1 - t, 2) * p1.Y;
-            var yC = 3 * Math.Pow(t, 2) * (1 - t) * p2.Y;
-            var yD = Math.Pow(t, 3) * p3.Y;
-            var y = yA + yB + yC + yD;
-
-            return new PointF((float)x, (float)y);
+            var delta = p1.Subtract(p0);
+            var rotation = (float)(-Math.Atan2(delta.Y, delta.X) + (Math.PI / 2));
+            return rotation;
         }
 
         private void CreatePeg(PointF pos)
@@ -244,6 +243,68 @@ namespace IntelOrca.PeggleEdit.Designer.Level_Editor
             p.X = (int)Math.Round(pos.X);
             p.Y = (int)Math.Round(pos.Y);
             level.Entries.Add(p);
+        }
+
+        private void CreateMarker(PointF pos)
+        {
+            var level = Editor.Level;
+            var p = new Circle(level);
+            p.Radius = 4;
+            p.X = (int)Math.Round(pos.X);
+            p.Y = (int)Math.Round(pos.Y);
+            level.Entries.Add(p);
+        }
+
+        private void CreateBrick(PointF pos, float angle)
+        {
+            var level = Editor.Level;
+            var brick = new Brick(level);
+            brick.PegInfo = new PegInfo(brick, true, false);
+            brick.X = (int)Math.Round(pos.X);
+            brick.Y = (int)Math.Round(pos.Y);
+            brick.Rotation = MathExt.ToDegrees(angle);
+            brick.SectorAngle = 40;
+            brick.Curved = true;
+            level.Entries.Add(brick);
+        }
+
+        private void CreateBrick(PointF left, float leftAngle, PointF right, float rightAngle)
+        {
+            var level = Editor.Level;
+            var brick = new Brick(level);
+            brick.PegInfo = new PegInfo(brick, true, false);
+
+            if (Math.Abs(leftAngle - rightAngle) < (1 / 180.0 * Math.PI))
+            {
+                brick.Length = right.GetLength(left);
+                brick.Location = left.Add(right.Subtract(left));
+                brick.Rotation = MathExt.ToDegrees(leftAngle);
+            }
+            else
+            {
+                var b = left.GetLength(right);
+                var sectorAngle = rightAngle - leftAngle;
+                var midAngle = leftAngle + (sectorAngle / 2);
+                var radius = b / (2 * Math.Sin(sectorAngle / 2));
+                var origin = new PointF(
+                    (float)(left.X + (Math.Cos(leftAngle) * radius)),
+                    (float)(right.Y - (Math.Sin(rightAngle) * radius)));
+                var midPoint = new PointF(
+                    (float)(origin.X - (Math.Cos(midAngle) * radius)),
+                    (float)(origin.Y + (Math.Sin(midAngle) * radius)));
+
+                brick.Location = midPoint;
+                brick.Rotation = MathExt.ToDegrees((float)(midAngle + Math.PI));
+                brick.SectorAngle = MathExt.ToDegrees(Math.Abs(sectorAngle));
+                brick.InnerRadius = (float)(radius - 10);
+                brick.Curved = true;
+            }
+            level.Entries.Add(brick);
+
+            // var rod = new Rod(level);
+            // rod.PointA = left;
+            // rod.PointB = origin;
+            // level.Entries.Add(rod);
         }
 
         public override void Draw(Graphics g)
@@ -449,6 +510,7 @@ namespace IntelOrca.PeggleEdit.Designer.Level_Editor
 
     internal static class PointExtensions
     {
+        public static PointF Add(this PointF lhs, PointF rhs) => new PointF(lhs.X + rhs.X, lhs.Y + rhs.Y);
         public static PointF Subtract(this PointF lhs, PointF rhs) => new PointF(lhs.X - rhs.X, lhs.Y - rhs.Y);
         public static float GetLength(this PointF a, PointF b) => b.Subtract(a).GetLength();
         public static float GetLength(this PointF p) => (float)Math.Sqrt((p.X * p.X) + (p.Y * p.Y));
@@ -487,6 +549,33 @@ namespace IntelOrca.PeggleEdit.Designer.Level_Editor
             P1 = p1;
             P2 = p2;
             P3 = p3;
+        }
+
+        public PointF GetPoint(double t)
+        {
+            if (IsLine)
+            {
+                var delta = P1.Subtract(P0);
+                var x = P0.X + (delta.X * t);
+                var y = P0.Y + (delta.Y * t);
+                return new PointF((float)x, (float)y);
+            }
+            else
+            {
+                var xA = Math.Pow(1 - t, 3) * P0.X;
+                var xB = 3 * t * Math.Pow(1 - t, 2) * P1.X;
+                var xC = 3 * Math.Pow(t, 2) * (1 - t) * P2.X;
+                var xD = Math.Pow(t, 3) * P3.X;
+                var x = xA + xB + xC + xD;
+
+                var yA = Math.Pow(1 - t, 3) * P0.Y;
+                var yB = 3 * t * Math.Pow(1 - t, 2) * P1.Y;
+                var yC = 3 * Math.Pow(t, 2) * (1 - t) * P2.Y;
+                var yD = Math.Pow(t, 3) * P3.Y;
+                var y = yA + yB + yC + yD;
+
+                return new PointF((float)x, (float)y);
+            }
         }
     }
 }
