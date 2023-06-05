@@ -173,7 +173,7 @@ namespace IntelOrca.PeggleEdit.Tools.Levels.Children
         {
             get
             {
-                return 5;
+                return LevelEntryTypes.Circle;
             }
         }
 

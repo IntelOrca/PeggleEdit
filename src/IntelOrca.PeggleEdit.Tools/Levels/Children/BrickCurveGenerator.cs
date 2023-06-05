@@ -11,7 +11,7 @@ namespace IntelOrca.PeggleEdit.Tools.Levels.Children
         {
         }
 
-        public override int Type => 1004;
+        public override int Type => LevelEntryTypes.BrickCurveGenerator;
 
         public override void Execute()
         {
@@ -19,14 +19,15 @@ namespace IntelOrca.PeggleEdit.Tools.Levels.Children
             Level.Entries.Remove(this);
         }
 
-        private void CreateBrick(PointF left, float leftAngle, PointF right, float rightAngle)
+        private PointF CreateBrick(PointF left, float leftAngle, PointF right, float rightAngle)
         {
             var brick = new Brick(Level);
             brick.PegInfo = new PegInfo(brick, true, false);
             if (Math.Abs(leftAngle - rightAngle) < (1 / 180.0 * Math.PI))
             {
+                var delta = right.Subtract(left);
                 brick.Length = right.GetLength(left);
-                brick.Location = new PointF(left.X + brick.Length / 2, left.Y);
+                brick.Location = new PointF(left.X + (delta.X / 2), left.Y + (delta.Y / 2));
                 brick.Rotation = MathExt.ToDegrees(leftAngle);
             }
             else
@@ -49,6 +50,7 @@ namespace IntelOrca.PeggleEdit.Tools.Levels.Children
                 brick.Curved = true;
             }
             Level.Entries.Add(brick);
+            return right;
         }
 
         public override void Draw(Graphics g)
@@ -57,34 +59,83 @@ namespace IntelOrca.PeggleEdit.Tools.Levels.Children
             ProcessBricks((p0, a0, p1, a1) => DrawBrick(g, p0, a0, p1, a1));
         }
 
-        private void DrawBrick(Graphics g, PointF left, float leftAngle, PointF right, float rightAngle)
+        private PointF DrawBrick(Graphics g, PointF left, float leftAngle, PointF right, float rightAngle)
         {
+            var finalRight = right;
             if (Math.Abs(leftAngle - rightAngle) < (1 / 180.0 * Math.PI))
             {
+                var delta = right.Subtract(left);
                 var length = right.GetLength(left);
-                var location = new PointF(left.X + length / 2, left.Y);
+                var location = new PointF(left.X + (delta.X / 2), left.Y + (delta.Y / 2));
                 var rotation = MathExt.ToDegrees(leftAngle);
                 DrawStrightBrick(g, location, length, 20.0f, rotation);
             }
             else
             {
-                var b = left.GetLength(right);
+                if (leftAngle < rightAngle)
+                {
+                    if (Math.Abs(rightAngle - leftAngle) > (float)Math.PI)
+                    {
+                        rightAngle -= (float)(2 * Math.PI);
+                    }
+                }
+                else
+                {
+                    if (Math.Abs(rightAngle - leftAngle) > (float)Math.PI)
+                    {
+                        rightAngle += (float)(2 * Math.PI);
+                    }
+                }
                 var sectorAngle = rightAngle - leftAngle;
                 var midAngle = leftAngle + (sectorAngle / 2);
-                var radius = b / (2 * Math.Sin(sectorAngle / 2));
+                var b = left.GetLength(right);
+                var radius = Math.Abs(b / (2 * Math.Sin(sectorAngle / 2)));
                 var origin = new PointF(
-                    (float)(left.X + (Math.Cos(leftAngle) * radius)),
-                    (float)(right.Y - (Math.Sin(rightAngle) * radius)));
+                    (float)(left.X - (Math.Cos(leftAngle) * radius)),
+                    (float)(left.Y + (Math.Sin(leftAngle) * radius)));
+                if (leftAngle < rightAngle)
+                {
+                    midAngle = (float)(midAngle - Math.PI);
+                    origin = new PointF(
+                        (float)(left.X + (Math.Cos(leftAngle) * radius)),
+                        (float)(left.Y - (Math.Sin(leftAngle) * radius)));
+                    finalRight = new PointF(
+                        (float)(origin.X - (Math.Cos(rightAngle) * radius)),
+                        (float)(origin.Y + (Math.Sin(rightAngle) * radius)));
+                }
+                else
+                {
+                    finalRight = new PointF(
+                        (float)(origin.X + (Math.Cos(rightAngle) * radius)),
+                        (float)(origin.Y - (Math.Sin(rightAngle) * radius)));
+                }
                 var midPoint = new PointF(
-                    (float)(origin.X - (Math.Cos(midAngle) * radius)),
-                    (float)(origin.Y + (Math.Sin(midAngle) * radius)));
+                    (float)(origin.X + (Math.Cos(midAngle) * radius)),
+                    (float)(origin.Y - (Math.Sin(midAngle) * radius)));
 
+                // var originPen = new Pen(Color.White, 1);
+                // originPen.DashStyle = DashStyle.Custom;
+                // originPen.DashPattern = new float[] { 2, 4 };
+                // g.DrawEllipse(originPen, (float)(origin.X - radius), (float)(origin.Y - radius), (float)(radius * 2), (float)(radius * 2));
+
+                // var delta = right.Subtract(left);
+                // var location = new PointF(left.X + (delta.X / 2), left.Y + (delta.Y / 2));
+                // location.X += 2;
+                // location.Y += 2;
+
+                // midPoint.X += 0f;
+                // midPoint.Y += 2.5f;
                 var location = midPoint;
-                var rotation = MathExt.ToDegrees((float)(midAngle + Math.PI));
+
+                var rotation = MathExt.ToDegrees((float)(midAngle));
                 var sectorAngle2 = MathExt.ToDegrees(Math.Abs(sectorAngle));
                 var innerRadius = (float)(radius - 10);
                 DrawCurvedBrick(g, location, innerRadius, 20.0f, rotation, sectorAngle2);
             }
+
+            g.DrawCircle(Pens.Black, Brushes.White, left, 4);
+            g.DrawCircle(Pens.Black, Brushes.White, finalRight, 4);
+            return finalRight;
         }
 
         private void DrawStrightBrick(Graphics g, PointF location, float length, float width, float rotation)
@@ -153,7 +204,7 @@ namespace IntelOrca.PeggleEdit.Tools.Levels.Children
                 (float)Math.Sin(MathExt.ToRadians(angle)) * radius + circleCentre.Y);
         }
 
-        private void ProcessBricks(Action<PointF, float, PointF, float> callback)
+        private void ProcessBricks(Func<PointF, float, PointF, float, PointF> callback)
         {
             var elements = BezierPath.GetElements();
             if (elements.Length == 0)
@@ -161,11 +212,14 @@ namespace IntelOrca.PeggleEdit.Tools.Levels.Children
 
             var tStep = 0.005;
             var lastPoint = elements[0].GetPoint(0);
+            var lastActualPoint = lastPoint;
             var lastAngle = GetAngle(lastPoint, elements[0].GetPoint(tStep));
 
             for (var i = 0; i < elements.Length; i++)
             {
                 var element = elements[i];
+                var totalLength = element.GetLength();
+                // var lengthDiff = Math.Round(totalLength / Math.Round(totalLength / Interval));
                 var lengthDiff = Interval;
                 var t = 0.0;
                 while (t <= 1)
@@ -173,11 +227,24 @@ namespace IntelOrca.PeggleEdit.Tools.Levels.Children
                     var pPrev = element.GetPoint(t - tStep);
                     var p = element.GetPoint(t);
                     var pNext = element.GetPoint(t + tStep);
+
+                    var pDelta = p.Subtract(lastPoint);
+                    var pNextDelta = pNext.Subtract(p);
+
+                    var pActual = lastActualPoint.Add(pDelta);
+                    
+                    var currentAngle = GetAngle(p, pNext);
+                    // var deltaAngle = Math.Abs(currentAngle - lastAngle);
+                    // var isTight = deltaAngle > (float)(Math.PI / 2);
+                    // if (isTight)
+                    // {
+                    //     currentAngle = lastAngle + (Math.Sign(currentAngle) * (float)(Math.PI / 2));
+                    // }
+
                     var lengthFromLastPeg = p.GetLength(lastPoint);
                     if (lengthFromLastPeg > lengthDiff)
                     {
-                        var currentAngle = GetAngle(p, pNext);
-                        callback(lastPoint, lastAngle, p, currentAngle);
+                        lastActualPoint = callback(lastActualPoint, lastAngle, pActual, currentAngle);
                         lastPoint = p;
                         lastAngle = currentAngle;
                     }
@@ -189,8 +256,17 @@ namespace IntelOrca.PeggleEdit.Tools.Levels.Children
         private static float GetAngle(PointF p0, PointF p1)
         {
             var delta = p1.Subtract(p0);
-            var rotation = (float)(-Math.Atan2(delta.Y, delta.X) + (Math.PI / 2));
-            return rotation;
+            var rotation = -Math.Atan2(delta.Y, delta.X) + (Math.PI / 2);
+            return ClampAngle((float)rotation);
+        }
+
+        private static float ClampAngle(float angle)
+        {
+            while (angle > Math.PI)
+                angle -= (float)(2 * Math.PI);
+            while (angle < -Math.PI)
+                angle += (float)(2 * Math.PI);
+            return angle;
         }
     }
 }

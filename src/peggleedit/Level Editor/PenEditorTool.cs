@@ -36,6 +36,9 @@ namespace IntelOrca.PeggleEdit.Designer.Level_Editor
 
         public override void MouseDown(MouseButtons button, Point location, Keys modifierKeys)
         {
+            if (button != MouseButtons.Left)
+                return;
+
             var virtualLocation = GetVirtualLocation(location, modifierKeys);
             switch (Path?.State)
             {
@@ -158,6 +161,7 @@ namespace IntelOrca.PeggleEdit.Designer.Level_Editor
         {
             switch (Path.State)
             {
+                case PenState.LineUp:
                 case PenState.LineDown:
                     Path.PopPoint();
                     break;
@@ -167,6 +171,7 @@ namespace IntelOrca.PeggleEdit.Designer.Level_Editor
                     Path.PopPoint();
                     Path.PopPoint();
                     break;
+                case PenState.CurveUp:
                 case PenState.CurveDown2:
                     Path.PopPoint();
                     Path.PopPoint();

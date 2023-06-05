@@ -11,7 +11,7 @@ namespace IntelOrca.PeggleEdit.Tools.Levels.Children
         {
         }
 
-        public override int Type => 1003;
+        public override int Type => LevelEntryTypes.PegCurveGenerator;
 
         public override void Execute()
         {

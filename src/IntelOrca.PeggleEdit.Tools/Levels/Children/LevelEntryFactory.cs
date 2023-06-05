@@ -33,24 +33,28 @@ namespace IntelOrca.PeggleEdit.Tools.Levels.Children
         {
             switch (type)
             {
-                case 2:         //Rod
+                case LevelEntryTypes.Rod:
                     return new Rod(level);
-                case 3:         //Polygon
+                case LevelEntryTypes.Polygon:
                     return new Polygon(level);
-                case 5:         //Circle
+                case LevelEntryTypes.Circle:
                     return new Circle(level);
-                case 6:         //Brick
+                case LevelEntryTypes.Brick:
                     return new Brick(level);
-                case 8:         //Teleport
+                case LevelEntryTypes.Teleport:
                     return new Teleport(level);
-                case 9:         //Effect
+                case LevelEntryTypes.Emitter:
                     return new Emitter(level);
 
                 //PeggleEdit's own entries
-                case 1001:
+                case LevelEntryTypes.PegGenerator:
                     return new PegGenerator(level);
-                case 1002:
+                case LevelEntryTypes.BrickGenerator:
                     return new BrickGenerator(level);
+                case LevelEntryTypes.PegCurveGenerator:
+                    return new PegCurveGenerator(level);
+                case LevelEntryTypes.BrickCurveGenerator:
+                    return new BrickCurveGenerator(level);
 
                 default:
                     return new UnknownEntry(level, type);

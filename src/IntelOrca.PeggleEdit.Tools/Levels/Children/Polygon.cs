@@ -181,7 +181,7 @@ namespace IntelOrca.PeggleEdit.Tools.Levels.Children
         {
             get
             {
-                return 3;
+                return LevelEntryTypes.Polygon;
             }
         }
 

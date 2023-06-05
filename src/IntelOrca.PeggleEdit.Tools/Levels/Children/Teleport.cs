@@ -143,7 +143,7 @@ namespace IntelOrca.PeggleEdit.Tools.Levels.Children
         {
             get
             {
-                return 8;
+                return LevelEntryTypes.Teleport;
             }
         }
 

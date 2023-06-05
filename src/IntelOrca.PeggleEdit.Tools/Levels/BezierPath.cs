@@ -1,14 +1,15 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Drawing;
+using System.IO;
 using System.Text;
 
 namespace IntelOrca.PeggleEdit.Tools.Levels
 {
     public class BezierPath
     {
-        public List<PointF> Points { get; } = new List<PointF>();
-        public List<PointKind> PointKinds { get; } = new List<PointKind>();
+        public List<PointF> Points { get; private set; } = new List<PointF>();
+        public List<PointKind> PointKinds { get; private set; } = new List<PointKind>();
         public PenState State { get; set; }
 
         public int NumPoints => Points.Count;
@@ -106,9 +107,9 @@ namespace IntelOrca.PeggleEdit.Tools.Levels
                 {
                     var firstElement = elements[0];
                     sb.Append("M ");
-                    sb.Append(firstElement.P2.X);
+                    sb.Append(firstElement.P0.X);
                     sb.Append(' ');
-                    sb.Append(firstElement.P2.Y);
+                    sb.Append(firstElement.P0.Y);
 
                     foreach (var el in elements)
                     {
@@ -138,6 +139,105 @@ namespace IntelOrca.PeggleEdit.Tools.Levels
                 }
                 return sb.ToString();
             }
+            set
+            {
+                var kinds = new List<PointKind>();
+                var points = new List<PointF>();
+
+                var sr = new StringReader(value);
+                while (sr.Peek() != -1)
+                {
+                    var c = ReadCommand(sr);
+                    if (c == 'M')
+                    {
+                        var p = ReadPoint(sr);
+                        if (p == null)
+                            return;
+
+                        kinds.Add(PointKind.MoveTo);
+                        points.Add(p.Value);
+                    }
+                    else if (c == 'L')
+                    {
+                        var p = ReadPoint(sr);
+                        if (p == null)
+                            return;
+
+                        kinds.Add(PointKind.LineTo);
+                        points.Add(p.Value);
+                    }
+                    else if (c == 'C')
+                    {
+                        var p0 = ReadPoint(sr);
+                        SkipComma(sr);
+                        var p1 = ReadPoint(sr);
+                        SkipComma(sr);
+                        var p2 = ReadPoint(sr);
+                        SkipComma(sr);
+
+                        if (p0 == null || p1 == null || p2 == null)
+                            return;
+
+                        kinds.Add(PointKind.CurveVia);
+                        points.Add(p0.Value);
+                        kinds.Add(PointKind.CurveVia);
+                        points.Add(p1.Value);
+                        kinds.Add(PointKind.CurveTo);
+                        points.Add(p2.Value);
+                    }
+                }
+
+                PointKinds = kinds;
+                Points = points;
+            }
+        }
+
+        private static char ReadCommand(StringReader sr)
+        {
+            SkipWhitespace(sr);
+            var c = sr.Read();
+            return (char)c;
+        }
+
+        private static PointF? ReadPoint(StringReader sr)
+        {
+            var x = ReadNumber(sr);
+            var y = ReadNumber(sr);
+            if (float.IsNaN(x) || float.IsNaN(y))
+                return null;
+
+            return new PointF(x, y);
+        }
+
+        private static float ReadNumber(StringReader sr)
+        {
+            SkipWhitespace(sr);
+
+            var sb = new StringBuilder();
+            int ci;
+            while ((ci = sr.Peek()) != -1)
+            {
+                var c = (char)sr.Read();
+                if (c != '.' && !char.IsDigit(c))
+                    break;
+
+                sb.Append(c);
+            }
+            if (!float.TryParse(sb.ToString(), out var result))
+                return float.NaN;
+            return result;
+        }
+
+        private static void SkipComma(StringReader sr)
+        {
+            if (sr.Peek() == ',')
+                sr.Read();
+        }
+
+        private static void SkipWhitespace(StringReader sr)
+        {
+            while (char.IsWhiteSpace((char)sr.Peek()))
+                sr.Read();
         }
 
         public enum PenState
@@ -192,6 +292,29 @@ namespace IntelOrca.PeggleEdit.Tools.Levels
                 P1 = p1;
                 P2 = p2;
                 P3 = p3;
+            }
+
+            public float GetLength(int segments = 32)
+            {
+                if (IsLine)
+                {
+                    return P1.GetLength(P0);
+                }
+                else
+                {
+                    var result = 0.0;
+                    var tStep = 1.0 / segments;
+                    var t = 0.0;
+                    var lastPoint = GetPoint(t);
+                    while (t <= 1)
+                    {
+                        t += tStep;
+                        var point = GetPoint(t);
+                        var dist = point.GetLength(lastPoint);
+                        result += dist;
+                    }
+                    return (float)result;
+                }
             }
 
             public PointF GetPoint(double t)

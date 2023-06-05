@@ -313,7 +313,7 @@ namespace IntelOrca.PeggleEdit.Tools.Levels.Children
         {
             get
             {
-                return 1002;
+                return LevelEntryTypes.BrickGenerator;
             }
         }
 

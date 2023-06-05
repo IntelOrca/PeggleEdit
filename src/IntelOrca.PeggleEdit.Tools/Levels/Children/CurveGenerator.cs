@@ -181,7 +181,11 @@ namespace IntelOrca.PeggleEdit.Tools.Levels.Children
         [DisplayName("Path")]
         [Description("SVG syntax for the path.")]
         [Category("Layout")]
-        public string Path => BezierPath.Svg;
+        public string Path
+        {
+            get => BezierPath.Svg;
+            set => BezierPath.Svg = value;
+        }
 
         public override RectangleF Bounds
         {
