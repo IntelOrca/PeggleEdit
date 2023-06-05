@@ -1,266 +1,9 @@
 ﻿using System;
-using System.ComponentModel;
 using System.Drawing;
 using System.Drawing.Drawing2D;
-using System.IO;
-using System.Xml.Linq;
-using static System.Windows.Forms.VisualStyles.VisualStyleElement.TrackBar;
-using static IntelOrca.PeggleEdit.Tools.Levels.BezierPath;
 
 namespace IntelOrca.PeggleEdit.Tools.Levels.Children
 {
-    public abstract class CurveGenerator : LevelEntry, ICloneable, IEntryFunction
-    {
-        public BezierPath BezierPath { get; private set; } = new BezierPath();
-
-        public CurveGenerator(Level level)
-            : base(level)
-        {
-        }
-
-        public abstract void Execute();
-
-        public override void ReadData(BinaryReader br, int version)
-        {
-            BezierPath = new BezierPath();
-            var numPoints = br.ReadUInt16();
-            for (int i = 0; i < numPoints; i++)
-            {
-                var x = br.ReadSingle();
-                var y = br.ReadSingle();
-                var k = (PointKind)br.ReadByte();
-                br.ReadByte();
-                BezierPath.PushPoint(k, new PointF(x, y));
-            }
-        }
-
-        public override void WriteData(BinaryWriter bw, int version)
-        {
-            bw.Write((ushort)BezierPath.NumPoints);
-            for (int i = 0; i < BezierPath.NumPoints; i++)
-            {
-                var p = BezierPath.Points[i];
-                var k = BezierPath.PointKinds[i];
-
-                bw.Write(p.X);
-                bw.Write(p.Y);
-                bw.Write((byte)k);
-                bw.Write((byte)0);
-            }
-        }
-
-        public override void Draw(Graphics g)
-        {
-            // Don't show in show collision mode
-            if (Level.ShowCollision)
-                return;
-
-            base.Draw(g);
-            DrawPath(g);
-        }
-
-        private void DrawPath(Graphics g)
-        {
-            var isDrawing = BezierPath.State != PenState.Initial;
-            var elements = BezierPath.GetElements();
-            for (int i = 0; i < elements.Length; i++)
-            {
-                var pen = isDrawing && i == elements.Length - 1 ? Pens.Red : Pens.White;
-                var el = elements[i];
-                if (el.IsLine)
-                {
-                    g.DrawLine(pen,
-                        GetVisualLocation(el.P0),
-                        GetVisualLocation(el.P1));
-                }
-                else
-                {
-                    g.DrawBezier(pen,
-                        GetVisualLocation(el.P0),
-                        GetVisualLocation(el.P1),
-                        GetVisualLocation(el.P2),
-                        GetVisualLocation(el.P3));
-                }
-            }
-        }
-
-        private void BrickCurve(Graphics g, in PenPathElement element, ref PointF lastPoint, ref float lastAngle)
-        {
-            var tStep = 0.005;
-            if (lastPoint == new PointF(float.MinValue, float.MinValue))
-            {
-                lastPoint = element.GetPoint(0);
-                lastAngle = GetAngle(element.GetPoint(0), element.GetPoint(tStep));
-            }
-            var lastPointBackup = lastPoint;
-
-            var lengthDiff = 30;
-
-            {
-                var t = 0.0;
-                while (t <= 1)
-                {
-                    var pPrev = element.GetPoint(t - tStep);
-                    var p = element.GetPoint(t);
-                    var pNext = element.GetPoint(t + tStep);
-                    var lengthFromLastPeg = p.GetLength(lastPoint);
-                    if (lengthFromLastPeg > lengthDiff)
-                    {
-                        // var delta = pNext.Subtract(p);
-                        // var rotation = (float)(-Math.Atan2(delta.Y, delta.X) + (Math.PI / 2));
-
-                        // CreatePeg(p);
-                        // CreateBrick(p, rotation);
-                        var currentAngle = GetAngle(p, pNext);
-                        // CreateBrick(lastPoint, lastAngle, p, currentAngle);
-                        // DrawPeg(g, p);
-                        lastPoint = p;
-                        lastAngle = currentAngle;
-                    }
-                    t += tStep;
-                }
-            }
-            // {
-            //     var lp = lastPointBackup;
-            //     var t = 0.0;
-            //     while (t <= 1)
-            //     {
-            //         var p = element.GetPoint(t);
-            //         var lengthFromLastPeg = p.GetLength(lp);
-            //         if (lengthFromLastPeg > lengthDiff)
-            //         {
-            //             CreateMarker(lp);
-            //             lp = p;
-            //         }
-            //         t += 0.01;
-            //     }
-            // }
-        }
-
-        private static float GetAngle(PointF p0, PointF p1)
-        {
-            var delta = p1.Subtract(p0);
-            var rotation = (float)(-Math.Atan2(delta.Y, delta.X) + (Math.PI / 2));
-            return rotation;
-        }
-
-        private PointF GetVisualLocation(PointF location)
-        {
-            return location;
-            // return Level.GetActualXY(location);
-        }
-
-        public override object Clone()
-        {
-            var copy = new BrickCurveGenerator(Level);
-            base.CloneTo(copy);
-
-            // TODO
-
-            return copy;
-        }
-
-        [DisplayName("Interval")]
-        [Description("The distance between each generated peg.")]
-        [Category("Pegs")]
-        [DefaultValue(30)]
-        public int Interval { get; set; } = 30;
-
-        public override RectangleF Bounds
-        {
-            get
-            {
-                var minX = int.MaxValue;
-                var minY = int.MaxValue;
-                var maxX = int.MinValue;
-                var maxY = int.MinValue;
-
-                var elements = BezierPath.GetElements();
-                foreach (var element in elements)
-                {
-                    var t = 0.0;
-                    while (t <= 1)
-                    {
-                        var p = element.GetPoint(t);
-                        minX = Math.Min(minX, (int)p.X);
-                        minY = Math.Min(minY, (int)p.Y);
-                        maxX = Math.Max(maxX, (int)p.X);
-                        maxY = Math.Max(maxY, (int)p.Y);
-                        t += 0.1;
-                    }
-                }
-
-                var result = RectangleF.FromLTRB(minX, minY, maxX, maxY);
-                result.Inflate(8, 8);
-                return result;
-            }
-        }
-    }
-
-    public class PegCurveGenerator : CurveGenerator
-    {
-        public PegCurveGenerator(Level level)
-            : base(level)
-        {
-        }
-
-        public override int Type => 1003;
-
-        public override void Execute()
-        {
-            ProcessPegs(p =>
-            {
-                var peg = new Circle(Level);
-                peg.PegInfo = new PegInfo(peg, true, false);
-                peg.Location = new PointF((int)p.X, (int)p.Y);
-                Level.Entries.Add(peg);
-            });
-            Level.Entries.Remove(this);
-        }
-
-        public override void Draw(Graphics g)
-        {
-            base.Draw(g);
-            ProcessPegs(p => DrawPeg(g, p));
-        }
-
-        private void DrawPeg(Graphics g, PointF p)
-        {
-            var pegBrush = new SolidBrush(Color.FromArgb(128, Color.Orange));
-            var circlePen = new Pen(Color.Black);
-
-            circlePen.DashStyle = DashStyle.Custom;
-            circlePen.DashPattern = new float[] { 2, 4 };
-
-            g.FillEllipse(pegBrush, p.X - 10.0f, p.Y - 10.0f, 20.0f, 20.0f);
-            g.DrawEllipse(circlePen, p.X - 10.0f, p.Y - 10.0f, 20.0f, 20.0f);
-        }
-
-        private void ProcessPegs(Action<PointF> callback)
-        {
-            var lastPoint = new PointF(float.MinValue, float.MinValue);
-            var elements = BezierPath.GetElements();
-            for (var i = 0; i < elements.Length; i++)
-            {
-                var element = elements[i];
-                var tStep = 0.005;
-                var lengthDiff = Interval;
-                var t = 0.0;
-                while (t <= 1)
-                {
-                    var p = element.GetPoint(t);
-                    var lengthFromLastPeg = p.GetLength(lastPoint);
-                    if (lengthFromLastPeg > lengthDiff)
-                    {
-                        callback(p);
-                        lastPoint = p;
-                    }
-                    t += tStep;
-                }
-            }
-        }
-    }
-
     public class BrickCurveGenerator : CurveGenerator
     {
         public BrickCurveGenerator(Level level)
@@ -272,7 +15,40 @@ namespace IntelOrca.PeggleEdit.Tools.Levels.Children
 
         public override void Execute()
         {
+            ProcessBricks((p0, a0, p1, a1) => CreateBrick(p0, a0, p1, a1));
             Level.Entries.Remove(this);
+        }
+
+        private void CreateBrick(PointF left, float leftAngle, PointF right, float rightAngle)
+        {
+            var brick = new Brick(Level);
+            brick.PegInfo = new PegInfo(brick, true, false);
+            if (Math.Abs(leftAngle - rightAngle) < (1 / 180.0 * Math.PI))
+            {
+                brick.Length = right.GetLength(left);
+                brick.Location = new PointF(left.X + brick.Length / 2, left.Y);
+                brick.Rotation = MathExt.ToDegrees(leftAngle);
+            }
+            else
+            {
+                var b = left.GetLength(right);
+                var sectorAngle = rightAngle - leftAngle;
+                var midAngle = leftAngle + (sectorAngle / 2);
+                var radius = b / (2 * Math.Sin(sectorAngle / 2));
+                var origin = new PointF(
+                    (float)(left.X + (Math.Cos(leftAngle) * radius)),
+                    (float)(right.Y - (Math.Sin(rightAngle) * radius)));
+                var midPoint = new PointF(
+                    (float)(origin.X - (Math.Cos(midAngle) * radius)),
+                    (float)(origin.Y + (Math.Sin(midAngle) * radius)));
+
+                brick.Location = midPoint;
+                brick.Rotation = MathExt.ToDegrees((float)(midAngle + Math.PI));
+                brick.SectorAngle = MathExt.ToDegrees(Math.Abs(sectorAngle));
+                brick.InnerRadius = (float)(radius - 10);
+                brick.Curved = true;
+            }
+            Level.Entries.Add(brick);
         }
 
         public override void Draw(Graphics g)
@@ -292,6 +68,22 @@ namespace IntelOrca.PeggleEdit.Tools.Levels.Children
             }
             else
             {
+                var b = left.GetLength(right);
+                var sectorAngle = rightAngle - leftAngle;
+                var midAngle = leftAngle + (sectorAngle / 2);
+                var radius = b / (2 * Math.Sin(sectorAngle / 2));
+                var origin = new PointF(
+                    (float)(left.X + (Math.Cos(leftAngle) * radius)),
+                    (float)(right.Y - (Math.Sin(rightAngle) * radius)));
+                var midPoint = new PointF(
+                    (float)(origin.X - (Math.Cos(midAngle) * radius)),
+                    (float)(origin.Y + (Math.Sin(midAngle) * radius)));
+
+                var location = midPoint;
+                var rotation = MathExt.ToDegrees((float)(midAngle + Math.PI));
+                var sectorAngle2 = MathExt.ToDegrees(Math.Abs(sectorAngle));
+                var innerRadius = (float)(radius - 10);
+                DrawCurvedBrick(g, location, innerRadius, 20.0f, rotation, sectorAngle2);
             }
         }
 
@@ -306,6 +98,59 @@ namespace IntelOrca.PeggleEdit.Tools.Levels.Children
             g.FillRectangle(brickBrush, dest);
 
             g.Transform = new Matrix();
+        }
+
+        private void DrawCurvedBrick(Graphics g, PointF location, float length, float width, float rotation, float sectorAngle)
+        {
+            var curvePoints = 4;
+
+            var mx = new Matrix();
+            mx.RotateAt(-rotation, location);
+            g.Transform = mx;
+
+            var offset = new PointF(-10, 0);
+
+            location.X += offset.X;
+            location.Y += offset.Y;
+
+            float hangle = sectorAngle / 2.0f;
+            float hhangle = (sectorAngle / 2.0f) * (0.4f);
+            float inner_radius = length;
+            float outer_radius = inner_radius + width;
+            PointF circleCentre = new PointF(location.X - inner_radius, location.Y);
+
+            float div_angle = sectorAngle / (curvePoints - 1);
+            float cur_angle = -(sectorAngle / 2.0f);
+
+            var o_pnts = new PointF[curvePoints];
+            var i_pnts = new PointF[curvePoints];
+
+            for (int i = 0; i < curvePoints; i++)
+            {
+                o_pnts[i] = GetBrickAngularPoint(circleCentre, cur_angle, outer_radius);
+                i_pnts[i] = GetBrickAngularPoint(circleCentre, cur_angle, inner_radius);
+
+                cur_angle += div_angle;
+            }
+
+            var pnts = new PointF[o_pnts.Length + i_pnts.Length];
+            Array.Copy(o_pnts, 0, pnts, 0, o_pnts.Length);
+
+            // Inner points need to be reversed
+            for (var i = 0; i < i_pnts.Length; i++)
+            {
+                pnts[pnts.Length - i - 1] = i_pnts[i];
+            }
+
+            var brickBrush = new SolidBrush(Color.FromArgb(128, Color.Orange));
+            g.FillPolygon(brickBrush, pnts);
+            g.Transform = new Matrix();
+        }
+
+        private static PointF GetBrickAngularPoint(PointF circleCentre, float angle, float radius)
+        {
+            return new PointF((float)Math.Cos(MathExt.ToRadians(angle)) * radius + circleCentre.X,
+                (float)Math.Sin(MathExt.ToRadians(angle)) * radius + circleCentre.Y);
         }
 
         private void ProcessBricks(Action<PointF, float, PointF, float> callback)

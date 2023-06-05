@@ -10,16 +10,20 @@ namespace IntelOrca.PeggleEdit.Designer.Level_Editor
 {
     internal class PenEditorTool : EditorTool
     {
-        private BrickCurveGenerator _entry;
+        private PegKind _pegKind;
+        private CurveGenerator _entry;
 
         public BezierPath Path => _entry?.BezierPath;
 
-        public PenEditorTool()
+        public PenEditorTool(PegKind pegKind)
         {
+            _pegKind = pegKind;
         }
 
         private PenEditorTool(PenEditorTool original)
         {
+            _pegKind = original._pegKind;
+            _entry = original._entry;
         }
 
         public override void Activate()
@@ -37,7 +41,9 @@ namespace IntelOrca.PeggleEdit.Designer.Level_Editor
             {
                 case null:
                 case PenState.Initial:
-                    _entry = new BrickCurveGenerator(Editor.Level);
+                    _entry = _pegKind == PegKind.Circle ?
+                        (CurveGenerator)new PegCurveGenerator(Editor.Level) :
+                        (CurveGenerator)new BrickCurveGenerator(Editor.Level);
                     Editor.Level.Entries.Add(_entry);
 
                     Path.State = PenState.MoveDown;
@@ -166,231 +172,19 @@ namespace IntelOrca.PeggleEdit.Designer.Level_Editor
                     Path.PopPoint();
                     break;
             }
-
-            // var lastPosition = new PointF(float.MinValue, float.MinValue);
-            // var lastAngle = 0.0f;
-            // var elements = GetElements();
-            // for (var i = 0; i < elements.Length; i++)
-            // {
-            //     PegCurve(in elements[i], ref lastPosition, ref lastAngle);
-            // }
-
             Path.State = PenState.Initial;
+
+            if (Path.GetElements().Length == 0)
+            {
+                Editor.Level.Entries.Remove(_entry);
+            }
+
             _entry = null;
-        }
-
-        private void PegCurve(in PenPathElement element, ref PointF lastPoint, ref float lastAngle)
-        {
-            var tStep = 0.005;
-            if (lastPoint == new PointF(float.MinValue, float.MinValue))
-            {
-                lastPoint = element.GetPoint(0);
-                lastAngle = GetAngle(element.GetPoint(0), element.GetPoint(tStep));
-            }
-            var lastPointBackup = lastPoint;
-
-            var lengthDiff = 30;
-
-            {
-                var t = 0.0;
-                while (t <= 1)
-                {
-                    var pPrev = element.GetPoint(t - tStep);
-                    var p = element.GetPoint(t);
-                    var pNext = element.GetPoint(t + tStep);
-                    var lengthFromLastPeg = p.GetLength(lastPoint);
-                    if (lengthFromLastPeg > lengthDiff)
-                    {
-                        // var delta = pNext.Subtract(p);
-                        // var rotation = (float)(-Math.Atan2(delta.Y, delta.X) + (Math.PI / 2));
-
-                        // CreatePeg(p);
-                        // CreateBrick(p, rotation);
-                        var currentAngle = GetAngle(p, pNext);
-                        CreateBrick(lastPoint, lastAngle, p, currentAngle);
-                        lastPoint = p;
-                        lastAngle = currentAngle;
-                    }
-                    t += tStep;
-                }
-            }
-            // {
-            //     var lp = lastPointBackup;
-            //     var t = 0.0;
-            //     while (t <= 1)
-            //     {
-            //         var p = element.GetPoint(t);
-            //         var lengthFromLastPeg = p.GetLength(lp);
-            //         if (lengthFromLastPeg > lengthDiff)
-            //         {
-            //             CreateMarker(lp);
-            //             lp = p;
-            //         }
-            //         t += 0.01;
-            //     }
-            // }
-        }
-
-        private static float GetAngle(PointF p0, PointF p1)
-        {
-            var delta = p1.Subtract(p0);
-            var rotation = (float)(-Math.Atan2(delta.Y, delta.X) + (Math.PI / 2));
-            return rotation;
-        }
-
-        private void CreatePeg(PointF pos)
-        {
-            var level = Editor.Level;
-            var p = new Circle(level);
-            p.PegInfo = new PegInfo(p, true, false);
-            p.X = (int)Math.Round(pos.X);
-            p.Y = (int)Math.Round(pos.Y);
-            level.Entries.Add(p);
-        }
-
-        private void CreateMarker(PointF pos)
-        {
-            var level = Editor.Level;
-            var p = new Circle(level);
-            p.Radius = 4;
-            p.X = (int)Math.Round(pos.X);
-            p.Y = (int)Math.Round(pos.Y);
-            level.Entries.Add(p);
-        }
-
-        private void CreateBrick(PointF pos, float angle)
-        {
-            var level = Editor.Level;
-            var brick = new Brick(level);
-            brick.PegInfo = new PegInfo(brick, true, false);
-            brick.X = (int)Math.Round(pos.X);
-            brick.Y = (int)Math.Round(pos.Y);
-            brick.Rotation = MathExt.ToDegrees(angle);
-            brick.SectorAngle = 40;
-            brick.Curved = true;
-            level.Entries.Add(brick);
-        }
-
-        private void CreateBrick(PointF left, float leftAngle, PointF right, float rightAngle)
-        {
-            var level = Editor.Level;
-            var brick = new Brick(level);
-            brick.PegInfo = new PegInfo(brick, true, false);
-
-            if (Math.Abs(leftAngle - rightAngle) < (1 / 180.0 * Math.PI))
-            {
-                brick.Length = right.GetLength(left);
-                brick.Location = left.Add(right.Subtract(left));
-                brick.Rotation = MathExt.ToDegrees(leftAngle);
-            }
-            else
-            {
-                var b = left.GetLength(right);
-                var sectorAngle = rightAngle - leftAngle;
-                var midAngle = leftAngle + (sectorAngle / 2);
-                var radius = b / (2 * Math.Sin(sectorAngle / 2));
-                var origin = new PointF(
-                    (float)(left.X + (Math.Cos(leftAngle) * radius)),
-                    (float)(right.Y - (Math.Sin(rightAngle) * radius)));
-                var midPoint = new PointF(
-                    (float)(origin.X - (Math.Cos(midAngle) * radius)),
-                    (float)(origin.Y + (Math.Sin(midAngle) * radius)));
-
-                brick.Location = midPoint;
-                brick.Rotation = MathExt.ToDegrees((float)(midAngle + Math.PI));
-                brick.SectorAngle = MathExt.ToDegrees(Math.Abs(sectorAngle));
-                brick.InnerRadius = (float)(radius - 10);
-                brick.Curved = true;
-            }
-            level.Entries.Add(brick);
-
-            // var rod = new Rod(level);
-            // rod.PointA = left;
-            // rod.PointB = origin;
-            // level.Entries.Add(rod);
-        }
-
-        public override void Draw(Graphics g)
-        {
-            /*
-            var elements = GetElements();
-            for (int i = 0; i < elements.Length; i++)
-            {
-                var pen = i == elements.Length - 1 ? Pens.Red : Pens.White;
-                var el = elements[i];
-                if (el.IsLine)
-                {
-                    g.DrawLine(pen,
-                        GetVisualLocation(el.P0),
-                        GetVisualLocation(el.P1));
-                }
-                else
-                {
-                    g.DrawBezier(pen,
-                        GetVisualLocation(el.P0),
-                        GetVisualLocation(el.P1),
-                        GetVisualLocation(el.P2),
-                        GetVisualLocation(el.P3));
-                }
-            }
-
-            if (_state == PenState.CurveDown)
-            {
-                // Cv Ct Cv
-                var p0 = GetVisualLocation(_points[_points.Count - 3]);
-                var p1 = GetVisualLocation(_points[_points.Count - 2]);
-                var p2 = GetVisualLocation(_points[_points.Count - 1]);
-
-                g.FillEllipse(Brushes.Cyan, p0.X - 4, p0.Y - 4, 8, 8);
-                g.FillEllipse(Brushes.Cyan, p2.X - 4, p2.Y - 4, 8, 8);
-                g.DrawLine(Pens.Cyan, p0, p2);
-            }
-            else if (_state == PenState.CurveUp)
-            {
-                // Cv Ct Cv Ct
-                var p0 = GetVisualLocation(_points[_points.Count - 4]);
-                var p1 = GetVisualLocation(_points[_points.Count - 3]);
-                var p2 = GetVisualLocation(_points[_points.Count - 2]);
-                var p3 = GetVisualLocation(_points[_points.Count - 1]);
-
-                g.FillEllipse(Brushes.Cyan, p0.X - 4, p0.Y - 4, 8, 8);
-                g.FillEllipse(Brushes.Cyan, p2.X - 4, p2.Y - 4, 8, 8);
-                g.DrawLine(Pens.Cyan, p0, p2);
-            }
-
-            // for (int i = 0; i < _points.Count; i++)
-            // {
-            //     var c = Color.White;
-            //     switch (_pointKinds[i])
-            //     {
-            //         case PointKind.MoveTo:
-            //             c = Color.Green;
-            //             break;
-            //         case PointKind.LineTo:
-            //             c = Color.White;
-            //             break;
-            //         case PointKind.CurveTo:
-            //             c = Color.Red;
-            //             break;
-            //         case PointKind.CurveVia:
-            //             c = Color.Cyan;
-            //             break;
-            //     }
-            //     var b = new SolidBrush(c);
-            //     var p = GetVisualLocation(_points[i]);
-            //     g.FillEllipse(b, p.X - 4, p.Y - 4, 8, 8);
-            // }
-            */
         }
 
         public override object Clone()
         {
             return new PenEditorTool(this);
-        }
-
-        private PointF GetVisualLocation(PointF location)
-        {
-            return Editor.Level.GetActualXY(location);
         }
 
         private PointF GetVirtualLocation(Point location, Keys modifierKeys)
@@ -431,19 +225,6 @@ namespace IntelOrca.PeggleEdit.Designer.Level_Editor
             var newX = origin.X + delta.X;
             var newY = origin.Y + delta.Y;
             return new PointF((int)Math.Round(newX), (int)Math.Round(newY));
-        }
-    }
-
-    static class GraphicsExtensions
-    {
-        public static void DrawBezier(this Graphics g, Pen pen, PointF p0, PointF p1, PointF p2)
-        {
-            // [P1, (C*2/3 + P1 * 1/3), (C*2/3 + P2 * 1/3), P2]
-            var newP0 = p0;
-            var newP1 = new PointF(p1.X * 2 / 3 + p0.X * 1 / 3, p1.Y * 2 / 3 + p0.Y * 1 / 3);
-            var newP2 = new PointF(p1.X * 2 / 3 + p2.X * 1 / 3, p1.Y * 2 / 3 + p2.Y * 1 / 3);
-            var newP3 = p2;
-            g.DrawBezier(pen, newP0, newP1, newP2, newP3);
         }
     }
 }

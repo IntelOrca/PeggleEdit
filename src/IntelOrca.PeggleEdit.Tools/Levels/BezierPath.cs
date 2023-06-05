@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Drawing;
+using System.Text;
 
 namespace IntelOrca.PeggleEdit.Tools.Levels
 {
@@ -93,6 +94,50 @@ namespace IntelOrca.PeggleEdit.Tools.Levels
                 }
             }
             return result.ToArray();
+        }
+
+        public string Svg
+        {
+            get
+            {
+                var sb = new StringBuilder();
+                var elements = GetElements();
+                if (elements.Length != 0)
+                {
+                    var firstElement = elements[0];
+                    sb.Append("M ");
+                    sb.Append(firstElement.P2.X);
+                    sb.Append(' ');
+                    sb.Append(firstElement.P2.Y);
+
+                    foreach (var el in elements)
+                    {
+                        if (el.IsLine)
+                        {
+                            sb.Append(" L ");
+                            sb.Append(el.P1.X);
+                            sb.Append(' ');
+                            sb.Append(el.P1.Y);
+                        }
+                        else
+                        {
+                            sb.Append(" C ");
+                            sb.Append(el.P1.X);
+                            sb.Append(' ');
+                            sb.Append(el.P1.Y);
+                            sb.Append(", ");
+                            sb.Append(el.P2.X);
+                            sb.Append(' ');
+                            sb.Append(el.P2.Y);
+                            sb.Append(", ");
+                            sb.Append(el.P3.X);
+                            sb.Append(' ');
+                            sb.Append(el.P3.Y);
+                        }
+                    }
+                }
+                return sb.ToString();
+            }
         }
 
         public enum PenState
