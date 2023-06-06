@@ -25,9 +25,8 @@ namespace IntelOrca.PeggleEdit.Tools.Levels.Children
             Level.Entries.Remove(this);
         }
 
-        public override void Draw(Graphics g)
+        protected override void DrawPregeneratedItems(Graphics g)
         {
-            base.Draw(g);
             ProcessPegs(p => DrawPeg(g, p));
         }
 

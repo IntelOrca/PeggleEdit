@@ -54,9 +54,14 @@ namespace IntelOrca.PeggleEdit.Tools.Levels.Children
                 return;
 
             base.Draw(g);
+            DrawPregeneratedItems(g);
             DrawPath(g);
             DrawPoints(g);
             DrawAnchors(g);
+        }
+
+        protected virtual void DrawPregeneratedItems(Graphics g)
+        {
         }
 
         private void DrawPath(Graphics g)

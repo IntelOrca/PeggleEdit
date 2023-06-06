@@ -562,7 +562,10 @@ namespace IntelOrca.PeggleEdit.Designer
             dialog.Filter = "Supported Image Files|*.png;*.jpg|Portable Network Graphics (*.png)|*.png|Joint Photographic Experts Group (*.jpg)|*.jpg";
             if (dialog.ShowDialog() == DialogResult.OK)
             {
-                level.Background = Image.FromFile(dialog.FileName);
+                using (var fileImage = Image.FromFile(dialog.FileName))
+                {
+                    level.Background = new Bitmap(fileImage);
+                }
 
                 LevelToolWindow ltw = mParent.GetLevelToolWindow(level);
                 if (ltw != null)
