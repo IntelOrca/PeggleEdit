@@ -25,7 +25,7 @@ namespace IntelOrca.PeggleEdit.Tools.Levels.Children
             brick.PegInfo = new PegInfo(brick, true, false);
             brick.TextureFlip = b.TextureFlip;
             brick.Curved = b.Curved;
-            brick.Location = b.Location;
+            brick.Location = Location.Add(b.Location);
             brick.Width = b.Width;
             brick.Length = b.Length;
             brick.Rotation = b.Rotation;
@@ -40,12 +40,13 @@ namespace IntelOrca.PeggleEdit.Tools.Levels.Children
 
         private void DrawBrick(Graphics g, BrickData b)
         {
-            var mx = new Matrix();
+            var backupMatrix = g.Transform;
+            var m = new Matrix();
             if (b.Curved)
-                mx.RotateAt(-b.Rotation, b.Location);
+                m.RotateAt(-b.Rotation, b.Location);
             else
-                mx.RotateAt(-b.Rotation + 90.0f, new PointF(b.Location.X, b.Location.Y));
-            g.Transform = mx;
+                m.RotateAt(-b.Rotation + 90.0f, b.Location);
+            g.MultiplyTransform(m);
 
             var outerBrush = new SolidBrush(Color.FromArgb(160, 234, 140, 22));
             var innerBrush = new SolidBrush(Color.FromArgb(160, 80, 0, 0));
@@ -73,7 +74,7 @@ namespace IntelOrca.PeggleEdit.Tools.Levels.Children
                 DrawBrick2(g, b, innerBrush);
             }
 
-            g.Transform = new Matrix();
+            g.Transform = backupMatrix;
         }
 
         private void DrawBrick2(Graphics g, BrickData b, Brush brickBrush)

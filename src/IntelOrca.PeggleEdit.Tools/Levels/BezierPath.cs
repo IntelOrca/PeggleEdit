@@ -14,6 +14,14 @@ namespace IntelOrca.PeggleEdit.Tools.Levels
 
         public int NumPoints => Points.Count;
 
+        public BezierPath Clone()
+        {
+            var result = new BezierPath();
+            result.Points.AddRange(Points.ToArray());
+            result.PointKinds.AddRange(PointKinds.ToArray());
+            return result;
+        }
+
         public void PopPoint()
         {
             Points.RemoveAt(Points.Count - 1);

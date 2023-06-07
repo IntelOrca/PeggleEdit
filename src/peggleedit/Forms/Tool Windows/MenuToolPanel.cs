@@ -19,6 +19,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Drawing;
 using System.IO;
+using System.Linq;
 using System.Reflection;
 using System.Runtime.InteropServices;
 using System.Text;
@@ -935,15 +936,19 @@ namespace IntelOrca.PeggleEdit.Designer
             if (!IsEditorAvailable())
                 return;
 
-            foreach (LevelEntry le in LevelEditor.GetSelectedObjects())
+            var entries = LevelEditor.GetSelectedObjects()
+                .Cast<LevelEntry>()
+                .Where(x => x is IEntryFunction)
+                .Cast<IEntryFunction>()
+                .ToArray();
+            if (entries.Length != 0)
             {
-                IEntryFunction lef = le as IEntryFunction;
-                if (lef != null)
-                    lef.Execute();
+                LevelEditor.CreateUndoPoint();
+                foreach (var entry in entries)
+                    entry.Execute();
             }
 
-            LevelEditor.SelectedEntries.Clear();
-
+            LevelEditor.ClearSelection();
             LevelEditor.UpdateRedraw();
         }
 

@@ -54,10 +54,19 @@ namespace IntelOrca.PeggleEdit.Tools.Levels.Children
                 return;
 
             base.Draw(g);
+
+            var backupTransform = g.Transform;
+            g.TranslateTransform(Location.X, Location.Y);
+
             DrawPregeneratedItems(g);
-            DrawPath(g);
-            DrawPoints(g);
-            DrawAnchors(g);
+            if (Selected)
+            {
+                DrawPath(g);
+                DrawPoints(g);
+                DrawAnchors(g);
+            }
+
+            g.Transform = backupTransform;
         }
 
         protected virtual void DrawPregeneratedItems(Graphics g)
@@ -171,10 +180,37 @@ namespace IntelOrca.PeggleEdit.Tools.Levels.Children
         {
             var copy = new BrickCurveGenerator(Level);
             base.CloneTo(copy);
-
-            // TODO
-
+            copy.BezierPath = BezierPath.Clone();
             return copy;
+        }
+
+        public void RecalculateOrigin()
+        {
+            var avg = new PointF();
+            var avgCount = 0;
+
+            var path = BezierPath;
+            for (var i = 0; i < path.Points.Count; i++)
+            {
+                var kind = path.PointKinds[i];
+                if (kind == PointKind.MoveTo || kind == PointKind.LineTo || kind == PointKind.CurveTo)
+                {
+                    var position = path.Points[i];
+                    avg = avg.Add(position);
+                    avgCount++;
+                }
+            }
+            avg.X /= avgCount;
+            avg.Y /= avgCount;
+
+            var diff = Location.Subtract(avg);
+            for (var i = 0; i < path.Points.Count; i++)
+            {
+                var position = path.Points[i];
+                path.Points[i] = position.Add(diff);
+            }
+
+            Location = avg;
         }
 
         [DisplayName("Interval")]
@@ -218,6 +254,7 @@ namespace IntelOrca.PeggleEdit.Tools.Levels.Children
 
                 var result = RectangleF.FromLTRB(minX, minY, maxX, maxY);
                 result.Inflate(8, 8);
+                result.Offset(Location);
                 return result;
             }
         }

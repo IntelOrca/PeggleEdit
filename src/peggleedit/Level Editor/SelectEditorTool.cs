@@ -19,6 +19,7 @@ using System.Collections.Generic;
 using System.Drawing;
 using System.Windows.Forms;
 using IntelOrca.PeggleEdit.Designer.Properties;
+using IntelOrca.PeggleEdit.Tools;
 using IntelOrca.PeggleEdit.Tools.Levels;
 using IntelOrca.PeggleEdit.Tools.Levels.Children;
 
@@ -174,20 +175,21 @@ namespace IntelOrca.PeggleEdit.Designer
             }
             else if (mMovingObjects)
             {
-                //Create undo point if first call
-                if (mFirstObjectMovement)
+                // Calculate the delta by how much the mouse has moved
+                var delta = location.Subtract(mSelectionStart);
+                if (!delta.IsEmpty)
                 {
-                    Editor.CreateUndoPoint();
-                    mFirstObjectMovement = false;
+                    // Create undo point if first call
+                    if (mFirstObjectMovement)
+                    {
+                        Editor.CreateUndoPoint();
+                        mFirstObjectMovement = false;
+                    }
+
+                    MoveSelectingObjectsBy(delta.X, delta.Y, true);
+
+                    Editor.UpdateRedraw();
                 }
-
-                //Calculate the delta by how much the mouse has moved
-                int dx = location.X - mSelectionStart.X;
-                int dy = location.Y - mSelectionStart.Y;
-
-                MoveSelectingObjectsBy(dx, dy, true);
-
-                Editor.UpdateRedraw();
             }
         }
 

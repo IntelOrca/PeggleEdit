@@ -19,7 +19,7 @@ namespace IntelOrca.PeggleEdit.Tools.Levels.Children
             {
                 var peg = new Circle(Level);
                 peg.PegInfo = new PegInfo(peg, true, false);
-                peg.Location = new PointF((int)p.X, (int)p.Y);
+                peg.Location = Location.Add(new PointF(p.X, p.Y)).Round();
                 Level.Entries.Add(peg);
             });
             Level.Entries.Remove(this);

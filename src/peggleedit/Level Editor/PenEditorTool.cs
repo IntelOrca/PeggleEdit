@@ -48,6 +48,8 @@ namespace IntelOrca.PeggleEdit.Designer.Level_Editor
                         (CurveGenerator)new PegCurveGenerator(Editor.Level) :
                         (CurveGenerator)new BrickCurveGenerator(Editor.Level);
                     Editor.Level.Entries.Add(_entry);
+                    Editor.ClearSelection();
+                    Editor.AddToSelection(_entry);
 
                     Path.State = PenState.MoveDown;
                     Path.PushPoint(PointKind.MoveTo, virtualLocation);
@@ -182,6 +184,10 @@ namespace IntelOrca.PeggleEdit.Designer.Level_Editor
             if (Path.GetElements().Length == 0)
             {
                 Editor.Level.Entries.Remove(_entry);
+            }
+            else
+            {
+                _entry.RecalculateOrigin();
             }
 
             _entry = null;
