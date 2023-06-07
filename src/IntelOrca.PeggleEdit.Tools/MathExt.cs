@@ -19,6 +19,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Drawing;
+using IntelOrca.PeggleEdit.Tools.Levels.Children;
 
 namespace IntelOrca.PeggleEdit.Tools
 {
@@ -80,6 +81,24 @@ namespace IntelOrca.PeggleEdit.Tools
         public static float ToRadians(float deg)
         {
             return deg / 180.0f * (float)Math.PI;
+        }
+
+        public static float RadiansDistance(float a, float b)
+        {
+            var rotationDelta = Math.Abs(a - b);
+            var delta2 = Math.Abs(a - (b - (2 * (float)Math.PI)));
+            var delta3 = Math.Abs(a - (b + (2 * (float)Math.PI)));
+            var minDelta = Math.Min(rotationDelta, Math.Min(delta2, delta3));
+            return minDelta;
+        }
+
+        public static float DegreesDistance(float a, float b)
+        {
+            var rotationDelta = Math.Abs(a - b);
+            var delta2 = Math.Abs(a - (b - 360));
+            var delta3 = Math.Abs(a - (b + 360));
+            var minDelta = Math.Min(rotationDelta, Math.Min(delta2, delta3));
+            return minDelta;
         }
     }
 }

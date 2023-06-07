@@ -155,16 +155,13 @@ namespace IntelOrca.PeggleEdit.Tools.Levels.Children
                     if (lengthFromLastPeg > lengthDiff)
                     {
                         var pNext = element.GetPoint(t + tStep);
+                        var currentAngle = GetAngle(p, pNext);
                         var pDelta = p.Subtract(lastPoint);
                         var pActual = lastActualPoint.Add(pDelta);
-                        var currentAngle = GetAngle(p, pNext);
                         var brick = CreateBrick(lastActualPoint, lastAngle, ref pActual, currentAngle);
                         if (lastBrick != null)
                         {
-                            var rotationDelta = Math.Abs(brick.Rotation - lastBrick.Value.Rotation);
-                            var delta2 = Math.Abs(brick.Rotation - (lastBrick.Value.Rotation - 360));
-                            var delta3 = Math.Abs(brick.Rotation - (lastBrick.Value.Rotation + 360));
-                            var minDelta = Math.Min(rotationDelta, Math.Min(delta2, delta3));
+                            var minDelta = MathExt.DegreesDistance(brick.Rotation, lastBrick.Value.Rotation);
                             if (minDelta > 90)
                             {
                                 brick.TextureFlip = !lastBrick.Value.TextureFlip;
