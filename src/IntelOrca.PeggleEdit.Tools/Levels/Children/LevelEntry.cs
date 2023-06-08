@@ -337,6 +337,16 @@ namespace IntelOrca.PeggleEdit.Tools.Levels.Children
             WriteData(bw, version);
         }
 
+        public bool HitTest(PointF position)
+        {
+            return HitTest(new RectangleF(position.X, position.Y, 1, 1));
+        }
+
+        public virtual bool HitTest(RectangleF rect)
+        {
+            return Bounds.IntersectsWith(rect);
+        }
+
         public override string ToString()
         {
             return String.Format("{0}, ({1}, {2})", this.GetType().Name, X, Y);

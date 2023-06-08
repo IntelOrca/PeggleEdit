@@ -239,6 +239,7 @@ namespace IntelOrca.PeggleEdit.Designer
                     }
 
                     path.Points[_pointMoveIndex] = _objectPoints[0].Add(delta);
+                    cg.InvalidatePath();
                     Editor.UpdateRedraw();
                     break;
                 }

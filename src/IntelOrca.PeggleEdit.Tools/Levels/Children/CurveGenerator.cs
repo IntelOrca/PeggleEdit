@@ -211,6 +211,12 @@ namespace IntelOrca.PeggleEdit.Tools.Levels.Children
             }
 
             Location = avg;
+
+            InvalidatePath();
+        }
+
+        public virtual void InvalidatePath()
+        {
         }
 
         [DisplayName("Interval")]

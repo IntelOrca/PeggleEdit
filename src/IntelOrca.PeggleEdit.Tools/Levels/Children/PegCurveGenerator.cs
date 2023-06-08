@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Drawing;
 using System.Drawing.Drawing2D;
 
@@ -6,12 +7,19 @@ namespace IntelOrca.PeggleEdit.Tools.Levels.Children
 {
     public class PegCurveGenerator : CurveGenerator
     {
+        private readonly List<PointF> _cache = new List<PointF>();
+
         public PegCurveGenerator(Level level)
             : base(level)
         {
         }
 
         public override int Type => LevelEntryTypes.PegCurveGenerator;
+
+        public override void InvalidatePath()
+        {
+            _cache.Clear();
+        }
 
         public override void Execute()
         {
@@ -44,6 +52,15 @@ namespace IntelOrca.PeggleEdit.Tools.Levels.Children
 
         private void ProcessPegs(Action<PointF> callback)
         {
+            if (_cache.Count != 0)
+            {
+                foreach (var b in _cache)
+                {
+                    callback(b);
+                }
+                return;
+            }
+
             var lastPoint = new PointF(float.MinValue, float.MinValue);
             var elements = BezierPath.GetElements();
             for (var i = 0; i < elements.Length; i++)
@@ -58,12 +75,29 @@ namespace IntelOrca.PeggleEdit.Tools.Levels.Children
                     var lengthFromLastPeg = p.GetLength(lastPoint);
                     if (lengthFromLastPeg > lengthDiff)
                     {
+                        _cache.Add(p);
                         callback(p);
                         lastPoint = p;
                     }
                     t += tStep;
                 }
             }
+        }
+
+        public override bool HitTest(RectangleF rect)
+        {
+            var result = false;
+            ProcessPegs(p => {
+                var pRect = new RectangleF();
+                pRect.Offset(Location);
+                pRect.Offset(p);
+                pRect.Inflate(10, 10);
+                if (rect.IntersectsWith(pRect))
+                {
+                    result = true;
+                }
+            });
+            return result;
         }
     }
 }

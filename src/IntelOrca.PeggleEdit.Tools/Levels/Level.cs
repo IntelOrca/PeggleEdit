@@ -286,8 +286,7 @@ namespace IntelOrca.PeggleEdit.Tools.Levels
             LevelEntryCollection entries = new LevelEntryCollection();
             foreach (LevelEntry le in mEntries)
             {
-                RectangleF pBounds = le.Bounds;
-                if (pBounds.IntersectsWith(rect))
+                if (le.HitTest(rect))
                 {
                     entries.Add(le);
                 }
@@ -300,89 +299,9 @@ namespace IntelOrca.PeggleEdit.Tools.Levels
         {
             foreach (LevelEntry le in mEntries)
             {
-                RectangleF pBounds = le.Bounds;
-                if (pBounds.IntersectsWith(rect))
+                if (le.HitTest(rect))
                 {
                     return true;
-                }
-            }
-
-            return false;
-        }
-
-        public LevelEntry GetPegAt(float x, float y)
-        {
-            foreach (LevelEntry le in mEntries)
-            {
-                if (le.HasPegInfo)
-                {
-                    RectangleF pBounds = new RectangleF(le.X - 10, le.Y - 10, 20, 20);
-                    if (pBounds.Contains(x, y))
-                    {
-                        return le;
-                    }
-                }
-                else if (le is Brick)
-                {
-                    Brick b = (Brick)le;
-                    RectangleF bBounds = new RectangleF(b.X - (b.Width / 2), b.Y - (b.Width / 2), b.Width, b.Width);
-                    if (bBounds.Contains(x, y))
-                    {
-                        return b;
-                    }
-                }
-            }
-
-            return null;
-        }
-
-        public LevelEntry[] GetPegsIn(RectangleF rect)
-        {
-            LevelEntryCollection entries = new LevelEntryCollection();
-            foreach (LevelEntry le in mEntries)
-            {
-                if (le.HasPegInfo)
-                {
-                    RectangleF pBounds = new RectangleF(le.X - 10, le.Y - 10, 20, 20);
-                    if (pBounds.IntersectsWith(rect))
-                    {
-                        entries.Add(le);
-                    }
-                }
-                else if (le is Brick)
-                {
-                    Brick b = (Brick)le;
-                    RectangleF bBounds = new RectangleF(b.X - (b.Width / 2), b.Y - (b.Width / 2), b.Width, b.Width);
-                    if (bBounds.IntersectsWith(rect))
-                    {
-                        entries.Add(b);
-                    }
-                }
-            }
-
-            return entries.ToArray();
-        }
-
-        public bool IsPegIn(RectangleF rect)
-        {
-            foreach (LevelEntry le in mEntries)
-            {
-                if (le.HasPegInfo)
-                {
-                    RectangleF pBounds = new RectangleF(le.X - 10, le.Y - 10, 20, 20);
-                    if (pBounds.IntersectsWith(rect))
-                    {
-                        return true;
-                    }
-                }
-                else if (le is Brick)
-                {
-                    Brick b = (Brick)le;
-                    RectangleF bBounds = new RectangleF(b.X - (b.Width / 2), b.Y - (b.Width / 2), b.Width, b.Width);
-                    if (bBounds.IntersectsWith(rect))
-                    {
-                        return true;
-                    }
                 }
             }
 

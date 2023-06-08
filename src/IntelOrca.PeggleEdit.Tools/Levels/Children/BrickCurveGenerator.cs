@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Drawing;
 using System.Drawing.Drawing2D;
 
@@ -6,12 +7,19 @@ namespace IntelOrca.PeggleEdit.Tools.Levels.Children
 {
     public class BrickCurveGenerator : CurveGenerator
     {
+        private List<BrickData> _cache = new List<BrickData>();
+
+        public override int Type => LevelEntryTypes.BrickCurveGenerator;
+
         public BrickCurveGenerator(Level level)
             : base(level)
         {
         }
 
-        public override int Type => LevelEntryTypes.BrickCurveGenerator;
+        public override void InvalidatePath()
+        {
+            _cache.Clear();
+        }
 
         public override void Execute()
         {
@@ -133,8 +141,35 @@ namespace IntelOrca.PeggleEdit.Tools.Levels.Children
                 (float)Math.Sin(MathExt.ToRadians(angle)) * radius + circleCentre.Y);
         }
 
+        public override bool HitTest(RectangleF rect)
+        {
+            var result = false;
+            ProcessBricks(b => {
+                var bSize = b.Width;
+
+                var bRect = new RectangleF();
+                bRect.Offset(Location);
+                bRect.Offset(b.Location);
+                bRect.Inflate(bSize, bSize);
+                if (rect.IntersectsWith(bRect))
+                {
+                    result = true;
+                }
+            });
+            return result;
+        }
+
         private void ProcessBricks(Action<BrickData> callback)
         {
+            if (_cache.Count != 0)
+            {
+                foreach (var b in _cache)
+                {
+                    callback(b);
+                }
+                return;
+            }
+
             var elements = BezierPath.GetElements();
             if (elements.Length == 0)
                 return;

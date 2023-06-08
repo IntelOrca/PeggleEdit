@@ -111,6 +111,8 @@ namespace IntelOrca.PeggleEdit.Designer.Level_Editor
                     }
                     break;
             }
+
+            _entry?.InvalidatePath();
             Editor.UpdateRedraw();
         }
 
@@ -156,6 +158,7 @@ namespace IntelOrca.PeggleEdit.Designer.Level_Editor
                     Path.State = PenState.LineUp;
                     break;
             }
+            _entry?.InvalidatePath();
             Editor.UpdateRedraw();
         }
 
