@@ -18,7 +18,7 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Drawing;
-using System.Drawing.Imaging;
+using System.Drawing.Drawing2D;
 using System.IO;
 using System.Runtime.InteropServices;
 using System.Windows.Forms;
@@ -562,7 +562,27 @@ namespace IntelOrca.PeggleEdit.Designer
             dialog.Filter = "Supported Image Files|*.png;*.jpg|Portable Network Graphics (*.png)|*.png|Joint Photographic Experts Group (*.jpg)|*.jpg";
             if (dialog.ShowDialog() == DialogResult.OK)
             {
-                level.Background = Image.FromFile(dialog.FileName);
+                using (var fileImage = Image.FromFile(dialog.FileName))
+                {
+                    var bitmap = new Bitmap(800, 600);
+                    using (var g = Graphics.FromImage(bitmap))
+                    {
+                        g.SmoothingMode = SmoothingMode.HighQuality;
+
+                        // Calculate the zoomed crop rectangle
+                        var zoomFactor = Math.Max((float)bitmap.Width / fileImage.Width, (float)bitmap.Height / fileImage.Height);
+                        var zoomedWidth = (int)(fileImage.Width * zoomFactor);
+                        var zoomedHeight = (int)(fileImage.Height * zoomFactor);
+                        var zoomedX = (bitmap.Width - zoomedWidth) / 2;
+                        var zoomedY = (bitmap.Height - zoomedHeight) / 2;
+                        g.DrawImage(
+                            fileImage,
+                            new Rectangle(zoomedX, zoomedY, zoomedWidth, zoomedHeight),
+                            new Rectangle(0, 0, fileImage.Width, fileImage.Height),
+                            GraphicsUnit.Pixel);
+                    }
+                    level.Background = bitmap;
+                }
 
                 LevelToolWindow ltw = mParent.GetLevelToolWindow(level);
                 if (ltw != null)

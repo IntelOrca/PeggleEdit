@@ -19,39 +19,64 @@ using System.Collections.Generic;
 using System.Drawing;
 using System.Windows.Forms;
 using IntelOrca.PeggleEdit.Designer.Properties;
-using IntelOrca.PeggleEdit.Tools.Levels;
+using IntelOrca.PeggleEdit.Tools;
 using IntelOrca.PeggleEdit.Tools.Levels.Children;
 
 namespace IntelOrca.PeggleEdit.Designer
 {
     class SelectEditorTool : EditorTool
     {
-        Point mSelectionStart;
-        Rectangle mSelectionRect;
-        List<PointF> mObjectPoints = new List<PointF>();
-        LevelEntry mDragObject;
-        bool mFirstObjectMovement;
-        bool mMovingObjects;
-        bool mSelecting;
-        List<LevelEntry> mPreviousSelection = new List<LevelEntry>();
+        private State _state;
+        private Point _selectionStart;
+        private Rectangle _selectionRect;
+        private List<PointF> _objectPoints = new List<PointF>();
+        private LevelEntry _dragObject;
+        private bool _firstObjectMovement;
+        private List<LevelEntry> _previousSelection = new List<LevelEntry>();
+        private int _pointMoveIndex;
 
         public override void MouseDown(MouseButtons button, Point location, Keys modifierKeys)
         {
-            Level level = Editor.Level;
+            var level = Editor.Level;
+            var vl = Editor.Level.GetVirtualXY(location);
 
-            Point vl = Editor.Level.GetVirtualXY(location);
+            // Check if dragging a curve generator point
+            foreach (LevelEntry e in Editor.SelectedEntries)
+            {
+                if (e is CurveGenerator cg)
+                {
+                    var path = cg.BezierPath;
+                    for (var i = 0; i < path.NumPoints; i++)
+                    {
+                        var rect = new RectangleF();
+                        rect.Offset(path.Points[i].Add(cg.Location));
+                        rect.Inflate(8, 8);
+                        if (rect.Contains(vl))
+                        {
+                            _selectionStart = location;
+                            _dragObject = e;
+                            _pointMoveIndex = i;
+                            _firstObjectMovement = true;
+                            _objectPoints.Clear();
+                            _objectPoints.Add(path.Points[i]);
+                            _state = State.MovingPoints;
+                            return;
+                        }
+                    }
+                }
+            }
 
-            //Get the pegs at this point
+            // Get the pegs at this point
             LevelEntry[] les = level.GetObjectsIn(new RectangleF(vl.X, vl.Y, 1, 1));
 
-            //Get top most object
+            // Get top most object
             LevelEntry top_le = null;
             if (les.Length > 0)
             {
                 top_le = les[les.Length - 1];
             }
 
-            //Select the one thats already selected if possible
+            // Select the one thats already selected if possible
             LevelEntry le = null;
             foreach (LevelEntry entry in les)
             {
@@ -65,11 +90,11 @@ namespace IntelOrca.PeggleEdit.Designer
             if (top_le != le)
                 le = null;
 
-            //Select whatever one is there
+            // Select whatever one is there
             if (le == null && les.Length > 0)
                 le = top_le;
 
-            //Did we click on an object
+            // Did we click on an object
             if (le != null)
             {
                 if (Editor.SelectedEntries.Contains(le))
@@ -79,50 +104,50 @@ namespace IntelOrca.PeggleEdit.Designer
                 }
                 else
                 {
-                    //Unless control is down, clear selection
+                    // Unless control is down, clear selection
                     if ((modifierKeys & Keys.Control) == 0)
                         Editor.SelectedEntries.Clear();
 
-                    //Add the new peg to the selection
+                    // Add the new peg to the selection
                     Editor.SelectedEntries.Add(le);
                 }
 
                 if (button == MouseButtons.Left && (modifierKeys & Keys.Control) == 0)
                 {
                     //Set the selection start to here
-                    mSelectionStart = location;
+                    _selectionStart = location;
 
                     //Store all the original poisitons of the objects
-                    mObjectPoints.Clear();
+                    _objectPoints.Clear();
                     for (int i = 0; i < Editor.SelectedEntries.Count; i++)
                     {
                         LevelEntry objs = Editor.SelectedEntries[i];
-                        mObjectPoints.Add(new PointF(objs.X, objs.Y));
+                        _objectPoints.Add(new PointF(objs.X, objs.Y));
                     }
 
                     //We are moving the pegs
-                    mDragObject = le;
-                    mMovingObjects = true;
-                    mFirstObjectMovement = true;
+                    _dragObject = le;
+                    _state = State.MovingObjects;
+                    _firstObjectMovement = true;
                 }
             }
             else
             {
-                //Unless control is down, clear selection
+                // Unless control is down, clear selection
                 if ((modifierKeys & Keys.Control) == 0)
                 {
-                    mPreviousSelection.Clear();
+                    _previousSelection.Clear();
                     Editor.SelectedEntries.Clear();
                 }
                 else
                 {
-                    mPreviousSelection.Clear();
-                    mPreviousSelection.AddRange(Editor.SelectedEntries.ToArray());
+                    _previousSelection.Clear();
+                    _previousSelection.AddRange(Editor.SelectedEntries.ToArray());
                 }
 
-                //Start selection rectangle
-                mSelectionStart = location;
-                mSelecting = true;
+                // Start selection rectangle
+                _selectionStart = location;
+                _state = State.Selecting;
             }
 
             Editor.UpdateRedraw();
@@ -136,58 +161,88 @@ namespace IntelOrca.PeggleEdit.Designer
             if (button != MouseButtons.Left)
                 return;
 
-            if (mSelecting)
+            switch (_state)
             {
-                if (location.X < mSelectionStart.X)
+                case State.Selecting:
                 {
-                    mSelectionRect.X = location.X;
-                    mSelectionRect.Width = mSelectionStart.X - location.X;
+                    if (location.X < _selectionStart.X)
+                    {
+                        _selectionRect.X = location.X;
+                        _selectionRect.Width = _selectionStart.X - location.X;
+                    }
+                    else
+                    {
+                        _selectionRect.X = _selectionStart.X;
+                        _selectionRect.Width = location.X - _selectionStart.X;
+                    }
+
+                    if (location.Y < _selectionStart.Y)
+                    {
+                        _selectionRect.Y = location.Y;
+                        _selectionRect.Height = _selectionStart.Y - location.Y;
+                    }
+                    else
+                    {
+                        _selectionRect.Y = _selectionStart.Y;
+                        _selectionRect.Height = location.Y - _selectionStart.Y;
+                    }
+
+                    Editor.SelectedEntries.Clear();
+                    Editor.SelectedEntries.AddRange(_previousSelection);
+
+                    var vl = Editor.Level.GetVirtualXY(_selectionRect.Location);
+                    Editor.SelectedEntries.AddRange(Editor.Level.GetObjectsIn(new RectangleF(
+                         vl.X, vl.Y,
+                         _selectionRect.Width, _selectionRect.Height)));
+
+                    Editor.UpdateRedraw();
+                    Editor.CheckSelectionChanged();
+                    break;
                 }
-                else
+                case State.MovingObjects:
                 {
-                    mSelectionRect.X = mSelectionStart.X;
-                    mSelectionRect.Width = location.X - mSelectionStart.X;
-                }
+                    // Calculate the delta by how much the mouse has moved
+                    var delta = location.Subtract(_selectionStart);
+                    if (delta.IsEmpty)
+                        break;
 
-                if (location.Y < mSelectionStart.Y)
+                    // Create undo point if first call
+                    if (_firstObjectMovement)
+                    {
+                        Editor.CreateUndoPoint();
+                        _firstObjectMovement = false;
+                    }
+
+                    MoveSelectingObjectsBy(delta.X, delta.Y, true);
+
+                    Editor.UpdateRedraw();
+                    break;
+                }
+                case State.MovingPoints:
                 {
-                    mSelectionRect.Y = location.Y;
-                    mSelectionRect.Height = mSelectionStart.Y - location.Y;
+                    if (!(_dragObject is CurveGenerator cg))
+                        break;
+
+                    var path = cg.BezierPath;
+                    if (_pointMoveIndex < 0 || _pointMoveIndex >= path.NumPoints)
+                        break;
+
+                    var delta = location.Subtract(_selectionStart);
+                    if (delta.IsEmpty)
+                        break;
+
+                    // Create undo point if first call
+                    if (_firstObjectMovement)
+                    {
+                        Editor.CreateUndoPoint();
+                        _firstObjectMovement = false;
+                    }
+
+                    path.Points[_pointMoveIndex] = _objectPoints[0].Add(delta);
+                    cg.InvalidatePath();
+                    Editor.UpdateRedraw();
+                    break;
                 }
-                else
-                {
-                    mSelectionRect.Y = mSelectionStart.Y;
-                    mSelectionRect.Height = location.Y - mSelectionStart.Y;
-                }
-
-                Editor.SelectedEntries.Clear();
-                Editor.SelectedEntries.AddRange(mPreviousSelection);
-
-                Point vl = Editor.Level.GetVirtualXY(mSelectionRect.Location);
-
-                Editor.SelectedEntries.AddRange(Editor.Level.GetObjectsIn(new RectangleF(
-                     vl.X, vl.Y,
-                     mSelectionRect.Width, mSelectionRect.Height)));
-
-                Editor.UpdateRedraw();
-                Editor.CheckSelectionChanged();
-            }
-            else if (mMovingObjects)
-            {
-                //Create undo point if first call
-                if (mFirstObjectMovement)
-                {
-                    Editor.CreateUndoPoint();
-                    mFirstObjectMovement = false;
-                }
-
-                //Calculate the delta by how much the mouse has moved
-                int dx = location.X - mSelectionStart.X;
-                int dy = location.Y - mSelectionStart.Y;
-
-                MoveSelectingObjectsBy(dx, dy, true);
-
-                Editor.UpdateRedraw();
             }
         }
 
@@ -198,11 +253,11 @@ namespace IntelOrca.PeggleEdit.Designer
                 LevelEntry obj = Editor.SelectedEntries[i];
 
                 //Calculate the new x and y with the delta
-                float newX = mObjectPoints[i].X + deltaX;
-                float newY = mObjectPoints[i].Y + deltaY;
+                float newX = _objectPoints[i].X + deltaX;
+                float newY = _objectPoints[i].Y + deltaY;
 
                 //Snap if it is the dragged object
-                if (snap && (Settings.Default.SnapToGrid & Settings.Default.ShowGrid) && obj == mDragObject)
+                if (snap && (Settings.Default.SnapToGrid & Settings.Default.ShowGrid) && obj == _dragObject)
                 {
                     float snapX = Editor.SnapToGrid(newX);
                     float snapY = Editor.SnapToGrid(newY);
@@ -211,8 +266,8 @@ namespace IntelOrca.PeggleEdit.Designer
                     if (snapX != newX || snapY != newY)
                     {
                         //Calculate delta
-                        deltaX = (int)(snapX - mObjectPoints[i].X);
-                        deltaY = (int)(snapY - mObjectPoints[i].Y);
+                        deltaX = (int)(snapX - _objectPoints[i].X);
+                        deltaY = (int)(snapY - _objectPoints[i].Y);
 
                         //Move the selected objects by delta
                         MoveSelectingObjectsBy(deltaX, deltaY, false);
@@ -235,9 +290,8 @@ namespace IntelOrca.PeggleEdit.Designer
                 return;
             }
 
-            mMovingObjects = false;
-            mSelecting = false;
-            mSelectionRect = Rectangle.Empty;
+            _state = State.None;
+            _selectionRect = Rectangle.Empty;
 
             Editor.UpdateRedraw();
             Editor.InvokeSelectionChangedEvent();
@@ -245,12 +299,10 @@ namespace IntelOrca.PeggleEdit.Designer
 
         public override void Draw(Graphics g)
         {
-            Rectangle rect;
-
-            //Draw the mouse selection
-            if (mSelecting)
+            // Draw the mouse selection
+            if (_state == State.Selecting)
             {
-                rect = mSelectionRect;
+                var rect = _selectionRect;
                 g.FillRectangle(new SolidBrush(Color.FromArgb(40, 255, 255, 255)), rect);
                 g.DrawRectangle(Pens.CornflowerBlue, rect);
 
@@ -325,5 +377,13 @@ namespace IntelOrca.PeggleEdit.Designer
         }
 
         #endregion
+
+        private enum State
+        {
+            None,
+            Selecting,
+            MovingObjects,
+            MovingPoints,
+        }
     }
 }

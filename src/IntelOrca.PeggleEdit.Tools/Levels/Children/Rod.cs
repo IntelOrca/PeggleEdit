@@ -214,7 +214,7 @@ namespace IntelOrca.PeggleEdit.Tools.Levels.Children
         {
             get
             {
-                return 2;
+                return LevelEntryTypes.Rod;
             }
         }
     }

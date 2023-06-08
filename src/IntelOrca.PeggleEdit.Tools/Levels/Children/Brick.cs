@@ -584,7 +584,7 @@ namespace IntelOrca.PeggleEdit.Tools.Levels.Children
         {
             get
             {
-                return 6;
+                return LevelEntryTypes.Brick;
             }
         }
 

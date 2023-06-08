@@ -235,7 +235,7 @@ namespace IntelOrca.PeggleEdit.Tools.Levels.Children
         {
             get
             {
-                return 1001;
+                return LevelEntryTypes.PegGenerator;
             }
         }
 

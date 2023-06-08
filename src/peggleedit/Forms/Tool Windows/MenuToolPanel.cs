@@ -19,11 +19,14 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Drawing;
 using System.IO;
+using System.Linq;
 using System.Reflection;
 using System.Runtime.InteropServices;
 using System.Text;
 using System.Windows.Forms;
+using IntelOrca.PeggleEdit.Designer.Level_Editor;
 using IntelOrca.PeggleEdit.Designer.Properties;
+using IntelOrca.PeggleEdit.Tools;
 using IntelOrca.PeggleEdit.Tools.Levels;
 using IntelOrca.PeggleEdit.Tools.Levels.Children;
 
@@ -81,6 +84,8 @@ namespace IntelOrca.PeggleEdit.Designer
         RibbonButton btnSelectTool;
         RibbonButton btnPegTool;
         RibbonButton btnBrickTool;
+        RibbonButton btnPegPenTool;
+        RibbonButton btnBrickPenTool;
         RibbonButton btnCircle;
         RibbonButton btnPolygon;
         RibbonButton btnRod;
@@ -315,6 +320,14 @@ namespace IntelOrca.PeggleEdit.Designer
             btnBrickTool.Image = Resources.brick_32;
             btnBrickTool.Click += new EventHandler(brickRibbonButton_Click);
 
+            btnPegPenTool = new RibbonButton("Peg Pen");
+            btnPegPenTool.Image = Resources.peg_32;
+            btnPegPenTool.Click += new EventHandler(pegPenRibbonButton_Click);
+
+            btnBrickPenTool = new RibbonButton("Brick Pen");
+            btnBrickPenTool.Image = Resources.brick_32;
+            btnBrickPenTool.Click += new EventHandler(brickPenRibbonButton_Click);
+
             btnCircle = new RibbonButton("Circle");
             btnCircle.Image = Resources.material_32;
             btnCircle.Click += new EventHandler(circleRibbonButton_Click);
@@ -354,6 +367,8 @@ namespace IntelOrca.PeggleEdit.Designer
             panelInsert.Items.Add(btnSelectTool);
             panelInsert.Items.Add(btnPegTool);
             panelInsert.Items.Add(btnBrickTool);
+            panelInsert.Items.Add(btnPegPenTool);
+            panelInsert.Items.Add(btnBrickPenTool);
             panelInsert.Items.Add(btnCircle);
             panelInsert.Items.Add(btnPolygon);
             panelInsert.Items.Add(btnRod);
@@ -822,6 +837,22 @@ namespace IntelOrca.PeggleEdit.Designer
             mParent.SetEditorTool(new DrawEditorTool(brick, true, 38, 38));
         }
 
+        private void pegPenRibbonButton_Click(object sender, EventArgs e)
+        {
+            UnselectAllTools();
+            btnPegPenTool.Checked = true;
+
+            mParent.SetEditorTool(new PenEditorTool(PegKind.Circle));
+        }
+
+        private void brickPenRibbonButton_Click(object sender, EventArgs e)
+        {
+            UnselectAllTools();
+            btnBrickPenTool.Checked = true;
+
+            mParent.SetEditorTool(new PenEditorTool(PegKind.Brick));
+        }
+
         private void circleRibbonButton_Click(object sender, EventArgs e)
         {
             UnselectAllTools();
@@ -905,15 +936,19 @@ namespace IntelOrca.PeggleEdit.Designer
             if (!IsEditorAvailable())
                 return;
 
-            foreach (LevelEntry le in LevelEditor.GetSelectedObjects())
+            var entries = LevelEditor.GetSelectedObjects()
+                .Cast<LevelEntry>()
+                .Where(x => x is IEntryFunction)
+                .Cast<IEntryFunction>()
+                .ToArray();
+            if (entries.Length != 0)
             {
-                IEntryFunction lef = le as IEntryFunction;
-                if (lef != null)
-                    lef.Execute();
+                LevelEditor.CreateUndoPoint();
+                foreach (var entry in entries)
+                    entry.Execute();
             }
 
-            LevelEditor.SelectedEntries.Clear();
-
+            LevelEditor.ClearSelection();
             LevelEditor.UpdateRedraw();
         }
 
@@ -1243,6 +1278,8 @@ namespace IntelOrca.PeggleEdit.Designer
             btnSelectTool.Checked = false;
             btnPegTool.Checked = false;
             btnBrickTool.Checked = false;
+            btnPegPenTool.Checked = false;
+            btnBrickPenTool.Checked = false;
             btnCircle.Checked = false;
             btnPolygon.Checked = false;
             btnRod.Checked = false;
