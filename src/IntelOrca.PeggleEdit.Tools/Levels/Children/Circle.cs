@@ -19,6 +19,7 @@ using System.ComponentModel;
 using System.Drawing;
 using System.IO;
 using IntelOrca.PeggleEdit.Tools.Pack;
+using IntelOrca.PeggleEdit.Tools.Properties;
 
 namespace IntelOrca.PeggleEdit.Tools.Levels.Children
 {
@@ -120,7 +121,7 @@ namespace IntelOrca.PeggleEdit.Tools.Levels.Children
             {
                 if (Collision)
                 {
-                    //Draw the collision white circle
+                    // Draw the collision white circle
                     g.FillEllipse(Brushes.White, drawbounds);
                 }
             }
@@ -128,14 +129,31 @@ namespace IntelOrca.PeggleEdit.Tools.Levels.Children
             {
                 if (HasPegInfo)
                 {
-                    //Draw the PeggleEdit style peg
-                    g.FillEllipse(new SolidBrush(PegInfo.GetOuterColour()), drawbounds);
-                    drawbounds.Inflate(-2, -2);
-                    g.FillEllipse(new SolidBrush(PegInfo.GetInnerColour()), drawbounds);
+                    if (Level.UsePegTextures)
+                    {
+                        var srcRect = new Rectangle(0, 0, 20, 20);
+                        if (!Level.ShowPreview)
+                        {
+                            if (PegInfo.CanBeOrange)
+                                srcRect.Y += 20;
+                            if (PegInfo.QuickDisappear)
+                                srcRect.Y += 80;
+                        }
+
+                        var dstRect = drawbounds;
+                        g.DrawImage(Resources.peg, dstRect, srcRect, GraphicsUnit.Pixel);
+                    }
+                    else
+                    {
+                        // Draw the PeggleEdit style peg
+                        g.FillEllipse(new SolidBrush(PegInfo.GetOuterColour()), drawbounds);
+                        drawbounds.Inflate(-2, -2);
+                        g.FillEllipse(new SolidBrush(PegInfo.GetInnerColour()), drawbounds);
+                    }
                 }
                 else
                 {
-                    //Draw the circle image
+                    // Draw the circle image
                     g.DrawImage(circleImage, location.X - (circleImage.Width / 2), location.Y - (circleImage.Height / 2), circleImage.Width, circleImage.Height);
                 }
             }

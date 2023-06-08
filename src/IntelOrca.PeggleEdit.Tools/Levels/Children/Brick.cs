@@ -180,9 +180,15 @@ namespace IntelOrca.PeggleEdit.Tools.Levels.Children
             bw.Write(new byte[] { 0, 0, 0, 0 });
         }
 
-        public override void Draw(Graphics g)
+        public override void Draw(Graphics g) => Draw(g, false);
+        public override void DrawShadow(Graphics g) => Draw(g, true);
+
+        private void Draw(Graphics g, bool shadow)
         {
-            //Show only if its collidable
+            if (shadow && Level.ShowCollision)
+                return;
+
+            // Show only if its collidable
             if (!HasPegInfo)
             {
                 if (Level.ShowCollision && !Collision)
@@ -205,10 +211,12 @@ namespace IntelOrca.PeggleEdit.Tools.Levels.Children
             {
                 //Rotate the matrix
                 Matrix mx = new Matrix();
+                if (shadow)
+                    mx.Translate(Level.ShadowOffset.X, Level.ShadowOffset.Y);
                 mx.RotateAt(-angle, location);
                 g.Transform = mx;
 
-                DrawCurvedBrick(g, location);
+                DrawCurvedBrick(g, location, shadow);
 
                 g.Transform = new Matrix();
             }
@@ -216,48 +224,67 @@ namespace IntelOrca.PeggleEdit.Tools.Levels.Children
             {
                 //Rotate the matrix
                 Matrix mx = new Matrix();
+                if (shadow)
+                    mx.Translate(Level.ShadowOffset.X, Level.ShadowOffset.Y);
                 mx.RotateAt(-angle + 90.0f, new PointF(location.X, location.Y));
                 g.Transform = mx;
 
-                DrawStrightBrick(g, location);
+                DrawStrightBrick(g, location, shadow);
 
                 g.Transform = new Matrix();
             }
         }
 
-        private void DrawStrightBrick(Graphics g, PointF location)
+        private void DrawStrightBrick(Graphics g, PointF location, bool shadow)
         {
-            RectangleF dest = new RectangleF(location.X - (Length / 2), location.Y - (Width / 2), Length, Width);
-            DrawBrick(g, dest, PegInfo.GetOuterColour());
-
-            dest.Inflate(-2, -5);
-
-            if (mTextureFlip)
-                dest.Y += 3.0f;
+            var dest = new RectangleF(location.X - (Length / 2), location.Y - (Width / 2), Length, Width);
+            if (shadow)
+            {
+                g.FillRectangle(new SolidBrush(Level.ShadowColour), dest);
+            }
+            else if (Level.ShowCollision)
+            {
+                g.FillRectangle(Brushes.White, dest);
+            }
+            else if (!Level.UsePegTextures)
+            {
+                g.FillRectangle(new SolidBrush(PegInfo.GetOuterColour()), dest);
+                dest.Inflate(-2, -5);
+                dest.Y += mTextureFlip ? 3.0f : -3.0f;
+                g.FillRectangle(new SolidBrush(PegInfo.GetInnerColour()), dest);
+            }
             else
-                dest.Y -= 3.0f;
-
-            DrawBrick(g, dest, PegInfo.GetInnerColour());
+            {
+                var brick = BrickImage.GetBrickImage(BrickData);
+                g.DrawImage(brick, location.X - (brick.Width / 2), location.Y - (brick.Height / 2));
+            }
         }
 
-        private void DrawCurvedBrick(Graphics g, PointF location)
+        private void DrawCurvedBrick(Graphics g, PointF location, bool shadow)
         {
-            if (Level.ShowCollision)
+            if (shadow)
+            {
+                DrawCurvedBrick(g, Level.ShadowColour, location, false);
+            }
+            else if (Level.ShowCollision)
             {
                 DrawCurvedBrick(g, Color.White, location, false);
-                return;
             }
-
-            float shadingOffset = 8.0f;
-            if (mTextureFlip)
-                shadingOffset = 2.0f;
-
-            DrawCurvedBrick(g, PegInfo.GetOuterColour(), location, false);
-            mWidth /= 2.0f;
-            location.X += shadingOffset;
-            DrawCurvedBrick(g, PegInfo.GetInnerColour(), location, true);
-            location.X -= shadingOffset;
-            mWidth *= 2.0f;
+            else if (!Level.UsePegTextures)
+            {
+                var shadingOffset = mTextureFlip ? 2 : 8;
+                DrawCurvedBrick(g, PegInfo.GetOuterColour(), location, false);
+                mWidth /= 2.0f;
+                location.X += shadingOffset;
+                DrawCurvedBrick(g, PegInfo.GetInnerColour(), location, true);
+                location.X -= shadingOffset;
+                mWidth *= 2.0f;
+            }
+            else
+            {
+                var brick = BrickImage.GetBrickImage(BrickData);
+                g.DrawImage(brick, location.X - (brick.Width / 2), location.Y - (brick.Height / 2));
+            }
         }
 
         private void DrawCurvedBrick(Graphics g, Color c, PointF location, bool inner)
@@ -377,26 +404,6 @@ namespace IntelOrca.PeggleEdit.Tools.Levels.Children
                 (float)Math.Sin(MathExt.ToRadians(angle)) * radius + circleCentre.Y);
         }
 
-        private void DrawBrick(Graphics g, RectangleF dest, Color c)
-        {
-            int yType = 0;
-            if (PegInfo.CanBeOrange)
-                yType = 1;
-            if (PegInfo.QuickDisappear)
-                yType += 4;
-
-            if (Level.ShowPreview)
-                yType = 0;
-
-            if (Level.ShowCollision)
-                g.FillRectangle(Brushes.White, dest);
-            else
-            {
-                g.FillRectangle(new SolidBrush(c), dest);
-                //g.DrawImage(mBrick, dest, new RectangleF(0, yType * 20, 32, 20), GraphicsUnit.Pixel);
-            }
-        }
-
         public PointF GetCentrePoint()
         {
             PointF cc = new PointF();
@@ -426,6 +433,28 @@ namespace IntelOrca.PeggleEdit.Tools.Levels.Children
         private float GetHeight()
         {
             return (2 * (float)Math.Sin((SectorAngle / 2) / 180.0 * Math.PI) * Length);
+        }
+
+        private BrickData BrickData
+        {
+            get
+            {
+                var brickData = new BrickData();
+                if (!Level.ShowPreview)
+                {
+                    brickData.CanBeOrange = PegInfo.CanBeOrange;
+                    brickData.QuickDisappear = PegInfo.QuickDisappear;
+                }
+                brickData.TextureFlip = TextureFlip;
+                brickData.Length = Length;
+                brickData.Width = Width;
+                if (Curved)
+                {
+                    brickData.Curved = true;
+                    brickData.SectorAngle = SectorAngle;
+                }
+                return brickData;
+            }
         }
 
         [EntryProperty(EntryPropertyType.Element, 0.0f)]
@@ -560,6 +589,10 @@ namespace IntelOrca.PeggleEdit.Tools.Levels.Children
             set
             {
                 mCurved = value;
+                if (mSectorAngle == 0)
+                {
+                    mSectorAngle = 30;
+                }
             }
         }
 

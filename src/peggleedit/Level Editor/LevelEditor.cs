@@ -781,9 +781,14 @@ namespace IntelOrca.PeggleEdit.Designer
         {
             //Draw the level
             if (mLevel == null)
+            {
                 g.FillRectangle(Brushes.Black, Bounds);
+            }
             else
+            {
+                mLevel.UsePegTextures = Settings.Default.UsePegTextures;
                 mLevel.Draw(g);
+            }
 
             DrawGrid(g);
 

@@ -27,6 +27,8 @@ namespace IntelOrca.PeggleEdit.Designer
         {
             InitializeComponent();
 
+            chkUsePegTextures.Checked = Settings.Default.UsePegTextures;
+
             chkShowGrid.Checked = Settings.Default.ShowGrid;
             chkSnapToGrid.Checked = Settings.Default.SnapToGrid;
             nudGridSize.Value = Settings.Default.GridSize;
@@ -39,6 +41,8 @@ namespace IntelOrca.PeggleEdit.Designer
 
         private void btnOK_Click(object sender, EventArgs e)
         {
+            Settings.Default.UsePegTextures = chkUsePegTextures.Checked;
+
             Settings.Default.ShowGrid = chkShowGrid.Checked;
             Settings.Default.SnapToGrid = chkSnapToGrid.Checked;
             Settings.Default.GridSize = (int)nudGridSize.Value;

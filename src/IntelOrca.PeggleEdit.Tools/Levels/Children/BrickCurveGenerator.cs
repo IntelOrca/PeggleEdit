@@ -298,16 +298,5 @@ namespace IntelOrca.PeggleEdit.Tools.Levels.Children
                 angle += (float)(2 * Math.PI);
             return angle;
         }
-
-        private struct BrickData
-        {
-            public bool TextureFlip { get; set; }
-            public bool Curved { get; set; }
-            public PointF Location { get; set; }
-            public float Length { get; set; }
-            public float Width { get; set; }
-            public float Rotation { get; set; }
-            public float SectorAngle { get; set; }
-        }
     }
 }

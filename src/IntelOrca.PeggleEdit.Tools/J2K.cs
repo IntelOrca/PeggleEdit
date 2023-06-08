@@ -69,6 +69,9 @@ namespace IntelOrca.PeggleEdit.Tools
 
         private static Image ConvertJPEG2(byte[] buffer)
         {
+#if DEBUG
+            return ConvertJPEG2WithPeggle(buffer);
+#else
             try
             {
                 Register();
@@ -79,6 +82,7 @@ namespace IntelOrca.PeggleEdit.Tools
             {
                 return ConvertJPEG2WithPeggle(buffer);
             }
+#endif
         }
 
         private static unsafe Image ConvertJPEG2WithPeggle(byte[] buffer)

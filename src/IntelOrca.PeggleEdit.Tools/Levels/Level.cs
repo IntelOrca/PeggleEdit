@@ -56,6 +56,8 @@ namespace IntelOrca.PeggleEdit.Tools.Levels
         //private Bitmap mCanvasBufferImage;
         //private Graphics mCanvasBufferGraphics;
 
+        public bool UsePegTextures { get; set; }
+
         public Level()
         {
             //mCanvasBufferImage = new Bitmap(Bounds.Width, Bounds.Height);
@@ -191,11 +193,13 @@ namespace IntelOrca.PeggleEdit.Tools.Levels
 
         public Image GetThumbnail()
         {
-            bool oInterface = mShowingInterface;
-            bool oAllPegsBlue = mShowPreview;
+            var oInterface = mShowingInterface;
+            var oAllPegsBlue = mShowPreview;
+            var oUsePegTextures = UsePegTextures;
 
             mShowingInterface = false;
             mShowPreview = true;
+            UsePegTextures = true;
 
             Bitmap fs = new Bitmap(800, 600);
             Graphics fsG = Graphics.FromImage(fs);
@@ -204,6 +208,7 @@ namespace IntelOrca.PeggleEdit.Tools.Levels
 
             mShowingInterface = oInterface;
             mShowPreview = oAllPegsBlue;
+            UsePegTextures = oUsePegTextures;
 
             Rectangle sRect = new Rectangle(100, 64, 600, 531);
             Size tbSize = new Size(200, 177);
