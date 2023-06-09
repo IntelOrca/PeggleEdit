@@ -207,6 +207,16 @@ namespace IntelOrca.PeggleEdit.Tools.Levels.Children
                 angle = movement.GetEstimatedMoveAngle(mAngle);
             }
 
+            if (Level.UsePegTextures)
+            {
+                // HACK 90 degree rotations seem to use a different rendering algorithm
+                //      that makes them appear out of place with other rotations
+                if (angle == (int)angle && ((int)angle % 90) == 0)
+                {
+                    angle += 0.0001f;
+                }
+            }
+
             //Calculate the brick destination rectangle
             float height = GetHeight();
             if (Curved)
