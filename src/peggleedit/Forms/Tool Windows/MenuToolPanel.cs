@@ -83,7 +83,8 @@ namespace IntelOrca.PeggleEdit.Designer
 
         RibbonButton btnSelectTool;
         RibbonButton btnPegTool;
-        RibbonButton btnBrickTool;
+        RibbonButton btnStraightBrickTool;
+        RibbonButton btnCurvedBrickTool;
         RibbonButton btnPegPenTool;
         RibbonButton btnBrickPenTool;
         RibbonButton btnCircle;
@@ -316,9 +317,13 @@ namespace IntelOrca.PeggleEdit.Designer
             btnPegTool.Image = Resources.peg_32;
             btnPegTool.Click += new EventHandler(pegRibbonButton_Click);
 
-            btnBrickTool = new RibbonButton("Brick");
-            btnBrickTool.Image = Resources.brick_32;
-            btnBrickTool.Click += new EventHandler(brickRibbonButton_Click);
+            btnStraightBrickTool = new RibbonButton("Brick");
+            btnStraightBrickTool.Image = Resources.brick_32;
+            btnStraightBrickTool.Click += new EventHandler(straightBrickRibbonButton_Click);
+
+            btnCurvedBrickTool = new RibbonButton("Curved Brick");
+            btnCurvedBrickTool.Image = Resources.brick_32;
+            btnCurvedBrickTool.Click += new EventHandler(curvedBrickRibbonButton_Click);
 
             btnPegPenTool = new RibbonButton("Peg Pen");
             btnPegPenTool.Image = Resources.peg_32;
@@ -366,7 +371,8 @@ namespace IntelOrca.PeggleEdit.Designer
             panelInsert = new RibbonPanel("Tools");
             panelInsert.Items.Add(btnSelectTool);
             panelInsert.Items.Add(btnPegTool);
-            panelInsert.Items.Add(btnBrickTool);
+            panelInsert.Items.Add(btnStraightBrickTool);
+            panelInsert.Items.Add(btnCurvedBrickTool);
             panelInsert.Items.Add(btnPegPenTool);
             panelInsert.Items.Add(btnBrickPenTool);
             panelInsert.Items.Add(btnCircle);
@@ -826,13 +832,27 @@ namespace IntelOrca.PeggleEdit.Designer
             mParent.SetEditorTool(new DrawEditorTool(circle, true, 30, 30));
         }
 
-        private void brickRibbonButton_Click(object sender, EventArgs e)
+        private void straightBrickRibbonButton_Click(object sender, EventArgs e)
         {
             UnselectAllTools();
-            btnBrickTool.Checked = true;
+            btnStraightBrickTool.Checked = true;
 
             Brick brick = new Brick(null);
             brick.Rotation = 90.0f;
+            brick.PegInfo = new PegInfo(brick, true, false);
+            mParent.SetEditorTool(new DrawEditorTool(brick, true, 38, 38));
+        }
+
+        private void curvedBrickRibbonButton_Click(object sender, EventArgs e)
+        {
+            UnselectAllTools();
+            btnCurvedBrickTool.Checked = true;
+
+            Brick brick = new Brick(null);
+            brick.Rotation = 90.0f;
+            brick.InnerRadius = 35;
+            brick.SectorAngle = 30;
+            brick.Curved = true;
             brick.PegInfo = new PegInfo(brick, true, false);
             mParent.SetEditorTool(new DrawEditorTool(brick, true, 38, 38));
         }
@@ -1277,7 +1297,8 @@ namespace IntelOrca.PeggleEdit.Designer
         {
             btnSelectTool.Checked = false;
             btnPegTool.Checked = false;
-            btnBrickTool.Checked = false;
+            btnStraightBrickTool.Checked = false;
+            btnCurvedBrickTool.Checked = false;
             btnPegPenTool.Checked = false;
             btnBrickPenTool.Checked = false;
             btnCircle.Checked = false;
@@ -1375,14 +1396,10 @@ namespace IntelOrca.PeggleEdit.Designer
 
                 new ShortcutAction((Keys)49, false, true, new EventHandler(selectRibbonButton_Click)),
                 new ShortcutAction((Keys)50, false, true, new EventHandler(pegRibbonButton_Click)),
-                new ShortcutAction((Keys)51, false, true, new EventHandler(brickRibbonButton_Click)),
-                new ShortcutAction((Keys)52, false, true, new EventHandler(circleRibbonButton_Click)),
-                new ShortcutAction((Keys)53, false, true, new EventHandler(polygonRibbonButton_Click)),
-                new ShortcutAction((Keys)54, false, true, new EventHandler(rodRibbonButton_Click)),
-                new ShortcutAction((Keys)55, false, true, new EventHandler(teleportRibbonButton_Click)),
-                new ShortcutAction((Keys)56, false, true, new EventHandler(emitterRibbonButton_Click)),
-                new ShortcutAction((Keys)57, false, true, new EventHandler(pegGeneratorRibbonButton_Click)),
-                new ShortcutAction((Keys)48, false, true, new EventHandler(brickGeneratorRibbonButton_Click)),
+                new ShortcutAction((Keys)51, false, true, new EventHandler(straightBrickRibbonButton_Click)),
+                new ShortcutAction((Keys)52, false, true, new EventHandler(curvedBrickRibbonButton_Click)),
+                new ShortcutAction((Keys)53, false, true, new EventHandler(pegPenRibbonButton_Click)),
+                new ShortcutAction((Keys)54, false, true, new EventHandler(brickPenRibbonButton_Click)),
 
                 new ShortcutAction(Keys.N, true, new EventHandler(newRibbonButton_Click)),
                 new ShortcutAction(Keys.O, true, new EventHandler(openRibbonButton_Click)),

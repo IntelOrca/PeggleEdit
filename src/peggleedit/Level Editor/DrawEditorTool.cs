@@ -22,33 +22,37 @@ namespace IntelOrca.PeggleEdit.Designer
 {
     internal class DrawEditorTool : EditorTool
     {
-        LevelEntry mEntry;
-        bool mDraw;
-        bool mAvoidOverlapping;
-        int mWidth;
-        int mHeight;
+        private LevelEntry _entry;
+        private bool _draw;
+        private bool _avoidOverlapping;
+        private int _width;
+        private int _height;
+        private bool _drawing;
 
         public DrawEditorTool(LevelEntry le, bool draw)
         {
-            mEntry = le;
-            mDraw = draw;
+            _entry = le;
+            _draw = draw;
         }
 
         public DrawEditorTool(LevelEntry le, bool draw, int width, int height)
         {
-            mEntry = le;
-            mDraw = draw;
-            mAvoidOverlapping = true;
-            mWidth = width;
-            mHeight = height;
+            _entry = le;
+            _draw = draw;
+            _avoidOverlapping = true;
+            _width = width;
+            _height = height;
         }
 
         public override void Activate()
         {
-            base.Activate();
-
             Editor.ClearSelection();
             Editor.UpdateRedraw();
+        }
+
+        public override void Deactivate()
+        {
+            Editor.SetProvisonalEntry(null);
         }
 
         public override void MouseDown(MouseButtons button, Point location, Keys modifierKeys)
@@ -56,32 +60,39 @@ namespace IntelOrca.PeggleEdit.Designer
             MouseMove(button, location, modifierKeys);
         }
 
+        public override void MouseUp(MouseButtons button, Point location, Keys modifierKeys)
+        {
+            _drawing = false;
+        }
+
         public override void MouseMove(MouseButtons button, Point location, Keys modifierKeys)
         {
-            location = Editor.Level.GetVirtualXY(location);
-
-            //Snap
-            PointF le_location = location;
-            if (Settings.Default.ShowGrid & Settings.Default.SnapToGrid)
-            {
-                le_location = new PointF(Editor.SnapToGrid((float)location.X), Editor.SnapToGrid((float)location.Y));
-            }
-
-            RectangleF lookRange = new RectangleF(le_location.X - (mWidth / 2), le_location.Y - (mHeight / 2), mWidth, mHeight);
-
             Editor.SetProvisonalEntry(null);
 
-            if ((!Editor.Level.IsObjectIn(lookRange)) || (!mAvoidOverlapping))
+            // Get location to place
+            location = Editor.Level.GetVirtualXY(location);
+            var placeLocation = (PointF)location;
+            if (Settings.Default.ShowGrid & Settings.Default.SnapToGrid)
             {
+                placeLocation = new PointF(Editor.SnapToGrid(location.X), Editor.SnapToGrid(location.Y));
+            }
 
-                var entry = (LevelEntry)mEntry.Clone();
+            // Check if area is clear
+            var lookRange = new RectangleF(placeLocation.X - (_width / 2), placeLocation.Y - (_height / 2), _width, _height);
+            if ((!Editor.Level.IsObjectIn(lookRange)) || (!_avoidOverlapping))
+            {
+                var entry = (LevelEntry)_entry.Clone();
                 entry.Level = Editor.Level;
-                entry.X = le_location.X;
-                entry.Y = le_location.Y;
+                entry.X = placeLocation.X;
+                entry.Y = placeLocation.Y;
 
                 if (button == MouseButtons.Left)
                 {
-                    Editor.CreateUndoPoint();
+                    if (!_drawing)
+                    {
+                        _drawing = true;
+                        Editor.CreateUndoPoint();
+                    }
                     Editor.Level.Entries.Add(entry);
                 }
                 else
@@ -92,7 +103,7 @@ namespace IntelOrca.PeggleEdit.Designer
                 Editor.UpdateRedraw();
 
                 // Have we finished
-                if (!mDraw && button == MouseButtons.Left && (modifierKeys & Keys.Control) == 0)
+                if (!_draw && button == MouseButtons.Left && (modifierKeys & Keys.Control) == 0)
                 {
                     Finish();
                 }
@@ -101,11 +112,11 @@ namespace IntelOrca.PeggleEdit.Designer
 
         public override object Clone()
         {
-            DrawEditorTool tool = new DrawEditorTool(mEntry, mDraw);
+            DrawEditorTool tool = new DrawEditorTool(_entry, _draw);
             CloneTo(tool);
-            tool.mAvoidOverlapping = mAvoidOverlapping;
-            tool.mWidth = mWidth;
-            tool.mHeight = mHeight;
+            tool._avoidOverlapping = _avoidOverlapping;
+            tool._width = _width;
+            tool._height = _height;
 
             return tool;
         }

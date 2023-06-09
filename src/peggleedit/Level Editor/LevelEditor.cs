@@ -19,6 +19,7 @@ using System.Collections.Generic;
 using System.ComponentModel;
 using System.Drawing;
 using System.Drawing.Drawing2D;
+using System.Linq;
 using System.Windows.Forms;
 using IntelOrca.PeggleEdit.Tools;
 using IntelOrca.PeggleEdit.Tools.Levels;
@@ -40,9 +41,8 @@ namespace IntelOrca.PeggleEdit.Designer
 
         private LevelEntryCollection mCopiedEntries = new LevelEntryCollection();
 
-        private bool _commandKeyDown;
-        private PointF _placePosition;
         private LevelEntry _provisionalEntry;
+        private Point _lastMousePosition;
 
         public event EventHandler UpdatedRedrawed;
         public event EventHandler SelectionChanged;
@@ -84,6 +84,11 @@ namespace IntelOrca.PeggleEdit.Designer
 
         public void CreateUndoPoint()
         {
+            foreach (LevelEntry le in mLevel.Entries)
+            {
+                le.Selected = SelectedEntries.Contains(le);
+            }
+
             mLevel.UpdateMovementLinksWrite();
             var copies = new LevelEntryCollection();
             foreach (LevelEntry le in mLevel.Entries)
@@ -115,7 +120,8 @@ namespace IntelOrca.PeggleEdit.Designer
 
                 mLevel.UpdateMovementLinksRead();
 
-                ChangeSelection(entries);
+                if (mSelectedTool is SelectEditorTool)
+                    ChangeSelection(entries.Where(x => x.Selected));
                 UpdateRedraw();
             }
         }
@@ -909,7 +915,6 @@ namespace IntelOrca.PeggleEdit.Designer
                 return;
 
             Point virtualLocation = Level.GetVirtualXY(e.Location);
-            _placePosition = virtualLocation;
 
             LevelEntry entry = Level.GetObjectAt(virtualLocation.X, virtualLocation.Y);
             if (entry == null)
@@ -937,6 +942,8 @@ namespace IntelOrca.PeggleEdit.Designer
 
             if (mSelectedTool != null)
                 mSelectedTool.MouseMove(e.Button, e.Location, Control.ModifierKeys);
+
+            _lastMousePosition = e.Location;
         }
 
         protected override void OnMouseUp(MouseEventArgs e)
@@ -1002,6 +1009,7 @@ namespace IntelOrca.PeggleEdit.Designer
             set
             {
                 mSelectedTool = value;
+                mSelectedTool.MouseMove(MouseButtons.None, _lastMousePosition, Keys.None);
             }
         }
 

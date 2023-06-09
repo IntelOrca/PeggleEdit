@@ -28,8 +28,6 @@ namespace IntelOrca.PeggleEdit.Designer.Level_Editor
 
         public override void Activate()
         {
-            base.Activate();
-
             Editor.ClearSelection();
             Editor.UpdateRedraw();
         }
