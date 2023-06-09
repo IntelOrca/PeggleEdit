@@ -72,24 +72,30 @@ namespace IntelOrca.PeggleEdit.Tools
                 bitmapSize = new Size(bitmapSize.Width * 2, bitmapSize.Height * 2);
             }
 
-            CalculateBrickVertices(brickData, out var vertices, out var texCoords);
-
-            var scale = supersample ? 2 : 1;
-            for (int i = 0; i < vertices.Length; i++)
-            {
-                vertices[i] = new PointF((bitmapSize.Width / 2) + (vertices[i].X * scale), (bitmapSize.Height / 2) + (vertices[i].Y * scale));
-            }
-
-            var texture = GetBrickTexture(brickData);
             var bitmapLarge = new Bitmap(bitmapSize.Width, bitmapSize.Height);
-            var numTriangles = vertices.Length / 3;
-            for (int i = 0; i < numTriangles; i++)
+            try
             {
-                SetPixelBufferColor(
-                    (u, v) => GetTexture(texture, u, v),
-                    (x, y, c) => SetPixel(bitmapLarge, x, y, c),
-                    new ReadOnlySpan<PointF>(vertices, i * 3, 3),
-                    new ReadOnlySpan<PointF>(texCoords, i * 3, 3));
+                CalculateBrickVertices(brickData, out var vertices, out var texCoords);
+
+                var scale = supersample ? 2 : 1;
+                for (int i = 0; i < vertices.Length; i++)
+                {
+                    vertices[i] = new PointF((bitmapSize.Width / 2) + (vertices[i].X * scale), (bitmapSize.Height / 2) + (vertices[i].Y * scale));
+                }
+
+                var texture = GetBrickTexture(brickData);
+                var numTriangles = vertices.Length / 3;
+                for (int i = 0; i < numTriangles; i++)
+                {
+                    SetPixelBufferColor(
+                        (u, v) => GetTexture(texture, u, v),
+                        (x, y, c) => SetPixel(bitmapLarge, x, y, c),
+                        new ReadOnlySpan<PointF>(vertices, i * 3, 3),
+                        new ReadOnlySpan<PointF>(texCoords, i * 3, 3));
+                }
+            }
+            catch
+            {
             }
 
             if (supersample)

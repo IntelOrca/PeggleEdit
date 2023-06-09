@@ -19,6 +19,8 @@ using System.ComponentModel;
 using System.Drawing;
 using System.Drawing.Drawing2D;
 using System.IO;
+using System.Reflection;
+using static System.Windows.Forms.VisualStyles.VisualStyleElement.TrackBar;
 
 namespace IntelOrca.PeggleEdit.Tools.Levels.Children
 {
@@ -219,6 +221,11 @@ namespace IntelOrca.PeggleEdit.Tools.Levels.Children
                 DrawCurvedBrick(g, location, shadow);
 
                 g.Transform = new Matrix();
+
+                if (!shadow)
+                {
+                    DrawCircleGuide(g);
+                }
             }
             else
             {
@@ -264,7 +271,7 @@ namespace IntelOrca.PeggleEdit.Tools.Levels.Children
         {
             if (shadow)
             {
-                DrawCurvedBrick(g, Level.ShadowColour, location, false);
+                DrawCurvedBrick(g, Level.ShadowColour, location, true);
             }
             else if (Level.ShowCollision)
             {
@@ -338,20 +345,7 @@ namespace IntelOrca.PeggleEdit.Tools.Levels.Children
             }
 
 
-            bool mouseOverOnly = true;
-            bool drawInnerCircle = true;
-            bool drawOuterCircle = true;
 
-            if (!inner)
-            {
-                if (!mouseOverOnly || (mouseOverOnly && MouseOver))
-                {
-                    if (drawInnerCircle)
-                        g.DrawEllipse(Pens.Magenta, circleCentre.X - inner_radius, circleCentre.Y - inner_radius, inner_radius * 2, inner_radius * 2);
-                    if (drawOuterCircle)
-                        g.DrawEllipse(Pens.White, circleCentre.X - outer_radius, circleCentre.Y - outer_radius, outer_radius * 2, outer_radius * 2);
-                }
-            }
 
 
 
@@ -396,6 +390,23 @@ namespace IntelOrca.PeggleEdit.Tools.Levels.Children
 
             location.X -= offset.X;
             location.Y -= offset.Y;
+        }
+
+        private void DrawCircleGuide(Graphics g)
+        {
+            var mouseOverOnly = true;
+            var drawInnerCircle = true;
+            var drawOuterCircle = true;
+            if (!mouseOverOnly || (mouseOverOnly && MouseOver))
+            {
+                var circleCentre = Origin;
+                var innerRadius = InnerRadius;
+                var outerRadius = OuterRadius;
+                if (drawInnerCircle)
+                    g.DrawEllipse(Pens.Magenta, circleCentre.X - innerRadius, circleCentre.Y - innerRadius, innerRadius * 2, innerRadius * 2);
+                if (drawOuterCircle)
+                    g.DrawEllipse(Pens.White, circleCentre.X - outerRadius, circleCentre.Y - outerRadius, outerRadius * 2, outerRadius * 2);
+            }
         }
 
         private PointF GetBrickAngularPoint(PointF circleCentre, float angle, float radius)
@@ -454,6 +465,120 @@ namespace IntelOrca.PeggleEdit.Tools.Levels.Children
                     brickData.SectorAngle = SectorAngle;
                 }
                 return brickData;
+            }
+        }
+
+        public float Radius
+        {
+            get => InnerRadius + (Width / 2);
+            set => InnerRadius = value - (Width / 2);
+        }
+
+        public PointF Origin
+        {
+            get
+            {
+                var radius = Radius;
+                var angle = MathExt.ToRadians(-Rotation);
+                var originDelta = new PointF(
+                    (float)(Math.Cos(angle) * radius),
+                    (float)(Math.Sin(angle) * radius));
+                return Location.Subtract(originDelta);
+            }
+            set
+            {
+                var delta = Location.Subtract(Origin);
+                Location = value.Add(delta);
+            }
+        }
+
+        public float LeftSideAngle
+        {
+            get
+            {
+                if (Curved)
+                    return MathExt.FixAngle((360 - Rotation) - 90 - (SectorAngle / 2));
+                else
+                    return MathExt.FixAngle(360 - Rotation - 90);
+            }
+            set
+            {
+                if (Curved)
+                    Rotation = MathExt.FixAngle(360 + 90 - (SectorAngle / 2) - value);
+                else
+                    Rotation = MathExt.FixAngle(360 - 90 - value);
+            }
+        }
+
+        public PointF LeftSidePosition
+        {
+            get
+            {
+                if (Curved)
+                {
+                    var angle = MathExt.ToRadians(-Rotation - (SectorAngle / 2));
+                    var radius = Radius;
+                    return Origin.Add(new PointF(
+                        (float)(radius * Math.Cos(angle)),
+                        (float)(radius * Math.Sin(angle))));
+                }
+                else
+                {
+                    var delta = new PointF(
+                        (float)((Length / 2) * Math.Cos(MathExt.ToRadians(LeftSideAngle))),
+                        (float)((Length / 2) * Math.Sin(MathExt.ToRadians(LeftSideAngle))));
+                    return Location.Add(delta);
+                }
+            }
+            set
+            {
+                var delta = Location.Subtract(LeftSidePosition);
+                Location = value.Add(delta);
+            }
+        }
+
+        public float RightSideAngle
+        {
+            get
+            {
+                if (Curved)
+                    return MathExt.FixAngle((360 - Rotation) + 90 + (SectorAngle / 2));
+                else
+                    return MathExt.FixAngle(360 - Rotation - 90 + 180);
+            }
+            set
+            {
+                if (Curved)
+                    Rotation = MathExt.FixAngle(90 + (SectorAngle / 2) + 360 - value);
+                else
+                    Rotation = MathExt.FixAngle(360 - 90 + 180 - value);
+            }
+        }
+
+        public PointF RightSidePosition
+        {
+            get
+            {
+                if (Curved)
+                {
+                    var angle = MathExt.ToRadians(-Rotation + (SectorAngle / 2));
+                    var radius = Radius;
+                    return Origin.Add(new PointF(
+                        (float)(radius * Math.Cos(angle)),
+                        (float)(radius * Math.Sin(angle))));
+                }
+                else
+                {
+                    var delta = new PointF(
+                        (float)((Length / 2) * Math.Cos(MathExt.ToRadians(RightSideAngle))),
+                        (float)((Length / 2) * Math.Sin(MathExt.ToRadians(RightSideAngle))));
+                    return Location.Add(delta);
+                }
+            }
+            set
+            {
+                var delta = Location.Subtract(RightSidePosition);
+                Location = value.Add(delta);
             }
         }
 
