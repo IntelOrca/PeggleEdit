@@ -157,6 +157,9 @@ namespace IntelOrca.PeggleEdit.Tools.Levels.Children
                     g.DrawImage(circleImage, location.X - (circleImage.Width / 2), location.Y - (circleImage.Height / 2), circleImage.Width, circleImage.Height);
                 }
             }
+
+            if (Provisional)
+                g.FillEllipse(new SolidBrush(Color.FromArgb(128, 255, 255,255)), drawbounds);
         }
 
         public virtual Image GetCircleImage()

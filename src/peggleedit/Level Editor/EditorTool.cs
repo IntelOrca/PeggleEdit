@@ -57,6 +57,14 @@ namespace IntelOrca.PeggleEdit.Designer
         {
         }
 
+        public virtual void KeyDown(KeyEventArgs e)
+        {
+        }
+
+        public virtual void KeyUp(KeyEventArgs e)
+        {
+        }
+
         public virtual object Clone()
         {
             return null;

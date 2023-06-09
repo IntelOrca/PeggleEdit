@@ -31,8 +31,12 @@ namespace IntelOrca.PeggleEdit.Tools.Levels.Children
     {
         Level mLevel;
 
-        bool mMouseOver;
-        bool mSelected;
+        [Browsable(false)]
+        public bool MouseOver { get; set; }
+        [Browsable(false)]
+        public bool Selected { get; set; }
+        [Browsable(false)]
+        public bool Provisional { get; set; }
 
         float mX;
         float mY;
@@ -451,32 +455,6 @@ namespace IntelOrca.PeggleEdit.Tools.Levels.Children
             }
         }
 
-        [Browsable(false)]
-        public bool MouseOver
-        {
-            get
-            {
-                return mMouseOver;
-            }
-            set
-            {
-                mMouseOver = value;
-            }
-        }
-
-        [Browsable(false)]
-        public bool Selected
-        {
-            get
-            {
-                return mSelected;
-            }
-            set
-            {
-                mSelected = value;
-            }
-        }
-
         public virtual object Clone()
         {
             throw new NotImplementedException();
@@ -484,6 +462,8 @@ namespace IntelOrca.PeggleEdit.Tools.Levels.Children
 
         protected void CloneTo(LevelEntry dest)
         {
+            dest.Selected = Selected;
+
             dest.mX = mX;
             dest.mY = mY;
 

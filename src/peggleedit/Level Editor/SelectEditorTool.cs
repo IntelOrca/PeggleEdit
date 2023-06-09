@@ -24,7 +24,7 @@ using IntelOrca.PeggleEdit.Tools.Levels.Children;
 
 namespace IntelOrca.PeggleEdit.Designer
 {
-    class SelectEditorTool : EditorTool
+    internal class SelectEditorTool : EditorTool
     {
         private State _state;
         private Point _selectionStart;
@@ -34,11 +34,15 @@ namespace IntelOrca.PeggleEdit.Designer
         private bool _firstObjectMovement;
         private List<LevelEntry> _previousSelection = new List<LevelEntry>();
         private int _pointMoveIndex;
+        private bool _commandKeyDown;
+        private PointF _placePosition;
 
         public override void MouseDown(MouseButtons button, Point location, Keys modifierKeys)
         {
             var level = Editor.Level;
             var vl = Editor.Level.GetVirtualXY(location);
+
+            Editor.SetProvisonalEntry(null);
 
             // Check if dragging a curve generator point
             foreach (LevelEntry e in Editor.SelectedEntries)
@@ -158,8 +162,16 @@ namespace IntelOrca.PeggleEdit.Designer
 
         public override void MouseMove(MouseButtons button, Point location, Keys modifierKeys)
         {
+            _placePosition = Editor.Level.GetVirtualXY(location);
             if (button != MouseButtons.Left)
+            {
+                Editor.SetProvisonalEntry(null);
+                if (Editor.SelectedEntries.Count != 0)
+                {
+                    PlaceBrick(true, false, false, true);
+                }
                 return;
+            }
 
             switch (_state)
             {
@@ -282,6 +294,186 @@ namespace IntelOrca.PeggleEdit.Designer
             }
         }
 
+        private void PlaceBrick(bool curved, bool swapDirection, bool force, bool provisional)
+        {
+            var level = Editor.Level;
+            var selectedEntries = Editor.SelectedEntries;
+            if (selectedEntries.Count == 1)
+            {
+                if (selectedEntries[0] is Brick prevBrick)
+                {
+                    var provisionalBricks = new List<Brick>();
+
+                    if (curved)
+                    {
+                        if (prevBrick.Curved)
+                        {
+                            for (var i = 0; i < 2; i++)
+                            {
+                                var brick = new Brick(level);
+                                brick.Curved = true;
+                                brick.Width = prevBrick.Width;
+                                brick.Length = prevBrick.Length;
+                                brick.SectorAngle = prevBrick.SectorAngle;
+
+                                if (swapDirection)
+                                {
+                                    brick.TextureFlip = !prevBrick.TextureFlip;
+                                    brick.Rotation = prevBrick.Rotation + 180;
+                                    if (i == 0)
+                                    {
+                                        brick.LeftSidePosition = prevBrick.LeftSidePosition;
+                                    }
+                                    else
+                                    {
+                                        brick.RightSidePosition = prevBrick.RightSidePosition;
+                                    }
+                                }
+                                else
+                                {
+                                    brick.TextureFlip = prevBrick.TextureFlip;
+                                    if (i == 0)
+                                    {
+                                        brick.Rotation = prevBrick.Rotation - prevBrick.SectorAngle;
+                                    }
+                                    else
+                                    {
+                                        brick.Rotation = prevBrick.Rotation + prevBrick.SectorAngle;
+                                    }
+
+                                    var newRotation = MathExt.ToRadians(-brick.Rotation);
+                                    var radius = prevBrick.Radius;
+                                    var origin = prevBrick.Origin;
+                                    brick.Location = origin.Add(new PointF(
+                                        (float)(Math.Cos(newRotation) * radius),
+                                        (float)(Math.Sin(newRotation) * radius)));
+                                }
+                                provisionalBricks.Add(brick);
+                            }
+                        }
+                        else
+                        {
+                            for (var i = 0; i < 4; i++)
+                            {
+                                var brick = new Brick(level);
+                                brick.Curved = true;
+                                brick.Width = prevBrick.Width;
+                                brick.Length = prevBrick.Length;
+                                brick.Radius = prevBrick.Length * 1.875f;
+                                brick.SectorAngle = (int)Math.Floor(prevBrick.Length * 360 / (Math.PI * brick.Radius * 2));
+                                brick.SectorAngle = 360.0f / (int)(360 / brick.SectorAngle);
+
+                                if (i == 0)
+                                {
+                                    brick.RightSideAngle = prevBrick.RightSideAngle + 180;
+                                    brick.RightSidePosition = prevBrick.RightSidePosition;
+                                    brick.TextureFlip = !prevBrick.TextureFlip;
+                                }
+                                else if (i == 1)
+                                {
+                                    brick.LeftSideAngle = prevBrick.RightSideAngle;
+                                    brick.LeftSidePosition = prevBrick.RightSidePosition;
+                                    brick.TextureFlip = prevBrick.TextureFlip;
+                                }
+                                else if (i == 2)
+                                {
+                                    brick.RightSideAngle = prevBrick.LeftSideAngle + 180;
+                                    brick.RightSidePosition = prevBrick.LeftSidePosition;
+                                    brick.TextureFlip = prevBrick.TextureFlip;
+                                }
+                                else
+                                {
+                                    brick.LeftSideAngle = prevBrick.LeftSideAngle;
+                                    brick.LeftSidePosition = prevBrick.LeftSidePosition;
+                                    brick.TextureFlip = !prevBrick.TextureFlip;
+                                }
+                                provisionalBricks.Add(brick);
+                            }
+                        }
+                    }
+                    else
+                    {
+                        for (var i = 0; i < 2; i++)
+                        {
+                            var brick = new Brick(level);
+                            brick.TextureFlip = prevBrick.TextureFlip;
+                            brick.Width = prevBrick.Width;
+                            if (prevBrick.Curved)
+                                brick.Length = (int)Math.Round(Math.PI * prevBrick.Radius * 2 * prevBrick.SectorAngle / 360);
+                            else
+                                brick.Length = prevBrick.Length;
+
+                            if (i == 0)
+                            {
+                                brick.LeftSideAngle = prevBrick.RightSideAngle + 180;
+                                brick.LeftSidePosition = prevBrick.RightSidePosition;
+                            }
+                            else
+                            {
+                                brick.RightSideAngle = prevBrick.LeftSideAngle + 180;
+                                brick.RightSidePosition = prevBrick.LeftSidePosition;
+                            }
+                            provisionalBricks.Add(brick);
+                        }
+                    }
+
+                    var bestBrick = (Brick)null;
+                    var bestDistance = float.MaxValue;
+                    foreach (var brick in provisionalBricks)
+                    {
+                        if (!force && level.GetObjectAt(brick.Location.X, brick.Location.Y) != null)
+                        {
+                            continue;
+                        }
+
+                        var dist = brick.Location.Subtract(_placePosition).GetLength();
+                        if (dist < bestDistance)
+                        {
+                            bestDistance = dist;
+                            bestBrick = brick;
+                        }
+                    }
+
+                    if (bestBrick != null)
+                    {
+                        if (provisional)
+                        {
+                            Editor.SetProvisonalEntry(bestBrick);
+                        }
+                        else
+                        {
+                            Editor.CreateUndoPoint();
+                            level.Entries.Add(bestBrick);
+                            Editor.ChangeSelection(bestBrick);
+                            Editor.UpdateRedraw();
+                        }
+                    }
+                }
+            }
+            else if (selectedEntries.Count == 0 && !swapDirection)
+            {
+                var brick = new Brick(level);
+                brick.Location = _placePosition;
+                brick.Rotation = 90;
+                if (curved)
+                {
+                    brick.Curved = true;
+                    brick.InnerRadius = 35;
+                    brick.SectorAngle = 30;
+                }
+                if (provisional)
+                {
+                    Editor.SetProvisonalEntry(brick);
+                }
+                else
+                {
+                    Editor.Level.Entries.Add(brick);
+                    Editor.ChangeSelection(brick);
+                    Editor.UpdateRedraw();
+                }
+            }
+        }
+
         public override void MouseUp(MouseButtons button, Point location, Keys modifierKeys)
         {
             if (button == MouseButtons.Right)
@@ -295,6 +487,51 @@ namespace IntelOrca.PeggleEdit.Designer
 
             Editor.UpdateRedraw();
             Editor.InvokeSelectionChangedEvent();
+        }
+
+        public override void KeyDown(KeyEventArgs e)
+        {
+            var x = 0;
+            var y = 0;
+            switch (e.KeyCode)
+            {
+                case Keys.Up:
+                    y = -1;
+                    break;
+                case Keys.Down:
+                    y = 1;
+                    break;
+                case Keys.Left:
+                    x = -1;
+                    break;
+                case Keys.Right:
+                    x = 1;
+                    break;
+                case Keys.B:
+                case Keys.V:
+                    if (!_commandKeyDown)
+                    {
+                        _commandKeyDown = true;
+                        PlaceBrick(!e.Shift, e.KeyCode == Keys.V, e.Control, false);
+                    }
+                    break;
+                default:
+                    return;
+            }
+
+            if (e.Modifiers == Keys.Control)
+            {
+                x *= 5;
+                y *= 5;
+            }
+
+            Editor.MoveObjects(x, y);
+        }
+
+        public override void KeyUp(KeyEventArgs e)
+        {
+            base.KeyUp(e);
+            _commandKeyDown = false;
         }
 
         public override void Draw(Graphics g)

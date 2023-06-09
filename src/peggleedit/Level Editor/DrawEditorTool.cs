@@ -16,12 +16,11 @@
 
 using System.Drawing;
 using System.Windows.Forms;
-using IntelOrca.PeggleEdit.Tools.Levels;
 using IntelOrca.PeggleEdit.Tools.Levels.Children;
 
 namespace IntelOrca.PeggleEdit.Designer
 {
-    class DrawEditorTool : EditorTool
+    internal class DrawEditorTool : EditorTool
     {
         LevelEntry mEntry;
         bool mDraw;
@@ -59,9 +58,6 @@ namespace IntelOrca.PeggleEdit.Designer
 
         public override void MouseMove(MouseButtons button, Point location, Keys modifierKeys)
         {
-            if (button != MouseButtons.Left)
-                return;
-
             location = Editor.Level.GetVirtualXY(location);
 
             //Snap
@@ -73,26 +69,32 @@ namespace IntelOrca.PeggleEdit.Designer
 
             RectangleF lookRange = new RectangleF(le_location.X - (mWidth / 2), le_location.Y - (mHeight / 2), mWidth, mHeight);
 
+            Editor.SetProvisonalEntry(null);
+
             if ((!Editor.Level.IsObjectIn(lookRange)) || (!mAvoidOverlapping))
             {
-                Editor.CreateUndoPoint();
 
-                LevelEntry entry = (LevelEntry)mEntry.Clone();
+                var entry = (LevelEntry)mEntry.Clone();
                 entry.Level = Editor.Level;
                 entry.X = le_location.X;
                 entry.Y = le_location.Y;
 
-                Editor.Level.Entries.Add(entry);
+                if (button == MouseButtons.Left)
+                {
+                    Editor.CreateUndoPoint();
+                    Editor.Level.Entries.Add(entry);
+                }
+                else
+                {
+                    Editor.SetProvisonalEntry(entry);
+                }
 
                 Editor.UpdateRedraw();
 
-                //Have we finished
-                if (!mDraw)
+                // Have we finished
+                if (!mDraw && button == MouseButtons.Left && (modifierKeys & Keys.Control) == 0)
                 {
-                    if ((modifierKeys & Keys.Control) == 0)
-                    {
-                        Finish();
-                    }
+                    Finish();
                 }
             }
         }

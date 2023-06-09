@@ -17,10 +17,7 @@
 using System;
 using System.ComponentModel;
 using System.Drawing;
-using System.Drawing.Drawing2D;
 using System.IO;
-using System.Reflection;
-using static System.Windows.Forms.VisualStyles.VisualStyleElement.TrackBar;
 
 namespace IntelOrca.PeggleEdit.Tools.Levels.Children
 {
@@ -217,39 +214,26 @@ namespace IntelOrca.PeggleEdit.Tools.Levels.Children
                 }
             }
 
-            //Calculate the brick destination rectangle
-            float height = GetHeight();
+            var backupTransform = g.Transform;
+            var mx = g.Transform;
+            if (shadow)
+                mx.Translate(Level.ShadowOffset.X, Level.ShadowOffset.Y);
             if (Curved)
             {
-                //Rotate the matrix
-                Matrix mx = new Matrix();
-                if (shadow)
-                    mx.Translate(Level.ShadowOffset.X, Level.ShadowOffset.Y);
                 mx.RotateAt(-angle, location);
                 g.Transform = mx;
-
                 DrawCurvedBrick(g, location, shadow);
-
-                g.Transform = new Matrix();
-
-                if (!shadow)
-                {
-                    DrawCircleGuide(g);
-                }
             }
             else
             {
-                //Rotate the matrix
-                Matrix mx = new Matrix();
-                if (shadow)
-                    mx.Translate(Level.ShadowOffset.X, Level.ShadowOffset.Y);
                 mx.RotateAt(-angle + 90.0f, new PointF(location.X, location.Y));
                 g.Transform = mx;
-
                 DrawStrightBrick(g, location, shadow);
-
-                g.Transform = new Matrix();
             }
+            g.Transform = backupTransform;
+
+            if (!shadow && Curved)
+                DrawCircleGuide(g);
         }
 
         private void DrawStrightBrick(Graphics g, PointF location, bool shadow)
@@ -275,6 +259,9 @@ namespace IntelOrca.PeggleEdit.Tools.Levels.Children
                 var brick = BrickImage.GetBrickImage(BrickData);
                 g.DrawImage(brick, location.X - (brick.Width / 2), location.Y - (brick.Height / 2));
             }
+
+            if (Provisional)
+                g.FillRectangle(new SolidBrush(Color.FromArgb(128, 255, 255, 255)), dest);
         }
 
         private void DrawCurvedBrick(Graphics g, PointF location, bool shadow)
@@ -302,6 +289,9 @@ namespace IntelOrca.PeggleEdit.Tools.Levels.Children
                 var brick = BrickImage.GetBrickImage(BrickData);
                 g.DrawImage(brick, location.X - (brick.Width / 2), location.Y - (brick.Height / 2));
             }
+
+            if (Provisional)
+                DrawCurvedBrick(g, Color.FromArgb(128, 255, 255, 255), location, false);
         }
 
         private void DrawCurvedBrick(Graphics g, Color c, PointF location, bool inner)

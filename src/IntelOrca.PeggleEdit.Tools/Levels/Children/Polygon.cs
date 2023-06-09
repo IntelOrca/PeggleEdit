@@ -125,9 +125,8 @@ namespace IntelOrca.PeggleEdit.Tools.Levels.Children
             {
                 if (!Level.ShowPreview)
                 {
-                    Matrix mx = new Matrix();
-                    mx.Translate(location.X, location.Y);
-                    g.Transform = mx;
+                    var backupMatrix = g.Transform;
+                    g.TranslateTransform(location.X, location.Y);
 
                     if (mPoints.Count != 0)
                     {
@@ -135,7 +134,7 @@ namespace IntelOrca.PeggleEdit.Tools.Levels.Children
                         g.DrawPolygon(Pens.Black, mPoints.ToArray());
                     }
 
-                    g.Transform = new Matrix();
+                    g.Transform = backupMatrix;
                 }
             }
             else
