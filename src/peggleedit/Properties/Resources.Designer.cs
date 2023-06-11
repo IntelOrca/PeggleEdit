@@ -133,6 +133,26 @@ namespace IntelOrca.PeggleEdit.Designer.Properties {
         /// <summary>
         ///   Looks up a localized resource of type System.Drawing.Bitmap.
         /// </summary>
+        internal static System.Drawing.Bitmap brick_curved_32 {
+            get {
+                object obj = ResourceManager.GetObject("brick_curved_32", resourceCulture);
+                return ((System.Drawing.Bitmap)(obj));
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized resource of type System.Drawing.Bitmap.
+        /// </summary>
+        internal static System.Drawing.Bitmap brick_pen_32 {
+            get {
+                object obj = ResourceManager.GetObject("brick_pen_32", resourceCulture);
+                return ((System.Drawing.Bitmap)(obj));
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized resource of type System.Drawing.Bitmap.
+        /// </summary>
         internal static System.Drawing.Bitmap bring_forward_32 {
             get {
                 object obj = ResourceManager.GetObject("bring_forward_32", resourceCulture);
@@ -596,6 +616,16 @@ namespace IntelOrca.PeggleEdit.Designer.Properties {
         internal static System.Drawing.Bitmap peg_move_type_32 {
             get {
                 object obj = ResourceManager.GetObject("peg_move_type_32", resourceCulture);
+                return ((System.Drawing.Bitmap)(obj));
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized resource of type System.Drawing.Bitmap.
+        /// </summary>
+        internal static System.Drawing.Bitmap peg_pen_32 {
+            get {
+                object obj = ResourceManager.GetObject("peg_pen_32", resourceCulture);
                 return ((System.Drawing.Bitmap)(obj));
             }
         }

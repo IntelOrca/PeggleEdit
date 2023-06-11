@@ -322,15 +322,15 @@ namespace IntelOrca.PeggleEdit.Designer
             btnStraightBrickTool.Click += new EventHandler(straightBrickRibbonButton_Click);
 
             btnCurvedBrickTool = new RibbonButton("Curved Brick");
-            btnCurvedBrickTool.Image = Resources.brick_32;
+            btnCurvedBrickTool.Image = Resources.brick_curved_32;
             btnCurvedBrickTool.Click += new EventHandler(curvedBrickRibbonButton_Click);
 
             btnPegPenTool = new RibbonButton("Peg Pen");
-            btnPegPenTool.Image = Resources.peg_32;
+            btnPegPenTool.Image = Resources.peg_pen_32;
             btnPegPenTool.Click += new EventHandler(pegPenRibbonButton_Click);
 
             btnBrickPenTool = new RibbonButton("Brick Pen");
-            btnBrickPenTool.Image = Resources.brick_32;
+            btnBrickPenTool.Image = Resources.brick_pen_32;
             btnBrickPenTool.Click += new EventHandler(brickPenRibbonButton_Click);
 
             btnCircle = new RibbonButton("Circle");
@@ -898,7 +898,7 @@ namespace IntelOrca.PeggleEdit.Designer
             UnselectAllTools();
             btnRod.Checked = true;
 
-            Rod rod = new Rod(LevelEditor.Level);
+            var rod = new Rod(null);
             rod.PointA = new PointF(300, 200);
             rod.PointB = new PointF(400, 250);
 
@@ -910,7 +910,7 @@ namespace IntelOrca.PeggleEdit.Designer
             UnselectAllTools();
             btnTeleport.Checked = true;
 
-            Teleport teleport = new Teleport(LevelEditor.Level);
+            var teleport = new Teleport(null);
             teleport.DestinationX = 50.0f;
             teleport.DestinationY = 50.0f;
 
@@ -922,7 +922,7 @@ namespace IntelOrca.PeggleEdit.Designer
             UnselectAllTools();
             btnEmitter.Checked = true;
 
-            Emitter emitter = new Emitter(LevelEditor.Level);
+            var emitter = new Emitter(null);
             emitter.DefaultValues();
 
             emitter.Width = 100;
@@ -936,7 +936,7 @@ namespace IntelOrca.PeggleEdit.Designer
             UnselectAllTools();
             btnPegGenerator.Checked = true;
 
-            PegGenerator pg = new PegGenerator(LevelEditor.Level);
+            var pg = new PegGenerator(null);
 
             mParent.SetEditorTool(new DrawEditorTool(pg, false));
         }
@@ -946,7 +946,7 @@ namespace IntelOrca.PeggleEdit.Designer
             UnselectAllTools();
             btnBrickGenerator.Checked = true;
 
-            BrickGenerator bg = new BrickGenerator(LevelEditor.Level);
+            var bg = new BrickGenerator(null);
 
             mParent.SetEditorTool(new DrawEditorTool(bg, false));
         }
