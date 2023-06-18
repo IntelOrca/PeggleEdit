@@ -233,7 +233,7 @@ namespace IntelOrca.PeggleEdit.Tools.Levels.Children
             g.Transform = backupTransform;
 
             if (!shadow && Curved)
-                DrawCircleGuide(g);
+                DrawCircleGuide(g, angle);
         }
 
         private void DrawStrightBrick(Graphics g, PointF location, bool shadow)
@@ -392,14 +392,14 @@ namespace IntelOrca.PeggleEdit.Tools.Levels.Children
             location.Y -= offset.Y;
         }
 
-        private void DrawCircleGuide(Graphics g)
+        private void DrawCircleGuide(Graphics g, float rotation)
         {
             var mouseOverOnly = true;
             var drawInnerCircle = true;
             var drawOuterCircle = true;
             if (!mouseOverOnly || (mouseOverOnly && MouseOver))
             {
-                var circleCentre = Origin;
+                var circleCentre = GetOrigin(DrawLocation, rotation);
                 var innerRadius = InnerRadius;
                 var outerRadius = OuterRadius;
                 if (drawInnerCircle)
@@ -446,6 +446,16 @@ namespace IntelOrca.PeggleEdit.Tools.Levels.Children
             return (2 * (float)Math.Sin((SectorAngle / 2) / 180.0 * Math.PI) * Length);
         }
 
+        private PointF GetOrigin(PointF location, float rotation)
+        {
+            var radius = Radius;
+            var angle = MathExt.ToRadians(-rotation);
+            var originDelta = new PointF(
+                (float)(Math.Cos(angle) * radius),
+                (float)(Math.Sin(angle) * radius));
+            return location.Subtract(originDelta);
+        }
+
         private BrickData BrickData
         {
             get
@@ -478,12 +488,7 @@ namespace IntelOrca.PeggleEdit.Tools.Levels.Children
         {
             get
             {
-                var radius = Radius;
-                var angle = MathExt.ToRadians(-Rotation);
-                var originDelta = new PointF(
-                    (float)(Math.Cos(angle) * radius),
-                    (float)(Math.Sin(angle) * radius));
-                return Location.Subtract(originDelta);
+                return GetOrigin(Location, Rotation);
             }
             set
             {
