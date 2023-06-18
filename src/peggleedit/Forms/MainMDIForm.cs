@@ -555,7 +555,7 @@ namespace IntelOrca.PeggleEdit.Designer
         public void SetStatus(string sz)
         {
             mStatusLabel.Text = sz;
-            Application.DoEvents();
+            mStatusStrip.Refresh();
         }
 
         public void SetStatus(string format, params object[] args)

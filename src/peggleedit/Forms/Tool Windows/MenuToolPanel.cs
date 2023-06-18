@@ -836,25 +836,14 @@ namespace IntelOrca.PeggleEdit.Designer
         {
             UnselectAllTools();
             btnStraightBrickTool.Checked = true;
-
-            Brick brick = new Brick(null);
-            brick.Rotation = 90.0f;
-            brick.PegInfo = new PegInfo(brick, true, false);
-            mParent.SetEditorTool(new DrawEditorTool(brick, true, 38, 38));
+            mParent.SetEditorTool(new BrickEditorTool(false));
         }
 
         private void curvedBrickRibbonButton_Click(object sender, EventArgs e)
         {
             UnselectAllTools();
             btnCurvedBrickTool.Checked = true;
-
-            Brick brick = new Brick(null);
-            brick.Rotation = 90.0f;
-            brick.InnerRadius = 35;
-            brick.SectorAngle = 30;
-            brick.Curved = true;
-            brick.PegInfo = new PegInfo(brick, true, false);
-            mParent.SetEditorTool(new DrawEditorTool(brick, true, 38, 38));
+            mParent.SetEditorTool(new BrickEditorTool(true));
         }
 
         private void pegPenRibbonButton_Click(object sender, EventArgs e)

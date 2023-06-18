@@ -131,6 +131,7 @@ namespace IntelOrca.PeggleEdit.Designer
             mSelectedEntries.AddRange(mEditor.SelectedEntries);
 
             mList.TopIndex = Math.Min(topIndex, mEntries.Count);
+            mList.Refresh();
 
             mSuspendChangeEvent = false;
         }
