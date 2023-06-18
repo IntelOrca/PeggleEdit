@@ -27,15 +27,33 @@ namespace IntelOrca.PeggleEdit.Designer
         private float _straightLength = 30;
         private float _curvedSectorAngle = 30;
         private float _curvedInnerRadius = 35;
+        private float _rotation = 90;
         private int _width = 38;
         private int _height = 38;
         private bool _drawing;
 
         private PointF? _connectPosition;
 
+        public bool Curved => _curved;
+
         public BrickEditorTool(bool curved)
         {
             _curved = curved;
+        }
+
+        public BrickEditorTool(Brick template)
+        {
+            _rotation = template.Rotation;
+            _curved = template.Curved;
+            if (_curved)
+            {
+                _curvedInnerRadius = template.InnerRadius;
+                _curvedSectorAngle = template.SectorAngle;
+            }
+            else
+            {
+                _straightLength = template.Length;
+            }
         }
 
         public override void Activate()
@@ -74,7 +92,7 @@ namespace IntelOrca.PeggleEdit.Designer
             // Check if we are connecting to another brick
             var newBrick = CreateBrick();
             var connectedToBrick = false;
-            if ((modifierKeys & Keys.Control) == 0)
+            if ((modifierKeys & Keys.Shift) == 0)
             {
                 foreach (var entry in Editor.Level.Entries)
                 {
@@ -195,7 +213,7 @@ namespace IntelOrca.PeggleEdit.Designer
             {
                 brick.Length = _straightLength;
             }
-            brick.Rotation = 90;
+            brick.Rotation = _rotation;
             return brick;
         }
 
@@ -225,8 +243,9 @@ namespace IntelOrca.PeggleEdit.Designer
             CloneTo(tool);
             tool._curved = _curved;
             tool._straightLength = _straightLength;
-            tool._curvedSectorAngle = _curvedInnerRadius;
+            tool._curvedSectorAngle = _curvedSectorAngle;
             tool._curvedInnerRadius = _curvedInnerRadius;
+            tool._rotation = _rotation;
             return tool;
         }
     }

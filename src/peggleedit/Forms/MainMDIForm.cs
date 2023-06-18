@@ -38,8 +38,12 @@ namespace IntelOrca.PeggleEdit.Designer
     [Guid("1A01E050-F11A-47C5-B62B-25678916F209")]
     partial class MainMDIForm : Form
     {
+        public static MainMDIForm Instance { get; private set; }
+
         public MainMDIForm()
         {
+            Instance = this;
+
             InitIdentifierMap();
             InitForm();
 
@@ -545,6 +549,7 @@ namespace IntelOrca.PeggleEdit.Designer
                 //Activate new tool
                 newtool.Activate();
             }
+            mMenuToolPanel.RefreshSelectedTool(tool);
         }
 
         private void FinishTool()

@@ -29,6 +29,8 @@ namespace IntelOrca.PeggleEdit.Designer
         private int _height;
         private bool _drawing;
 
+        public LevelEntry Template => _entry;
+
         public DrawEditorTool(LevelEntry le, bool draw)
         {
             _entry = le;
@@ -79,7 +81,7 @@ namespace IntelOrca.PeggleEdit.Designer
 
             // Check if area is clear
             var lookRange = new RectangleF(placeLocation.X - (_width / 2), placeLocation.Y - (_height / 2), _width, _height);
-            if ((!Editor.Level.IsObjectIn(lookRange)) || (!_avoidOverlapping))
+            if (((modifierKeys & Keys.Control) != 0 || !Editor.Level.IsObjectIn(lookRange)) || (!_avoidOverlapping))
             {
                 var entry = (LevelEntry)_entry.Clone();
                 entry.Level = Editor.Level;

@@ -13,6 +13,7 @@ namespace IntelOrca.PeggleEdit.Designer.Level_Editor
         private PegKind _pegKind;
         private CurveGenerator _entry;
 
+        public PegKind PegKind => _pegKind;
         public BezierPath Path => _entry?.BezierPath;
 
         public PenEditorTool(PegKind pegKind)

@@ -333,6 +333,16 @@ namespace IntelOrca.PeggleEdit.Designer.Properties {
         /// <summary>
         ///   Looks up a localized resource of type System.Drawing.Bitmap.
         /// </summary>
+        internal static System.Drawing.Bitmap eyedropper_32 {
+            get {
+                object obj = ResourceManager.GetObject("eyedropper_32", resourceCulture);
+                return ((System.Drawing.Bitmap)(obj));
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized resource of type System.Drawing.Bitmap.
+        /// </summary>
         internal static System.Drawing.Bitmap flip_horizontally_16 {
             get {
                 object obj = ResourceManager.GetObject("flip_horizontally_16", resourceCulture);

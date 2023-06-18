@@ -82,6 +82,7 @@ namespace IntelOrca.PeggleEdit.Designer
         #region Ribbon
 
         RibbonButton btnSelectTool;
+        RibbonButton btnEyedropperTool;
         RibbonButton btnPegTool;
         RibbonButton btnStraightBrickTool;
         RibbonButton btnCurvedBrickTool;
@@ -313,6 +314,10 @@ namespace IntelOrca.PeggleEdit.Designer
             btnSelectTool.Image = Resources.pointer_32;
             btnSelectTool.Click += new EventHandler(selectRibbonButton_Click);
 
+            btnEyedropperTool = new RibbonButton("Eyedropper");
+            btnEyedropperTool.Image = Resources.eyedropper_32;
+            btnEyedropperTool.Click += new EventHandler(eyedropperRibbonButton_Click);
+
             btnPegTool = new RibbonButton("Peg");
             btnPegTool.Image = Resources.peg_32;
             btnPegTool.Click += new EventHandler(pegRibbonButton_Click);
@@ -370,6 +375,7 @@ namespace IntelOrca.PeggleEdit.Designer
 
             panelInsert = new RibbonPanel("Tools");
             panelInsert.Items.Add(btnSelectTool);
+            panelInsert.Items.Add(btnEyedropperTool);
             panelInsert.Items.Add(btnPegTool);
             panelInsert.Items.Add(btnStraightBrickTool);
             panelInsert.Items.Add(btnCurvedBrickTool);
@@ -816,127 +822,89 @@ namespace IntelOrca.PeggleEdit.Designer
 
         private void selectRibbonButton_Click(object sender, EventArgs e)
         {
-            UnselectAllTools();
-            btnSelectTool.Checked = true;
-
             mParent.SetEditorTool(new SelectEditorTool());
+        }
+
+        private void eyedropperRibbonButton_Click(object sender, EventArgs e)
+        {
+            mParent.SetEditorTool(new EyedropperEditorTool());
         }
 
         private void pegRibbonButton_Click(object sender, EventArgs e)
         {
-            UnselectAllTools();
-            btnPegTool.Checked = true;
-
-            Circle circle = new Circle(null);
+            var circle = new Circle(null);
             circle.PegInfo = new PegInfo(circle, true, false);
             mParent.SetEditorTool(new DrawEditorTool(circle, true, 30, 30));
         }
 
         private void straightBrickRibbonButton_Click(object sender, EventArgs e)
         {
-            UnselectAllTools();
-            btnStraightBrickTool.Checked = true;
             mParent.SetEditorTool(new BrickEditorTool(false));
         }
 
         private void curvedBrickRibbonButton_Click(object sender, EventArgs e)
         {
-            UnselectAllTools();
-            btnCurvedBrickTool.Checked = true;
             mParent.SetEditorTool(new BrickEditorTool(true));
         }
 
         private void pegPenRibbonButton_Click(object sender, EventArgs e)
         {
-            UnselectAllTools();
-            btnPegPenTool.Checked = true;
-
             mParent.SetEditorTool(new PenEditorTool(PegKind.Circle));
         }
 
         private void brickPenRibbonButton_Click(object sender, EventArgs e)
         {
-            UnselectAllTools();
-            btnBrickPenTool.Checked = true;
-
             mParent.SetEditorTool(new PenEditorTool(PegKind.Brick));
         }
 
         private void circleRibbonButton_Click(object sender, EventArgs e)
         {
-            UnselectAllTools();
-            btnCircle.Checked = true;
-
-            Circle circle = new Circle(null);
+            var circle = new Circle(null);
             circle.Radius = 20.0f;
             mParent.SetEditorTool(new DrawEditorTool(circle, false));
         }
 
         private void polygonRibbonButton_Click(object sender, EventArgs e)
         {
-            UnselectAllTools();
-            btnPolygon.Checked = true;
-
-            Polygon p = new Polygon(null);
+            var p = new Polygon(null);
             p.SetPoints(new PointF[] { new PointF(0, 0), new PointF(0, 40), new PointF(40, 40), new PointF(40, 0), new PointF(0, 0) });
             mParent.SetEditorTool(new DrawEditorTool(p, false));
         }
 
         private void rodRibbonButton_Click(object sender, EventArgs e)
         {
-            UnselectAllTools();
-            btnRod.Checked = true;
-
             var rod = new Rod(null);
             rod.PointA = new PointF(300, 200);
             rod.PointB = new PointF(400, 250);
-
             mParent.SetEditorTool(new DrawEditorTool(rod, false));
         }
 
         private void teleportRibbonButton_Click(object sender, EventArgs e)
         {
-            UnselectAllTools();
-            btnTeleport.Checked = true;
-
             var teleport = new Teleport(null);
             teleport.DestinationX = 50.0f;
             teleport.DestinationY = 50.0f;
-
             mParent.SetEditorTool(new DrawEditorTool(teleport, false));
         }
 
         private void emitterRibbonButton_Click(object sender, EventArgs e)
         {
-            UnselectAllTools();
-            btnEmitter.Checked = true;
-
             var emitter = new Emitter(null);
             emitter.DefaultValues();
-
             emitter.Width = 100;
             emitter.Height = 100;
-
             mParent.SetEditorTool(new DrawEditorTool(emitter, false));
         }
 
         private void pegGeneratorRibbonButton_Click(object sender, EventArgs e)
         {
-            UnselectAllTools();
-            btnPegGenerator.Checked = true;
-
             var pg = new PegGenerator(null);
-
             mParent.SetEditorTool(new DrawEditorTool(pg, false));
         }
 
         private void brickGeneratorRibbonButton_Click(object sender, EventArgs e)
         {
-            UnselectAllTools();
-            btnBrickGenerator.Checked = true;
-
             var bg = new BrickGenerator(null);
-
             mParent.SetEditorTool(new DrawEditorTool(bg, false));
         }
 
@@ -1285,6 +1253,7 @@ namespace IntelOrca.PeggleEdit.Designer
         private void UnselectAllTools()
         {
             btnSelectTool.Checked = false;
+            btnEyedropperTool.Checked = false;
             btnPegTool.Checked = false;
             btnStraightBrickTool.Checked = false;
             btnCurvedBrickTool.Checked = false;
@@ -1297,6 +1266,61 @@ namespace IntelOrca.PeggleEdit.Designer
             btnEmitter.Checked = false;
             btnPegGenerator.Checked = false;
             btnBrickGenerator.Checked = false;
+        }
+
+        public void RefreshSelectedTool(EditorTool tool)
+        {
+            UnselectAllTools();
+            switch (tool)
+            {
+                case SelectEditorTool _:
+                    btnSelectTool.Checked = true;
+                    break;
+                case EyedropperEditorTool _:
+                    btnEyedropperTool.Checked = true;
+                    break;
+                case BrickEditorTool brickEditorTool:
+                    if (brickEditorTool.Curved)
+                        btnCurvedBrickTool.Checked = true;
+                    else
+                        btnStraightBrickTool.Checked = true;
+                    break;
+                case PenEditorTool penEditorTool:
+                    if (penEditorTool.PegKind == PegKind.Circle)
+                        btnPegPenTool.Checked = true;
+                    else
+                        btnBrickPenTool.Checked = true;
+                    break;
+                case DrawEditorTool drawEditorTool:
+                    switch (drawEditorTool.Template)
+                    {
+                        case Circle circle when circle.HasPegInfo:
+                            btnPegTool.Checked = true;
+                            break;
+                        case Circle _:
+                            btnCircle.Checked = true;
+                            break;
+                        case Polygon _:
+                            btnPolygon.Checked = true;
+                            break;
+                        case Rod _:
+                            btnRod.Checked = true;
+                            break;
+                        case Teleport _:
+                            btnTeleport.Checked = true;
+                            break;
+                        case Emitter _:
+                            btnEmitter.Checked = true;
+                            break;
+                        case PegGenerator _:
+                            btnPegGenerator.Checked = true;
+                            break;
+                        case BrickGenerator _:
+                            btnBrickGenerator.Checked = true;
+                            break;
+                    }
+                    break;
+            }
         }
 
         public void SelectDefaultTool()
@@ -1384,11 +1408,12 @@ namespace IntelOrca.PeggleEdit.Designer
                 new ShortcutAction(Keys.F1, false, new EventHandler(readmeRibbonButton_Click)),
 
                 new ShortcutAction((Keys)49, false, true, new EventHandler(selectRibbonButton_Click)),
-                new ShortcutAction((Keys)50, false, true, new EventHandler(pegRibbonButton_Click)),
-                new ShortcutAction((Keys)51, false, true, new EventHandler(straightBrickRibbonButton_Click)),
-                new ShortcutAction((Keys)52, false, true, new EventHandler(curvedBrickRibbonButton_Click)),
-                new ShortcutAction((Keys)53, false, true, new EventHandler(pegPenRibbonButton_Click)),
-                new ShortcutAction((Keys)54, false, true, new EventHandler(brickPenRibbonButton_Click)),
+                new ShortcutAction((Keys)50, false, true, new EventHandler(eyedropperRibbonButton_Click)),
+                new ShortcutAction((Keys)51, false, true, new EventHandler(pegRibbonButton_Click)),
+                new ShortcutAction((Keys)52, false, true, new EventHandler(straightBrickRibbonButton_Click)),
+                new ShortcutAction((Keys)53, false, true, new EventHandler(curvedBrickRibbonButton_Click)),
+                new ShortcutAction((Keys)54, false, true, new EventHandler(pegPenRibbonButton_Click)),
+                new ShortcutAction((Keys)55, false, true, new EventHandler(brickPenRibbonButton_Click)),
 
                 new ShortcutAction(Keys.N, true, new EventHandler(newRibbonButton_Click)),
                 new ShortcutAction(Keys.O, true, new EventHandler(openRibbonButton_Click)),
