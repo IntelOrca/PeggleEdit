@@ -26,6 +26,8 @@ namespace IntelOrca.PeggleEdit.Tools.Levels
     /// </summary>
     public class LevelWriter : IDisposable
     {
+        public const int PegoFileVersion = 0x35;
+        public const int DeluxeFileVersion = 0x42;
         public const int DefaultFileVersion = 0x52;
 
         Stream mBaseStream;

@@ -483,20 +483,16 @@ namespace IntelOrca.PeggleEdit.Designer
         private void SetupLevelMenu()
         {
             mContextMenu.Items.Clear();
-
-            ToolStripItem mnuOpen = new ToolStripMenuItem("Open", Resources.open_16, new EventHandler(mnuLevelOpen_Click));
-            ToolStripItem mnuDelete = new ToolStripMenuItem("Delete", Resources.remove_16, new EventHandler(mnuLevelDelete_Click));
-            ToolStripItem mnuExport = new ToolStripMenuItem("Export", Resources.export_16, new EventHandler(mnuLevelExport_Click));
-            ToolStripItem mnuProperties = new ToolStripMenuItem("Properties", Resources.properties_16, new EventHandler(mnuLevelProperties_Click));
-            ToolStripItem mnuSetBackground = new ToolStripMenuItem("Set Background", Resources.image_16, new EventHandler(mnuSetBackground_Click));
-
-            mContextMenu.Items.Add(mnuOpen);
+            mContextMenu.Items.Add(new ToolStripMenuItem("Open", Resources.open_16, mnuLevelOpen_Click));
             mContextMenu.Items.Add(new ToolStripSeparator());
-            mContextMenu.Items.Add(mnuDelete);
-            mContextMenu.Items.Add(mnuExport);
+            mContextMenu.Items.Add(new ToolStripMenuItem("Delete", Resources.remove_16, mnuLevelDelete_Click));
             mContextMenu.Items.Add(new ToolStripSeparator());
-            mContextMenu.Items.Add(mnuProperties);
-            mContextMenu.Items.Add(mnuSetBackground);
+            mContextMenu.Items.Add(new ToolStripMenuItem("Export (Pego)", Resources.export_16, mnuLevelExportPego_Click));
+            mContextMenu.Items.Add(new ToolStripMenuItem("Export (Deluxe)", Resources.export_16, mnuLevelExportDeluxe_Click));
+            mContextMenu.Items.Add(new ToolStripMenuItem("Export (Nights)", Resources.export_16, mnuLevelExportNights_Click));
+            mContextMenu.Items.Add(new ToolStripSeparator());
+            mContextMenu.Items.Add(new ToolStripMenuItem("Properties", Resources.properties_16, mnuLevelProperties_Click));
+            mContextMenu.Items.Add(new ToolStripMenuItem("Set Background", Resources.image_16, mnuSetBackground_Click));
         }
 
         private void mnuLevelOpen_Click(object sender, EventArgs e)
@@ -523,16 +519,22 @@ namespace IntelOrca.PeggleEdit.Designer
             }
         }
 
-        private void mnuLevelExport_Click(object sender, EventArgs e)
+        private void mnuLevelExportPego_Click(object sender, EventArgs e) => ExportLevel(LevelWriter.PegoFileVersion);
+        private void mnuLevelExportDeluxe_Click(object sender, EventArgs e) => ExportLevel(LevelWriter.DeluxeFileVersion);
+        private void mnuLevelExportNights_Click(object sender, EventArgs e) => ExportLevel(LevelWriter.DefaultFileVersion);
+
+        private void ExportLevel(int version)
         {
-            Level level = SelectedNode.Tag as Level;
-            SaveFileDialog dialog = new SaveFileDialog();
-            dialog.Title = "Export level";
-            dialog.Filter = "Peggle Level Files (*.dat)|*.dat";
-            if (dialog.ShowDialog() == DialogResult.OK)
+            var level = SelectedNode.Tag as Level;
+            using (var dialog = new SaveFileDialog())
             {
-                LevelWriter writer = new LevelWriter(dialog.FileName);
-                writer.Write(level, LevelWriter.DefaultFileVersion);
+                dialog.Title = "Export level";
+                dialog.Filter = "Peggle Level Files (*.dat)|*.dat";
+                if (dialog.ShowDialog() == DialogResult.OK)
+                {
+                    var writer = new LevelWriter(dialog.FileName);
+                    writer.Write(level, version);
+                }
             }
         }
 

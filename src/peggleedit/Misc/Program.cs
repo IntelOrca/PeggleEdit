@@ -20,6 +20,7 @@ using System.IO;
 using System.Reflection;
 using System.Windows.Forms;
 using IntelOrca.PeggleEdit.Designer.Properties;
+using IntelOrca.PeggleEdit.Tools.Pack;
 
 namespace IntelOrca.PeggleEdit.Designer
 {
@@ -41,8 +42,32 @@ namespace IntelOrca.PeggleEdit.Designer
         /// The main entry point for the application.
         /// </summary>
         [STAThread]
-        private static void Main()
+        private static int Main(string[] args)
         {
+            if (args.Length > 0 && args[0] == "unpack")
+            {
+                if (args.Length > 1)
+                {
+                    var pakFile = args[1];
+                    var targetPath = Path.GetDirectoryName(pakFile);
+                    try
+                    {
+                        var collection = new PakCollection(pakFile);
+                        collection.Export(targetPath);
+                        return 0;
+                    }
+                    catch (Exception ex)
+                    {
+                        Console.Error.WriteLine(ex.Message);
+                    }
+                }
+                else
+                {
+                    Console.Error.WriteLine("usage: peggleedit unpack <pak_file>");
+                }
+                return 1;
+            }
+
             _tempPath = Path.Combine(Path.GetTempPath(), Application.ProductName);
 
             Settings.Load();
@@ -51,7 +76,13 @@ namespace IntelOrca.PeggleEdit.Designer
             Application.SetCompatibleTextRenderingDefault(false);
             Application.Run(new MainMDIForm());
 
+            if (args.Length > 0)
+            {
+                MainMDIForm.Instance.OpenPack(args[0]);
+            }
+
             Settings.Save();
+            return 0;
         }
 
         private static Version GetVersion()
