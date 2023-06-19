@@ -1,4 +1,4 @@
-PeggleEdit 5.1.0 (Dunnock) (unreleased)
+PeggleEdit 5.1.0 (Dunnock) (2023-06-19)
 
 * [Feature] #8: Automatically resize / crop background image
 * [Feature] #13: Add a bezier pen tool for pegs and bricks
