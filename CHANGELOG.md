@@ -1,3 +1,20 @@
+PeggleEdit 5.1.0 (Dunnock) (unreleased)
+
+* [Feature] #8: Automatically resize / crop background image
+* [Feature] #13: Add a bezier pen tool for pegs and bricks
+* [Feature] Add an eyedropper tool
+* [Feature] Add separate tools for placing straight and curved bricks
+* [Feature] Allow b, B and v keys to insert a brick to the currently selected brick (As seen in Pego editor)
+* [Feature] Allow CTRL to always allow placement of a peg, SHIFT to prevent brick connection
+* [Feature] Allow exporting to Pego and Peggle Deluxe
+* [Feature] Connect brick to neighbour when placing a brick close to another
+* [Feature] Show a ghost of the peg that is about to be placed
+* [Feature] Use Peggle textures for pegs and bricks. Can be disabled in settings
+* [Feature] Accept first command line argument as the .pak to open on launch
+* [Feature] Add command line interface for unpacking .pak files
+* [Enhancement] Improve hit testing of curve generators. Empty space no longer blocks placing of peg
+* [Enhancement] Persist properties window scroll position when selection changes
+
 PeggleEdit 5.0.0 (Crow) (2023-04-10)
 
 * [Feature] Add button to open GitHub page
