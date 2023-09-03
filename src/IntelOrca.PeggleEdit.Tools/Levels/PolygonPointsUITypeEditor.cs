@@ -42,8 +42,7 @@ namespace IntelOrca.PeggleEdit.Tools.Levels
             if (value == null)
                 value = new PointF[0];
 
-            PolygonEditor form = new PolygonEditor(lc.GetPolygonImage());
-            form.PointsFromPolygon((PointF[])value);
+            var form = new PolygonEditor(lc.GetPolygonImage(), (PointF[])value);
             if (form.ShowDialog() == DialogResult.OK)
             {
                 return form.GetFinalPoints();

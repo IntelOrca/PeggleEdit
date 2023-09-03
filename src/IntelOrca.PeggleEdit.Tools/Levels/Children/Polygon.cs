@@ -19,7 +19,6 @@ using System.Collections.Generic;
 using System.ComponentModel;
 using System.Drawing;
 using System.Drawing.Design;
-using System.Drawing.Drawing2D;
 using System.IO;
 using IntelOrca.PeggleEdit.Tools.Pack;
 
@@ -123,19 +122,16 @@ namespace IntelOrca.PeggleEdit.Tools.Levels.Children
 
             if (polygonImage == null || Level.ShowCollision)
             {
-                if (!Level.ShowPreview)
+                var backupMatrix = g.Transform;
+                g.TranslateTransform(location.X, location.Y);
+
+                if (mPoints.Count != 0)
                 {
-                    var backupMatrix = g.Transform;
-                    g.TranslateTransform(location.X, location.Y);
-
-                    if (mPoints.Count != 0)
-                    {
-                        g.FillPolygon(Brushes.White, mPoints.ToArray());
-                        g.DrawPolygon(Pens.Black, mPoints.ToArray());
-                    }
-
-                    g.Transform = backupMatrix;
+                    g.FillPolygon(Brushes.White, mPoints.ToArray());
+                    g.DrawPolygon(Pens.Black, mPoints.ToArray());
                 }
+
+                g.Transform = backupMatrix;
             }
             else
             {

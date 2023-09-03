@@ -17,6 +17,7 @@
 using System;
 using System.Collections.Generic;
 using System.Drawing;
+using System.Linq;
 using System.Windows.Forms;
 
 namespace IntelOrca.PeggleEdit.Tools.Levels
@@ -27,25 +28,14 @@ namespace IntelOrca.PeggleEdit.Tools.Levels
     public partial class PolygonEditor : Form
     {
         Image mImage;
-        List<Point> mPoints = new List<Point>();
+        List<PointF> mPoints = new List<PointF>();
 
-        public PolygonEditor(Image img)
+        public PolygonEditor(Image img, PointF[] points)
         {
             InitializeComponent();
-
             mImage = img;
-
-            int addedWidth = ClientSize.Width - pnlPointEditor.Width;
-            int addedHeight = ClientSize.Height - pnlPointEditor.Height;
-
-            if (mImage == null)
-            {
-                mImage = new Bitmap(100, 100);
-            }
-
-            ClientSize = new Size(addedWidth + mImage.Width, addedHeight + mImage.Height);
-
-            RefreshSelectedPoint();
+            mPoints = points.ToList();
+            RefreshPoints();
         }
 
         private void pnlPointEditor_MouseDown(object sender, MouseEventArgs e)
@@ -73,8 +63,8 @@ namespace IntelOrca.PeggleEdit.Tools.Levels
             //Check if its near first point
             if (mPoints.Count > 1)
             {
-                Point p = mPoints[0];
-                Rectangle area = new Rectangle(p.X - 2, p.Y - 2, 4, 4);
+                var p = mPoints[0];
+                var area = new RectangleF(p.X - 2, p.Y - 2, 4, 4);
                 if (area.Contains(e.X, e.Y))
                 {
                     mPoints.Add(p);
@@ -90,6 +80,9 @@ namespace IntelOrca.PeggleEdit.Tools.Levels
 
         private void pnlPointEditor_Paint(object sender, PaintEventArgs e)
         {
+            var canvasSize = pnlPointEditor.Size;
+            e.Graphics.TranslateTransform(canvasSize.Width / 2, canvasSize.Height / 2);
+
             if (mImage != null)
                 e.Graphics.DrawImage(mImage, new Rectangle(0, 0, mImage.Width, mImage.Height), new Rectangle(0, 0, mImage.Width, mImage.Height), GraphicsUnit.Pixel);
 
@@ -102,25 +95,50 @@ namespace IntelOrca.PeggleEdit.Tools.Levels
             {
                 for (int i = 1; i < mPoints.Count; i++)
                 {
-                    Point a = mPoints[i - 1];
-                    Point b = mPoints[i];
+                    var a = mPoints[i - 1];
+                    var b = mPoints[i];
 
                     e.Graphics.DrawLine(Pens.White, a, b);
                 }
 
-                foreach (Point p in mPoints)
+                foreach (var p in mPoints)
                 {
-                    Rectangle rect = new Rectangle(p.X - 2, p.Y - 2, 4, 4);
+                    var rect = new RectangleF(p.X - 2, p.Y - 2, 4, 4);
                     e.Graphics.FillRectangle(Brushes.White, rect);
-                    e.Graphics.DrawRectangle(Pens.Black, rect);
+                    e.Graphics.DrawRectangle(Pens.Black, rect.X, rect.Y, rect.Width, rect.Height);
                 }
             }
+        }
+
+        private void pnlPointEditor_SizeChanged(object sender, EventArgs e)
+        {
+            pnlPointEditor.Invalidate();
         }
 
         private void btnReset_Click(object sender, EventArgs e)
         {
             mPoints.Clear();
 
+            RefreshPoints();
+        }
+
+        private void btnCentre_Click(object sender, EventArgs e)
+        {
+            if (mPoints.Count < 1)
+                return;
+
+            var minX = mPoints.Min(p => p.X);
+            var minY = mPoints.Min(p => p.Y);
+            var maxX = mPoints.Max(p => p.X);
+            var maxY = mPoints.Max(p => p.Y);
+            var currentOrigin = new PointF(
+                minX + ((maxX - minX) / 2),
+                minY + ((maxY - minY) / 2));
+
+            for (var i = 0; i < mPoints.Count; i++)
+            {
+                mPoints[i] = mPoints[i].Subtract(currentOrigin);
+            }
             RefreshPoints();
         }
 
@@ -145,7 +163,7 @@ namespace IntelOrca.PeggleEdit.Tools.Levels
         private void RefreshPoints()
         {
             lstPoints.Items.Clear();
-            foreach (Point p in mPoints)
+            foreach (var p in mPoints)
             {
                 lstPoints.Items.Add(p.ToString());
             }
@@ -168,15 +186,7 @@ namespace IntelOrca.PeggleEdit.Tools.Levels
 
         public PointF[] GetFinalPoints()
         {
-            Point centreOfImage = new Point(mImage.Width / 2, mImage.Height / 2);
-
-            List<PointF> points = new List<PointF>();
-            foreach (Point p in mPoints)
-            {
-                points.Add(new PointF(p.X - centreOfImage.X, p.Y - centreOfImage.Y));
-            }
-
-            return points.ToArray();
+            return mPoints.Select(p => (PointF)p).ToArray();
         }
 
         public void PointsFromPolygon(PointF[] pnts)
@@ -206,7 +216,7 @@ namespace IntelOrca.PeggleEdit.Tools.Levels
                 return;
             }
 
-            Point pnt = mPoints[lstPoints.SelectedIndex];
+            var pnt = mPoints[lstPoints.SelectedIndex];
 
             txtX.Enabled = true;
             txtY.Enabled = true;
@@ -227,10 +237,9 @@ namespace IntelOrca.PeggleEdit.Tools.Levels
 
             disableTxtEvent = true;
 
-            int value;
-            if (Int32.TryParse(txtX.Text, out value))
+            if (int.TryParse(txtX.Text, out var value))
             {
-                Point pnt = mPoints[lstPoints.SelectedIndex];
+                var pnt = mPoints[lstPoints.SelectedIndex];
                 pnt.X = value;
                 mPoints[lstPoints.SelectedIndex] = pnt;
 
@@ -253,10 +262,9 @@ namespace IntelOrca.PeggleEdit.Tools.Levels
 
             disableTxtEvent = true;
 
-            int value;
-            if (Int32.TryParse(txtY.Text, out value))
+            if (int.TryParse(txtY.Text, out var value))
             {
-                Point pnt = mPoints[lstPoints.SelectedIndex];
+                var pnt = mPoints[lstPoints.SelectedIndex];
                 pnt.Y = value;
                 mPoints[lstPoints.SelectedIndex] = pnt;
 
