@@ -18,7 +18,6 @@ using System;
 using System.ComponentModel;
 using System.Drawing;
 using System.IO;
-using System.Text;
 
 namespace IntelOrca.PeggleEdit.Tools.Levels.Children
 {

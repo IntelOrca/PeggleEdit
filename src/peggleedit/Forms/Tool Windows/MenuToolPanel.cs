@@ -110,6 +110,7 @@ namespace IntelOrca.PeggleEdit.Designer
         RibbonCheckBox chkObjects;
         RibbonCheckBox chkCollision;
         RibbonCheckBox chkPreview;
+        RibbonCheckBox chkParticles;
 
         private void InitOrb()
         {
@@ -492,12 +493,17 @@ namespace IntelOrca.PeggleEdit.Designer
             chkPreview = new RibbonCheckBox("Preview");
             chkPreview.CheckedChanged += new EventHandler(showPreviewRibbonButton_Click);
 
+            chkParticles = new RibbonCheckBox("Particles");
+            chkParticles.Checked = true;
+            chkParticles.CheckedChanged += new EventHandler(showParticlesRibbonButton_Click);
+
             RibbonPanel panelShowHide = new RibbonPanel("Show / Hide");
             panelShowHide.Items.Add(chkBackground);
             panelShowHide.Items.Add(chkInterface);
             panelShowHide.Items.Add(chkObjects);
             panelShowHide.Items.Add(chkCollision);
             panelShowHide.Items.Add(chkPreview);
+            panelShowHide.Items.Add(chkParticles);
 
             RibbonButton btnPackExplorer = new RibbonButton("Pack Explorer");
             btnPackExplorer.Image = Resources.pack_explorer_32;
@@ -1184,6 +1190,12 @@ namespace IntelOrca.PeggleEdit.Designer
                 LevelEditor.Level.ShowPreview = true;
             }
 
+            LevelEditor.UpdateRedraw();
+        }
+
+        private void showParticlesRibbonButton_Click(object sender, EventArgs e)
+        {
+            LevelEditor.Level.ShowParticles = chkParticles.Checked;
             LevelEditor.UpdateRedraw();
         }
 

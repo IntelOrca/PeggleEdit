@@ -53,13 +53,17 @@ namespace IntelOrca.PeggleEdit.Tools.Levels
 
         private float mScale = 1.0f;
 
+        private readonly ParticlePreview _particlePreview = new ParticlePreview();
+
         //private Bitmap mCanvasBufferImage;
         //private Graphics mCanvasBufferGraphics;
 
+        public bool ShowParticles { get; set; } = true;
         public bool UsePegTextures { get; set; }
 
         public Level()
         {
+            _particlePreview.Level = this;
             //mCanvasBufferImage = new Bitmap(Bounds.Width, Bounds.Height);
             //mCanvasBufferGraphics = Graphics.FromImage(mCanvasBufferImage);
         }
@@ -117,6 +121,9 @@ namespace IntelOrca.PeggleEdit.Tools.Levels
             if (mShowingBackground)
                 DrawBackground(g);
 
+            if (mShowPreview && ShowParticles)
+                DrawParticles(g);
+
             if (mShowingEntries)
                 DrawEntries(g);
 
@@ -138,6 +145,18 @@ namespace IntelOrca.PeggleEdit.Tools.Levels
                 Rectangle rect = new Rectangle(400 - (mBackground.Width / 2), 300 - (mBackground.Height / 2), mBackground.Width, mBackground.Height);
                 g.DrawImage(mBackground, rect);
             }
+        }
+
+        private void DrawParticles(Graphics g)
+        {
+            g.TranslateTransform(Level.DrawAdjustX, Level.DrawAdjustY);
+            var containerState = g.BeginContainer();
+            g.SmoothingMode = SmoothingMode.HighQuality;
+
+            _particlePreview.Draw(g);
+
+            g.EndContainer(containerState);
+            g.TranslateTransform(-Level.DrawAdjustX, -Level.DrawAdjustY);
         }
 
         private void DrawEntries(Graphics g)
@@ -417,13 +436,17 @@ namespace IntelOrca.PeggleEdit.Tools.Levels
         {
             mFirstPreviewUpdate = Environment.TickCount;
             mPreviewTime = 0;
+            _particlePreview.Clear();
         }
 
         public void UpdatePreview()
         {
             if (mFirstPreviewUpdate != 0)
             {
+                var lastPreviewTime = mPreviewTime;
                 mPreviewTime = (ulong)((Environment.TickCount - mFirstPreviewUpdate) / 10);
+                var delta = mPreviewTime - lastPreviewTime;
+                _particlePreview.Update(delta);
             }
         }
 

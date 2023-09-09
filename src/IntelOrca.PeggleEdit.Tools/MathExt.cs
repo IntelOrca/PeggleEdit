@@ -15,11 +15,6 @@
 // along with PeggleEdit. If not, see <http://www.gnu.org/licenses/>.
 
 using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Drawing;
-using IntelOrca.PeggleEdit.Tools.Levels.Children;
 
 namespace IntelOrca.PeggleEdit.Tools
 {
@@ -99,6 +94,11 @@ namespace IntelOrca.PeggleEdit.Tools
             var delta3 = Math.Abs(a - (b + 360));
             var minDelta = Math.Min(rotationDelta, Math.Min(delta2, delta3));
             return minDelta;
+        }
+
+        public static float Lerp(float a, float b, float t)
+        {
+            return a + (b - a) * t;
         }
     }
 }
