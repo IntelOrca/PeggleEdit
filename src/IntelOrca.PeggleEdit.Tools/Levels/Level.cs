@@ -137,6 +137,9 @@ namespace IntelOrca.PeggleEdit.Tools.Levels
         private void DrawBackground(Graphics g)
         {
             var bg = Background?.Image;
+            if (bg == null)
+                return;
+
             if (bg.Size == new Size(646, 543))
             {
                 g.DrawImage(bg, 73, 53, bg.Width, bg.Height);
