@@ -44,10 +44,25 @@ namespace IntelOrca.PeggleEdit.Designer
 
             Editor.SetProvisonalEntry(null);
 
-            // Check if dragging a curve generator point
             foreach (LevelEntry e in Editor.SelectedEntries)
             {
-                if (e is CurveGenerator cg)
+                if (e is Teleport t)
+                {
+                    var rect = new RectangleF();
+                    rect.Offset(t.Destination);
+                    rect.Inflate(8, 8);
+                    if (rect.Contains(vl))
+                    {
+                        _selectionStart = location;
+                        _dragObject = e;
+                        _firstObjectMovement = true;
+                        _objectPoints.Clear();
+                        _objectPoints.Add(t.Destination);
+                        _state = State.MovingPoints;
+                        return;
+                    }
+                }
+                else if (e is CurveGenerator cg)
                 {
                     var path = cg.BezierPath;
                     for (var i = 0; i < path.NumPoints; i++)
@@ -232,27 +247,43 @@ namespace IntelOrca.PeggleEdit.Designer
                 }
                 case State.MovingPoints:
                 {
-                    if (!(_dragObject is CurveGenerator cg))
-                        break;
-
-                    var path = cg.BezierPath;
-                    if (_pointMoveIndex < 0 || _pointMoveIndex >= path.NumPoints)
-                        break;
-
-                    var delta = location.Subtract(_selectionStart);
-                    if (delta.IsEmpty)
-                        break;
-
-                    // Create undo point if first call
-                    if (_firstObjectMovement)
+                    if (_dragObject is Teleport t)
                     {
-                        Editor.CreateUndoPoint();
-                        _firstObjectMovement = false;
-                    }
+                        var delta = location.Subtract(_selectionStart);
+                        if (delta.IsEmpty)
+                            break;
 
-                    path.Points[_pointMoveIndex] = _objectPoints[0].Add(delta);
-                    cg.InvalidatePath();
-                    Editor.UpdateRedraw();
+                        // Create undo point if first call
+                        if (_firstObjectMovement)
+                        {
+                            Editor.CreateUndoPoint();
+                            _firstObjectMovement = false;
+                        }
+
+                        t.Destination = _objectPoints[0].Add(delta);
+                        Editor.UpdateRedraw();
+                    }
+                    else if (_dragObject is CurveGenerator cg)
+                    {
+                        var path = cg.BezierPath;
+                        if (_pointMoveIndex < 0 || _pointMoveIndex >= path.NumPoints)
+                            break;
+
+                        var delta = location.Subtract(_selectionStart);
+                        if (delta.IsEmpty)
+                            break;
+
+                        // Create undo point if first call
+                        if (_firstObjectMovement)
+                        {
+                            Editor.CreateUndoPoint();
+                            _firstObjectMovement = false;
+                        }
+
+                        path.Points[_pointMoveIndex] = _objectPoints[0].Add(delta);
+                        cg.InvalidatePath();
+                        Editor.UpdateRedraw();
+                    }
                     break;
                 }
             }

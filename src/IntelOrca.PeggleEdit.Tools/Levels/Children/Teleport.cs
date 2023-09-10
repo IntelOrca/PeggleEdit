@@ -123,10 +123,16 @@ namespace IntelOrca.PeggleEdit.Tools.Levels.Children
 
             if (MouseOver || Selected)
             {
+                var anchorOutline = new Pen(Color.FromArgb(0x23, 0x53, 0xDC));
+                var anchorBrush = new SolidBrush(Color.FromArgb(196, 0x23, 0xB0, 0xDC));
+
                 //Draw line to destination
                 Pen pen = new Pen(Color.White, 1.0f);
+                pen.DashStyle = DashStyle.Custom;
+                pen.DashPattern = new float[] { 2, 4 };
                 pen.CustomEndCap = new AdjustableArrowCap(10.0f, 10.0f, false);
                 g.DrawLine(pen, DrawX, DrawY, DestinationX, DestinationY);
+                g.DrawSquare(anchorOutline, anchorBrush, Destination, 8);
             }
         }
 
@@ -157,6 +163,19 @@ namespace IntelOrca.PeggleEdit.Tools.Levels.Children
             set
             {
                 mEntry = value;
+            }
+        }
+
+        [Browsable(false)]
+        public PointF Destination
+        {
+            get => mEntry?.Location ?? new PointF();
+            set
+            {
+                if (mEntry != null)
+                {
+                    mEntry.Location = value;
+                }
             }
         }
 
