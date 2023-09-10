@@ -135,15 +135,7 @@ namespace IntelOrca.PeggleEdit.Tools.Levels
 
         private Image GetImage(Emitter emitter)
         {
-            if (emitter.EmitImageFilename == null)
-                return null;
-
-            string key = emitter.EmitImageFilename.Replace("/", "\\");
-
-            if (LevelPack.Current.Images.ContainsKey(key + ".png"))
-                return LevelPack.Current.Images[key + ".png"];
-            else
-                return null;
+            return LevelPack.Current.GetImage(emitter.EmitImageFilename)?.Image;
         }
 
         private void UpdateParticles(float delta)

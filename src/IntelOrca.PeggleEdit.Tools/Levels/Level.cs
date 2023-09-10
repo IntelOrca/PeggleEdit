@@ -19,6 +19,7 @@ using System.Collections.Generic;
 using System.Drawing;
 using System.Drawing.Drawing2D;
 using IntelOrca.PeggleEdit.Tools.Levels.Children;
+using IntelOrca.PeggleEdit.Tools.Pack;
 using IntelOrca.PeggleEdit.Tools.Properties;
 
 namespace IntelOrca.PeggleEdit.Tools.Levels
@@ -38,7 +39,6 @@ namespace IntelOrca.PeggleEdit.Tools.Levels
         static Image mInterfaceCollision = Resources.interface_collision;
 
         LevelInfo mInfo = LevelInfo.DefaultInfo;
-        Image mBackground;
         LevelEntryCollection mEntries = new LevelEntryCollection();
 
         private bool mShowingBackground = true;
@@ -58,8 +58,11 @@ namespace IntelOrca.PeggleEdit.Tools.Levels
         //private Bitmap mCanvasBufferImage;
         //private Graphics mCanvasBufferGraphics;
 
+        public PakImage Background { get; set; }
+        public PakImage Thumbnail { get; set; }
         public bool ShowParticles { get; set; } = true;
         public bool UsePegTextures { get; set; }
+        public ulong Hash { get; set; }
 
         public Level()
         {
@@ -133,17 +136,15 @@ namespace IntelOrca.PeggleEdit.Tools.Levels
 
         private void DrawBackground(Graphics g)
         {
-            if (mBackground == null)
-                return;
-
-            if (mBackground.Size == new Size(646, 543))
+            var bg = Background?.Image;
+            if (bg.Size == new Size(646, 543))
             {
-                g.DrawImage(mBackground, 73, 53, mBackground.Width, mBackground.Height);
+                g.DrawImage(bg, 73, 53, bg.Width, bg.Height);
             }
             else
             {
-                Rectangle rect = new Rectangle(400 - (mBackground.Width / 2), 300 - (mBackground.Height / 2), mBackground.Width, mBackground.Height);
-                g.DrawImage(mBackground, rect);
+                Rectangle rect = new Rectangle(400 - (bg.Width / 2), 300 - (bg.Height / 2), bg.Width, bg.Height);
+                g.DrawImage(bg, rect);
             }
         }
 
@@ -492,18 +493,6 @@ namespace IntelOrca.PeggleEdit.Tools.Levels
             set
             {
                 mInfo = value;
-            }
-        }
-
-        public Image Background
-        {
-            get
-            {
-                return mBackground;
-            }
-            set
-            {
-                mBackground = value;
             }
         }
 

@@ -141,15 +141,7 @@ namespace IntelOrca.PeggleEdit.Tools.Levels.Children
 
         public Image GetPolygonImage()
         {
-            if (ImageFilename == null)
-                return null;
-
-            string key = ImageFilename.Replace("/", "\\");
-
-            if (LevelPack.Current.Images.ContainsKey(key + ".png"))
-                return LevelPack.Current.Images[key + ".png"];
-            else
-                return null;
+            return LevelPack.Current.GetImage(ImageFilename)?.Image;
         }
 
         public void SetPoints(PointF[] pnts)

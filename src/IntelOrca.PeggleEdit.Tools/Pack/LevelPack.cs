@@ -16,12 +16,11 @@
 
 using System;
 using System.Collections.Generic;
-using System.Drawing;
-using System.Drawing.Imaging;
 using System.IO;
 using System.Linq;
 using System.Text;
 using System.Windows.Forms;
+using IntelOrca.PeggleEdit.Tools.Extensions;
 using IntelOrca.PeggleEdit.Tools.Levels;
 using IntelOrca.PeggleEdit.Tools.Pack.CFG;
 using IntelOrca.PeggleEdit.Tools.Pack.Challenge;
@@ -39,9 +38,26 @@ namespace IntelOrca.PeggleEdit.Tools.Pack
 
         public List<Level> Levels { get; } = new List<Level>();
         public List<ChallengePage> ChallengePages { get; } = new List<ChallengePage>();
-        public Dictionary<string, Image> Images { get; } = new Dictionary<string, Image>();
+        public Dictionary<string, PakImage> Images { get; } = new Dictionary<string, PakImage>(StringComparer.OrdinalIgnoreCase);
         public string Name { get; set; } = "Untitled Pack";
         public string Description { get; set; } = "Type your description here.";
+
+        public PakImage GetImage(string key)
+        {
+            if (key == null)
+                return null;
+
+            key = key.Replace("/", "\\");
+            foreach (var extension in new[] { ".jp2", ".jpg", ".png" })
+            {
+                var key2 = key + extension;
+                if (Images.TryGetValue(key2, out var image))
+                {
+                    return image;
+                }
+            }
+            return null;
+        }
 
         public bool Open(string path)
         {
@@ -98,7 +114,9 @@ namespace IntelOrca.PeggleEdit.Tools.Pack
                     }
 
                     level.Info = linfo;
-                    level.Background = GetBackground(pakFile, linfo.Filename);
+                    level.Background = GetImage(pakFile, Path.Combine("levels", linfo.Filename));
+                    level.Thumbnail = GetImage(pakFile, Path.Combine("levels", "cached_thumbnails", linfo.Filename));
+                    level.Hash = GetLevelData(level).CalculateFnv1a();
                     Levels.Add(level);
                 }
             }
@@ -109,9 +127,12 @@ namespace IntelOrca.PeggleEdit.Tools.Pack
                 if (record.FileName.StartsWith("levels\\"))
                     continue;
 
-                if (record.FileName.EndsWith(".png", StringComparison.CurrentCultureIgnoreCase))
+                var fileName = Path.GetFileName(record.FileName);
+                if (fileName.EndsWith(".jpg", StringComparison.CurrentCultureIgnoreCase) ||
+                    fileName.EndsWith(".jp2", StringComparison.CurrentCultureIgnoreCase) ||
+                    fileName.EndsWith(".png", StringComparison.CurrentCultureIgnoreCase))
                 {
-                    Images.Add(record.FileName, GetImageFromBuffer(record.Buffer));
+                    Images.Add(record.FileName, new PakImage(fileName, record.Buffer));
                 }
             }
         }
@@ -131,26 +152,48 @@ namespace IntelOrca.PeggleEdit.Tools.Pack
             {
                 var datRecord = new PakRecord(pakFile, Path.Combine("levels", $"{lvl.Info.Filename}.dat"), DateTime.Now);
                 datRecord.Buffer = GetLevelData(lvl);
+                pakFile.Records.Add(datRecord);
 
                 if (lvl.Background != null)
                 {
-                    var bgImageRecord = new PakRecord(pakFile, Path.Combine("levels", $"{lvl.Info.Filename}.png"), DateTime.Now);
-                    bgImageRecord.Buffer = GetImageData(lvl.Background);
+                    var extension = Path.GetExtension(lvl.Background.FileName);
+                    var bgImageRecord = new PakRecord(pakFile, Path.Combine("levels", $"{lvl.Info.Filename}{extension}"), DateTime.Now);
+                    bgImageRecord.Buffer = lvl.Background.Data;
                     pakFile.Records.Add(bgImageRecord);
                 }
 
-                var tbRecord = new PakRecord(pakFile, Path.Combine("levels", "cached_thumbnails", $"{lvl.Info.Filename}.png"), DateTime.Now);
-                tbRecord.Buffer = GetImageData(lvl.GetThumbnail());
+                var oldHash = lvl.Hash;
+                var newHash = datRecord.Buffer.CalculateFnv1a();
+                if (oldHash != newHash)
+                {
+                    lvl.Hash = newHash;
+                    lvl.Thumbnail = null;
+                }
 
-                pakFile.Records.Add(datRecord);
-                pakFile.Records.Add(tbRecord);
+                if (lvl.Thumbnail == null)
+                {
+                    try
+                    {
+                        lvl.Thumbnail = new PakImage($"{lvl.Info.Filename}.png", lvl.GetThumbnail());
+                    }
+                    catch
+                    {
+                    }
+                }
+                if (lvl.Thumbnail != null)
+                {
+                    var extension = Path.GetExtension(lvl.Thumbnail.FileName);
+                    var tbRecord = new PakRecord(pakFile, Path.Combine("levels", "cached_thumbnails", $"{lvl.Info.Filename}{extension}"), DateTime.Now);
+                    tbRecord.Buffer = lvl.Thumbnail.Data;
+                    pakFile.Records.Add(tbRecord);
+                }
             }
 
             // Images
             foreach (var kvp in Images)
             {
                 var iRecord = new PakRecord(pakFile, kvp.Key, DateTime.Now);
-                iRecord.Buffer = GetImageData(kvp.Value);
+                iRecord.Buffer = kvp.Value.Data;
                 pakFile.Records.Add(iRecord);
             }
 
@@ -253,52 +296,6 @@ namespace IntelOrca.PeggleEdit.Tools.Pack
             return writer.GetText();
         }
 
-        private byte[] GetImageData(Image img)
-        {
-            var ms = new MemoryStream();
-            img.Save(ms, ImageFormat.Png);
-            return ms.ToArray();
-        }
-
-        private Image GetImageFromBuffer(byte[] buffer)
-        {
-            Image img;
-            try
-            {
-                var ms = new MemoryStream(buffer);
-                img = Image.FromStream(ms);
-            }
-            catch
-            {
-                img = null;
-            }
-            return img;
-        }
-
-        private Image GetBackground(PakCollection collection, string levelFilename)
-        {
-            try
-            {
-                var fileName = Path.Combine("levels", levelFilename);
-                var record = collection.FindFirstRecordWithExtension(fileName, ".jp2", ".jpg", ".png");
-                if (record != null)
-                {
-                    return GetImageFromRecord(record);
-                }
-            }
-            catch
-            {
-            }
-            return null;
-        }
-
-        private static Image GetImageFromRecord(PakRecord record)
-        {
-            return record.FileName.EndsWith(".jp2", StringComparison.OrdinalIgnoreCase) ?
-                J2K.ConvertJPEG2(record) :
-                Image.FromStream(new MemoryStream(record.Buffer));
-        }
-
         public void Import(string selectedPath)
         {
             try
@@ -336,6 +333,28 @@ namespace IntelOrca.PeggleEdit.Tools.Pack
         {
             var fileName = Path.GetFileNameWithoutExtension(path);
             return fileName + ".cfg";
+        }
+
+        private PakImage GetImage(PakCollection collection, string fileName)
+        {
+            try
+            {
+                var record = collection.FindFirstRecordWithExtension(fileName, ".jp2", ".jpg", ".png");
+                if (record != null)
+                {
+                    return GetImageFromRecord(record);
+                }
+            }
+            catch
+            {
+            }
+            return null;
+        }
+
+        private static PakImage GetImageFromRecord(PakRecord record)
+        {
+            var fileName = Path.GetFileName(record.FileName);
+            return new PakImage(fileName, record.Buffer);
         }
     }
 }

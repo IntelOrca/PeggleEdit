@@ -15,10 +15,8 @@
 // along with PeggleEdit. If not, see <http://www.gnu.org/licenses/>.
 
 using System;
-using System.Drawing;
 using System.IO;
 using System.Text;
-using IntelOrca.PeggleEdit.Tools;
 using IntelOrca.PeggleEdit.Tools.Levels;
 using IntelOrca.PeggleEdit.Tools.Pack;
 using IntelOrca.PeggleEdit.Tools.Pack.CFG;
@@ -73,17 +71,16 @@ namespace IntelOrca.PeggleEdit.Designer
 
                 var info = new LevelInfo(name, displayname, acescore, -3);
                 level.Info = info;
-                level.Background = GetBackground(name);
+                level.Background = GetImage(Path.Combine("levels", name));
 
                 mPack.Levels.Add(level);
             }
         }
 
-        private Image GetBackground(string levelFilename)
+        private PakImage GetImage(string fileName)
         {
             try
             {
-                var fileName = Path.Combine("levels", levelFilename);
                 var record = mPakCollection.FindFirstRecordWithExtension(fileName, ".jp2", ".jpg", ".png");
                 if (record != null)
                 {
@@ -96,11 +93,10 @@ namespace IntelOrca.PeggleEdit.Designer
             return null;
         }
 
-        private static Image GetImageFromRecord(PakRecord record)
+        private static PakImage GetImageFromRecord(PakRecord record)
         {
-            return record.FileName.EndsWith(".jp2", StringComparison.OrdinalIgnoreCase) ?
-                J2K.ConvertJPEG2(record) :
-                Image.FromStream(new MemoryStream(record.Buffer));
+            var fileName = Path.GetFileName(record.FileName);
+            return new PakImage(fileName, record.Buffer);
         }
     }
 }

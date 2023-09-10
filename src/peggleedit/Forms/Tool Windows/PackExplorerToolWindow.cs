@@ -170,7 +170,7 @@ namespace IntelOrca.PeggleEdit.Designer
                 return;
             }
 
-            Image image = e.Node.Tag as Image;
+            var image = e.Node.Tag as PakImage;
             if (image == null)
             {
                 e.CancelEdit = true;
@@ -208,7 +208,7 @@ namespace IntelOrca.PeggleEdit.Designer
             TreeNode imagesNode = new TreeNode("Images");
             imagesNode.Name = "image_folder";
             imagesNode.ImageIndex = imagesNode.SelectedImageIndex = IMG_KEY_FOLDER_IMAGES;
-            foreach (KeyValuePair<string, Image> kvp in mPack.Images)
+            foreach (KeyValuePair<string, PakImage> kvp in mPack.Images)
             {
                 imagesNode.Nodes.Add(GetImageNode(kvp.Key, kvp.Value));
             }
@@ -339,7 +339,7 @@ namespace IntelOrca.PeggleEdit.Designer
             return lnode;
         }
 
-        private TreeNode GetImageNode(string name, Image image)
+        private TreeNode GetImageNode(string name, PakImage image)
         {
             TreeNode inode = new TreeNode(name);
             inode.ImageIndex = inode.SelectedImageIndex = IMG_KEY_IMAGE;
@@ -488,7 +488,7 @@ namespace IntelOrca.PeggleEdit.Designer
                     info.Name = Path.GetFileNameWithoutExtension(dialog.FileName);
                     level.Info = info;
 
-                    level.Background = OpenBackground(dialog.FileName);
+                    level.Background = new PakImage(Path.GetFileName(dialog.FileName), OpenBackground(dialog.FileName));
 
                     mPack.Levels.Add(level);
 
@@ -608,7 +608,8 @@ namespace IntelOrca.PeggleEdit.Designer
                             new Rectangle(0, 0, fileImage.Width, fileImage.Height),
                             GraphicsUnit.Pixel);
                     }
-                    level.Background = bitmap;
+                    level.Background = new PakImage(Path.GetFileName(dialog.FileName), bitmap);
+                    level.Thumbnail = null;
                 }
 
                 LevelToolWindow ltw = mParent.GetLevelToolWindow(level);
@@ -638,7 +639,7 @@ namespace IntelOrca.PeggleEdit.Designer
             dialog.Filter = "Portable Network Graphics (*.png)|*.png";
             if (dialog.ShowDialog() == DialogResult.OK)
             {
-                Image image = Image.FromFile(dialog.FileName);
+                var image = new PakImage(dialog.FileName);
 
                 //Find unique name
                 string oimgname = Path.Combine("images", Path.GetFileNameWithoutExtension(dialog.FileName));
@@ -688,13 +689,10 @@ namespace IntelOrca.PeggleEdit.Designer
 
         private void mnuImageDelete_Click(object sender, EventArgs e)
         {
-            Image image = SelectedNode.Tag as Image;
-
-            DialogResult result = MessageBox.Show("'" + SelectedNode.Text + "' will be deleted permenently?", "Delete Image", MessageBoxButtons.OKCancel, MessageBoxIcon.Question);
+            var result = MessageBox.Show("'" + SelectedNode.Text + "' will be deleted permenently?", "Delete Image", MessageBoxButtons.OKCancel, MessageBoxIcon.Question);
             if (result == DialogResult.OK)
             {
                 mPack.Images.Remove(SelectedNode.Text);
-
                 mTreeView.Nodes.Remove(SelectedNode);
             }
         }

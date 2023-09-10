@@ -67,7 +67,7 @@ namespace IntelOrca.PeggleEdit.Tools
             return ConvertJPEG2(record.Buffer);
         }
 
-        private static Image ConvertJPEG2(byte[] buffer)
+        public static Image ConvertJPEG2(byte[] buffer)
         {
 #if DEBUG
             return ConvertJPEG2WithPeggle(buffer);

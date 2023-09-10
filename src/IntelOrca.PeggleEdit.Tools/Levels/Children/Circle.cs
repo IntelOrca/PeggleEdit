@@ -159,20 +159,12 @@ namespace IntelOrca.PeggleEdit.Tools.Levels.Children
             }
 
             if (Provisional)
-                g.FillEllipse(new SolidBrush(Color.FromArgb(128, 255, 255,255)), drawbounds);
+                g.FillEllipse(new SolidBrush(Color.FromArgb(128, 255, 255, 255)), drawbounds);
         }
 
         public virtual Image GetCircleImage()
         {
-            if (ImageFilename == null)
-                return null;
-
-            string key = ImageFilename.Replace("/", "\\");
-
-            if (LevelPack.Current.Images.ContainsKey(key + ".png"))
-                return LevelPack.Current.Images[key + ".png"];
-            else
-                return null;
+            return LevelPack.Current.GetImage(ImageFilename)?.Image;
         }
 
         [EntryProperty(EntryPropertyType.Element, 0.0f)]
