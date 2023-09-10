@@ -133,6 +133,7 @@ namespace IntelOrca.PeggleEdit.Tools.Levels.Children
         public override object Clone()
         {
             Teleport cpyTeleport = new Teleport(Level);
+            base.CloneTo(cpyTeleport);
             if (mEntry != null)
                 cpyTeleport.mEntry = (LevelEntry)mEntry.Clone();
 
