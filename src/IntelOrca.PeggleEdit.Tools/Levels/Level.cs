@@ -217,10 +217,14 @@ namespace IntelOrca.PeggleEdit.Tools.Levels
         public Image GetThumbnail()
         {
             var oInterface = mShowingInterface;
+            var oShowBackground = mShowingBackground;
+            var oShowCollision = mShowCollision;
             var oAllPegsBlue = mShowPreview;
             var oUsePegTextures = UsePegTextures;
 
             mShowingInterface = false;
+            mShowingBackground = true;
+            mShowCollision = false;
             mShowPreview = true;
             UsePegTextures = true;
 
@@ -230,6 +234,8 @@ namespace IntelOrca.PeggleEdit.Tools.Levels
             fsG.Dispose();
 
             mShowingInterface = oInterface;
+            mShowingBackground = oShowBackground;
+            mShowCollision = oShowCollision;
             mShowPreview = oAllPegsBlue;
             UsePegTextures = oUsePegTextures;
 

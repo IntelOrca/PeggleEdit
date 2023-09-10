@@ -289,7 +289,7 @@ namespace IntelOrca.PeggleEdit.Designer
                 Level level = tag as Level;
                 mParent.OpenLevel(level);
             }
-            else if (tag is Image)
+            else if (tag is PakImage)
             {
                 OpenImage(e.Node);
             }
@@ -375,8 +375,8 @@ namespace IntelOrca.PeggleEdit.Designer
             string dirpath = Path.GetDirectoryName(path);
             if (!Directory.Exists(dirpath))
                 Directory.CreateDirectory(dirpath);
-            Image img = node.Tag as Image;
-            img.Save(path);
+            var img = node.Tag as PakImage;
+            img.Image.Save(path);
             Process.Start(path);
         }
 

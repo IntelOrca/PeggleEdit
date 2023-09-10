@@ -93,6 +93,26 @@ namespace IntelOrca.PeggleEdit.Tools.Properties {
         /// <summary>
         ///   Looks up a localized resource of type System.Drawing.Bitmap.
         /// </summary>
+        internal static System.Drawing.Bitmap circle_inner {
+            get {
+                object obj = ResourceManager.GetObject("circle_inner", resourceCulture);
+                return ((System.Drawing.Bitmap)(obj));
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized resource of type System.Drawing.Bitmap.
+        /// </summary>
+        internal static System.Drawing.Bitmap circle_outer {
+            get {
+                object obj = ResourceManager.GetObject("circle_outer", resourceCulture);
+                return ((System.Drawing.Bitmap)(obj));
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized resource of type System.Drawing.Bitmap.
+        /// </summary>
         internal static System.Drawing.Bitmap interface_collision {
             get {
                 object obj = ResourceManager.GetObject("interface_collision", resourceCulture);

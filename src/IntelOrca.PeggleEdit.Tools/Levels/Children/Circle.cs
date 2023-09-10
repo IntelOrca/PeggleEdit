@@ -18,6 +18,7 @@ using System;
 using System.ComponentModel;
 using System.Drawing;
 using System.IO;
+using IntelOrca.PeggleEdit.Tools.Extensions;
 using IntelOrca.PeggleEdit.Tools.Pack;
 using IntelOrca.PeggleEdit.Tools.Properties;
 
@@ -107,55 +108,55 @@ namespace IntelOrca.PeggleEdit.Tools.Levels.Children
 
             base.Draw(g);
 
-            //Get the circle image
-            Image circleImage = GetCircleImage();
-
-            //Set the location
-            PointF location = DrawLocation;
-
-            //Set the draw bounds
-            RectangleF drawbounds = new RectangleF(location.X - mRadius, location.Y - mRadius, mRadius * 2, mRadius * 2);
-
-
-            if (Level.ShowCollision || (!HasPegInfo && circleImage == null))
+            var circleImage = GetCircleImage();
+            var location = DrawLocation;
+            var drawbounds = new RectangleF(location.X - mRadius, location.Y - mRadius, mRadius * 2, mRadius * 2);
+            if (HasPegInfo)
             {
-                if (Collision)
+                if (Level.UsePegTextures)
                 {
-                    // Draw the collision white circle
-                    g.FillEllipse(Brushes.White, drawbounds);
+                    var srcRect = new Rectangle(0, 0, 20, 20);
+                    if (!Level.ShowPreview)
+                    {
+                        if (PegInfo.CanBeOrange)
+                            srcRect.Y += 20;
+                        if (PegInfo.QuickDisappear)
+                            srcRect.Y += 80;
+                    }
+
+                    var dstRect = drawbounds;
+                    g.DrawImage(Resources.peg, dstRect, srcRect, GraphicsUnit.Pixel);
+                }
+                else
+                {
+                    // Draw the PeggleEdit style peg
+                    g.FillEllipse(new SolidBrush(PegInfo.GetOuterColour()), drawbounds);
+                    drawbounds.Inflate(-2, -2);
+                    g.FillEllipse(new SolidBrush(PegInfo.GetInnerColour()), drawbounds);
                 }
             }
             else
             {
-                if (HasPegInfo)
+                // Draw the circle image
+                if (circleImage == null)
                 {
-                    if (Level.UsePegTextures)
-                    {
-                        var srcRect = new Rectangle(0, 0, 20, 20);
-                        if (!Level.ShowPreview)
-                        {
-                            if (PegInfo.CanBeOrange)
-                                srcRect.Y += 20;
-                            if (PegInfo.QuickDisappear)
-                                srcRect.Y += 80;
-                        }
+                    var colour = OutlineColour;
+                    if (colour == Color.Black)
+                        colour = Color.White;
 
-                        var dstRect = drawbounds;
-                        g.DrawImage(Resources.peg, dstRect, srcRect, GraphicsUnit.Pixel);
-                    }
-                    else
-                    {
-                        // Draw the PeggleEdit style peg
-                        g.FillEllipse(new SolidBrush(PegInfo.GetOuterColour()), drawbounds);
-                        drawbounds.Inflate(-2, -2);
-                        g.FillEllipse(new SolidBrush(PegInfo.GetInnerColour()), drawbounds);
-                    }
+                    var dst = new RectangleF(location.X - Radius, location.Y - Radius, Radius * 2, Radius * 2);
+                    g.DrawImageWithColour(Resources.circle_outer, dst, colour);
+                    g.DrawImage(Resources.circle_inner, dst);
                 }
                 else
                 {
-                    // Draw the circle image
                     g.DrawImage(circleImage, location.X - (circleImage.Width / 2), location.Y - (circleImage.Height / 2), circleImage.Width, circleImage.Height);
                 }
+            }
+
+            if (Level.ShowCollision && Collision)
+            {
+                g.FillEllipse(Brushes.White, drawbounds);
             }
 
             if (Provisional)

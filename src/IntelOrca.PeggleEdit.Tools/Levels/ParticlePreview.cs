@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Drawing;
-using System.Drawing.Imaging;
+using IntelOrca.PeggleEdit.Tools.Extensions;
 using IntelOrca.PeggleEdit.Tools.Levels.Children;
 using IntelOrca.PeggleEdit.Tools.Pack;
 
@@ -227,11 +227,10 @@ namespace IntelOrca.PeggleEdit.Tools.Levels
             }
             else
             {
-                var attrs = GetImageAttributes(Opacity);
                 var img = Image;
                 if (Rotation == 0)
                 {
-                    g.DrawImage(img, dst, 0, 0, img.Width, img.Height, GraphicsUnit.Pixel, attrs);
+                    g.DrawImageWithColour(img, dst, colour);
                 }
                 else
                 {
@@ -239,27 +238,10 @@ namespace IntelOrca.PeggleEdit.Tools.Levels
                     var mx = g.Transform;
                     mx.RotateAt(-Rotation, Location);
                     g.Transform = mx;
-                    g.DrawImage(img, dst, 0, 0, img.Width, img.Height, GraphicsUnit.Pixel, attrs);
+                    g.DrawImageWithColour(img, dst, colour);
                     g.Transform = backupTransform;
                 }
             }
-        }
-
-        private ImageAttributes GetImageAttributes(float opacity)
-        {
-            var matrixItems = new float[][] {
-                new float[] { 1, 0, 0, 0, 0 },
-                new float[] { 0, 1, 0, 0, 0 },
-                new float[] { 0, 0, 1, 0, 0 },
-                new float[] { 0, 0, 0, opacity, 0 },
-                new float[] { 0, 0, 0, 0, 1  } };
-            var colorMatrix = new ColorMatrix(matrixItems);
-            var imageAttributes = new ImageAttributes();
-            imageAttributes.SetColorMatrix(
-                colorMatrix,
-                ColorMatrixFlag.Default,
-                ColorAdjustType.Bitmap);
-            return imageAttributes;
         }
     }
 }

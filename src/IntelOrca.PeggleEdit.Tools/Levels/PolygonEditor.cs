@@ -60,31 +60,34 @@ namespace IntelOrca.PeggleEdit.Tools.Levels
             if (IsComplete())
                 return;
 
-            //Check if its near first point
+            // Check if its near first point
+            var canvasSize = pnlPointEditor.Size;
+            var p = new PointF(e.X - (canvasSize.Width / 2), e.Y - (canvasSize.Height / 2));
             if (mPoints.Count > 1)
             {
-                var p = mPoints[0];
-                var area = new RectangleF(p.X - 2, p.Y - 2, 4, 4);
-                if (area.Contains(e.X, e.Y))
+                var p0 = mPoints[0];
+                var area = new RectangleF(p0.X - 2, p0.Y - 2, 4, 4);
+                if (area.Contains(p))
                 {
-                    mPoints.Add(p);
+                    mPoints.Add(p0);
                     RefreshPoints();
                     return;
                 }
             }
 
-            mPoints.Add(new Point(e.X, e.Y));
-
+            mPoints.Add(p);
             RefreshPoints();
         }
 
         private void pnlPointEditor_Paint(object sender, PaintEventArgs e)
         {
+            e.Graphics.FillRectangle(Brushes.Black, e.ClipRectangle);
+
             var canvasSize = pnlPointEditor.Size;
             e.Graphics.TranslateTransform(canvasSize.Width / 2, canvasSize.Height / 2);
 
             if (mImage != null)
-                e.Graphics.DrawImage(mImage, new Rectangle(0, 0, mImage.Width, mImage.Height), new Rectangle(0, 0, mImage.Width, mImage.Height), GraphicsUnit.Pixel);
+                e.Graphics.DrawImage(mImage, new Rectangle(-mImage.Width / 2, -mImage.Height / 2, mImage.Width, mImage.Height), new Rectangle(0, 0, mImage.Width, mImage.Height), GraphicsUnit.Pixel);
 
             if (IsComplete())
             {

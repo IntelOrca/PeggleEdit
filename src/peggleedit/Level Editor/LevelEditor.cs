@@ -914,31 +914,23 @@ namespace IntelOrca.PeggleEdit.Designer
             if (mLevel == null)
                 return;
 
-            Point virtualLocation = Level.GetVirtualXY(e.Location);
-
-            LevelEntry entry = Level.GetObjectAt(virtualLocation.X, virtualLocation.Y);
-            if (entry == null)
+            var virtualLocation = Level.GetVirtualXY(e.Location);
+            var prevObject = lastOverObject;
+            if (lastOverObject != null)
             {
-                if (lastOverObject != null)
-                {
-                    lastOverObject.MouseOver = false;
-                    lastOverObject = null;
-
-                    UpdateRedraw();
-                }
+                lastOverObject.MouseOver = false;
+                lastOverObject = null;
             }
-            else
+
+            var entry = Level.GetObjectAt(virtualLocation.X, virtualLocation.Y);
+            if (entry != null && entry.HitTest(virtualLocation))
             {
                 entry.MouseOver = true;
-                if (lastOverObject != entry)
-                {
-                    if (lastOverObject != null)
-                        lastOverObject.MouseOver = false;
-                    lastOverObject = entry;
-
-                    UpdateRedraw();
-                }
+                lastOverObject = entry;
             }
+
+            if (lastOverObject != prevObject)
+                UpdateRedraw();
 
             if (mSelectedTool != null)
                 mSelectedTool.MouseMove(e.Button, e.Location, Control.ModifierKeys);

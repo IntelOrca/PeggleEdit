@@ -144,7 +144,8 @@ namespace IntelOrca.PeggleEdit.Tools.Levels.Children
         public override bool HitTest(RectangleF rect)
         {
             var result = false;
-            ProcessBricks(b => {
+            ProcessBricks(b =>
+            {
                 var bSize = b.Width;
 
                 var bRect = new RectangleF();
@@ -208,6 +209,7 @@ namespace IntelOrca.PeggleEdit.Tools.Levels.Children
                             }
                         }
                         lastBrick = brick;
+                        _cache.Add(brick);
                         callback(brick);
                         lastActualPoint = pActual;
                         lastPoint = p;

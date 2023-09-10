@@ -18,13 +18,15 @@ using System.ComponentModel;
 using System.Drawing;
 using System.Drawing.Drawing2D;
 using System.IO;
+using IntelOrca.PeggleEdit.Tools.Extensions;
+using IntelOrca.PeggleEdit.Tools.Pack;
 
 namespace IntelOrca.PeggleEdit.Tools.Levels.Children
 {
     /// <summary>
     /// Represents the teleport level entry.
     /// </summary>
-    public class Teleport : LevelEntry
+    public class Teleport : LevelEntry, IPointContainer
     {
         LevelEntry mEntry;
 
@@ -106,20 +108,35 @@ namespace IntelOrca.PeggleEdit.Tools.Levels.Children
 
         public override void Draw(Graphics g)
         {
-            if (Level.ShowCollision)
-                return;
-
             base.Draw(g);
 
-            HatchBrush hbrush = new HatchBrush(HatchStyle.DiagonalCross, Color.White, Color.Transparent);
-
-            //Draw the destination entry
+            // Draw the destination entry
             if (mEntry != null)
                 mEntry.Draw(g);
 
-            //Draw teleport
-            g.FillEllipse(hbrush, Bounds);
-            g.DrawEllipse(Pens.Black, Bounds);
+            // Draw teleport
+            var image = LevelPack.Current.GetImage(ImageFilename)?.Image;
+            if (image == null)
+            {
+                g.SmoothingMode = SmoothingMode.None;
+                var drawBounds = Bounds;
+                g.FillRectangle(Brushes.Black, drawBounds);
+                drawBounds.Inflate(-1, -1);
+                g.FillRectangle(Brushes.White, drawBounds);
+                drawBounds.Inflate(-3, -3);
+                g.FillRectangle(Brushes.Black, drawBounds);
+                g.SmoothingMode = SmoothingMode.HighQuality;
+            }
+            else
+            {
+                g.DrawImage(image, DrawLocation.X - (image.Width / 2), DrawLocation.Y - (image.Height / 2), image.Width, image.Height);
+            }
+
+            // Collision
+            if (Level.ShowCollision && Collision)
+            {
+                g.FillRectangle(Brushes.White, Bounds);
+            }
 
             if (MouseOver || Selected)
             {
@@ -140,6 +157,8 @@ namespace IntelOrca.PeggleEdit.Tools.Levels.Children
         {
             Teleport cpyTeleport = new Teleport(Level);
             base.CloneTo(cpyTeleport);
+            cpyTeleport.mWidth = mWidth;
+            cpyTeleport.mHeight = mHeight;
             if (mEntry != null)
                 cpyTeleport.mEntry = (LevelEntry)mEntry.Clone();
 
@@ -255,6 +274,18 @@ namespace IntelOrca.PeggleEdit.Tools.Levels.Children
             {
                 return new RectangleF(DrawX - (mWidth / 2), DrawY - (mHeight / 2), mWidth, mHeight);
             }
+        }
+
+        public int InteractionPointCount => 1;
+
+        public PointF GetInteractionPoint(int index)
+        {
+            return Destination;
+        }
+
+        public void SetInteractionPoint(int index, PointF value)
+        {
+            Destination = value;
         }
     }
 }

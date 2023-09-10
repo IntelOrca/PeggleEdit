@@ -46,29 +46,14 @@ namespace IntelOrca.PeggleEdit.Designer
 
             foreach (LevelEntry e in Editor.SelectedEntries)
             {
-                if (e is Teleport t)
+                if (e is IPointContainer pc)
                 {
-                    var rect = new RectangleF();
-                    rect.Offset(t.Destination);
-                    rect.Inflate(8, 8);
-                    if (rect.Contains(vl))
+                    for (var i = 0; i < pc.InteractionPointCount; i++)
                     {
-                        _selectionStart = location;
-                        _dragObject = e;
-                        _firstObjectMovement = true;
-                        _objectPoints.Clear();
-                        _objectPoints.Add(t.Destination);
-                        _state = State.MovingPoints;
-                        return;
-                    }
-                }
-                else if (e is CurveGenerator cg)
-                {
-                    var path = cg.BezierPath;
-                    for (var i = 0; i < path.NumPoints; i++)
-                    {
+                        var p = pc.GetInteractionPoint(i);
+
                         var rect = new RectangleF();
-                        rect.Offset(path.Points[i].Add(cg.Location));
+                        rect.Offset(p);
                         rect.Inflate(8, 8);
                         if (rect.Contains(vl))
                         {
@@ -77,7 +62,7 @@ namespace IntelOrca.PeggleEdit.Designer
                             _pointMoveIndex = i;
                             _firstObjectMovement = true;
                             _objectPoints.Clear();
-                            _objectPoints.Add(path.Points[i]);
+                            _objectPoints.Add(p);
                             _state = State.MovingPoints;
                             return;
                         }
@@ -247,11 +232,28 @@ namespace IntelOrca.PeggleEdit.Designer
                 }
                 case State.MovingPoints:
                 {
-                    if (_dragObject is Teleport t)
+                    if (_dragObject is IPointContainer pc)
                     {
+                        if (_pointMoveIndex < 0 || _pointMoveIndex >= pc.InteractionPointCount)
+                            break;
+
                         var delta = location.Subtract(_selectionStart);
                         if (delta.IsEmpty)
                             break;
+
+                        var p = _objectPoints[0].Add(delta);
+                        for (var i = 0; i < pc.InteractionPointCount; i++)
+                        {
+                            if (i != _pointMoveIndex)
+                            {
+                                var other = pc.GetInteractionPoint(i);
+                                if (p.GetLength(other) < 8)
+                                {
+                                    p = other;
+                                    break;
+                                }
+                            }
+                        }
 
                         // Create undo point if first call
                         if (_firstObjectMovement)
@@ -260,28 +262,7 @@ namespace IntelOrca.PeggleEdit.Designer
                             _firstObjectMovement = false;
                         }
 
-                        t.Destination = _objectPoints[0].Add(delta);
-                        Editor.UpdateRedraw();
-                    }
-                    else if (_dragObject is CurveGenerator cg)
-                    {
-                        var path = cg.BezierPath;
-                        if (_pointMoveIndex < 0 || _pointMoveIndex >= path.NumPoints)
-                            break;
-
-                        var delta = location.Subtract(_selectionStart);
-                        if (delta.IsEmpty)
-                            break;
-
-                        // Create undo point if first call
-                        if (_firstObjectMovement)
-                        {
-                            Editor.CreateUndoPoint();
-                            _firstObjectMovement = false;
-                        }
-
-                        path.Points[_pointMoveIndex] = _objectPoints[0].Add(delta);
-                        cg.InvalidatePath();
+                        pc.SetInteractionPoint(_pointMoveIndex, p);
                         Editor.UpdateRedraw();
                     }
                     break;

@@ -20,6 +20,8 @@ using System.ComponentModel;
 using System.Drawing;
 using System.Drawing.Design;
 using System.IO;
+using System.Linq;
+using IntelOrca.PeggleEdit.Tools.Extensions;
 using IntelOrca.PeggleEdit.Tools.Pack;
 
 namespace IntelOrca.PeggleEdit.Tools.Levels.Children
@@ -27,7 +29,7 @@ namespace IntelOrca.PeggleEdit.Tools.Levels.Children
     /// <summary>
     /// Represents the polygon level entry.
     /// </summary>
-    public class Polygon : LevelEntry, ICloneable
+    public class Polygon : LevelEntry, ICloneable, IPointContainer
     {
         byte mNormalDir;
 
@@ -116,26 +118,43 @@ namespace IntelOrca.PeggleEdit.Tools.Levels.Children
             if (LevelPack.Current == null)
                 return;
 
-            Image polygonImage = GetPolygonImage();
+            var location = DrawLocation;
+            var polygonImage = GetPolygonImage();
+            if (polygonImage != null)
+            {
+                g.DrawImage(polygonImage, location.X - (polygonImage.Width / 2), location.Y - (polygonImage.Height / 2), polygonImage.Width, polygonImage.Height);
+            }
 
-            PointF location = DrawLocation;
-
-            if (polygonImage == null || Level.ShowCollision)
+            if (polygonImage == null || !Level.ShowPreview || Level.ShowCollision)
             {
                 var backupMatrix = g.Transform;
                 g.TranslateTransform(location.X, location.Y);
 
-                if (mPoints.Count != 0)
+                if (Level.ShowCollision && MathExt.IsPolygonClosed(mPoints))
                 {
-                    g.FillPolygon(Brushes.White, mPoints.ToArray());
-                    g.DrawPolygon(Pens.Black, mPoints.ToArray());
+                    g.FillPolygon(Brushes.White, mPoints.Take(mPoints.Count - 1).ToArray());
+                }
+                else
+                {
+                    for (var i = 0; i < mPoints.Count - 1; i++)
+                    {
+                        var p0 = mPoints[i];
+                        var p1 = mPoints[i + 1];
+                        g.DrawLine(Pens.White, p0, p1);
+                    }
                 }
 
                 g.Transform = backupMatrix;
             }
-            else
+
+            if (MouseOver || Selected)
             {
-                g.DrawImage(polygonImage, location.X - (polygonImage.Width / 2), location.Y - (polygonImage.Height / 2), polygonImage.Width, polygonImage.Height);
+                var anchorOutline = new Pen(Color.FromArgb(0x23, 0x53, 0xDC));
+                var anchorBrush = new SolidBrush(Color.FromArgb(196, 0x23, 0xB0, 0xDC));
+                foreach (var p in mPoints)
+                {
+                    g.DrawSquare(anchorOutline, anchorBrush, p.Add(DrawLocation), 8);
+                }
             }
         }
 
@@ -206,5 +225,16 @@ namespace IntelOrca.PeggleEdit.Tools.Levels.Children
                 mPoints = new List<PointF>(value);
             }
         }
+
+        public override bool HitTest(RectangleF rect)
+        {
+            rect.Offset(-Location.X, -Location.Y);
+            rect.Inflate(8, 8);
+            return MathExt.RectIntersectsPolygon(rect, mPoints);
+        }
+
+        public int InteractionPointCount => mPoints.Count;
+        public PointF GetInteractionPoint(int index) => mPoints[index].Add(Location);
+        public void SetInteractionPoint(int index, PointF value) => mPoints[index] = value.Subtract(Location);
     }
 }

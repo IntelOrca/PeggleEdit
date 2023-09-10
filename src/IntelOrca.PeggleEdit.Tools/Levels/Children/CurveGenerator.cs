@@ -3,11 +3,12 @@ using System.ComponentModel;
 using System.Drawing;
 using System.Drawing.Drawing2D;
 using System.IO;
+using IntelOrca.PeggleEdit.Tools.Extensions;
 using static IntelOrca.PeggleEdit.Tools.Levels.BezierPath;
 
 namespace IntelOrca.PeggleEdit.Tools.Levels.Children
 {
-    public abstract class CurveGenerator : LevelEntry, ICloneable, IEntryFunction
+    public abstract class CurveGenerator : LevelEntry, ICloneable, IEntryFunction, IPointContainer
     {
         public BezierPath BezierPath { get; private set; } = new BezierPath();
 
@@ -263,6 +264,14 @@ namespace IntelOrca.PeggleEdit.Tools.Levels.Children
                 result.Offset(Location);
                 return result;
             }
+        }
+
+        public int InteractionPointCount => BezierPath.NumPoints;
+        public PointF GetInteractionPoint(int index) => BezierPath.GetPosition(index).Add(Location);
+        public void SetInteractionPoint(int index, PointF value)
+        {
+            BezierPath.SetPosition(index, value.Subtract(Location));
+            InvalidatePath();
         }
     }
 }

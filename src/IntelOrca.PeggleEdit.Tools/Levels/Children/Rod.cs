@@ -18,13 +18,14 @@ using System;
 using System.ComponentModel;
 using System.Drawing;
 using System.IO;
+using IntelOrca.PeggleEdit.Tools.Extensions;
 
 namespace IntelOrca.PeggleEdit.Tools.Levels.Children
 {
     /// <summary>
     /// Represents the rod level entry.
     /// </summary>
-    public class Rod : LevelEntry
+    public class Rod : LevelEntry, IPointContainer
     {
         PointF mPointA;
         PointF mPointB;
@@ -68,9 +69,19 @@ namespace IntelOrca.PeggleEdit.Tools.Levels.Children
         {
             if (Level.ShowCollision && !Collision)
                 return;
+            if (Level.ShowPreview)
+                return;
 
-            Pen p = new Pen(Color.White, 2);
+            var p = new Pen(Color.White, 1);
             g.DrawLine(p, mPointA, mPointB);
+
+            if (MouseOver || Selected)
+            {
+                var anchorOutline = new Pen(Color.FromArgb(0x23, 0x53, 0xDC));
+                var anchorBrush = new SolidBrush(Color.FromArgb(196, 0x23, 0xB0, 0xDC));
+                g.DrawSquare(anchorOutline, anchorBrush, mPointA, 8);
+                g.DrawSquare(anchorOutline, anchorBrush, mPointB, 8);
+            }
         }
 
         public override object Clone()
@@ -216,6 +227,30 @@ namespace IntelOrca.PeggleEdit.Tools.Levels.Children
             {
                 return LevelEntryTypes.Rod;
             }
+        }
+
+        public override bool HitTest(RectangleF rect)
+        {
+            rect.Inflate(8, 8);
+            return MathExt.LineIntersectsRectangle(mPointA, mPointB, rect);
+        }
+
+        public int InteractionPointCount => 2;
+
+        public PointF GetInteractionPoint(int index)
+        {
+            if (index == 0)
+                return mPointA;
+            else
+                return mPointB;
+        }
+
+        public void SetInteractionPoint(int index, PointF value)
+        {
+            if (index == 0)
+                mPointA = value;
+            else
+                mPointB = value;
         }
     }
 }
