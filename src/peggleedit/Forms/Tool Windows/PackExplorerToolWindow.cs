@@ -405,10 +405,10 @@ namespace IntelOrca.PeggleEdit.Designer
         private void SetupPackMenu()
         {
             mContextMenu.Items.Clear();
-
-            ToolStripItem mnuAdd = new ToolStripMenuItem("Properties", Resources.properties_16, new EventHandler(mnuPackProperties_Click));
-
-            mContextMenu.Items.Add(mnuAdd);
+            mContextMenu.Items.Add(new ToolStripMenuItem("Properties", Resources.properties_16, new EventHandler(mnuPackProperties_Click)));
+            mContextMenu.Items.Add(new ToolStripSeparator());
+            mContextMenu.Items.Add(new ToolStripMenuItem("Import...", Resources.import_16, new EventHandler(mnuPackImport_Click)));
+            mContextMenu.Items.Add(new ToolStripMenuItem("Export...", Resources.export_16, new EventHandler(mnuPackExport_Click)));
         }
 
         private void mnuPackProperties_Click(object sender, EventArgs e)
@@ -418,6 +418,31 @@ namespace IntelOrca.PeggleEdit.Designer
             {
                 //Pack name may have changed
                 SelectedNode.Text = mPack.Name;
+            }
+        }
+
+        private void mnuPackImport_Click(object sender, EventArgs e)
+        {
+            using (var folderDialog = new FolderBrowserDialog())
+            {
+                if (folderDialog.ShowDialog() == DialogResult.OK)
+                {
+                    var pack = new LevelPack();
+                    pack.Import(folderDialog.SelectedPath);
+                    mParent.OpenPack(pack);
+                }
+            }
+        }
+
+        private void mnuPackExport_Click(object sender, EventArgs e)
+        {
+            using (var folderDialog = new FolderBrowserDialog())
+            {
+                if (folderDialog.ShowDialog() == DialogResult.OK)
+                {
+                    mPack.Export(folderDialog.SelectedPath);
+                    Process.Start(folderDialog.SelectedPath);
+                }
             }
         }
 

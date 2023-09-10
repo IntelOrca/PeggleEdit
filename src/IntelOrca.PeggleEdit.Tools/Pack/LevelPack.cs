@@ -45,111 +45,116 @@ namespace IntelOrca.PeggleEdit.Tools.Pack
 
         public bool Open(string path)
         {
-            var successful = false;
             try
             {
-                var pakFilename = Path.GetFileNameWithoutExtension(path);
                 var pakFile = new PakCollection(path);
-
-                var cfgRecord = GetCFGRecord(pakFilename, pakFile);
-                if (cfgRecord == null)
-                {
-                    throw new InvalidDataException("Unable to find a cfg file in the level pack.");
-                }
-
-                ParseCFG(Encoding.UTF8.GetString(cfgRecord.Buffer));
-
-                // Load levels
-                foreach (var linfo in mLevelInfos)
-                {
-                    var buffer = pakFile.GetRecord(Path.Combine("levels", linfo.Filename + ".dat")).Buffer;
-                    using (var levelReader = new LevelReader(buffer))
-                    {
-                        var level = levelReader.Read();
-                        if (level == null)
-                        {
-                            MessageBox.Show($"Unable to open {linfo.Name}", "Open Level Pack", MessageBoxButtons.OK, MessageBoxIcon.Error);
-                            continue;
-                        }
-
-                        level.Info = linfo;
-                        level.Background = GetBackground(pakFile, linfo.Filename);
-                        Levels.Add(level);
-                    }
-                }
-
-                // Load any images
-                foreach (var record in pakFile)
-                {
-                    if (record.FileName.StartsWith("levels\\"))
-                        continue;
-
-                    if (record.FileName.EndsWith(".png", StringComparison.CurrentCultureIgnoreCase))
-                    {
-                        Images.Add(record.FileName, GetImageFromBuffer(record.Buffer));
-                    }
-                }
-
-                successful = true;
+                OpenFromPack(pakFile, path);
+                return true;
             }
             catch (Exception ex)
             {
                 MessageBox.Show(ex.Message, "Open Level Pack", MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
-            return successful;
+            return false;
         }
 
         public bool Save(string path)
         {
-            var successful = false;
             try
             {
-                var pakFilename = Path.GetFileNameWithoutExtension(path);
-                var pakFile = new PakCollection();
-
-                // CFG
-                var cfgRecord = new PakRecord(pakFile, pakFilename + ".cfg", DateTime.Now);
-                cfgRecord.Buffer = Encoding.UTF8.GetBytes(WriteCFG());
-                pakFile.Records.Add(cfgRecord);
-
-                // Levels
-                foreach (var lvl in Levels)
-                {
-                    var datRecord = new PakRecord(pakFile, Path.Combine("levels", $"{lvl.Info.Filename}.dat"), DateTime.Now);
-                    datRecord.Buffer = GetLevelData(lvl);
-
-                    if (lvl.Background != null)
-                    {
-                        var bgImageRecord = new PakRecord(pakFile, Path.Combine("levels", $"{lvl.Info.Filename}.png"), DateTime.Now);
-                        bgImageRecord.Buffer = GetImageData(lvl.Background);
-                        pakFile.Records.Add(bgImageRecord);
-                    }
-
-                    var tbRecord = new PakRecord(pakFile, Path.Combine("levels", "cached_thumbnails", $"{lvl.Info.Filename}.png"), DateTime.Now);
-                    tbRecord.Buffer = GetImageData(lvl.GetThumbnail());
-
-                    pakFile.Records.Add(datRecord);
-                    pakFile.Records.Add(tbRecord);
-                }
-
-                // Images
-                foreach (var kvp in Images)
-                {
-                    var iRecord = new PakRecord(pakFile, kvp.Key, DateTime.Now);
-                    iRecord.Buffer = GetImageData(kvp.Value);
-                    pakFile.Records.Add(iRecord);
-                }
-
+                var pakFile = SaveToPack(path);
                 pakFile.Save(path);
-
-                successful = true;
+                return true;
             }
             catch (Exception ex)
             {
                 MessageBox.Show(ex.Message, "Save Level Pack", MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
+            return false;
+        }
 
-            return successful;
+        private void OpenFromPack(PakCollection pakFile, string path)
+        {
+            var cfgFileName = GetCfgFileName(path);
+            var cfgRecord = GetCFGRecord(cfgFileName, pakFile);
+            if (cfgRecord == null)
+            {
+                throw new InvalidDataException("Unable to find a cfg file in the level pack.");
+            }
+
+            ParseCFG(Encoding.UTF8.GetString(cfgRecord.Buffer));
+
+            // Load levels
+            foreach (var linfo in mLevelInfos)
+            {
+                var buffer = pakFile.GetRecord(Path.Combine("levels", linfo.Filename + ".dat")).Buffer;
+                using (var levelReader = new LevelReader(buffer))
+                {
+                    var level = levelReader.Read();
+                    if (level == null)
+                    {
+                        MessageBox.Show($"Unable to open {linfo.Name}", "Open Level Pack", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                        continue;
+                    }
+
+                    level.Info = linfo;
+                    level.Background = GetBackground(pakFile, linfo.Filename);
+                    Levels.Add(level);
+                }
+            }
+
+            // Load any images
+            foreach (var record in pakFile)
+            {
+                if (record.FileName.StartsWith("levels\\"))
+                    continue;
+
+                if (record.FileName.EndsWith(".png", StringComparison.CurrentCultureIgnoreCase))
+                {
+                    Images.Add(record.FileName, GetImageFromBuffer(record.Buffer));
+                }
+            }
+        }
+
+        private PakCollection SaveToPack(string path)
+        {
+            var pakFile = new PakCollection();
+
+            // CFG
+            var cfgName = GetCfgFileName(path);
+            var cfgRecord = new PakRecord(pakFile, cfgName, DateTime.Now);
+            cfgRecord.Buffer = Encoding.UTF8.GetBytes(WriteCFG());
+            pakFile.Records.Add(cfgRecord);
+
+            // Levels
+            foreach (var lvl in Levels)
+            {
+                var datRecord = new PakRecord(pakFile, Path.Combine("levels", $"{lvl.Info.Filename}.dat"), DateTime.Now);
+                datRecord.Buffer = GetLevelData(lvl);
+
+                if (lvl.Background != null)
+                {
+                    var bgImageRecord = new PakRecord(pakFile, Path.Combine("levels", $"{lvl.Info.Filename}.png"), DateTime.Now);
+                    bgImageRecord.Buffer = GetImageData(lvl.Background);
+                    pakFile.Records.Add(bgImageRecord);
+                }
+
+                var tbRecord = new PakRecord(pakFile, Path.Combine("levels", "cached_thumbnails", $"{lvl.Info.Filename}.png"), DateTime.Now);
+                tbRecord.Buffer = GetImageData(lvl.GetThumbnail());
+
+                pakFile.Records.Add(datRecord);
+                pakFile.Records.Add(tbRecord);
+            }
+
+            // Images
+            foreach (var kvp in Images)
+            {
+                var iRecord = new PakRecord(pakFile, kvp.Key, DateTime.Now);
+                iRecord.Buffer = GetImageData(kvp.Value);
+                pakFile.Records.Add(iRecord);
+            }
+
+            return pakFile;
         }
 
         private PakRecord GetCFGRecord(string pakFilename, PakCollection pakFile)
@@ -292,6 +297,45 @@ namespace IntelOrca.PeggleEdit.Tools.Pack
             return record.FileName.EndsWith(".jp2", StringComparison.OrdinalIgnoreCase) ?
                 J2K.ConvertJPEG2(record) :
                 Image.FromStream(new MemoryStream(record.Buffer));
+        }
+
+        public void Import(string selectedPath)
+        {
+            try
+            {
+                var pak = new PakCollection();
+                var files = Directory.GetFiles(selectedPath, "*", SearchOption.AllDirectories);
+                foreach (var file in files)
+                {
+                    var relativePath = file.Remove(0, selectedPath.Length + 1);
+                    var relativeDirectory = Path.GetDirectoryName(relativePath);
+                    pak.ImportFile(relativeDirectory, file);
+                }
+                OpenFromPack(pak, selectedPath);
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show(ex.Message, "Export Level Pack", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
+        }
+
+        public void Export(string selectedPath)
+        {
+            try
+            {
+                var pakFile = SaveToPack(selectedPath);
+                pakFile.Export(selectedPath);
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show(ex.Message, "Export Level Pack", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
+        }
+
+        private static string GetCfgFileName(string path)
+        {
+            var fileName = Path.GetFileNameWithoutExtension(path);
+            return fileName + ".cfg";
         }
     }
 }

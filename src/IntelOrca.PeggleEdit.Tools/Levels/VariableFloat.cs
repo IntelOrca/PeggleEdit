@@ -15,9 +15,9 @@
 // along with PeggleEdit. If not, see <http://www.gnu.org/licenses/>.
 
 using System;
+using System.ComponentModel;
 using System.IO;
 using System.Text;
-using System.ComponentModel;
 
 namespace IntelOrca.PeggleEdit.Tools.Levels
 {
@@ -66,8 +66,6 @@ namespace IntelOrca.PeggleEdit.Tools.Levels
             {
                 mIsVariable = true;
                 mVariableValue = ReadString(br);
-
-                System.Diagnostics.Debug.WriteLine(mVariableValue);
             }
         }
 
