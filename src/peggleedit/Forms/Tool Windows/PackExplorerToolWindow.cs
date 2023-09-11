@@ -23,7 +23,6 @@ using System.IO;
 using System.Runtime.InteropServices;
 using System.Windows.Forms;
 using IntelOrca.PeggleEdit.Designer.Properties;
-using IntelOrca.PeggleEdit.Tools;
 using IntelOrca.PeggleEdit.Tools.Levels;
 using IntelOrca.PeggleEdit.Tools.Pack;
 using IntelOrca.PeggleEdit.Tools.Pack.Challenge;
@@ -380,24 +379,18 @@ namespace IntelOrca.PeggleEdit.Designer
             Process.Start(path);
         }
 
-        private Image OpenBackground(string filename)
+        private PakImage OpenBackground(string levelPath)
         {
-            string jp2 = Path.ChangeExtension(filename, ".jp2");
-            string jpg = Path.ChangeExtension(filename, ".jpg");
-
-            if (File.Exists(jp2))
+            var extensions = new[] { ".jp2", ".jpg", ".png" };
+            foreach (var ext in extensions)
             {
-                J2K.RegisterPegglePath(Settings.Default.PeggleNightsExePath);
-                return J2K.ConvertJPEG2(jp2);
+                var imagePath = Path.ChangeExtension(levelPath, ext);
+                if (File.Exists(imagePath))
+                {
+                    return new PakImage(imagePath);
+                }
             }
-            else if (File.Exists(jpg))
-            {
-                return Image.FromFile(jpg);
-            }
-            else
-            {
-                return null;
-            }
+            return null;
         }
 
         #region Pack Context Menu
@@ -488,7 +481,7 @@ namespace IntelOrca.PeggleEdit.Designer
                     info.Name = Path.GetFileNameWithoutExtension(dialog.FileName);
                     level.Info = info;
 
-                    level.Background = new PakImage(Path.GetFileName(dialog.FileName), OpenBackground(dialog.FileName));
+                    level.Background = OpenBackground(dialog.FileName);
 
                     mPack.Levels.Add(level);
 

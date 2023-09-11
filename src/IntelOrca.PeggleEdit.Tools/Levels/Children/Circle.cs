@@ -87,6 +87,8 @@ namespace IntelOrca.PeggleEdit.Tools.Levels.Children
         {
             if (Level.ShowCollision)
                 return;
+            if (!HasPegInfo && Level.ShowPreview && !Visible)
+                return;
 
             PointF location = DrawLocation;
             if (MovementLink?.Movement is Movement movement)
@@ -135,7 +137,7 @@ namespace IntelOrca.PeggleEdit.Tools.Levels.Children
                     g.FillEllipse(new SolidBrush(PegInfo.GetInnerColour()), drawbounds);
                 }
             }
-            else
+            else if (!Level.ShowPreview || Visible)
             {
                 // Draw the circle image
                 if (circleImage == null)
