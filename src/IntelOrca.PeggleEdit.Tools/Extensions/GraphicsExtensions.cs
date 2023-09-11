@@ -5,6 +5,11 @@ namespace IntelOrca.PeggleEdit.Tools.Extensions
 {
     public static class GraphicsExtensions
     {
+        public static void DrawRectangle(this Graphics g, Pen pen, RectangleF rect)
+        {
+            g.DrawRectangle(pen, rect.X, rect.Y, rect.Width, rect.Height);
+        }
+
         public static void DrawSquare(this Graphics g, Pen outline, Brush fill, PointF pos, int size)
         {
             var halfSize = size / 2;

@@ -68,8 +68,12 @@ namespace IntelOrca.PeggleEdit.Tools.Levels
         private void UpdateEmitter(Emitter emitter)
         {
             var edata = GetEmitterData(emitter);
+            var interval = 0.01 / (emitter.EmitRate.StaticValue + emitter.UnknownEmitRate);
+            if (interval == 0)
+                return;
+
             var timeSinceLastEmission = _time - edata.LastEmitTime;
-            if (timeSinceLastEmission < emitter.EmitRate.StaticValue * 10)
+            if (timeSinceLastEmission < interval)
                 return;
 
             edata.LastEmitTime = _time;
@@ -120,6 +124,10 @@ namespace IntelOrca.PeggleEdit.Tools.Levels
                 p.MaxOpacity = emitter.Opacity.StaticValue;
                 p.FadeIn = emitter.FadeInTime;
                 p.TimeBeforeFadeOut = emitter.TimeBeforeFadeOut;
+            }
+            else
+            {
+                p.MaxOpacity = 1;
             }
 
             while (_particles.Count > 1000)

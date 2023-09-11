@@ -145,7 +145,7 @@ namespace IntelOrca.PeggleEdit.Designer
         void mTreeView_BeforeLabelEdit(object sender, NodeLabelEditEventArgs e)
         {
             //Only allow image names to be edited
-            Image image = e.Node.Tag as Image;
+            var image = e.Node.Tag as PakImage;
             if (image == null)
             {
                 e.CancelEdit = true;

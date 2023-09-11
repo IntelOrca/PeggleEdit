@@ -17,7 +17,9 @@
 using System;
 using System.ComponentModel;
 using System.Drawing;
+using System.Drawing.Drawing2D;
 using System.IO;
+using IntelOrca.PeggleEdit.Tools.Extensions;
 
 namespace IntelOrca.PeggleEdit.Tools.Levels.Children
 {
@@ -93,7 +95,7 @@ namespace IntelOrca.PeggleEdit.Tools.Levels.Children
             : base(level)
         {
             Visible = true;
-            OutlineColour = Color.Transparent;
+            OutlineColour = Color.Black;
 
             DefaultValues();
         }
@@ -341,18 +343,24 @@ namespace IntelOrca.PeggleEdit.Tools.Levels.Children
 
         public override void Draw(Graphics g)
         {
-            if (Level.ShowCollision || Level.ShowPreview)
-                return;
-
             base.Draw(g);
 
-            PointF location = DrawLocation;
-
-            Rectangle rect = new Rectangle((int)(location.X - (mWidth / 2)), (int)(location.Y - (mHeight / 2)), mWidth, mHeight);
-            g.DrawRectangle(Pens.Blue, rect);
-
-            rect.Inflate(-1, -1);
-            g.DrawRectangle(Pens.LightBlue, rect);
+            if (!Level.ShowPreview && OutlineColour == Color.Black)
+            {
+                var bounds = Bounds;
+                g.DrawRectangle(Pens.Blue, bounds);
+                bounds.Inflate(-1, -1);
+                g.DrawRectangle(Pens.LightBlue, bounds);
+            }
+            else if (!Level.ShowPreview || OutlineColour != Color.Black)
+            {
+                g.SmoothingMode = SmoothingMode.None;
+                var bounds = Bounds;
+                g.DrawRectangle(Pens.Black, bounds);
+                bounds.Inflate(-2, -2);
+                g.DrawRectangle(new Pen(OutlineColour, 3), bounds);
+                g.SmoothingMode = SmoothingMode.HighQuality;
+            }
         }
 
         public override object Clone()

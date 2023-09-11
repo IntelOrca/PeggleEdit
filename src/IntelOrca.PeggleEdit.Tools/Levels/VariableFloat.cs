@@ -39,14 +39,25 @@ namespace IntelOrca.PeggleEdit.Tools.Levels
 
         public VariableFloat(string variableValue)
         {
-            mIsVariable = true;
-            mVariableValue = variableValue;
+            if (float.TryParse(variableValue, out var f))
+            {
+                mIsVariable = false;
+                mStaticValue = f;
+                mVariableValue = default;
+            }
+            else
+            {
+                mIsVariable = true;
+                mStaticValue = default;
+                mVariableValue = variableValue;
+            }
         }
 
         public VariableFloat(float staticValue)
         {
             mIsVariable = false;
             mStaticValue = staticValue;
+            mVariableValue = default;
         }
 
         public VariableFloat(BinaryReader br)
