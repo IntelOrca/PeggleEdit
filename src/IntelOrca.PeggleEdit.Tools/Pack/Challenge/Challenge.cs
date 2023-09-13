@@ -186,7 +186,7 @@ namespace IntelOrca.PeggleEdit.Tools.Pack.Challenge
                         level.Opponent = pOpponents[i];
                         mAgainstOpponents = true;
                     }
-                    if (int.TryParse(pDifficulty[i], out var d))
+                    if (pDifficulty != null && int.TryParse(pDifficulty[i], out var d))
                         level.OpponentDifficulty = d;
                     mLevels.Add(level);
                 }
