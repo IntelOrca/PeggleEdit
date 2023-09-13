@@ -16,8 +16,8 @@
 
 using System;
 using System.Collections.Generic;
-using IntelOrca.PeggleEdit.Tools.Pack.CFG;
 using System.Reflection;
+using IntelOrca.PeggleEdit.Tools.Pack.CFG;
 
 namespace IntelOrca.PeggleEdit.Tools.Pack.Challenge
 {
@@ -70,7 +70,7 @@ namespace IntelOrca.PeggleEdit.Tools.Pack.Challenge
         }
 
         public static string[] Characters = new string[] { "Bjorn", "Jimmy Lightning", "Kat Tut", "Splork", "Claude", "Renfield", "Tula", "Warren", "Lord Cinderbottom", "Master Hu", "Marina" };
-        public static string[] OpponentDifficulty = new string[] { "Easy", "Normal", "Hard", "Master" };
+        public static string[] OpponentDifficulty = new string[] { "Normal", "Hard", "Master" };
 
         private int mID;
 
@@ -170,15 +170,24 @@ namespace IntelOrca.PeggleEdit.Tools.Pack.Challenge
 
             mGravityMod = Convert.ToSingle(GetProperty(block, "GravityMod", 0.0f));
             mProjectileSpeedMod = Convert.ToSingle(GetProperty(block, "ProjSpeedMod", 0.0f));
+            mAgainstOpponents = false;
 
-
-            CFGProperty plevels = block.GetFirstProperty("Levels");
-            if (plevels != null)
+            var pLevels = block.GetFirstProperty("Levels");
+            var pOpponents = block.GetFirstProperty("Opponents");
+            var pDifficulty = block.GetFirstProperty("OpponentDifficulty");
+            if (pLevels != null)
             {
-                foreach (string v in plevels.Values)
+                for (var i = 0; i < pLevels.Values.Count; i++)
                 {
-                    ChallengeLevel level = new ChallengeLevel();
-                    level.Level = v;
+                    var level = new ChallengeLevel();
+                    level.Level = pLevels[i];
+                    if (pOpponents != null && pOpponents.Values.Count > i)
+                    {
+                        level.Opponent = pOpponents[i];
+                        mAgainstOpponents = true;
+                    }
+                    if (int.TryParse(pDifficulty[i], out var d))
+                        level.OpponentDifficulty = d;
                     mLevels.Add(level);
                 }
             }
