@@ -345,14 +345,15 @@ namespace IntelOrca.PeggleEdit.Tools.Levels.Children
         {
             base.Draw(g);
 
-            if (!Level.ShowPreview && OutlineColour == Color.Black)
+            var hasOutline = OutlineColour.R != 0 || OutlineColour.G != 0 || OutlineColour.B != 0;
+            if (!Level.ShowPreview && !hasOutline)
             {
                 var bounds = Bounds;
                 g.DrawRectangle(Pens.Blue, bounds);
                 bounds.Inflate(-1, -1);
                 g.DrawRectangle(Pens.LightBlue, bounds);
             }
-            else if (!Level.ShowPreview || OutlineColour != Color.Black)
+            else if (!Level.ShowPreview || hasOutline)
             {
                 g.SmoothingMode = SmoothingMode.None;
                 var bounds = Bounds;
