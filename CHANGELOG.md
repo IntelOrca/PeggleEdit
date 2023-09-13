@@ -1,3 +1,13 @@
+PeggleEdit 5.1.1 (Eagle) (2023-09-13)
+
+* [Feature] Add import / export of level packs to folder
+* [Feature] Basic preview of emitters
+* [Feature] Control points for rods, polygons, and teleports can now be moved in the editor
+* [Enhancement] Show a warning if a level contains a generator
+* [Fix] #12: Duel challenges do not load as duels
+* [Fix] #15: Undoing moves teleports to 0,0
+* [Fix] Preserve image format when loading and saving pak files
+
 PeggleEdit 5.1.0 (Dunnock) (2023-06-19)
 
 * [Feature] #8: Automatically resize / crop background image
