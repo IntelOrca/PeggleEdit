@@ -29,5 +29,8 @@ This means that out of all the challenges in the game and in all the level packs
 ### Is there any faster way to repeatedly test my level? ###
 Because Peggle Nights stops its level packs from being overwritten, you have to keep closing and re-opening the game. Another way to test your level is to extract main.pak found in the PeggleNights folder and delete the .pak file so that Peggle Nights reads the individual files in the folder rather than in main.pak. Then you can export your level and save it over the top of an existing quick-play level such as "bjorn1.dat". Then you simply reload the level in the game.
 
+### What resolution do I need to make my art for the levels? ###
+Peggle runs in 800x600 so your art should be the same. If you need a reference on how your art would look in-game, use the image found [here](https://github.com/IntelOrca/PeggleEdit) for reference. Load it into your preferred image editor as a layer on top of your art.
+
 ### Why do the images I import for objects have white squares behind them? ###
 Your images need to be transparent. If they are not transparent then you will get this effect. The preferred image type is PNG which supports an alpha channel. Applications such as GIMP or Inkscape allow you to save transparent PNG files. See [GIMP Transparency](http://docs.gimp.org/en/gimp-using-web-transparency.html) for a guide to saving transparent images in GIMP.
