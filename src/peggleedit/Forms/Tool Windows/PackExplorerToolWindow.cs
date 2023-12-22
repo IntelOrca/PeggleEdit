@@ -135,7 +135,7 @@ namespace IntelOrca.PeggleEdit.Designer
                 {
                     mnuLevelDelete_Click(sender, EventArgs.Empty);
                 }
-                else if (SelectedNode.Tag is Image)
+                else if (SelectedNode.Tag is PakImage)
                 {
                     mnuImageDelete_Click(sender, EventArgs.Empty);
                 }
