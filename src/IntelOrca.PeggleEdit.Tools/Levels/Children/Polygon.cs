@@ -119,17 +119,24 @@ namespace IntelOrca.PeggleEdit.Tools.Levels.Children
                 return;
 
             var location = DrawLocation;
+            var angle = 0.0f;
+            if (MovementLink?.Movement is Movement movement)
+            {
+                angle = movement.GetEstimatedMoveAngle(angle);
+            }
+
+            var backupMatrix = g.Transform;
+            g.TranslateTransform(location.X, location.Y);
+            g.RotateTransform(angle);
+
             var polygonImage = GetPolygonImage();
             if (polygonImage != null)
             {
-                g.DrawImage(polygonImage, location.X - (polygonImage.Width / 2), location.Y - (polygonImage.Height / 2), polygonImage.Width, polygonImage.Height);
+                g.DrawImage(polygonImage, -(polygonImage.Width / 2), -(polygonImage.Height / 2), polygonImage.Width, polygonImage.Height);
             }
 
             if (polygonImage == null || !Level.ShowPreview || Level.ShowCollision)
             {
-                var backupMatrix = g.Transform;
-                g.TranslateTransform(location.X, location.Y);
-
                 if (Level.ShowCollision && MathExt.IsPolygonClosed(mPoints))
                 {
                     g.FillPolygon(Brushes.White, mPoints.Take(mPoints.Count - 1).ToArray());
@@ -143,9 +150,9 @@ namespace IntelOrca.PeggleEdit.Tools.Levels.Children
                         g.DrawLine(Pens.White, p0, p1);
                     }
                 }
-
-                g.Transform = backupMatrix;
             }
+
+            g.Transform = backupMatrix;
 
             if (MouseOver || Selected)
             {
