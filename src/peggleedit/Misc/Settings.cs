@@ -29,6 +29,7 @@ namespace IntelOrca.PeggleEdit.Designer
         public static Settings Default { get; private set; } = new Settings();
 
         public string PeggleNightsExePath { get; set; } = @"C:\Program Files\PopCap Games\Peggle Nights\PeggleNights.exe";
+        public string PeggleNightsPath => PeggleNightsExePath == null ? null : Path.GetDirectoryName(PeggleNightsExePath);
         public bool ShowGrid { get; set; }
         public bool SnapToGrid { get; set; } = true;
         public int GridSize { get; set; } = 20;

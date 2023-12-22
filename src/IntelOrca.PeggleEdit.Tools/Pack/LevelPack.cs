@@ -32,15 +32,79 @@ namespace IntelOrca.PeggleEdit.Tools.Pack
     /// </summary>
     public class LevelPack
     {
-        public static LevelPack Current { get; set; }
+        private static string _pegglePath;
+        private static int _mainPakLoad;
+        private static PakCollection _mainPak { get; set; }
 
         private readonly List<LevelInfo> mLevelInfos = new List<LevelInfo>();
+
+        public static LevelPack Current { get; set; }
 
         public List<Level> Levels { get; } = new List<Level>();
         public List<ChallengePage> ChallengePages { get; } = new List<ChallengePage>();
         public Dictionary<string, PakImage> Images { get; } = new Dictionary<string, PakImage>(StringComparer.OrdinalIgnoreCase);
         public string Name { get; set; } = "Untitled Pack";
         public string Description { get; set; } = "Type your description here.";
+
+        public static void RegisterPegglePath(string pegglePath)
+        {
+            _pegglePath = pegglePath;
+        }
+
+        private PakImage GetMainPakImage(string key)
+        {
+            if (_mainPakLoad == 0)
+            {
+                if (string.IsNullOrEmpty(_pegglePath))
+                    return null;
+
+                _mainPakLoad = 2;
+                var mainPak = Path.Combine(_pegglePath, "main.pak");
+                try
+                {
+                    if (File.Exists(mainPak))
+                    {
+                        _mainPak = new PakCollection(mainPak);
+                        _mainPakLoad = 1;
+                    }
+                }
+                catch
+                {
+                }
+            }
+
+            if (_mainPakLoad != 0)
+            {
+                key = key.Replace("/", "\\");
+                foreach (var extension in new[] { ".jp2", ".jpg", ".png" })
+                {
+                    var key2 = key + extension;
+                    if (_mainPakLoad == 1)
+                    {
+                        var record = _mainPak.GetRecord(key2);
+                        if (record != null)
+                        {
+                            return new PakImage(record.FileName, record.Buffer);
+                        }
+                    }
+                    else
+                    {
+                        var realFileName = Path.Combine(_pegglePath, key2);
+                        try
+                        {
+                            if (File.Exists(realFileName))
+                            {
+                                return new PakImage(realFileName);
+                            }
+                        }
+                        catch
+                        {
+                        }
+                    }
+                }
+            }
+            return null;
+        }
 
         public PakImage GetImage(string key)
         {
@@ -56,7 +120,7 @@ namespace IntelOrca.PeggleEdit.Tools.Pack
                     return image;
                 }
             }
-            return null;
+            return GetMainPakImage(key);
         }
 
         public bool Open(string path)

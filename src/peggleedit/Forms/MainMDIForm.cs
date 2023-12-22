@@ -633,6 +633,8 @@ namespace IntelOrca.PeggleEdit.Designer
 
         public void NewPack()
         {
+            LevelPack.RegisterPegglePath(Settings.Default.PeggleNightsPath);
+
             mPackFilename = String.Empty;
 
             LevelPack pack = new LevelPack();
@@ -647,6 +649,7 @@ namespace IntelOrca.PeggleEdit.Designer
 
             LevelPack pack = new LevelPack();
             J2K.RegisterPegglePath(Settings.Default.PeggleNightsExePath);
+            LevelPack.RegisterPegglePath(Settings.Default.PeggleNightsPath);
             if (pack.Open(filename))
             {
                 mPackFilename = filename;
