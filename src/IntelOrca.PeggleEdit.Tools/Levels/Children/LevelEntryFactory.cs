@@ -69,21 +69,16 @@ namespace IntelOrca.PeggleEdit.Tools.Levels.Children
         /// <returns>A new instance of a level entry with data read by the binary reader.</returns>
         public static LevelEntry CreateLevelEntry(BinaryReader br, int version)
         {
-            int sb1 = br.ReadInt32();
-            if (sb1 == 0)
+            int magic = br.ReadInt32();
+            if (magic == 0)
                 return null;
-            if (sb1 != 1)
-            {
-                //Do something weird
+            else if (magic != 1)
                 return null;
-            }
 
-            int type = br.ReadInt32();
-
-            LevelEntry entry = CreateLevelEntry(type, null);
+            var type = br.ReadInt32();
+            var entry = CreateLevelEntry(type, null);
             entry.ReadGenericData(br, version);
             entry.ReadData(br, version);
-
             return entry;
         }
     }

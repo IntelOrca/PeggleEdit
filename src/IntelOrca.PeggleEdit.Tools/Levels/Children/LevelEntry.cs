@@ -19,7 +19,7 @@ using System.ComponentModel;
 using System.Drawing;
 using System.Drawing.Design;
 using System.IO;
-using System.Text;
+using IntelOrca.PeggleEdit.Tools.Extensions;
 
 namespace IntelOrca.PeggleEdit.Tools.Levels.Children
 {
@@ -91,7 +91,9 @@ namespace IntelOrca.PeggleEdit.Tools.Levels.Children
 
         public void ReadGenericData(BinaryReader br, int version)
         {
-            FlagGroup f = new FlagGroup(br.ReadInt32());
+            var f = version < 0x0F ?
+                new FlagGroup(br.ReadUInt24()) :
+                new FlagGroup(br.ReadInt32());
 
             mCollision = f[5];
             mVisible = f[6];
@@ -100,9 +102,6 @@ namespace IntelOrca.PeggleEdit.Tools.Levels.Children
             mBaseObject = f[15];
             mBallStopReset = f[20];
             mForeground = f[22];
-            mDrawSort = f[24];
-            mForeground2 = f[25];
-            mDrawFloat = f[28];
 
             if (f[0])
                 mRolly = br.ReadSingle();
@@ -134,12 +133,23 @@ namespace IntelOrca.PeggleEdit.Tools.Levels.Children
                 mSound = br.ReadByte();
             if (f[21])
                 mLogic = LevelReader.ReadPopcapString(br);
+
+            mDrawSort = f[24];
+            mForeground2 = f[25];
+            mDrawFloat = f[28];
             if (f[23])
                 mMaxBounceVelocity = br.ReadSingle();
             if (f[26])
                 mSubID = br.ReadInt32();
             if (f[27])
                 mFlipperFlags = br.ReadByte();
+
+            if (version >= 0x50)
+            {
+                if (f[30])
+                    mShadow = f[30];
+            }
+
             if (f[2])
             {
                 mPegInfo = new PegInfo(this);
@@ -150,9 +160,6 @@ namespace IntelOrca.PeggleEdit.Tools.Levels.Children
                 MovementLink = new MovementLink(mLevel);
                 MovementLink.ReadData(br, version);
             }
-
-            if (f[30] && version >= 0x50)
-                mShadow = f[30];
         }
 
         public void WriteGenericData(BinaryWriter bw, int version)
@@ -312,7 +319,7 @@ namespace IntelOrca.PeggleEdit.Tools.Levels.Children
             }
             return new PointF(mX, mY);
         }
-        
+
         public void SetSelectedMovePosition(PointF value)
         {
             var movement = GetHighestSelectedMovement();

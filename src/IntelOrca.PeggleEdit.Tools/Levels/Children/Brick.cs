@@ -93,15 +93,22 @@ namespace IntelOrca.PeggleEdit.Tools.Levels.Children
             {
                 mCurvePoints = br.ReadByte() + 2;
             }
-            if (fC[5])
-                br.ReadSingle();    //Left angle
-            if (fC[6])
-                br.ReadSingle();    //Right angle
 
-            //if arg0+3		ReadSingle		ReadSingle
+            var leftAngle = 0.0f;
+            var rightAngle = 0.0f;
+            if (fC[5])
+            {
+                leftAngle = br.ReadSingle();
+            }
+            if (fC[6])
+            {
+                rightAngle = br.ReadSingle();
+                br.ReadSingle();
+            }
 
             if (fC[4])
                 mSectorAngle = br.ReadSingle();
+
             if (fC[7])
                 mWidth = br.ReadSingle();
 
@@ -110,10 +117,7 @@ namespace IntelOrca.PeggleEdit.Tools.Levels.Children
             mLength = br.ReadSingle();
             mAngle = br.ReadSingle();
 
-            byte[] hmm = br.ReadBytes(4);
-
-            //for (int i = 0; i < 4; i++)
-            //	br.ReadByte();
+            var unk = br.ReadUInt32();
         }
 
         public override void WriteData(BinaryWriter bw, int version)
