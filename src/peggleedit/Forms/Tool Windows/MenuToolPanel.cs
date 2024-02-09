@@ -24,6 +24,7 @@ using System.Reflection;
 using System.Runtime.InteropServices;
 using System.Text;
 using System.Windows.Forms;
+using IntelOrca.PeggleEdit.Designer.Forms;
 using IntelOrca.PeggleEdit.Designer.Level_Editor;
 using IntelOrca.PeggleEdit.Designer.Properties;
 using IntelOrca.PeggleEdit.Tools;
@@ -132,6 +133,9 @@ namespace IntelOrca.PeggleEdit.Designer
             orbSaveAs.Image = Resources.saveas_32;
             orbSaveAs.Click += new EventHandler(saveAsRibbonButton_Click);
 
+            RibbonOrbMenuItem orbPakTool = new RibbonOrbMenuItem(".pak Extract / Pack");
+            orbPakTool.Click += new EventHandler(pakToolRibbonButton_Click);
+
             RibbonOrbMenuItem orbClose = new RibbonOrbMenuItem("Close");
 
             RibbonOrbMenuItem orbExit = new RibbonOrbMenuItem("Exit");
@@ -146,6 +150,8 @@ namespace IntelOrca.PeggleEdit.Designer
             mRibbon.OrbDropDown.MenuItems.Add(orbOpen);
             mRibbon.OrbDropDown.MenuItems.Add(orbSave);
             mRibbon.OrbDropDown.MenuItems.Add(orbSaveAs);
+            mRibbon.OrbDropDown.MenuItems.Add(new RibbonSeparator());
+            mRibbon.OrbDropDown.MenuItems.Add(orbPakTool);
             mRibbon.OrbDropDown.MenuItems.Add(new RibbonSeparator());
             mRibbon.OrbDropDown.MenuItems.Add(orbClose);
             mRibbon.OrbDropDown.OptionItems.Add(orbExit);
@@ -607,6 +613,14 @@ namespace IntelOrca.PeggleEdit.Designer
             {
                 if (mParent.SavePack(dialog.FileName))
                     mParent.PackFilename = dialog.FileName;
+            }
+        }
+
+        private void pakToolRibbonButton_Click(object sender, EventArgs e)
+        {
+            using (var pakToolForm = new PakToolForm())
+            {
+                pakToolForm.ShowDialog();
             }
         }
 
