@@ -16,6 +16,13 @@ namespace IntelOrca.PeggleEdit.Tools.Levels.Children
 
         public override int Type => LevelEntryTypes.PegCurveGenerator;
 
+        public override object Clone()
+        {
+            var copy = new PegCurveGenerator(Level);
+            base.CloneTo(copy);
+            return copy;
+        }
+
         public override void InvalidatePath()
         {
             _cache.Clear();

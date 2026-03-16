@@ -177,12 +177,10 @@ namespace IntelOrca.PeggleEdit.Tools.Levels.Children
             return location;
         }
 
-        public override object Clone()
+        protected void CloneTo(CurveGenerator copy)
         {
-            var copy = new BrickCurveGenerator(Level);
             base.CloneTo(copy);
             copy.BezierPath = BezierPath.Clone();
-            return copy;
         }
 
         public void RecalculateOrigin()
