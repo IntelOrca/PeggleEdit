@@ -259,7 +259,7 @@ namespace IntelOrca.PeggleEdit.Designer
                     SetupLevelMenu();
                     mContextMenu.Show(mTreeView, e.Location);
                 }
-                else if (e.Node.Tag is Image)
+                else if (e.Node.Tag is PakImage)
                 {
                     SetupImageMenu();
                     mContextMenu.Show(mTreeView, e.Location);
