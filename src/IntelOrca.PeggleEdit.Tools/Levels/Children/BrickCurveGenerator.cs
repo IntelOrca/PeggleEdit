@@ -11,6 +11,13 @@ namespace IntelOrca.PeggleEdit.Tools.Levels.Children
 
         public override int Type => LevelEntryTypes.BrickCurveGenerator;
 
+        public override object Clone()
+        {
+            var copy = new BrickCurveGenerator(Level);
+            base.CloneTo(copy);
+            return copy;
+        }
+
         public BrickCurveGenerator(Level level)
             : base(level)
         {
