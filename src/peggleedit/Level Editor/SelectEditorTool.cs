@@ -503,21 +503,21 @@ namespace IntelOrca.PeggleEdit.Designer
 
         public override void KeyDown(KeyEventArgs e)
         {
-            var x = 0;
-            var y = 0;
+            float x = 0f;
+            float y = 0f;
             switch (e.KeyCode)
             {
                 case Keys.Up:
-                    y = -1;
+                    y = -1f;
                     break;
                 case Keys.Down:
-                    y = 1;
+                    y = 1f;
                     break;
                 case Keys.Left:
-                    x = -1;
+                    x = -1f;
                     break;
                 case Keys.Right:
-                    x = 1;
+                    x = 1f;
                     break;
                 case Keys.B:
                 case Keys.V:
@@ -533,8 +533,13 @@ namespace IntelOrca.PeggleEdit.Designer
 
             if (e.Modifiers == Keys.Control)
             {
-                x *= 5;
-                y *= 5;
+                x *= 5f;
+                y *= 5f;
+            }
+            else if (e.Modifiers == Keys.Alt)
+            {
+                x /= 16f;
+                y /= 16f;
             }
 
             Editor.MoveObjects(x, y);
