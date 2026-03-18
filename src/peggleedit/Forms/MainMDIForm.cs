@@ -749,6 +749,7 @@ namespace IntelOrca.PeggleEdit.Designer
                         var text = "One or more of your levels contains a peg generator, or similar object.\n" +
                             "These must be removed for the level to be playable in Peggle.";
                         MessageBox.Show(text, "Save Project", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                        return;
                     }
                 }
             }
