@@ -102,7 +102,6 @@ namespace IntelOrca.PeggleEdit.Designer
         RibbonPanel panelZOrder;
 
         RibbonPanel panelInsert;
-        RibbonButton btnScript;
 
         RibbonPanel panelRemove;
 
@@ -401,12 +400,7 @@ namespace IntelOrca.PeggleEdit.Designer
             btnApplyFunction.Image = Resources.execute_32;
             btnApplyFunction.Click += new EventHandler(applyFunctionRibbonButton_Click);
 
-            btnScript = new RibbonButton("Script");
-            btnScript.Image = Resources.script_32;
-            btnScript.Click += new EventHandler(scriptRibbonButton_Click);
-
             panelFunctions.Items.Add(btnApplyFunction);
-            panelFunctions.Items.Add(btnScript);
 
             RibbonButton btnRemove = new RibbonButton("Remove");
             btnRemove.Image = Resources.remove_peg_32;
@@ -965,16 +959,7 @@ namespace IntelOrca.PeggleEdit.Designer
             LevelEditor.RemoveOffscreenObjects();
         }
 
-        private void scriptRibbonButton_Click(object sender, EventArgs e)
-        {
-            if (!IsEditorAvailable())
-                return;
 
-            if (Program.AppBetaRelease)
-                MessageBox.Show("Not implemented yet!");
-            else
-                RunScript();
-        }
 
         #endregion
 
@@ -1369,16 +1354,7 @@ namespace IntelOrca.PeggleEdit.Designer
             }
         }
 
-        private void RunScript()
-        {
-            LevelEditor.CreateUndoPoint();
 
-            //LevelGen gen = new LevelGen();
-            //gen.Generate();
-            //LevelEditor.Level = gen.GetLevel();
-
-            LevelEditor.UpdateRedraw();
-        }
 
         private void UpdatePropertyGrid()
         {
