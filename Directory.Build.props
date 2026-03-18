@@ -2,8 +2,8 @@
   <PropertyGroup>
     <TargetFramework>net472</TargetFramework>
     <GenerateResourceUsePreserializedResources>true</GenerateResourceUsePreserializedResources>
-    <Copyright>Copyright © Ted John 2010-2023</Copyright>
-    <AssemblyVersion>5.1.1</AssemblyVersion>
+    <Copyright>Copyright © Ted John 2010-2026</Copyright>
+    <AssemblyVersion>5.2.0</AssemblyVersion>
   </PropertyGroup>
   <ItemGroup>
     <PackageReference Include="System.Resources.Extensions" Version="7.0.0" />

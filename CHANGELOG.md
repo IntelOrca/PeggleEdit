@@ -1,3 +1,16 @@
+PeggleEdit 5.2.0 (Flamingo) (TBC)
+
+* [Feature] Add new pak extract / pack tool
+* [Feature] #23: Hold ALT to move objects by 0.125 units
+* [Enhancement] Fall back to main.pak or Peggle Nights directory for images
+* [Change] Remove the unimplemented script button
+* [Fix] Fix #25: Warning about peg generators when saving pops up multiple times
+* [Fix] Fix #32: right-click context menu not appearing on image nodes in Pack Explorer
+* [Fix] Fix #33: copy+paste of PegCurveGenerator always producing BrickCurveGenerator
+* [Fix] Fix reading of some deluxe levels
+* [Fix] Fix movement rotation of polygon
+* [Fix] Fix deletion of image in pack explorer
+
 PeggleEdit 5.1.1 (Eagle) (2023-09-13)
 
 * [Feature] Add import / export of level packs to folder
