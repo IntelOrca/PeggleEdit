@@ -46,9 +46,9 @@ namespace IntelOrca.PeggleEdit.Tools.Pack.CFG
 
         private void WriteApplicationSigniture(StringBuilder sb)
         {
-            sb.AppendLine("//Created by " + Assembly.GetExecutingAssembly().GetName().Name);
-            sb.AppendLine("//At " + DateTime.Now.ToString());
-            sb.AppendLine("//http://tedtycoon.co.uk for more information.");
+            sb.AppendLine("// Created by PeggleEdit");
+            sb.AppendLine("// At " + DateTime.Now.ToString());
+            sb.AppendLine("// See https://github.com/IntelOrca/PeggleEdit for more information.");
             sb.AppendLine();
         }
 
