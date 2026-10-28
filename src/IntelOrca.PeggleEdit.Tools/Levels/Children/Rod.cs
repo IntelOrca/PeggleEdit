@@ -87,6 +87,7 @@ namespace IntelOrca.PeggleEdit.Tools.Levels.Children
         public override object Clone()
         {
             Rod cpyRod = new Rod(Level);
+            base.CloneTo(cpyRod);
             cpyRod.mPointA = mPointA;
             cpyRod.mPointB = mPointB;
 

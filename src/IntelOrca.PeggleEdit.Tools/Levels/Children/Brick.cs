@@ -169,7 +169,7 @@ namespace IntelOrca.PeggleEdit.Tools.Levels.Children
 
             if (fC[3])
             {
-                bw.Write((byte)(mCurvePoints + 2));
+                bw.Write((byte)(mCurvePoints - 2));
             }
 
             if (fC[4])

@@ -221,7 +221,7 @@ namespace IntelOrca.PeggleEdit.Tools.Levels.Children
                 LevelWriter.WritePopcapString(bw, mID);
             }
             if (f[19])
-                bw.Write(mSolidColour.ToArgb());
+                bw.Write(mSound);
             if (f[21])
             {
                 LevelWriter.WritePopcapString(bw, mLogic);

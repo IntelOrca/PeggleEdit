@@ -19,7 +19,9 @@ using System.Collections.Generic;
 using System.ComponentModel;
 using System.Drawing;
 using System.Drawing.Drawing2D;
+using System.IO;
 using System.Linq;
+using System.Runtime.InteropServices;
 using System.Windows.Forms;
 using IntelOrca.PeggleEdit.Tools;
 using IntelOrca.PeggleEdit.Tools.Levels;
@@ -38,8 +40,6 @@ namespace IntelOrca.PeggleEdit.Designer
         private LevelEntryCollection mOldSelectedEntries = new LevelEntryCollection();
         private LevelEntryCollection mSelectedEntries = new LevelEntryCollection();
         private List<PointF> mObjectPoints = new List<PointF>();
-
-        private LevelEntryCollection mCopiedEntries = new LevelEntryCollection();
 
         private LevelEntry _provisionalEntry;
         private Point _lastMousePosition;
@@ -283,31 +283,70 @@ namespace IntelOrca.PeggleEdit.Designer
 
         public void CutObjects()
         {
-            CopyObjects();
-            DeleteObjects();
+            if (CopyObjects())
+                DeleteObjects();
         }
 
-        public void CopyObjects()
+        public bool CopyObjects()
         {
-            mCopiedEntries.Clear();
-            mCopiedEntries.AddRange(mSelectedEntries);
+            if (mSelectedEntries.Count == 0)
+                return false;
+
+            var data = LevelEntryClipboard.Serialize(GetSelectedObjectsInZOrder().Cast<LevelEntry>());
+            var dataObject = new DataObject();
+            dataObject.SetData(LevelEntryClipboard.FormatName, false, new MemoryStream(data));
+            try
+            {
+                Clipboard.SetDataObject(dataObject, true, 10, 100);
+                return true;
+            }
+            catch (ExternalException)
+            {
+                MessageBox.Show("Unable to copy to the clipboard.", "Copy", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                return false;
+            }
+        }
+
+        private static LevelEntry[] GetClipboardEntries()
+        {
+            try
+            {
+                if (Clipboard.GetData(LevelEntryClipboard.FormatName) is MemoryStream ms)
+                    return LevelEntryClipboard.Deserialize(ms.ToArray());
+            }
+            catch (Exception)
+            {
+                // Clipboard is unavailable or holds data PeggleEdit does not understand
+            }
+            return null;
         }
 
         public void PasteObjects()
         {
-            if (mCopiedEntries.Count == 0)
+            var entries = GetClipboardEntries();
+            if (entries == null || entries.Length == 0)
                 return;
 
             CreateUndoPoint();
 
             mSelectedEntries.Clear();
 
-            foreach (LevelEntry le in mCopiedEntries)
+            // Only the anchor of the base movement is absolute, so move each base movement once
+            // to keep entries that share movements in the same relative position
+            var offsetMovements = new HashSet<Movement>();
+            foreach (LevelEntry cpyLE in entries)
             {
-                LevelEntry cpyLE = (LevelEntry)le.Clone();
-
-                cpyLE.X += 20;
-                cpyLE.Y += 20;
+                var baseMovement = cpyLE.GetBaseMovement();
+                if (baseMovement == null)
+                {
+                    cpyLE.X += 20;
+                    cpyLE.Y += 20;
+                }
+                else if (offsetMovements.Add(baseMovement))
+                {
+                    baseMovement.AnchorPointX += 20;
+                    baseMovement.AnchorPointY += 20;
+                }
 
                 cpyLE.Level = mLevel;
                 mLevel.Entries.Add(cpyLE);

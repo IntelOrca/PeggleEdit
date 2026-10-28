@@ -131,6 +131,7 @@ namespace IntelOrca.PeggleEdit.Tools.Levels.Children
             mRandomStartPosition = fA[4];
             mChangeUnknown = fA[6];
             mChangeScale = fA[7];
+            mChangeColour = fA[8];
             mChangeOpacity = fA[9];
             mChangeVelocity = fA[10];
             mChangeDirection = fA[11];
@@ -389,6 +390,11 @@ namespace IntelOrca.PeggleEdit.Tools.Levels.Children
             cpyEmitter.mFadeInTime = mFadeInTime;
             cpyEmitter.mLifeDuration = mLifeDuration;
 
+            cpyEmitter.mChangeRotation = mChangeRotation;
+            cpyEmitter.mInitialRotation = (VariableFloat)mInitialRotation.Clone();
+            cpyEmitter.mRotationVelocity = (VariableFloat)mRotationVelocity.Clone();
+            cpyEmitter.mRotationUnknown = mRotationUnknown;
+
             cpyEmitter.mChangeScale = mChangeScale;
             cpyEmitter.mMinScale = (VariableFloat)mMinScale.Clone();
             cpyEmitter.mScaleVelocity = (VariableFloat)mScaleVelocity.Clone();
@@ -403,6 +409,12 @@ namespace IntelOrca.PeggleEdit.Tools.Levels.Children
             cpyEmitter.mAccelerationY = mAccelerationY;
 
             cpyEmitter.mMainVar = mMainVar;
+            cpyEmitter.mMainVar0 = mMainVar0;
+            cpyEmitter.mMainVar1 = mMainVar1;
+            cpyEmitter.mMainVar2 = mMainVar2;
+            cpyEmitter.mMainVar3 = mMainVar3;
+            cpyEmitter.mUnknown0 = (VariableFloat)mUnknown0.Clone();
+            cpyEmitter.mUnknown1 = (VariableFloat)mUnknown1.Clone();
             cpyEmitter.mUnknownEmitRate = mUnknownEmitRate;
             cpyEmitter.mUnknown2 = mUnknown2;
 

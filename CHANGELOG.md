@@ -2,6 +2,7 @@ PeggleEdit 5.2.0 (Flamingo) (TBC)
 
 * [Feature] Add new pak extract / pack tool
 * [Feature] #23: Hold ALT to move objects by 0.125 units
+* [Feature] #34: Copy and paste objects between levels and between instances of PeggleEdit
 * [Enhancement] Fall back to main.pak or Peggle Nights directory for images
 * [Change] Remove the unimplemented script button
 * [Fix] Fix #25: Warning about peg generators when saving pops up multiple times
@@ -10,6 +11,11 @@ PeggleEdit 5.2.0 (Flamingo) (TBC)
 * [Fix] Fix reading of some deluxe levels
 * [Fix] Fix movement rotation of polygon
 * [Fix] Fix deletion of image in pack explorer
+* [Fix] Fix saving of objects with a sound set producing a corrupt level
+* [Fix] Fix curved bricks gaining 4 extra curve points every time the level is saved
+* [Fix] Fix teleports without a destination gaining a polygon destination when saved
+* [Fix] Fix emitter colour changes being lost when saved
+* [Fix] Fix copy / undo losing emitter rotation settings and all generic properties of rods
 
 PeggleEdit 5.1.1 (Eagle) (2023-09-13)
 

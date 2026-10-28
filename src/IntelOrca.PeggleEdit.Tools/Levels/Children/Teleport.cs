@@ -60,6 +60,10 @@ namespace IntelOrca.PeggleEdit.Tools.Levels.Children
             {
                 mEntry = LevelEntryFactory.CreateLevelEntry(br, version);
             }
+            else
+            {
+                mEntry = null;
+            }
             if (fA[2])
             {
                 X = br.ReadSingle();
@@ -159,8 +163,7 @@ namespace IntelOrca.PeggleEdit.Tools.Levels.Children
             base.CloneTo(cpyTeleport);
             cpyTeleport.mWidth = mWidth;
             cpyTeleport.mHeight = mHeight;
-            if (mEntry != null)
-                cpyTeleport.mEntry = (LevelEntry)mEntry.Clone();
+            cpyTeleport.mEntry = (LevelEntry)mEntry?.Clone();
 
             return cpyTeleport;
         }
