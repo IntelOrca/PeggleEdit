@@ -19,6 +19,7 @@ using System.Collections.Generic;
 using System.Drawing;
 using System.IO;
 using System.Text.Json;
+using System.Text.Json.Serialization;
 using System.Windows.Forms;
 using Microsoft.Win32;
 
@@ -44,9 +45,16 @@ namespace IntelOrca.PeggleEdit.Designer
 
         public List<string> RecentPackFiles { get; set; } = new List<string>();
 
-        public bool HideVersionNotification { get; set; }
-        public string CurrentVersion { get; set; }
-        public string LatestVersionAvailable { get; set; }
+        /// <summary>
+        /// The ring to check for updates. Unset means the ring of the running build.
+        /// </summary>
+        [JsonConverter(typeof(LenientUpdateRingConverter))]
+        public UpdateRing? UpdateRing { get; set; }
+        public string SkippedUpdate { get; set; }
+
+        [JsonIgnore]
+        public UpdateRing EffectiveUpdateRing =>
+            UpdateRing ?? (BuildInfo.IsNightly ? Designer.UpdateRing.Nightly : Designer.UpdateRing.Release);
 
         private static string GetDataPath(string fileName)
         {
@@ -132,6 +140,35 @@ namespace IntelOrca.PeggleEdit.Designer
                     "Failed to edit registry for file association.",
                     MessageBoxButtons.OK,
                     MessageBoxIcon.Error);
+            }
+        }
+
+        /// <summary>
+        /// Reads an update ring by name, treating anything unrecognised (e.g. a ring added by a newer
+        /// version) as unset rather than failing to load the whole configuration file.
+        /// </summary>
+        private class LenientUpdateRingConverter : JsonConverter<UpdateRing?>
+        {
+            public override bool HandleNull => true;
+
+            public override UpdateRing? Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
+            {
+                if (reader.TokenType == JsonTokenType.String &&
+                    Enum.TryParse<UpdateRing>(reader.GetString(), true, out var ring) &&
+                    Enum.IsDefined(typeof(UpdateRing), ring))
+                {
+                    return ring;
+                }
+                reader.Skip();
+                return null;
+            }
+
+            public override void Write(Utf8JsonWriter writer, UpdateRing? value, JsonSerializerOptions options)
+            {
+                if (value == null)
+                    writer.WriteNullValue();
+                else
+                    writer.WriteStringValue(value.Value.ToString());
             }
         }
     }

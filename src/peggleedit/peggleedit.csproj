@@ -17,7 +17,15 @@
     <ProjectReference Include="..\System.Windows.Forms.Ribbon\System.Windows.Forms.Ribbon.csproj" />
   </ItemGroup>
   <ItemGroup>
+    <Reference Include="System.IO.Compression" />
+    <Reference Include="System.IO.Compression.FileSystem" />
     <Reference Include="System.Net.Http" />
+  </ItemGroup>
+  <!-- CI sets these (as environment variables) to identify release and nightly builds for the updater. -->
+  <ItemGroup>
+    <AssemblyMetadata Include="PeggleEditChannel" Value="$(PeggleEditChannel)" Condition="'$(PeggleEditChannel)' != ''" />
+    <AssemblyMetadata Include="PeggleEditCommit" Value="$(PeggleEditCommit)" Condition="'$(PeggleEditCommit)' != ''" />
+    <AssemblyMetadata Include="PeggleEditCommitDate" Value="$(PeggleEditCommitDate)" Condition="'$(PeggleEditCommitDate)' != ''" />
   </ItemGroup>
   <ItemGroup>
     <EmbeddedResource Update="Forms\AboutForm.resx">

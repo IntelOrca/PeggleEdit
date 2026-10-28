@@ -6,11 +6,41 @@ jobs:
     runs-on: windows-latest
     steps:
     - name: Checkout
-      uses: actions/checkout@v3
+      uses: actions/checkout@v4
     - name: Setup .NET Core SDK
-      uses: actions/setup-dotnet@v1
+      uses: actions/setup-dotnet@v4
       with:
         dotnet-version: '6.0.x'
+    # A v* tag builds a release; a push to master builds the rolling nightly. The channel, commit and
+    # commit date are baked into peggleedit.exe (as MSBuild properties via the environment) so that the
+    # in-app updater knows which build it is running.
+    - name: Set build info
+      shell: pwsh
+      run: |
+        $version = ([xml](Get-Content Directory.Build.props)).Project.PropertyGroup.AssemblyVersion | Where-Object { $_ } | Select-Object -First 1
+        $asset = 'peggleedit.zip'
+        if ($env:GITHUB_REF -like 'refs/tags/v*') {
+          if ($env:GITHUB_REF_NAME -ne "v$version") {
+            throw "Tag $env:GITHUB_REF_NAME does not match AssemblyVersion $version in Directory.Build.props"
+          }
+          $channel = 'release'
+          $tag = $env:GITHUB_REF_NAME
+        } elseif ($env:GITHUB_EVENT_NAME -eq 'push' -and $env:GITHUB_REF -eq 'refs/heads/master') {
+          $channel = 'nightly'
+          $tag = 'nightly'
+          $version = "$version-nightly"
+          # Each nightly zip has its own name so that a download in progress is not replaced underneath it.
+          $asset = "peggleedit-$($env:GITHUB_SHA.Substring(0, 7)).zip"
+        } else {
+          $channel = 'dev'
+          $tag = ''
+        }
+        "PeggleEditChannel=$channel" >> $env:GITHUB_ENV
+        "PeggleEditCommit=$env:GITHUB_SHA" >> $env:GITHUB_ENV
+        "PeggleEditCommitDate=$(git log -1 --format=%cI)" >> $env:GITHUB_ENV
+        "PeggleEditVersion=$version" >> $env:GITHUB_ENV
+        "PeggleEditTag=$tag" >> $env:GITHUB_ENV
+        "PeggleEditAsset=$asset" >> $env:GITHUB_ENV
     - name: Restore
       run: dotnet restore
     - name: Build
@@ -25,14 +55,122 @@ jobs:
         cp ../LICENSE .
         cp ../README.md .
         7z a -tzip -mx9 -mtc=off -r ../peggleedit.zip *.dll *.exe *.config CHANGELOG.md LICENSE README.md
+    # The update feed read by the in-app updater, attached to the release next to the zip.
+    - name: Write build.json
+      if: env.PeggleEditTag != ''
+      shell: pwsh
+      run: |
+        $feed = [ordered]@{
+          channel = $env:PeggleEditChannel
+          version = $env:PeggleEditVersion
+          sha = $env:PeggleEditCommit
+          date = $env:PeggleEditCommitDate
+          assets = [ordered]@{
+            windows = [ordered]@{
+              url = "https://github.com/$env:GITHUB_REPOSITORY/releases/download/$env:PeggleEditTag/$env:PeggleEditAsset"
+              sha256 = (Get-FileHash peggleedit.zip -Algorithm SHA256).Hash.ToLower()
+            }
+          }
+        }
+        $feed | ConvertTo-Json -Depth 4 | Set-Content build.json -Encoding utf8NoBOM
+        Get-Content build.json
     - name: Upload artifacts
       uses: actions/upload-artifact@v4
       with:
         name: peggleedit
-        path: peggleedit.zip
+        path: |
+          peggleedit.zip
+          build.json
+
+  release:
+    name: Create release
+    if: startsWith(github.ref, 'refs/tags/v')
+    needs: build
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+    - name: Download artifacts
+      uses: actions/download-artifact@v4
+      with:
+        name: peggleedit
+        path: artefacts
     - name: Create release
-      uses: softprops/action-gh-release@v1
-      if: startsWith(github.ref, 'refs/tags/v')
+      uses: softprops/action-gh-release@v2
       with:
         fail_on_unmatched_files: true
-        files: peggleedit.zip
+        files: |
+          artefacts/peggleedit.zip
+          artefacts/build.json
+
+  nightly:
+    name: Publish nightly
+    if: github.event_name == 'push' && github.ref == 'refs/heads/master'
+    needs: build
+    runs-on: ubuntu-latest
+    # One shared release: publish one at a time, and skip a build that master has already moved on from,
+    # so that an older build finishing last can't replace a newer one.
+    concurrency:
+      group: nightly
+      cancel-in-progress: false
+    permissions:
+      contents: write
+    env:
+      GH_TOKEN: ${{ github.token }}
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v4
+    - name: Check this is still the latest commit
+      id: latest
+      run: |
+        head=$(git ls-remote origin refs/heads/master | cut -f1)
+        if [ "$head" = "$GITHUB_SHA" ]; then
+          echo "publish=true" >> "$GITHUB_OUTPUT"
+        else
+          echo "publish=false" >> "$GITHUB_OUTPUT"
+          echo "::notice::master is now at $head, so this build is not published as the nightly."
+        fi
+    - name: Download artifacts
+      if: steps.latest.outputs.publish == 'true'
+      uses: actions/download-artifact@v4
+      with:
+        name: peggleedit
+        path: artefacts
+    - name: Name the zip as build.json expects
+      if: steps.latest.outputs.publish == 'true'
+      run: |
+        asset=$(jq -r '.assets.windows.url' artefacts/build.json | xargs basename)
+        mv artefacts/peggleedit.zip "artefacts/$asset"
+        echo "ASSET=$asset" >> "$GITHUB_ENV"
+    - name: Point nightly tag at this commit
+      if: steps.latest.outputs.publish == 'true'
+      run: |
+        git tag -f nightly
+        git push --force origin refs/tags/nightly
+    # The zip is uploaded before build.json, so the feed never points at a zip that doesn't exist yet.
+    - name: Publish nightly
+      if: steps.latest.outputs.publish == 'true'
+      uses: softprops/action-gh-release@v2
+      with:
+        tag_name: nightly
+        name: nightly
+        body: |
+          Rolling nightly build of ${{ github.sha }}. Updated on every push to master and may be unstable.
+          Select the Nightly update ring in Options to have PeggleEdit update to it automatically.
+        prerelease: true
+        make_latest: false
+        overwrite_files: true
+        fail_on_unmatched_files: true
+        files: artefacts/${{ env.ASSET }}
+    - name: Publish build.json
+      if: steps.latest.outputs.publish == 'true'
+      run: gh release upload nightly artefacts/build.json --clobber --repo "$GITHUB_REPOSITORY"
+    # Keep the previous zip as well, for anyone who read the previous build.json and is still downloading.
+    - name: Remove old nightly zips
+      if: steps.latest.outputs.publish == 'true'
+      run: |
+        gh api "repos/$GITHUB_REPOSITORY/releases/tags/nightly" \
+          --jq '[.assets[] | select(.name | test("^peggleedit-[0-9a-f]+\\.zip$"))] | sort_by(.created_at) | reverse | .[2:] | .[].id' |
+        while read -r id; do
+          gh api -X DELETE "repos/$GITHUB_REPOSITORY/releases/assets/$id"
+        done

@@ -26,8 +26,8 @@ namespace IntelOrca.PeggleEdit.Designer
         {
             InitializeComponent();
 
-            Text = String.Format("{0} {1} ({2})", Program.AppTitle, Program.AppVersion, Program.AppVersionName);
-            lblTitle.Text = String.Format("{0} {1} ({2})", Program.AppTitle, Program.AppVersion, Program.AppVersionName);
+            Text = String.Format("{0} {1}", Program.AppTitle, Program.AppVersionLabel);
+            lblTitle.Text = String.Format("{0} {1}", Program.AppTitle, Program.AppVersionLabel);
             lblAuthor.Text = String.Format("Written by {0} {1}", Program.AppAuthor, Program.AppYear);
             lblWebsite.Text = Program.AppWebsite;
         }

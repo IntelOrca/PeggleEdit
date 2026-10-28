@@ -3,6 +3,9 @@ PeggleEdit 5.2.0 (Flamingo) (TBC)
 * [Feature] Add new pak extract / pack tool
 * [Feature] #23: Hold ALT to move objects by 0.125 units
 * [Feature] #34: Copy and paste objects between levels and between instances of PeggleEdit
+* [Feature] Nightly builds, published as a rolling "nightly" pre-release on every change
+* [Feature] Choose a Release or Nightly update ring in Options
+* [Feature] PeggleEdit can now update itself when a new version is available
 * [Enhancement] Fall back to main.pak or Peggle Nights directory for images
 * [Change] Remove the unimplemented script button
 * [Fix] Fix #25: Warning about peg generators when saving pops up multiple times

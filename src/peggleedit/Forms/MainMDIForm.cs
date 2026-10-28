@@ -18,12 +18,9 @@ using System;
 using System.Collections.Generic;
 using System.Drawing;
 using System.IO;
-using System.Net.Http;
-using System.Net.Http.Headers;
 using System.Reflection;
 using System.Runtime.InteropServices;
-using System.Text.Json;
-using System.Threading.Tasks;
+using System.Threading;
 using System.Windows.Forms;
 using Crom.Controls.Docking;
 using IntelOrca.PeggleEdit.Designer.Forms;
@@ -48,10 +45,14 @@ namespace IntelOrca.PeggleEdit.Designer
             InitForm();
 
             DefaultStartupPack();
+        }
 
-#if !DEBUG
-            CheckForNewVersion();
-#endif
+        protected override void OnShown(EventArgs e)
+        {
+            base.OnShown(e);
+            if (Program.JustUpdated)
+                SetStatus("Updated to {0} {1}", Program.AppTitle, Program.AppVersionLabel);
+            CheckForUpdates();
         }
 
         #region MDI Form
@@ -70,7 +71,7 @@ namespace IntelOrca.PeggleEdit.Designer
             this.Icon = Icon.FromHandle(Resources.orca_32.GetHicon());
 
             //Set the form title
-            this.Text = String.Format("{0} {1} ({2})", Program.AppTitle, Program.AppVersion, Program.AppVersionName);
+            this.Text = String.Format("{0} {1}", Program.AppTitle, Program.AppVersionLabel);
 
             //Set the form size
             MinimumSize = new Size(700, 500);
@@ -811,61 +812,94 @@ namespace IntelOrca.PeggleEdit.Designer
 
         #region Update check
 
-        private void CheckForNewVersion()
-        {
-            CheckForNewVersionAsync();
-        }
+        private bool mCheckingForUpdates;
+        private bool mRecheckForUpdates;
+        private UpdateInfo mPendingUpdate;
+        private UpdateRing mPendingUpdateRing;
 
-        private async void CheckForNewVersionAsync()
+        [DllImport("user32.dll")]
+        private static extern bool IsWindowEnabled(IntPtr hWnd);
+
+        /// <summary>
+        /// Checks the selected update ring for a newer build and offers to install it. Failures (offline,
+        /// rate limited, bad feed) are only reported in the status bar.
+        /// </summary>
+        public async void CheckForUpdates()
         {
-            // Update current version in settings file
-            var currentVersionString = Settings.Default.CurrentVersion;
-            if (!Version.TryParse(currentVersionString, out var currentVersion) || currentVersion != Program.CurrentVersion)
+            if (!BuildInfo.IsPublished)
+                return;
+            if (mCheckingForUpdates)
             {
-                Settings.Default.CurrentVersion = Program.CurrentVersion.ToString();
-                Settings.Default.LatestVersionAvailable = null;
-                Settings.Default.HideVersionNotification = false;
-                Settings.Save();
+                // The ring may have changed since the running check started.
+                mRecheckForUpdates = true;
+                return;
             }
 
-            // Check GitHub for latest version if necessary
-            var latestVersionString = Settings.Default.LatestVersionAvailable;
-            if (!Version.TryParse(latestVersionString, out var latestVersion) || latestVersion <= Program.CurrentVersion)
+            mCheckingForUpdates = true;
+            try
             {
-                latestVersion = await GetLatestVersionAsync();
-                Settings.Default.LatestVersionAvailable = latestVersion.ToString();
-                Settings.Save();
-            }
-
-            if (latestVersion > Program.CurrentVersion)
-            {
-                if (!Settings.Default.HideVersionNotification)
+                var ring = Settings.Default.EffectiveUpdateRing;
+                UpdateInfo update;
+                try
                 {
-                    NewUpdateForm.Show(this);
+                    update = await Updater.CheckAsync(ring, CancellationToken.None);
+                }
+                catch (Exception ex)
+                {
+                    if (!IsDisposed)
+                    {
+                        var message = ex is OperationCanceledException ? "timed out" : ex.Message;
+                        SetStatus("Unable to check for updates: {0}", message);
+                    }
+                    return;
+                }
+
+                if (update == null || update.Key == Settings.Default.SkippedUpdate || IsDisposed)
+                    return;
+                if (ring != Settings.Default.EffectiveUpdateRing)
+                    return;
+
+                mPendingUpdate = update;
+                mPendingUpdateRing = ring;
+                OfferPendingUpdate();
+            }
+            finally
+            {
+                mCheckingForUpdates = false;
+                if (mRecheckForUpdates && !IsDisposed)
+                {
+                    mRecheckForUpdates = false;
+                    CheckForUpdates();
                 }
             }
         }
 
-        private async Task<Version> GetLatestVersionAsync()
+        /// <summary>
+        /// Shows the update prompt, unless another dialog is open, in which case it is shown when the
+        /// main window is next activated.
+        /// </summary>
+        private void OfferPendingUpdate()
         {
-            var client = new HttpClient();
-            client.DefaultRequestHeaders.UserAgent.Add(new ProductInfoHeaderValue(Program.AppTitle, Program.AppVersion.ToString()));
-            var response = await client.GetAsync("https://api.github.com/repos/IntelOrca/PeggleEdit/releases/latest");
-            if (response.IsSuccessStatusCode)
+            if (mPendingUpdate == null || IsDisposed || !IsWindowEnabled(Handle))
+                return;
+
+            var update = mPendingUpdate;
+            mPendingUpdate = null;
+            if (mPendingUpdateRing != Settings.Default.EffectiveUpdateRing)
+                return;
+            if (NewUpdateForm.Show(this, update, mPendingUpdateRing))
             {
-                var jsonResponse = await response.Content.ReadAsStringAsync();
-                var body = JsonSerializer.Deserialize<VersionCheckBody>(jsonResponse);
-                var tagName = body.tag_name;
-                return Version.Parse(tagName.Substring(1));
+                Close();
             }
-            throw new Exception("Unable to get latest version");
+        }
+
+        protected override void OnActivated(EventArgs e)
+        {
+            base.OnActivated(e);
+            if (mPendingUpdate != null)
+                BeginInvoke((Action)OfferPendingUpdate);
         }
 
         #endregion
-    }
-
-    public class VersionCheckBody
-    {
-        public string tag_name { get; set; }
     }
 }

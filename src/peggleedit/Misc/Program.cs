@@ -36,6 +36,23 @@ namespace IntelOrca.PeggleEdit.Designer
 
         public static Version CurrentVersion = GetVersion();
 
+        /// <summary>
+        /// The version shown to the user, e.g. "5.2.0 (Flamingo)" or "5.2.0 (Flamingo) nightly 4f2a1c9".
+        /// </summary>
+        public static string AppVersionLabel
+        {
+            get
+            {
+                var label = $"{AppVersion} ({AppVersionName})";
+                return BuildInfo.Suffix == "" ? label : $"{label} {BuildInfo.Suffix}";
+            }
+        }
+
+        /// <summary>
+        /// Whether this process was started by the updater after installing a new build.
+        /// </summary>
+        public static bool JustUpdated { get; private set; }
+
         private static string _tempPath;
 
         /// <summary>
@@ -68,6 +85,8 @@ namespace IntelOrca.PeggleEdit.Designer
                 return 1;
             }
 
+            JustUpdated = Updater.Cleanup();
+
             _tempPath = Path.Combine(Path.GetTempPath(), Application.ProductName);
 
             Settings.Load();
@@ -82,6 +101,9 @@ namespace IntelOrca.PeggleEdit.Designer
             }
 
             Settings.Save();
+
+            if (Updater.PendingInstall != null)
+                Updater.CompletePendingInstall();
             return 0;
         }
 

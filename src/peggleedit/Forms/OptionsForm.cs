@@ -37,6 +37,13 @@ namespace IntelOrca.PeggleEdit.Designer
             chkAlwaysShowAnchors.Checked = Settings.Default.ShowAnchorsAlways;
 
             txtPeggleNightsExePath.Text = Settings.Default.PeggleNightsExePath;
+
+            cmbUpdateRing.SelectedIndex = (int)Settings.Default.EffectiveUpdateRing;
+            lblCurrentBuild.Text =
+                String.Format("You have {0} {1}.", Program.AppTitle, Program.AppVersionLabel) + Environment.NewLine +
+                "Nightly builds contain the latest changes but may be unstable.";
+            if (!BuildInfo.IsPublished)
+                lblCurrentBuild.Text += Environment.NewLine + "This is a development build, so it does not update itself.";
         }
 
         private void btnOK_Click(object sender, EventArgs e)
@@ -52,7 +59,15 @@ namespace IntelOrca.PeggleEdit.Designer
 
             Settings.Default.PeggleNightsExePath = txtPeggleNightsExePath.Text;
 
+            var updateRing = (UpdateRing)cmbUpdateRing.SelectedIndex;
+            var updateRingChanged = updateRing != Settings.Default.EffectiveUpdateRing;
+            if (updateRingChanged || Settings.Default.UpdateRing != null)
+                Settings.Default.UpdateRing = updateRing;
+
             Settings.Save();
+
+            if (updateRingChanged)
+                MainMDIForm.Instance?.CheckForUpdates();
 
             DialogResult = DialogResult.OK;
             Close();

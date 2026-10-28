@@ -45,6 +45,10 @@
             this.txtPeggleNightsExePath = new System.Windows.Forms.TextBox();
             this.tabApplication = new System.Windows.Forms.TabPage();
             this.btnSetFileAssociation = new System.Windows.Forms.Button();
+            this.grpUpdates = new System.Windows.Forms.GroupBox();
+            this.lblUpdateRing = new System.Windows.Forms.Label();
+            this.cmbUpdateRing = new System.Windows.Forms.ComboBox();
+            this.lblCurrentBuild = new System.Windows.Forms.Label();
             this.btnOK = new System.Windows.Forms.Button();
             this.btnCancel = new System.Windows.Forms.Button();
             this.grpApperance = new System.Windows.Forms.GroupBox();
@@ -58,6 +62,7 @@
             this.tabPeggleNights.SuspendLayout();
             this.grpTesting.SuspendLayout();
             this.tabApplication.SuspendLayout();
+            this.grpUpdates.SuspendLayout();
             this.grpApperance.SuspendLayout();
             this.SuspendLayout();
             // 
@@ -238,6 +243,7 @@
             // 
             // tabApplication
             // 
+            this.tabApplication.Controls.Add(this.grpUpdates);
             this.tabApplication.Controls.Add(this.btnSetFileAssociation);
             this.tabApplication.Location = new System.Drawing.Point(8, 39);
             this.tabApplication.Margin = new System.Windows.Forms.Padding(6, 6, 6, 6);
@@ -257,6 +263,56 @@
             this.btnSetFileAssociation.Text = "Set File Association";
             this.btnSetFileAssociation.UseVisualStyleBackColor = true;
             this.btnSetFileAssociation.Click += new System.EventHandler(this.btnSetFileAssociation_Click);
+            // 
+            // grpUpdates
+            // 
+            this.grpUpdates.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
+            | System.Windows.Forms.AnchorStyles.Right)));
+            this.grpUpdates.Controls.Add(this.lblCurrentBuild);
+            this.grpUpdates.Controls.Add(this.cmbUpdateRing);
+            this.grpUpdates.Controls.Add(this.lblUpdateRing);
+            this.grpUpdates.Location = new System.Drawing.Point(12, 68);
+            this.grpUpdates.Margin = new System.Windows.Forms.Padding(6);
+            this.grpUpdates.Name = "grpUpdates";
+            this.grpUpdates.Padding = new System.Windows.Forms.Padding(6);
+            this.grpUpdates.Size = new System.Drawing.Size(618, 176);
+            this.grpUpdates.TabIndex = 1;
+            this.grpUpdates.TabStop = false;
+            this.grpUpdates.Text = "Updates";
+            // 
+            // lblUpdateRing
+            // 
+            this.lblUpdateRing.AutoSize = true;
+            this.lblUpdateRing.Location = new System.Drawing.Point(12, 42);
+            this.lblUpdateRing.Margin = new System.Windows.Forms.Padding(6, 0, 6, 0);
+            this.lblUpdateRing.Name = "lblUpdateRing";
+            this.lblUpdateRing.Size = new System.Drawing.Size(132, 25);
+            this.lblUpdateRing.TabIndex = 0;
+            this.lblUpdateRing.Text = "Update ring:";
+            // 
+            // cmbUpdateRing
+            // 
+            this.cmbUpdateRing.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
+            this.cmbUpdateRing.FormattingEnabled = true;
+            this.cmbUpdateRing.Items.AddRange(new object[] {
+            "Release",
+            "Nightly"});
+            this.cmbUpdateRing.Location = new System.Drawing.Point(190, 38);
+            this.cmbUpdateRing.Margin = new System.Windows.Forms.Padding(6);
+            this.cmbUpdateRing.Name = "cmbUpdateRing";
+            this.cmbUpdateRing.Size = new System.Drawing.Size(238, 33);
+            this.cmbUpdateRing.TabIndex = 1;
+            // 
+            // lblCurrentBuild
+            // 
+            this.lblCurrentBuild.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
+            | System.Windows.Forms.AnchorStyles.Right)));
+            this.lblCurrentBuild.Location = new System.Drawing.Point(12, 86);
+            this.lblCurrentBuild.Margin = new System.Windows.Forms.Padding(6, 0, 6, 0);
+            this.lblCurrentBuild.Name = "lblCurrentBuild";
+            this.lblCurrentBuild.Size = new System.Drawing.Size(594, 78);
+            this.lblCurrentBuild.TabIndex = 2;
+            this.lblCurrentBuild.Text = "Nightly builds are built from every change and may be unstable.";
             // 
             // btnOK
             // 
@@ -335,6 +391,8 @@
             this.grpTesting.ResumeLayout(false);
             this.grpTesting.PerformLayout();
             this.tabApplication.ResumeLayout(false);
+            this.grpUpdates.ResumeLayout(false);
+            this.grpUpdates.PerformLayout();
             this.grpApperance.ResumeLayout(false);
             this.grpApperance.PerformLayout();
             this.ResumeLayout(false);
@@ -362,6 +420,10 @@
         private System.Windows.Forms.TextBox txtPeggleNightsExePath;
         private System.Windows.Forms.TabPage tabApplication;
         private System.Windows.Forms.Button btnSetFileAssociation;
+        private System.Windows.Forms.GroupBox grpUpdates;
+        private System.Windows.Forms.Label lblUpdateRing;
+        private System.Windows.Forms.ComboBox cmbUpdateRing;
+        private System.Windows.Forms.Label lblCurrentBuild;
         private System.Windows.Forms.GroupBox grpApperance;
         private System.Windows.Forms.CheckBox chkUsePegTextures;
     }
