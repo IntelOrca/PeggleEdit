@@ -90,8 +90,9 @@ namespace IntelOrca.PeggleEdit.Tools.Pack.CFG
 
         private string GetValue(string value)
         {
+            // Peggle fails to parse properties with no value, e.g. "Desc:", so write an empty string instead
             if (String.IsNullOrEmpty(value))
-                return String.Empty;
+                return "\"\"";
 
             if (value.Contains(" ") || value.Contains(","))
                 return String.Format("\"{0}\"", value);

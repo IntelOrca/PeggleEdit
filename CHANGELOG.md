@@ -20,6 +20,7 @@ PeggleEdit 5.2.0 (Flamingo) (TBC)
 * [Fix] Fix emitter colour changes being lost when saved
 * [Fix] Fix copy / undo losing emitter rotation settings and all generic properties of rods
 * [Fix] Fix #35: Angles drift slightly every time a level is loaded and saved
+* [Fix] Fix #22: Blank pack description prevents the first level of each stage from loading
 * [Fix] Fix solid (non-peg) bricks becoming pegs, and objects without a shadow gaining one, when saved
 * [Fix] Fix unknown data, and values stored in the level that match the default, being lost from level objects when saved
 
