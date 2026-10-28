@@ -31,6 +31,10 @@ namespace IntelOrca.PeggleEdit.Tools.Levels.Children
     {
         private float mRadius;
 
+        // Unknown flags, preserved so that they are written back as read
+        private int mUnknownFlagsA = 1 << 0; // Make it bounce
+        private int mUnknownFlagsB;
+
         public Circle(Level level)
             : base(level)
         {
@@ -40,10 +44,12 @@ namespace IntelOrca.PeggleEdit.Tools.Levels.Children
         public override void ReadData(BinaryReader br, int version)
         {
             FlagGroup fA = new FlagGroup(br.ReadByte());
+            mUnknownFlagsA = fA.Int32 & ~(1 << 1);
 
             if (version >= 0x52)
             {
                 FlagGroup fB = new FlagGroup(br.ReadByte());
+                mUnknownFlagsB = fB.Int32;
             }
 
             if (fA[1])
@@ -58,11 +64,8 @@ namespace IntelOrca.PeggleEdit.Tools.Levels.Children
 
         public override void WriteData(BinaryWriter bw, int version)
         {
-            FlagGroup fA = new FlagGroup();
-            FlagGroup fB = new FlagGroup();
-
-            //Make it bouce
-            fA[0] = true;
+            FlagGroup fA = new FlagGroup(mUnknownFlagsA);
+            FlagGroup fB = new FlagGroup(mUnknownFlagsB);
 
             if (!HasMovementInfo)
                 fA[1] = true;
@@ -206,6 +209,8 @@ namespace IntelOrca.PeggleEdit.Tools.Levels.Children
             Circle newCircle = new Circle(Level);
             base.CloneTo(newCircle);
             newCircle.mRadius = mRadius;
+            newCircle.mUnknownFlagsA = mUnknownFlagsA;
+            newCircle.mUnknownFlagsB = mUnknownFlagsB;
 
             return newCircle;
         }

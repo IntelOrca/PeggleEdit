@@ -30,6 +30,13 @@ namespace IntelOrca.PeggleEdit.Tools.Levels.Children
         PointF mPointA;
         PointF mPointB;
 
+        // Unknown values, preserved so that they are written back as read
+        int mUnknownFlags;
+        bool mHasUnknown0;
+        float mUnknown0;
+        bool mHasUnknown1;
+        float mUnknown1;
+
         public Rod(Level level)
             : base(level)
         {
@@ -39,30 +46,40 @@ namespace IntelOrca.PeggleEdit.Tools.Levels.Children
         public override void ReadData(BinaryReader br, int version)
         {
             FlagGroup fA = new FlagGroup(br.ReadByte());
+            mUnknownFlags = fA.Int32 & ~((1 << 0) | (1 << 1));
 
             mPointA = new PointF(br.ReadSingle(), br.ReadSingle());
             mPointB = new PointF(br.ReadSingle(), br.ReadSingle());
 
+            mHasUnknown0 = fA[0];
             if (fA[0])
             {
-                float e = br.ReadSingle();
+                mUnknown0 = br.ReadSingle();
             }
 
+            mHasUnknown1 = fA[1];
             if (fA[1])
             {
-                float f = br.ReadSingle();
+                mUnknown1 = br.ReadSingle();
             }
         }
 
         public override void WriteData(BinaryWriter bw, int version)
         {
-            FlagGroup fA = new FlagGroup();
+            FlagGroup fA = new FlagGroup(mUnknownFlags);
+            fA[0] = mHasUnknown0;
+            fA[1] = mHasUnknown1;
             bw.Write(fA.Int8);
 
             bw.Write(mPointA.X);
             bw.Write(mPointA.Y);
             bw.Write(mPointB.X);
             bw.Write(mPointB.Y);
+
+            if (fA[0])
+                bw.Write(mUnknown0);
+            if (fA[1])
+                bw.Write(mUnknown1);
         }
 
         public override void Draw(Graphics g)
@@ -90,6 +107,11 @@ namespace IntelOrca.PeggleEdit.Tools.Levels.Children
             base.CloneTo(cpyRod);
             cpyRod.mPointA = mPointA;
             cpyRod.mPointB = mPointB;
+            cpyRod.mUnknownFlags = mUnknownFlags;
+            cpyRod.mHasUnknown0 = mHasUnknown0;
+            cpyRod.mUnknown0 = mUnknown0;
+            cpyRod.mHasUnknown1 = mHasUnknown1;
+            cpyRod.mUnknown1 = mUnknown1;
 
             return cpyRod;
         }

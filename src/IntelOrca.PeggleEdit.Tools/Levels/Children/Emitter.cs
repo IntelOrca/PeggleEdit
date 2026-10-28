@@ -40,6 +40,8 @@ namespace IntelOrca.PeggleEdit.Tools.Levels.Children
         float mMainVar1;
         string mMainVar2;
         byte mMainVar3;
+        bool mHasUnknown01;
+        int mUnknownFlags = 1 << 14; // Needed to make it visible?
         VariableFloat mUnknown0 = new VariableFloat();
         VariableFloat mUnknown1 = new VariableFloat();
 
@@ -125,6 +127,7 @@ namespace IntelOrca.PeggleEdit.Tools.Levels.Children
             mMainVar = br.ReadInt32();
 
             fA = new FlagGroup(br.ReadInt16());
+            mUnknownFlags = fA.Int32 & ((1 << 0) | (1 << 1) | (1 << 3) | (1 << 14) | (1 << 15));
 
             mTransparancy = fA[2];
 
@@ -136,6 +139,7 @@ namespace IntelOrca.PeggleEdit.Tools.Levels.Children
             mChangeVelocity = fA[10];
             mChangeDirection = fA[11];
             mChangeRotation = fA[12];
+            mHasUnknown01 = fA[13];
 
             mImage = LevelReader.ReadPopcapString(br);
             mWidth = br.ReadInt32();
@@ -230,7 +234,7 @@ namespace IntelOrca.PeggleEdit.Tools.Levels.Children
 
         public override void WriteData(BinaryWriter bw, int version)
         {
-            FlagGroup fA = new FlagGroup();
+            FlagGroup fA = new FlagGroup(mUnknownFlags);
 
             fA[2] = mTransparancy;
             fA[4] = mRandomStartPosition;
@@ -245,8 +249,7 @@ namespace IntelOrca.PeggleEdit.Tools.Levels.Children
             fA[10] = mChangeVelocity;
             fA[11] = mChangeDirection;
             fA[12] = mChangeRotation;
-
-            fA[14] = true;      //Needed to make it visible?
+            fA[13] = mHasUnknown01;
 
             bw.Write(mMainVar);
 
@@ -413,6 +416,8 @@ namespace IntelOrca.PeggleEdit.Tools.Levels.Children
             cpyEmitter.mMainVar1 = mMainVar1;
             cpyEmitter.mMainVar2 = mMainVar2;
             cpyEmitter.mMainVar3 = mMainVar3;
+            cpyEmitter.mHasUnknown01 = mHasUnknown01;
+            cpyEmitter.mUnknownFlags = mUnknownFlags;
             cpyEmitter.mUnknown0 = (VariableFloat)mUnknown0.Clone();
             cpyEmitter.mUnknown1 = (VariableFloat)mUnknown1.Clone();
             cpyEmitter.mUnknownEmitRate = mUnknownEmitRate;

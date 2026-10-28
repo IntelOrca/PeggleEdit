@@ -28,9 +28,20 @@ namespace IntelOrca.PeggleEdit.Tools.Levels.Children
     public sealed class PegInfo : ICloneable
     {
         private LevelEntry mParent;
-        private byte mType;
+        private byte mType = 1;
         private bool mVariable;
         private bool mCrumble;
+
+        // Unknown values, preserved so that they are written back as read
+        private int mUnknownFlags;
+        private bool mHasUnknown0;
+        private int mUnknown0;
+        private bool mHasUnknown1;
+        private int mUnknown1;
+        private bool mHasUnknown2;
+        private byte mUnknown2;
+        private bool mHasUnknown3;
+        private byte mUnknown3;
 
         public PegInfo(LevelEntry parent)
         {
@@ -48,29 +59,46 @@ namespace IntelOrca.PeggleEdit.Tools.Levels.Children
         {
             mType = br.ReadByte();
             FlagGroup f2 = new FlagGroup(br.ReadByte());
+            mUnknownFlags = f2.Int32 & ((1 << 0) | (1 << 6));
             if (f2[1])
                 mVariable = true;
+            mHasUnknown0 = f2[2];
             if (f2[2])
-                br.ReadInt32();
+                mUnknown0 = br.ReadInt32();
             if (f2[3])
                 mCrumble = true;
+            mHasUnknown1 = f2[4];
             if (f2[4])
-                br.ReadInt32();
+                mUnknown1 = br.ReadInt32();
+            mHasUnknown2 = f2[5];
             if (f2[5])
-                br.ReadByte();
+                mUnknown2 = br.ReadByte();
+            mHasUnknown3 = f2[7];
             if (f2[7])
-                br.ReadByte();
+                mUnknown3 = br.ReadByte();
         }
 
         public void WriteData(BinaryWriter bw, int version)
         {
-            bw.Write((byte)1);
-            FlagGroup f2 = new FlagGroup();
+            bw.Write(mType);
+            FlagGroup f2 = new FlagGroup(mUnknownFlags);
             if (mVariable)
                 f2[1] = true;
+            f2[2] = mHasUnknown0;
             if (mCrumble)
                 f2[3] = true;
+            f2[4] = mHasUnknown1;
+            f2[5] = mHasUnknown2;
+            f2[7] = mHasUnknown3;
             bw.Write(f2.Int8);
+            if (f2[2])
+                bw.Write(mUnknown0);
+            if (f2[4])
+                bw.Write(mUnknown1);
+            if (f2[5])
+                bw.Write(mUnknown2);
+            if (f2[7])
+                bw.Write(mUnknown3);
         }
 
         public Color GetOuterColour()
@@ -161,6 +189,16 @@ namespace IntelOrca.PeggleEdit.Tools.Levels.Children
             PegInfo pi = new PegInfo(mParent);
             pi.mVariable = mVariable;
             pi.mCrumble = mCrumble;
+            pi.mType = mType;
+            pi.mUnknownFlags = mUnknownFlags;
+            pi.mHasUnknown0 = mHasUnknown0;
+            pi.mUnknown0 = mUnknown0;
+            pi.mHasUnknown1 = mHasUnknown1;
+            pi.mUnknown1 = mUnknown1;
+            pi.mHasUnknown2 = mHasUnknown2;
+            pi.mUnknown2 = mUnknown2;
+            pi.mHasUnknown3 = mHasUnknown3;
+            pi.mUnknown3 = mUnknown3;
             return pi;
         }
     }

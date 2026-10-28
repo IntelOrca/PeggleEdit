@@ -33,6 +33,22 @@ namespace IntelOrca.PeggleEdit.Tools.Levels.Children
         int mWidth;
         int mHeight;
 
+        // Unknown values, preserved so that they are written back as read
+        int mUnknownFlags;
+        bool mHasUnknown0;
+        short mUnknown0;
+        bool mHasUnknown1;
+        int mUnknown1;
+        bool mHasUnknown2;
+        int mUnknown2;
+        bool mHasUnknown3;
+        float mUnknown3X;
+        float mUnknown3Y;
+
+        // Destination entry id when it is not stored inline (1), preserved so that it is written back as read
+        bool mHasEntryId;
+        int mEntryId;
+
         public Teleport(Level level)
             : base(level)
         {
@@ -48,17 +64,32 @@ namespace IntelOrca.PeggleEdit.Tools.Levels.Children
         public override void ReadData(BinaryReader br, int version)
         {
             FlagGroup fA = new FlagGroup(br.ReadByte());
+            mUnknownFlags = fA.Int32 & ((1 << 0) | (1 << 7));
             mWidth = br.ReadInt32();
             mHeight = br.ReadInt32();
+            mHasUnknown0 = fA[1];
             if (fA[1])
-                br.ReadInt16();
+                mUnknown0 = br.ReadInt16();
+            mHasUnknown1 = fA[3];
             if (fA[3])
-                br.ReadInt32();
+                mUnknown1 = br.ReadInt32();
+            mHasUnknown2 = fA[5];
             if (fA[5])
-                br.ReadInt32();
+                mUnknown2 = br.ReadInt32();
+            mHasEntryId = false;
             if (fA[4])
             {
-                mEntry = LevelEntryFactory.CreateLevelEntry(br, version);
+                var entryId = br.ReadInt32();
+                if (entryId == 1)
+                {
+                    mEntry = LevelEntryFactory.CreateLevelEntry(entryId, br, version);
+                }
+                else
+                {
+                    mEntry = null;
+                    mHasEntryId = true;
+                    mEntryId = entryId;
+                }
             }
             else
             {
@@ -70,21 +101,27 @@ namespace IntelOrca.PeggleEdit.Tools.Levels.Children
                 Y = br.ReadSingle();
             }
 
+            mHasUnknown3 = fA[6];
             if (fA[6])
             {
-                br.ReadSingle();
-                br.ReadSingle();
+                mUnknown3X = br.ReadSingle();
+                mUnknown3Y = br.ReadSingle();
             }
         }
 
         public override void WriteData(BinaryWriter bw, int version)
         {
-            FlagGroup fA = new FlagGroup();
+            FlagGroup fA = new FlagGroup(mUnknownFlags);
+
+            fA[1] = mHasUnknown0;
+            fA[3] = mHasUnknown1;
+            fA[5] = mHasUnknown2;
+            fA[6] = mHasUnknown3;
 
             if (!HasMovementInfo)
                 fA[2] = true;
 
-            if (mEntry != null)
+            if (mEntry != null || mHasEntryId)
                 fA[4] = true;
 
             //Write data
@@ -92,9 +129,19 @@ namespace IntelOrca.PeggleEdit.Tools.Levels.Children
             bw.Write(mWidth);
             bw.Write(mHeight);
 
+            if (fA[1])
+                bw.Write(mUnknown0);
+            if (fA[3])
+                bw.Write(mUnknown1);
+            if (fA[5])
+                bw.Write(mUnknown2);
+
             if (fA[4])
             {
-                mEntry.Write(bw, version);
+                if (mEntry != null)
+                    mEntry.Write(bw, version);
+                else
+                    bw.Write(mEntryId);
             }
 
             if (fA[2])
@@ -105,8 +152,8 @@ namespace IntelOrca.PeggleEdit.Tools.Levels.Children
 
             if (fA[6])
             {
-                bw.Write(0.0f);
-                bw.Write(0.0f);
+                bw.Write(mUnknown3X);
+                bw.Write(mUnknown3Y);
             }
         }
 
@@ -163,6 +210,18 @@ namespace IntelOrca.PeggleEdit.Tools.Levels.Children
             base.CloneTo(cpyTeleport);
             cpyTeleport.mWidth = mWidth;
             cpyTeleport.mHeight = mHeight;
+            cpyTeleport.mUnknownFlags = mUnknownFlags;
+            cpyTeleport.mHasUnknown0 = mHasUnknown0;
+            cpyTeleport.mUnknown0 = mUnknown0;
+            cpyTeleport.mHasUnknown1 = mHasUnknown1;
+            cpyTeleport.mUnknown1 = mUnknown1;
+            cpyTeleport.mHasUnknown2 = mHasUnknown2;
+            cpyTeleport.mUnknown2 = mUnknown2;
+            cpyTeleport.mHasUnknown3 = mHasUnknown3;
+            cpyTeleport.mUnknown3X = mUnknown3X;
+            cpyTeleport.mUnknown3Y = mUnknown3Y;
+            cpyTeleport.mHasEntryId = mHasEntryId;
+            cpyTeleport.mEntryId = mEntryId;
             cpyTeleport.mEntry = (LevelEntry)mEntry?.Clone();
 
             return cpyTeleport;

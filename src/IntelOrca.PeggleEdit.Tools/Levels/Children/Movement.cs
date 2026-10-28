@@ -65,6 +65,7 @@ namespace IntelOrca.PeggleEdit.Tools.Levels.Children
         byte mPhase2;
         float mStartPhase;
         float mPostDelayPhase;
+        // Angles are kept in radians, as stored in the level file, so that they round trip exactly
         float mMoveRotation;
         float mMaxAngle;
         float mRotation;
@@ -77,6 +78,9 @@ namespace IntelOrca.PeggleEdit.Tools.Levels.Children
 
         float mObjectX;
         float mObjectY;
+
+        // Flags as read, excluding the sub-movement, so that values present in the file but zero are kept
+        int mValueFlags;
 
         [DefaultValue(0.0f)]
         [DisplayName("Sub-movement X Offset")]
@@ -115,6 +119,7 @@ namespace IntelOrca.PeggleEdit.Tools.Levels.Children
             mTimePeriod = br.ReadInt16();
 
             FlagGroup fA = new FlagGroup(br.ReadInt16());
+            mValueFlags = fA.Int32 & ~(1 << 12);
 
             if (fA[0])
                 mOffset = br.ReadInt16();
@@ -123,7 +128,7 @@ namespace IntelOrca.PeggleEdit.Tools.Levels.Children
             if (fA[2])
                 mStartPhase = br.ReadSingle();
             if (fA[3])
-                mMoveRotation = MathExt.ToDegrees(br.ReadSingle());
+                mMoveRotation = br.ReadSingle();
             if (fA[4])
                 mRadius2 = br.ReadInt16();
             if (fA[5])
@@ -141,7 +146,7 @@ namespace IntelOrca.PeggleEdit.Tools.Levels.Children
             if (fA[11])
                 mUnknown8 = br.ReadSingle();
             if (fA[14])
-                mRotation = MathExt.ToDegrees(br.ReadSingle());
+                mRotation = br.ReadSingle();
             if (fA[12])
             {
                 SubMovementOffsetX = br.ReadSingle();
@@ -179,6 +184,8 @@ namespace IntelOrca.PeggleEdit.Tools.Levels.Children
             if (MovementLink != null)
                 fA[12] = true;
 
+            fA.Int32 |= mValueFlags;
+
             int type = (int)mType;
             if (mReverse)
                 type = (256 - type);
@@ -198,7 +205,7 @@ namespace IntelOrca.PeggleEdit.Tools.Levels.Children
             if (fA[2])
                 bw.Write(mStartPhase);
             if (fA[3])
-                bw.Write(MathExt.ToRadians(mMoveRotation));
+                bw.Write(mMoveRotation);
             if (fA[4])
                 bw.Write((short)mRadius2);
             if (fA[5])
@@ -216,7 +223,7 @@ namespace IntelOrca.PeggleEdit.Tools.Levels.Children
             if (fA[11])
                 bw.Write(mUnknown8);
             if (fA[14])
-                bw.Write(MathExt.ToRadians(mRotation));
+                bw.Write(mRotation);
             if (fA[12])
             {
                 bw.Write(SubMovementOffsetX);
@@ -252,7 +259,7 @@ namespace IntelOrca.PeggleEdit.Tools.Levels.Children
             {
                 Matrix mx = new Matrix();
                 mx.Translate(-SubMovementOffsetX, -SubMovementOffsetY);
-                mx.RotateAt(-mMoveRotation, new PointF(anchor.X, anchor.Y));
+                mx.RotateAt(-MovementAngle, new PointF(anchor.X, anchor.Y));
 
                 g.Transform = mx;
 
@@ -382,7 +389,7 @@ namespace IntelOrca.PeggleEdit.Tools.Levels.Children
                 phase = 100.0f - phase;
 
             Matrix matrix = new Matrix();
-            matrix.RotateAt(-mMoveRotation, new PointF(mAnchorPoint.X, mAnchorPoint.Y));
+            matrix.RotateAt(-MovementAngle, new PointF(mAnchorPoint.X, mAnchorPoint.Y));
 
             switch (mType)
             {
@@ -762,11 +769,11 @@ namespace IntelOrca.PeggleEdit.Tools.Levels.Children
         {
             get
             {
-                return mMoveRotation;
+                return MathExt.ToDegrees(mMoveRotation);
             }
             set
             {
-                mMoveRotation = value;
+                mMoveRotation = MathExt.ToRadians(value);
             }
         }
 
@@ -809,6 +816,7 @@ namespace IntelOrca.PeggleEdit.Tools.Levels.Children
             cpyMovement.SubMovementOffsetY = SubMovementOffsetY;
             cpyMovement.mObjectX = mObjectX;
             cpyMovement.mObjectY = mObjectY;
+            cpyMovement.mValueFlags = mValueFlags;
 
             return cpyMovement;
         }
@@ -940,11 +948,11 @@ namespace IntelOrca.PeggleEdit.Tools.Levels.Children
         {
             get
             {
-                return mRotation;
+                return MathExt.ToDegrees(mRotation);
             }
             set
             {
-                mRotation = value;
+                mRotation = MathExt.ToRadians(value);
             }
         }
 

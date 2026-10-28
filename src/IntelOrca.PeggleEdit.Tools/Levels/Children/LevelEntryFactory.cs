@@ -70,6 +70,19 @@ namespace IntelOrca.PeggleEdit.Tools.Levels.Children
         public static LevelEntry CreateLevelEntry(BinaryReader br, int version)
         {
             int magic = br.ReadInt32();
+            return CreateLevelEntry(magic, br, version);
+        }
+
+        /// <summary>
+        /// Creates a new instance of a level entry and assigns it with data read from a binary reader, where the
+        /// magic number has already been read.
+        /// </summary>
+        /// <param name="magic">The magic number that was read before the level entry data.</param>
+        /// <param name="br">The binary reader to use when reading the level entry data.</param>
+        /// <param name="version">The version of the file the data is in.</param>
+        /// <returns>A new instance of a level entry with data read by the binary reader.</returns>
+        public static LevelEntry CreateLevelEntry(int magic, BinaryReader br, int version)
+        {
             if (magic == 0)
                 return null;
             else if (magic != 1)

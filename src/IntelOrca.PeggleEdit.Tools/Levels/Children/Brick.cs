@@ -36,6 +36,39 @@ namespace IntelOrca.PeggleEdit.Tools.Levels.Children
         private bool mCurved;
         private bool mTextureFlip;
 
+        // Unknown values, preserved so that they are written back as read
+        private int mUnknownFlagsA;
+        private int mUnknownFlagsB;
+        private int mUnknownFlagsC;
+        private bool mHasType;
+        private bool mHasCurvePoints;
+        private bool mHasSectorAngle;
+        private bool mHasWidth = true;
+        private bool mHasUnknownLeftAngle;
+        private float mUnknownLeftAngle;
+        private bool mHasUnknownRightAngle;
+        private float mUnknownRightAngle;
+        private float mUnknownRightAngle2;
+        private bool mHasUnknown0;
+        private float mUnknown0;
+        private bool mHasUnknown1;
+        private float mUnknown1;
+        private bool mHasUnknown2;
+        private float mUnknown2;
+        private bool mHasUnknown3;
+        private byte mUnknown3;
+        private bool mHasUnknown4;
+        private byte mUnknown4;
+        private bool mHasUnknown5;
+        private int mUnknown5;
+        private bool mHasUnknown6;
+        private short mUnknown6;
+        private bool mHasUnknown7;
+        private float mUnknown7;
+        private bool mHasUnknown8;
+        private float mUnknown8;
+        private uint mUnknown9;
+
         public Brick(Level level)
             : base(level)
         {
@@ -53,14 +86,20 @@ namespace IntelOrca.PeggleEdit.Tools.Levels.Children
             FlagGroup fB = new FlagGroup();
             if (version >= 0x23)
                 fB = new FlagGroup(br.ReadByte());
+            mUnknownFlagsA = fA.Int32 & ((1 << 0) | (1 << 6) | (1 << 7));
+            mUnknownFlagsB = fB.Int32 & ~((1 << 0) | (1 << 1) | (1 << 2));
+            mHasUnknown0 = fA[2];
             if (fA[2])
-                br.ReadSingle();
+                mUnknown0 = br.ReadSingle();
+            mHasUnknown1 = fA[3];
             if (fA[3])
-                br.ReadSingle();
+                mUnknown1 = br.ReadSingle();
+            mHasUnknown2 = fA[5];
             if (fA[5])
-                br.ReadSingle();
+                mUnknown2 = br.ReadSingle();
+            mHasUnknown3 = fA[1];
             if (fA[1])
-                br.ReadByte();
+                mUnknown3 = br.ReadByte();
             if (fA[4])
             {
                 X = br.ReadSingle();
@@ -69,46 +108,56 @@ namespace IntelOrca.PeggleEdit.Tools.Levels.Children
 
             //if arg0 (lots)
 
+            mHasUnknown4 = fB[0];
             if (fB[0])
-                br.ReadByte();
+                mUnknown4 = br.ReadByte();
+            mHasUnknown5 = fB[1];
             if (fB[1])
-                br.ReadInt32();
+                mUnknown5 = br.ReadInt32();
+            mHasUnknown6 = fB[2];
             if (fB[2])
-                br.ReadInt16();
+                mUnknown6 = br.ReadInt16();
 
             mCurved = true;
 
             FlagGroup fC = new FlagGroup(br.ReadInt16());
+            mUnknownFlagsC = fC.Int32 & ((1 << 0) | (1 << 1) | (0x1F << 11));
+            mHasUnknown7 = fC[8];
             if (fC[8])
-                br.ReadSingle();
+                mUnknown7 = br.ReadSingle();
+            mHasUnknown8 = fC[9];
             if (fC[9])
-                br.ReadSingle();
+                mUnknown8 = br.ReadSingle();
+            mHasType = fC[2];
             if (fC[2])
             {
                 mType = br.ReadByte();
                 if (mType == 5)
                     mCurved = false;
             }
+            mHasCurvePoints = fC[3];
             if (fC[3])
             {
                 mCurvePoints = br.ReadByte() + 2;
             }
 
-            var leftAngle = 0.0f;
-            var rightAngle = 0.0f;
+            mHasUnknownLeftAngle = fC[5];
             if (fC[5])
             {
-                leftAngle = br.ReadSingle();
+                mUnknownLeftAngle = br.ReadSingle();
             }
+            mHasUnknownRightAngle = fC[6];
             if (fC[6])
             {
-                rightAngle = br.ReadSingle();
-                br.ReadSingle();
+                mUnknownRightAngle = br.ReadSingle();
+                mUnknownRightAngle2 = br.ReadSingle();
             }
 
+            mHasSectorAngle = fC[4];
             if (fC[4])
                 mSectorAngle = br.ReadSingle();
 
+            mHasWidth = fC[7];
             if (fC[7])
                 mWidth = br.ReadSingle();
 
@@ -117,32 +166,52 @@ namespace IntelOrca.PeggleEdit.Tools.Levels.Children
             mLength = br.ReadSingle();
             mAngle = br.ReadSingle();
 
-            var unk = br.ReadUInt32();
+            mUnknown9 = br.ReadUInt32();
         }
 
         public override void WriteData(BinaryWriter bw, int version)
         {
-            FlagGroup fA = new FlagGroup();
-            FlagGroup fB = new FlagGroup();
-            FlagGroup fC = new FlagGroup();
+            FlagGroup fA = new FlagGroup(mUnknownFlagsA);
+            FlagGroup fB = new FlagGroup(mUnknownFlagsB);
+            FlagGroup fC = new FlagGroup(mUnknownFlagsC);
+
+            fA[1] = mHasUnknown3;
+            fA[2] = mHasUnknown0;
+            fA[3] = mHasUnknown1;
+            fA[5] = mHasUnknown2;
+            fB[0] = mHasUnknown4;
+            fB[1] = mHasUnknown5;
+            fB[2] = mHasUnknown6;
+            fC[8] = mHasUnknown7;
+            fC[9] = mHasUnknown8;
 
             if (!HasMovementInfo)
                 fA[4] = true;
 
+            fC[5] = mHasUnknownLeftAngle;
+            fC[6] = mHasUnknownRightAngle;
+
+            // Keep the curve values that were in the file, otherwise only write them if needed
+            fC[3] = mHasCurvePoints;
+            fC[4] = mHasSectorAngle;
             if (mCurved)
             {
-                fC[4] = true;
+                if (mSectorAngle != 0.0f)
+                    fC[4] = true;
 
                 if (mCurvePoints != 4)
                     fC[3] = true;
 
+                if (mHasType && mType != 5)
+                    fC[2] = true;
             }
             else
             {
                 fC[2] = true;
             }
 
-            fC[7] = true;
+            // Only write the width if it was in the file or has been changed from the default
+            fC[7] = (mHasWidth || mWidth != 20.0f);
 
             if (mTextureFlip)
                 fC[10] = true;
@@ -154,22 +223,52 @@ namespace IntelOrca.PeggleEdit.Tools.Levels.Children
             if (version >= 0x23)
                 bw.Write(fB.Int8);
 
+            if (fA[2])
+                bw.Write(mUnknown0);
+            if (fA[3])
+                bw.Write(mUnknown1);
+            if (fA[5])
+                bw.Write(mUnknown2);
+            if (fA[1])
+                bw.Write(mUnknown3);
             if (fA[4])
             {
                 bw.Write(X);
                 bw.Write(Y);
             }
 
+            if (version >= 0x23)
+            {
+                if (fB[0])
+                    bw.Write(mUnknown4);
+                if (fB[1])
+                    bw.Write(mUnknown5);
+                if (fB[2])
+                    bw.Write(mUnknown6);
+            }
+
             bw.Write(fC.Int16);
 
+            if (fC[8])
+                bw.Write(mUnknown7);
+            if (fC[9])
+                bw.Write(mUnknown8);
             if (fC[2])
             {
-                bw.Write((byte)5);
+                bw.Write(mCurved ? mType : (byte)5);
             }
 
             if (fC[3])
             {
                 bw.Write((byte)(mCurvePoints - 2));
+            }
+
+            if (fC[5])
+                bw.Write(mUnknownLeftAngle);
+            if (fC[6])
+            {
+                bw.Write(mUnknownRightAngle);
+                bw.Write(mUnknownRightAngle2);
             }
 
             if (fC[4])
@@ -180,7 +279,7 @@ namespace IntelOrca.PeggleEdit.Tools.Levels.Children
             bw.Write(mLength);
             bw.Write(mAngle);
 
-            bw.Write(new byte[] { 0, 0, 0, 0 });
+            bw.Write(mUnknown9);
         }
 
         public override void Draw(Graphics g) => Draw(g, false);
@@ -240,6 +339,9 @@ namespace IntelOrca.PeggleEdit.Tools.Levels.Children
                 DrawCircleGuide(g, angle);
         }
 
+        private Color GetOuterColour() => HasPegInfo ? PegInfo.GetOuterColour() : Color.Gray;
+        private Color GetInnerColour() => HasPegInfo ? PegInfo.GetInnerColour() : Color.DimGray;
+
         private void DrawStrightBrick(Graphics g, PointF location, bool shadow)
         {
             var dest = new RectangleF(location.X - (Length / 2), location.Y - (Width / 2), Length, Width);
@@ -251,12 +353,12 @@ namespace IntelOrca.PeggleEdit.Tools.Levels.Children
             {
                 g.FillRectangle(Brushes.White, dest);
             }
-            else if (!Level.UsePegTextures)
+            else if (!Level.UsePegTextures || !HasPegInfo)
             {
-                g.FillRectangle(new SolidBrush(PegInfo.GetOuterColour()), dest);
+                g.FillRectangle(new SolidBrush(GetOuterColour()), dest);
                 dest.Inflate(-2, -5);
                 dest.Y += mTextureFlip ? 3.0f : -3.0f;
-                g.FillRectangle(new SolidBrush(PegInfo.GetInnerColour()), dest);
+                g.FillRectangle(new SolidBrush(GetInnerColour()), dest);
             }
             else
             {
@@ -278,13 +380,13 @@ namespace IntelOrca.PeggleEdit.Tools.Levels.Children
             {
                 DrawCurvedBrick(g, Color.White, location, false);
             }
-            else if (!Level.UsePegTextures)
+            else if (!Level.UsePegTextures || !HasPegInfo)
             {
                 var shadingOffset = mTextureFlip ? 2 : 8;
-                DrawCurvedBrick(g, PegInfo.GetOuterColour(), location, false);
+                DrawCurvedBrick(g, GetOuterColour(), location, false);
                 mWidth /= 2.0f;
                 location.X += shadingOffset;
-                DrawCurvedBrick(g, PegInfo.GetInnerColour(), location, true);
+                DrawCurvedBrick(g, GetInnerColour(), location, true);
                 location.X -= shadingOffset;
                 mWidth *= 2.0f;
             }
@@ -442,6 +544,38 @@ namespace IntelOrca.PeggleEdit.Tools.Levels.Children
             cpyBrick.mCurved = mCurved;
             cpyBrick.mTextureFlip = mTextureFlip;
 
+            cpyBrick.mHasType = mHasType;
+            cpyBrick.mHasCurvePoints = mHasCurvePoints;
+            cpyBrick.mHasSectorAngle = mHasSectorAngle;
+            cpyBrick.mHasWidth = mHasWidth;
+            cpyBrick.mHasUnknownLeftAngle = mHasUnknownLeftAngle;
+            cpyBrick.mUnknownLeftAngle = mUnknownLeftAngle;
+            cpyBrick.mHasUnknownRightAngle = mHasUnknownRightAngle;
+            cpyBrick.mUnknownRightAngle = mUnknownRightAngle;
+            cpyBrick.mUnknownRightAngle2 = mUnknownRightAngle2;
+            cpyBrick.mUnknownFlagsA = mUnknownFlagsA;
+            cpyBrick.mUnknownFlagsB = mUnknownFlagsB;
+            cpyBrick.mUnknownFlagsC = mUnknownFlagsC;
+            cpyBrick.mHasUnknown0 = mHasUnknown0;
+            cpyBrick.mUnknown0 = mUnknown0;
+            cpyBrick.mHasUnknown1 = mHasUnknown1;
+            cpyBrick.mUnknown1 = mUnknown1;
+            cpyBrick.mHasUnknown2 = mHasUnknown2;
+            cpyBrick.mUnknown2 = mUnknown2;
+            cpyBrick.mHasUnknown3 = mHasUnknown3;
+            cpyBrick.mUnknown3 = mUnknown3;
+            cpyBrick.mHasUnknown4 = mHasUnknown4;
+            cpyBrick.mUnknown4 = mUnknown4;
+            cpyBrick.mHasUnknown5 = mHasUnknown5;
+            cpyBrick.mUnknown5 = mUnknown5;
+            cpyBrick.mHasUnknown6 = mHasUnknown6;
+            cpyBrick.mUnknown6 = mUnknown6;
+            cpyBrick.mHasUnknown7 = mHasUnknown7;
+            cpyBrick.mUnknown7 = mUnknown7;
+            cpyBrick.mHasUnknown8 = mHasUnknown8;
+            cpyBrick.mUnknown8 = mUnknown8;
+            cpyBrick.mUnknown9 = mUnknown9;
+
             return cpyBrick;
         }
 
@@ -465,7 +599,7 @@ namespace IntelOrca.PeggleEdit.Tools.Levels.Children
             get
             {
                 var brickData = new BrickData();
-                if (!Level.ShowPreview)
+                if (!Level.ShowPreview && HasPegInfo)
                 {
                     brickData.CanBeOrange = PegInfo.CanBeOrange;
                     brickData.QuickDisappear = PegInfo.QuickDisappear;

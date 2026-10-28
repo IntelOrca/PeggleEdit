@@ -64,12 +64,25 @@ namespace IntelOrca.PeggleEdit.Tools.Levels.Children
         Color mOutlineColour;
         float mImageDX;
         float mImageDY;
-        float mImageRotation;
+        float mImageRotation; // In radians, as stored in the level file, so that it round trips exactly
         byte mSound;
         float mMaxBounceVelocity;
         int mSubID;
         byte mFlipperFlags;
         bool mShadow = true;
+
+        // Unknown values, preserved so that they are written back as read
+        bool mHasUnknown4;
+        int mUnknown4;
+        bool mHasUnknown16;
+        int mUnknown16;
+        bool mHasUnknown18;
+        int mUnknown18;
+        int mUnknownFlags;
+
+        // Flags for values that are only written when not the default, so that a default value present in the file is kept
+        const int ValueFlagsMask = (1 << 0) | (1 << 1) | (0x3F << 8) | (1 << 17) | (1 << 19) | (1 << 21) | (1 << 23) | (1 << 26) | (1 << 27);
+        int mValueFlags;
 
         [EntryProperty(EntryPropertyType.SubElement, null)]
         [Description("The movement properties of the object.")]
@@ -95,6 +108,11 @@ namespace IntelOrca.PeggleEdit.Tools.Levels.Children
                 new FlagGroup(br.ReadUInt24()) :
                 new FlagGroup(br.ReadInt32());
 
+            mValueFlags = f.Int32 & ValueFlagsMask;
+            mUnknownFlags = f.Int32 & ((1 << 29) | (1 << 31));
+            if (version < 0x50)
+                mUnknownFlags |= f.Int32 & (1 << 30);
+
             mCollision = f[5];
             mVisible = f[6];
             mCanMove = f[7];
@@ -107,8 +125,9 @@ namespace IntelOrca.PeggleEdit.Tools.Levels.Children
                 mRolly = br.ReadSingle();
             if (f[1])
                 mBouncy = br.ReadSingle();
+            mHasUnknown4 = f[4];
             if (f[4])
-                br.ReadInt32();
+                mUnknown4 = br.ReadInt32();
             if (f[8])
                 mSolidColour = Color.FromArgb(br.ReadInt32());
             if (f[9])
@@ -122,13 +141,15 @@ namespace IntelOrca.PeggleEdit.Tools.Levels.Children
             if (f[12])
                 mImageDY = br.ReadSingle();
             if (f[13])
-                mImageRotation = MathExt.ToDegrees(br.ReadSingle());
+                mImageRotation = br.ReadSingle();
+            mHasUnknown16 = f[16];
             if (f[16])
-                br.ReadInt32();
+                mUnknown16 = br.ReadInt32();
             if (f[17])
                 mID = LevelReader.ReadPopcapString(br);
+            mHasUnknown18 = f[18];
             if (f[18])
-                br.ReadInt32();
+                mUnknown18 = br.ReadInt32();
             if (f[19])
                 mSound = br.ReadByte();
             if (f[21])
@@ -146,14 +167,17 @@ namespace IntelOrca.PeggleEdit.Tools.Levels.Children
 
             if (version >= 0x50)
             {
-                if (f[30])
-                    mShadow = f[30];
+                mShadow = f[30];
             }
 
             if (f[2])
             {
                 mPegInfo = new PegInfo(this);
                 mPegInfo.ReadData(br, version);
+            }
+            else
+            {
+                mPegInfo = null;
             }
             if (f[3])
             {
@@ -165,12 +189,13 @@ namespace IntelOrca.PeggleEdit.Tools.Levels.Children
         public void WriteGenericData(BinaryWriter bw, int version)
         {
             //Set flags
-            FlagGroup f = new FlagGroup();
+            FlagGroup f = new FlagGroup(mUnknownFlags);
 
             f[0] = (mRolly != 0.0f);
             f[1] = (mBouncy != 0.0f);
             f[2] = HasPegInfo;
             f[3] = HasMovementInfo;
+            f[4] = mHasUnknown4;
             f[5] = mCollision;
             f[6] = mVisible;
             f[7] = mCanMove;
@@ -182,7 +207,9 @@ namespace IntelOrca.PeggleEdit.Tools.Levels.Children
             f[13] = (mImageRotation != 0.0f);
             f[14] = mBackground;
             f[15] = mBaseObject;
+            f[16] = mHasUnknown16;
             f[17] = !String.IsNullOrEmpty(mID);
+            f[18] = mHasUnknown18;
             f[19] = (mSound != 0);
             f[20] = mBallStopReset;
             f[21] = !String.IsNullOrEmpty(mLogic);
@@ -193,7 +220,9 @@ namespace IntelOrca.PeggleEdit.Tools.Levels.Children
             f[26] = (mSubID != 0);
             f[27] = (mFlipperFlags != 0);
             f[28] = mDrawFloat;
-            f[30] = (mShadow && version >= 0x50);
+            if (version >= 0x50)
+                f[30] = mShadow;
+            f.Int32 |= mValueFlags;
 
             //Write data
             bw.Write(f.Int32);
@@ -202,6 +231,8 @@ namespace IntelOrca.PeggleEdit.Tools.Levels.Children
                 bw.Write(mRolly);
             if (f[1])
                 bw.Write(mBouncy);
+            if (f[4])
+                bw.Write(mUnknown4);
             if (f[8])
                 bw.Write(mSolidColour.ToArgb());
             if (f[9])
@@ -215,11 +246,15 @@ namespace IntelOrca.PeggleEdit.Tools.Levels.Children
             if (f[12])
                 bw.Write(mImageDY);
             if (f[13])
-                bw.Write(MathExt.ToRadians(mImageRotation));
+                bw.Write(mImageRotation);
+            if (f[16])
+                bw.Write(mUnknown16);
             if (f[17])
             {
                 LevelWriter.WritePopcapString(bw, mID);
             }
+            if (f[18])
+                bw.Write(mUnknown18);
             if (f[19])
                 bw.Write(mSound);
             if (f[21])
@@ -479,6 +514,10 @@ namespace IntelOrca.PeggleEdit.Tools.Levels.Children
                 dest.mPegInfo = (PegInfo)mPegInfo.Clone();
                 dest.mPegInfo.Parent = dest;
             }
+            else
+            {
+                dest.mPegInfo = null;
+            }
 
             dest.MovementLink = MovementLink?.Clone();
             dest.mImageFilename = mImageFilename;
@@ -506,6 +545,14 @@ namespace IntelOrca.PeggleEdit.Tools.Levels.Children
             dest.mSubID = mSubID;
             dest.mFlipperFlags = mFlipperFlags;
             dest.mShadow = mShadow;
+            dest.mHasUnknown4 = mHasUnknown4;
+            dest.mUnknown4 = mUnknown4;
+            dest.mHasUnknown16 = mHasUnknown16;
+            dest.mUnknown16 = mUnknown16;
+            dest.mHasUnknown18 = mHasUnknown18;
+            dest.mUnknown18 = mUnknown18;
+            dest.mUnknownFlags = mUnknownFlags;
+            dest.mValueFlags = mValueFlags;
         }
 
         [Browsable(false)]
@@ -849,11 +896,11 @@ namespace IntelOrca.PeggleEdit.Tools.Levels.Children
         {
             get
             {
-                return mImageRotation;
+                return MathExt.ToDegrees(mImageRotation);
             }
             set
             {
-                mImageRotation = value;
+                mImageRotation = MathExt.ToRadians(value);
             }
         }
 

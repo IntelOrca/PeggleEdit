@@ -38,6 +38,18 @@ namespace IntelOrca.PeggleEdit.Tools.Levels.Children
         int mGrowType;
         List<PointF> mPoints;
 
+        // Which optional values were present, and unknown values, preserved so that they are written back as read
+        int mUnknownFlagsA;
+        int mUnknownFlagsB;
+        bool mHasRotation;
+        bool mHasUnknown0;
+        float mUnknown0;
+        bool mHasScale;
+        bool mHasNormalDir;
+        bool mHasUnknown1;
+        byte mUnknown1;
+        bool mHasGrowType;
+
         public Polygon(Level level)
             : base(level)
         {
@@ -51,13 +63,19 @@ namespace IntelOrca.PeggleEdit.Tools.Levels.Children
             if (version >= 0x23)
                 fB = new FlagGroup(br.ReadByte());
 
+            mUnknownFlagsA = fA.Int32 & ((1 << 0) | (1 << 6) | (1 << 7));
+            mUnknownFlagsB = fB.Int32 & ~((1 << 0) | (1 << 1));
 
+            mHasRotation = fA[2];
             if (fA[2])
                 mRotation = br.ReadSingle();
+            mHasUnknown0 = fA[3];
             if (fA[3])
-                br.ReadSingle();
+                mUnknown0 = br.ReadSingle();
+            mHasScale = fA[5];
             if (fA[5])
                 mScale = br.ReadSingle();
+            mHasNormalDir = fA[1];
             if (fA[1])
                 mNormalDir = br.ReadByte();
             if (fA[4])
@@ -72,17 +90,26 @@ namespace IntelOrca.PeggleEdit.Tools.Levels.Children
                 mPoints.Add(new PointF(br.ReadSingle(), br.ReadSingle()));
             }
 
+            mHasUnknown1 = fB[0];
             if (fB[0])
-                br.ReadByte();
+                mUnknown1 = br.ReadByte();
 
+            mHasGrowType = fB[1];
             if (fB[1])
                 mGrowType = br.ReadInt32();
         }
 
         public override void WriteData(BinaryWriter bw, int version)
         {
-            FlagGroup fA = new FlagGroup();
-            FlagGroup fB = new FlagGroup();
+            FlagGroup fA = new FlagGroup(mUnknownFlagsA);
+            FlagGroup fB = new FlagGroup(mUnknownFlagsB);
+
+            fA[1] = mHasNormalDir;
+            fA[2] = mHasRotation;
+            fA[3] = mHasUnknown0;
+            fA[5] = mHasScale;
+            fB[0] = mHasUnknown1;
+            fB[1] = mHasGrowType;
 
             if (!HasMovementInfo)
                 fA[4] = true;
@@ -94,6 +121,14 @@ namespace IntelOrca.PeggleEdit.Tools.Levels.Children
             if (version >= 0x23)
                 bw.Write(fB.Int8);
 
+            if (fA[2])
+                bw.Write(mRotation);
+            if (fA[3])
+                bw.Write(mUnknown0);
+            if (fA[5])
+                bw.Write(mScale);
+            if (fA[1])
+                bw.Write(mNormalDir);
             if (fA[4])
             {
                 bw.Write(X);
@@ -105,6 +140,14 @@ namespace IntelOrca.PeggleEdit.Tools.Levels.Children
             {
                 bw.Write(p.X);
                 bw.Write(p.Y);
+            }
+
+            if (version >= 0x23)
+            {
+                if (fB[0])
+                    bw.Write(mUnknown1);
+                if (fB[1])
+                    bw.Write(mGrowType);
             }
         }
 
@@ -186,6 +229,20 @@ namespace IntelOrca.PeggleEdit.Tools.Levels.Children
             base.CloneTo(cpyPolygon);
 
             cpyPolygon.mPoints = new List<PointF>(mPoints.ToArray());
+            cpyPolygon.mNormalDir = mNormalDir;
+            cpyPolygon.mRotation = mRotation;
+            cpyPolygon.mScale = mScale;
+            cpyPolygon.mGrowType = mGrowType;
+            cpyPolygon.mUnknownFlagsA = mUnknownFlagsA;
+            cpyPolygon.mUnknownFlagsB = mUnknownFlagsB;
+            cpyPolygon.mHasRotation = mHasRotation;
+            cpyPolygon.mHasUnknown0 = mHasUnknown0;
+            cpyPolygon.mUnknown0 = mUnknown0;
+            cpyPolygon.mHasScale = mHasScale;
+            cpyPolygon.mHasNormalDir = mHasNormalDir;
+            cpyPolygon.mHasUnknown1 = mHasUnknown1;
+            cpyPolygon.mUnknown1 = mUnknown1;
+            cpyPolygon.mHasGrowType = mHasGrowType;
 
             return cpyPolygon;
         }

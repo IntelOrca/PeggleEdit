@@ -30,6 +30,7 @@ namespace IntelOrca.PeggleEdit.Designer
         private float _rotation = 90;
         private int _width = 38;
         private int _height = 38;
+        private bool _solid;
         private bool _drawing;
 
         private PointF? _connectPosition;
@@ -45,6 +46,7 @@ namespace IntelOrca.PeggleEdit.Designer
         {
             _rotation = template.Rotation;
             _curved = template.Curved;
+            _solid = !template.HasPegInfo;
             if (_curved)
             {
                 _curvedInnerRadius = template.InnerRadius;
@@ -214,6 +216,8 @@ namespace IntelOrca.PeggleEdit.Designer
                 brick.Length = _straightLength;
             }
             brick.Rotation = _rotation;
+            if (_solid)
+                brick.PegInfo = null;
             return brick;
         }
 
@@ -246,6 +250,7 @@ namespace IntelOrca.PeggleEdit.Designer
             tool._curvedSectorAngle = _curvedSectorAngle;
             tool._curvedInnerRadius = _curvedInnerRadius;
             tool._rotation = _rotation;
+            tool._solid = _solid;
             return tool;
         }
     }
