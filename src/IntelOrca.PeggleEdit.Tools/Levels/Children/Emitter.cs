@@ -145,7 +145,7 @@ namespace IntelOrca.PeggleEdit.Tools.Levels.Children
             mWidth = br.ReadInt32();
             mHeight = br.ReadInt32();
 
-            if (mDataVersion == 2)
+            if (mDataVersion >= 2)
             {
                 mFastForward = br.ReadInt32();
                 mHardwareRate = br.ReadSingle();
@@ -259,7 +259,7 @@ namespace IntelOrca.PeggleEdit.Tools.Levels.Children
             bw.Write(mWidth);
             bw.Write(mHeight);
 
-            if (mDataVersion == 2)
+            if (mDataVersion >= 2)
             {
                 bw.Write(mFastForward);
                 bw.Write(mHardwareRate);
