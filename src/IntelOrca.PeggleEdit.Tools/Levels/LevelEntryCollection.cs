@@ -26,6 +26,16 @@ namespace IntelOrca.PeggleEdit.Tools.Levels
     /// </summary>
     public class LevelEntryCollection : CollectionBase
     {
+        /// <summary>
+        /// Increases every time entries are added, removed, replaced or reordered.
+        /// </summary>
+        public int Version { get; private set; }
+
+        protected override void OnInsertComplete(int index, object value) => Version++;
+        protected override void OnRemoveComplete(int index, object value) => Version++;
+        protected override void OnSetComplete(int index, object oldValue, object newValue) => Version++;
+        protected override void OnClearComplete() => Version++;
+
         public LevelEntryCollection()
         {
 
@@ -82,16 +92,19 @@ namespace IntelOrca.PeggleEdit.Tools.Levels
         public void Sort(IComparer comparer)
         {
             this.InnerList.Sort(comparer);
+            Version++;
         }
 
         public void Sort(Comparison<LevelEntry> comparison)
         {
             this.InnerList.Sort(new LevelEntryComparer(comparison));
+            Version++;
         }
 
         public void Reverse()
         {
             this.InnerList.Reverse();
+            Version++;
         }
 
         public LevelEntry[] ToArray()

@@ -32,6 +32,9 @@ PeggleEdit 5.2.0 (Flamingo) (TBC)
 * [Fix] Fix solid (non-peg) bricks becoming pegs, and objects without a shadow gaining one, when saved
 * [Fix] Fix unknown data, and values stored in the level that match the default, being lost from level objects when saved
 * [Fix] Use the game's defaults for solid and outline colours: black could not be used as a colour, and colours from the level showed as transparent
+* [Fix] Fix early Pego levels (before file version 0x0F) being corrupted when saved
+* [Fix] Fix level entries that refer to another object being dropped when saved
+* [Fix] Fix text containing non-ASCII characters producing a corrupt level
 
 PeggleEdit 5.1.1 (Eagle) (2023-09-13)
 

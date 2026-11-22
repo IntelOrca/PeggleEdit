@@ -60,23 +60,29 @@ namespace IntelOrca.PeggleEdit.Tools.Levels
                 //Read file version
                 mFileVersion = br.ReadInt32();
 
-                //Read byte
-                br.ReadByte();
+                mLevel.FileVersion = mFileVersion;
+                mLevel.HeaderByte = br.ReadByte();
 
                 mNumEntries = br.ReadInt32();
 
                 //Read entries
                 for (entry_index = 0; entry_index < mNumEntries; entry_index++)
                 {
-                    var entry = LevelEntryFactory.CreateLevelEntry(br, mFileVersion);
+                    int magic = br.ReadInt32();
+                    var entry = LevelEntryFactory.CreateLevelEntry(magic, br, mFileVersion);
                     if (entry != null)
                     {
                         entry.Level = mLevel;
                         mLevel.Entries.Add(entry);
                     }
+                    else
+                    {
+                        mLevel.NullEntries.Add((mLevel.Entries.Count, magic));
+                    }
                 }
 
                 mLevel.UpdateMoverLinksRead();
+                mLevel.PreserveNullEntries();
                 return mLevel;
             }
             catch (Exception ex)

@@ -64,6 +64,39 @@ namespace IntelOrca.PeggleEdit.Tools.Levels
         public bool UsePegTextures { get; set; }
         public ulong Hash { get; set; }
 
+        /// <summary>
+        /// The level file version this level was read from.
+        /// </summary>
+        public int FileVersion { get; set; } = LevelWriter.DefaultFileVersion;
+
+        /// <summary>
+        /// The unknown byte in the level file header (normally 1), preserved so that the level is written back as read.
+        /// </summary>
+        public byte HeaderByte { get; set; } = 1;
+
+        /// <summary>
+        /// Entries in the file that had no data: empty slots (magic 0) and references to an earlier object (any other
+        /// magic but 1). Index is the number of real entries that came before it. They are written back only while the
+        /// entry list is unchanged since the level was read, as they would be in the wrong place otherwise.
+        /// </summary>
+        public List<(int Index, int Magic)> NullEntries { get; } = new List<(int Index, int Magic)>();
+
+        private int mNullEntriesVersion;
+
+        /// <summary>
+        /// The null entries to write: none once the entry list has been changed.
+        /// </summary>
+        internal IReadOnlyList<(int Index, int Magic)> PreservedNullEntries =>
+            Entries.Version == mNullEntriesVersion ? NullEntries : (IReadOnlyList<(int Index, int Magic)>)new (int, int)[0];
+
+        /// <summary>
+        /// Keeps the null entries that were read until the entry list is changed.
+        /// </summary>
+        internal void PreserveNullEntries()
+        {
+            mNullEntriesVersion = Entries.Version;
+        }
+
         public Level()
         {
             _particlePreview.Level = this;

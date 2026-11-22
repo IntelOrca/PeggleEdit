@@ -56,17 +56,23 @@ namespace IntelOrca.PeggleEdit.Tools.Levels
             //Level version
             bw.Write(version);
 
-            //1
-            bw.Write((byte)1);
+            //Unknown, normally 1
+            bw.Write(mLevel.HeaderByte);
 
             //Num. entries
-            bw.Write(mLevel.Entries.Count);
+            var nullEntries = mLevel.PreservedNullEntries;
+            bw.Write(mLevel.Entries.Count + nullEntries.Count);
 
-            //Entry loop
-            foreach (LevelEntry le in mLevel.Entries)
+            //Entry loop, with any null entries put back where they were read
+            int nullIndex = 0;
+            for (int i = 0; i < mLevel.Entries.Count; i++)
             {
-                le.Write(bw, version);
+                for (; nullIndex < nullEntries.Count && nullEntries[nullIndex].Index <= i; nullIndex++)
+                    bw.Write(nullEntries[nullIndex].Magic);
+                mLevel.Entries[i].Write(bw, version);
             }
+            for (; nullIndex < nullEntries.Count; nullIndex++)
+                bw.Write(nullEntries[nullIndex].Magic);
 
             bw.Close();
 
@@ -81,8 +87,9 @@ namespace IntelOrca.PeggleEdit.Tools.Levels
             }
             else
             {
-                bw.Write((short)sz.Length);
-                bw.Write(Encoding.UTF8.GetBytes(sz));
+                var bytes = Encoding.UTF8.GetBytes(sz);
+                bw.Write((short)bytes.Length);
+                bw.Write(bytes);
             }
         }
 

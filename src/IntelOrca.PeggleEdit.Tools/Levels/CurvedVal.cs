@@ -108,8 +108,9 @@ namespace IntelOrca.PeggleEdit.Tools.Levels
             }
             else
             {
-                bw.Write((short)s.Length);
-                bw.Write(Encoding.UTF8.GetBytes(s));
+                var bytes = Encoding.UTF8.GetBytes(s);
+                bw.Write((short)bytes.Length);
+                bw.Write(bytes);
             }
         }
 

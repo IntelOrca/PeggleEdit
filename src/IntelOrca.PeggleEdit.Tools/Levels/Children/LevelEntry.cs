@@ -236,8 +236,20 @@ namespace IntelOrca.PeggleEdit.Tools.Levels.Children
                 f[30] = mDrawShadow;
             f.Int32 |= mValueFlags;
 
+            // Before version 0x0F the flags are 24 bits, so values for later bits can not be stored
+            if (version < 0x0F)
+                f.Int32 &= 0xFFFFFF;
+
             //Write data
-            bw.Write(f.Int32);
+            if (version < 0x0F)
+            {
+                bw.Write((ushort)f.Int32);
+                bw.Write((byte)(f.Int32 >> 16));
+            }
+            else
+            {
+                bw.Write(f.Int32);
+            }
 
             if (f[0])
                 bw.Write(mRolly);

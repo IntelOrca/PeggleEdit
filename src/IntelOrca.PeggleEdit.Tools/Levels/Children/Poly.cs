@@ -59,6 +59,8 @@ namespace IntelOrca.PeggleEdit.Tools.Levels.Children
         bool mHasGrowTimer;
         byte mGrowTimer;
         bool mHasGrowType;
+        bool mHasFlashTimer;
+        short mFlashTimer;
 
         public Poly(Level level)
             : base(level)
@@ -74,7 +76,7 @@ namespace IntelOrca.PeggleEdit.Tools.Levels.Children
                 fB = new FlagGroup(br.ReadByte());
 
             mUnknownFlagsA = fA.Int32 & ((1 << 0) | (1 << 6) | (1 << 7));
-            mUnknownFlagsB = fB.Int32 & ~((1 << 0) | (1 << 1));
+            mUnknownFlagsB = fB.Int32 & ~((1 << 0) | (1 << 1) | (1 << 2));
 
             mHasRotation = fA[2];
             if (fA[2])
@@ -107,6 +109,10 @@ namespace IntelOrca.PeggleEdit.Tools.Levels.Children
             mHasGrowType = fB[1];
             if (fB[1])
                 mGrowType = br.ReadInt32();
+
+            mHasFlashTimer = fB[2];
+            if (fB[2])
+                mFlashTimer = br.ReadInt16();
         }
 
         public override void WriteData(BinaryWriter bw, int version)
@@ -120,6 +126,7 @@ namespace IntelOrca.PeggleEdit.Tools.Levels.Children
             fA[5] = mHasScale;
             fB[0] = mHasGrowTimer;
             fB[1] = mHasGrowType;
+            fB[2] = mHasFlashTimer;
 
             if (!HasMover)
                 fA[4] = true;
@@ -158,6 +165,8 @@ namespace IntelOrca.PeggleEdit.Tools.Levels.Children
                     bw.Write(mGrowTimer);
                 if (fB[1])
                     bw.Write(mGrowType);
+                if (fB[2])
+                    bw.Write(mFlashTimer);
             }
         }
 
@@ -253,6 +262,8 @@ namespace IntelOrca.PeggleEdit.Tools.Levels.Children
             cpyPolygon.mHasGrowTimer = mHasGrowTimer;
             cpyPolygon.mGrowTimer = mGrowTimer;
             cpyPolygon.mHasGrowType = mHasGrowType;
+            cpyPolygon.mHasFlashTimer = mHasFlashTimer;
+            cpyPolygon.mFlashTimer = mFlashTimer;
 
             return cpyPolygon;
         }
