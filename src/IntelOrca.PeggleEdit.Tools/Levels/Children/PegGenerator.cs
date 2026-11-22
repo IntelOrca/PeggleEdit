@@ -15,6 +15,7 @@
 // along with PeggleEdit. If not, see <http://www.gnu.org/licenses/>.
 
 using System;
+using System.Collections.Generic;
 using System.ComponentModel;
 using System.Drawing;
 using System.Drawing.Drawing2D;
@@ -25,7 +26,7 @@ namespace IntelOrca.PeggleEdit.Tools.Levels.Children
     /// <summary>
     /// Represents the peg generator level entry which has function capabilities.
     /// </summary>
-    public class PegGenerator : LevelEntry, ICloneable, IEntryFunction
+    public class PegGenerator : LevelEntry, ICloneable, IEntryGenerator
     {
         int mNumberOfPegs;
         int mMaxNumberOfPegs;
@@ -43,27 +44,33 @@ namespace IntelOrca.PeggleEdit.Tools.Levels.Children
             mRadiusY = 90.0f;
         }
 
-        public void Execute()
+        public void Execute() => Generators.Apply(this);
+
+        public IReadOnlyList<LevelEntry> Generate()
         {
+            var origin = Generators.GetOrigin(this);
+            var pegs = new List<LevelEntry>();
             int index = 0;
             float da = 360.0f / (float)mMaxNumberOfPegs;
-            for (float a = mAngularOffset; a < 360 + mAngularOffset; a += da)
+            for (float a = mAngularOffset; a < 360 + mAngularOffset && index < mNumberOfPegs; a += da)
             {
                 float angle = MathExt.ToRadians(a);
 
                 Ball p = new Ball(Level);
                 p.PegInfo = new PegInfo(p, true, false);
-                p.X = X + ((float)Math.Cos(angle) * mRadiusX);
-                p.Y = Y + ((float)Math.Sin(angle) * mRadiusY);
-
-                Level.Entries.Add(p);
+                p.X = origin.X + ((float)Math.Cos(angle) * mRadiusX);
+                p.Y = origin.Y + ((float)Math.Sin(angle) * mRadiusY);
+                pegs.Add(p);
 
                 index++;
-                if (index == mNumberOfPegs)
-                    break;
             }
+            return Generators.Finish(this, origin, pegs);
+        }
 
-            Level.Entries.Remove(this);
+        public override void RenderShadow(Graphics g)
+        {
+            if (Level.ShowPreview)
+                Generators.DrawGenerated(this, g, true);
         }
 
         public override void ReadData(BinaryReader br, int version)
@@ -105,6 +112,12 @@ namespace IntelOrca.PeggleEdit.Tools.Levels.Children
         {
             if (Level.ShowCollision)
                 return;
+
+            if (Level.ShowPreview)
+            {
+                Generators.DrawGenerated(this, g, false);
+                return;
+            }
 
             base.Draw(g);
 

@@ -697,7 +697,6 @@ namespace IntelOrca.PeggleEdit.Designer
 
         public bool SavePack(string filename)
         {
-            CheckAndShowUnplayableWarning();
             UpdateRecentList(filename);
             return mPack.Save(filename);
         }
@@ -754,23 +753,6 @@ namespace IntelOrca.PeggleEdit.Designer
                 {
                     mDockContainer.Remove(dfi);
                     return;
-                }
-            }
-        }
-
-        private void CheckAndShowUnplayableWarning()
-        {
-            foreach (var level in mPack.Levels)
-            {
-                foreach (LevelEntry entry in level.Entries)
-                {
-                    if (entry.Type >= 1000)
-                    {
-                        var text = "One or more of your levels contains a peg generator, or similar object.\n" +
-                            "These must be removed for the level to be playable in Peggle.";
-                        MessageBox.Show(text, "Save Project", MessageBoxButtons.OK, MessageBoxIcon.Warning);
-                        return;
-                    }
                 }
             }
         }

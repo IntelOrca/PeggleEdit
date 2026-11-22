@@ -28,16 +28,17 @@ namespace IntelOrca.PeggleEdit.Tools.Levels.Children
             _cache.Clear();
         }
 
-        public override void Execute()
+        protected override List<LevelEntry> CreateEntries(PointF origin)
         {
+            var pegs = new List<LevelEntry>();
             ProcessPegs(p =>
             {
                 var peg = new Ball(Level);
                 peg.PegInfo = new PegInfo(peg, true, false);
-                peg.Location = Location.Add(new PointF(p.X, p.Y)).Round();
-                Level.Entries.Add(peg);
+                peg.Location = origin.Add(new PointF(p.X, p.Y)).Round();
+                pegs.Add(peg);
             });
-            Level.Entries.Remove(this);
+            return pegs;
         }
 
         protected override void DrawPregeneratedItems(Graphics g)

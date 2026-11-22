@@ -430,30 +430,23 @@ namespace IntelOrca.PeggleEdit.Tools.Levels
         /// </summary>
         public void UpdateMoverLinksRead()
         {
-            var linkable = GetLinkableObjects().ToList();
-            object GetLinkable(int id) => id - FirstLinkId >= 0 && id - FirstLinkId < linkable.Count ? linkable[id - FirstLinkId] : null;
+            UpdateMoverLinksRead(GetAllEntries(EntryList), EntryList);
+            UpdateObjectLinksRead(EntryList);
+        }
 
-            foreach (var entry in GetAllEntries())
-            {
-                if (entry is Hole hole && hole.HasDestinationLink)
-                    hole.DestinationLinkTarget = GetLinkable(hole.DestinationLink);
-            }
-
-            mNullEntryObjects = new List<(LevelEntry After, object Target)>();
-            foreach (var (index, magic) in NullEntries)
-            {
-                var after = index > 0 && index <= Entries.Count ? Entries[index - 1] : null;
-                mNullEntryObjects.Add((after, magic == 0 ? null : GetLinkable(magic)));
-            }
-
-            foreach (LevelEntry entry in GetAllEntries())
+        /// <summary>
+        /// Sets the movers of links read from a file, numbering objects as the game does over <paramref name="numbered"/>.
+        /// </summary>
+        private void UpdateMoverLinksRead(IEnumerable<LevelEntry> entries, IReadOnlyList<LevelEntry> numbered)
+        {
+            foreach (LevelEntry entry in entries)
             {
                 var link = entry.MoverLink;
                 while (link != null)
                 {
                     if (!link.OwnsMover)
                     {
-                        link.InternalMover = GetMoverFromId(link.InternalLinkId);
+                        link.InternalMover = GetMoverFromId(link.InternalLinkId, numbered);
                         break;
                     }
                     else
@@ -466,19 +459,31 @@ namespace IntelOrca.PeggleEdit.Tools.Levels
 
         /// <summary>
         /// Numbers the objects that links refer to as the level now is, and leaves out the links to objects that have
-        /// been removed. Called before the level is written or copied.
+        /// been removed. Called before the level is copied, and after it is written.
         /// </summary>
         public void UpdateMoverLinksWrite()
         {
-            UpdateObjectLinksWrite();
-            foreach (LevelEntry entry in GetAllEntries())
+            UpdateMoverLinksWrite(GetAllEntries(EntryList), EntryList, null);
+            UpdateObjectLinksWrite(EntryList);
+        }
+
+        /// <summary>
+        /// Sets the ids of links to write, numbering objects as the game does over <paramref name="numbered"/>. A link to
+        /// a mover that is not there is written to its substitute, if it has one.
+        /// </summary>
+        private void UpdateMoverLinksWrite(IEnumerable<LevelEntry> entries, IReadOnlyList<LevelEntry> numbered, IDictionary<Mover, Mover> substitutes)
+        {
+            foreach (LevelEntry entry in entries)
             {
                 var link = entry.MoverLink;
                 while (link != null)
                 {
                     if (!link.OwnsMover)
                     {
-                        link.InternalLinkId = GetMoverId(link.Mover);
+                        int id = GetMoverId(link.Mover, numbered);
+                        if (id == 0 && link.Mover != null && substitutes != null && substitutes.TryGetValue(link.Mover, out var substitute))
+                            id = GetMoverId(substitute, numbered);
+                        link.InternalLinkId = id;
                         break;
                     }
                     else
@@ -489,22 +494,141 @@ namespace IntelOrca.PeggleEdit.Tools.Levels
             }
         }
 
-        private void UpdateObjectLinksWrite()
+        public Mover GetMoverFromId(int id) => GetMoverFromId(id, EntryList);
+
+        private static Mover GetMoverFromId(int id, IReadOnlyList<LevelEntry> entries)
         {
-            bool hasHoleLinks = GetAllEntries().Any(x => x is Hole hole && hole.HasDestinationLink);
+            int mi = FirstLinkId;
+            foreach (var obj in GetLinkableObjects(entries))
+            {
+                if (mi == id)
+                    return obj as Mover;
+                mi++;
+            }
+            return null;
+        }
+
+        public int GetMoverId(Mover movement) => GetMoverId(movement, EntryList);
+
+        private static int GetMoverId(Mover movement, IReadOnlyList<LevelEntry> entries)
+        {
+            int mi = FirstLinkId;
+            foreach (var obj in GetLinkableObjects(entries))
+            {
+                if (obj is Mover && obj == movement)
+                    return mi;
+                mi++;
+            }
+            return 0;
+        }
+
+        // The id the game gives to the first object in a level
+        const int FirstLinkId = 3;
+
+        private IReadOnlyList<LevelEntry> EntryList => Entries.ToArray();
+
+        /// <summary>
+        /// Gets the entries, including the destination entries of holes, in file order.
+        /// </summary>
+        private static IEnumerable<LevelEntry> GetAllEntries(IEnumerable<LevelEntry> entries)
+        {
+            foreach (LevelEntry entry in entries)
+            {
+                for (var e = entry; e != null; e = (e as Hole)?.DestinationEntry)
+                    yield return e;
+            }
+        }
+
+        /// <summary>
+        /// Gets the entries the game sees: the level's entries with each generator replaced by the entries it
+        /// generates.
+        /// </summary>
+        /// <param name="generators">Each generator, with where its entries are.</param>
+        internal List<LevelEntry> ExpandGenerators(out List<EditorData.GeneratorRecord> generators)
+        {
+            var result = new List<LevelEntry>();
+            generators = new List<EditorData.GeneratorRecord>();
+            foreach (LevelEntry entry in Entries)
+            {
+                if (entry is IEntryGenerator generator)
+                {
+                    var generated = generator.Generate();
+                    generators.Add(new EditorData.GeneratorRecord { First = result.Count, Count = generated.Count, Generator = entry });
+                    result.AddRange(generated);
+                }
+                else
+                {
+                    result.Add(entry);
+                }
+            }
+            return result;
+        }
+
+        /// <summary>
+        /// Sets the ids of the links to write for the entries the game sees, and for the generators (which are written
+        /// in PeggleEdit's data with the same numbering). A link to a generator's mover becomes a link to the mover of
+        /// the first entry it generates.
+        /// </summary>
+        internal void UpdateMoverLinksWrite(IReadOnlyList<LevelEntry> gameEntries, IReadOnlyList<EditorData.GeneratorRecord> generators)
+        {
+            var substitutes = new Dictionary<Mover, Mover>();
+            foreach (var record in generators)
+            {
+                if (record.Generator.MoverLink is MoverLink link && link.OwnsMover && link.Mover != null &&
+                    record.Count > 0 && gameEntries[record.First].MoverLink?.Mover is Mover first)
+                {
+                    substitutes[link.Mover] = first;
+                }
+            }
+            var entries = GetAllEntries(gameEntries).Concat(generators.Select(x => x.Generator));
+            UpdateMoverLinksWrite(entries, gameEntries, substitutes);
+            UpdateObjectLinksWrite(gameEntries);
+        }
+
+        /// <summary>
+        /// Finds the objects that hole destinations and null entries refer to, numbering objects as the game does over
+        /// <paramref name="numbered"/>.
+        /// </summary>
+        private void UpdateObjectLinksRead(IReadOnlyList<LevelEntry> numbered)
+        {
+            var linkable = GetLinkableObjects(numbered).ToList();
+            object GetLinkable(int id) => id - FirstLinkId >= 0 && id - FirstLinkId < linkable.Count ? linkable[id - FirstLinkId] : null;
+
+            foreach (var entry in GetAllEntries(numbered))
+            {
+                if (entry is Hole hole && hole.HasDestinationLink)
+                    hole.DestinationLinkTarget = GetLinkable(hole.DestinationLink);
+            }
+
+            mNullEntryObjects = new List<(LevelEntry After, object Target)>();
+            foreach (var (index, magic) in NullEntries)
+            {
+                var after = index > 0 && index <= numbered.Count ? numbered[index - 1] : null;
+                mNullEntryObjects.Add((after, magic == 0 ? null : GetLinkable(magic)));
+            }
+        }
+
+        /// <summary>
+        /// Numbers the objects that hole destinations and null entries refer to as the game does over
+        /// <paramref name="numbered"/> (once the mover links are numbered, as they count), places the null entries
+        /// after the entries they followed, and leaves out those whose object or entry has been removed.
+        /// </summary>
+        private void UpdateObjectLinksWrite(IReadOnlyList<LevelEntry> numbered)
+        {
+            bool hasHoleLinks = GetAllEntries(numbered).Any(x => x is Hole hole && hole.HasDestinationLink);
             if (!hasHoleLinks && NullEntries.Count == 0)
                 return;
 
             var numbers = new Dictionary<object, int>();
             int id = FirstLinkId;
-            foreach (var obj in GetLinkableObjects())
+            foreach (var obj in GetLinkableObjects(numbered))
             {
                 if (obj != null && !numbers.ContainsKey(obj))
                     numbers.Add(obj, id);
                 id++;
             }
 
-            foreach (var entry in GetAllEntries())
+            foreach (var entry in GetAllEntries(numbered))
             {
                 if (entry is Hole hole && hole.HasDestinationLink && hole.DestinationLinkTarget != null)
                 {
@@ -518,8 +642,8 @@ namespace IntelOrca.PeggleEdit.Tools.Levels
             if (mNullEntryObjects.Count != NullEntries.Count)
                 return;
             var entryIndices = new Dictionary<LevelEntry, int>();
-            for (int i = 0; i < Entries.Count; i++)
-                entryIndices[Entries[i]] = i;
+            for (int i = 0; i < numbered.Count; i++)
+                entryIndices[numbered[i]] = i;
             var kept = new List<(int Index, int Magic, LevelEntry After, object Target)>();
             for (int i = 0; i < NullEntries.Count; i++)
             {
@@ -545,53 +669,68 @@ namespace IntelOrca.PeggleEdit.Tools.Levels
             mNullEntryObjects = kept.Select(x => (x.After, x.Target)).ToList();
         }
 
-        public Mover GetMoverFromId(int id)
+        /// <summary>
+        /// Puts generators read from PeggleEdit's data back in place of the entries they generated. The entries must
+        /// be the entries as read, with their links already set.
+        /// </summary>
+        internal void RestoreGenerators(IReadOnlyList<EditorData.GeneratorRecord> generators)
         {
-            int mi = FirstLinkId;
-            foreach (var obj in GetLinkableObjects())
-            {
-                if (mi == id)
-                    return obj as Mover;
-                mi++;
-            }
-            return null;
-        }
+            var read = EntryList;
+            foreach (var record in generators)
+                record.Generator.Level = this;
+            UpdateMoverLinksRead(generators.Select(x => x.Generator), read);
 
-        public int GetMoverId(Mover movement)
-        {
-            int mi = FirstLinkId;
-            foreach (var obj in GetLinkableObjects())
+            // Links to the movers of generated entries go to the generator's mover instead, as those entries go
+            var replaced = new Dictionary<Mover, Mover>();
+            foreach (var record in generators)
             {
-                if (obj is Mover && obj == movement)
-                    return mi;
-                mi++;
+                var generatorMover = record.Generator.MoverLink?.Mover;
+                for (int i = record.First; i < record.First + record.Count; i++)
+                {
+                    for (var link = read[i].MoverLink; link != null && link.OwnsMover && link.Mover != null; link = link.Mover.MoverLink)
+                        replaced[link.Mover] = generatorMover;
+                }
             }
-            return 0;
-        }
 
-        // The id the game gives to the first object in a level
-        const int FirstLinkId = 3;
+            Entries.Clear();
+            int next = 0;
+            foreach (var record in generators)
+            {
+                for (; next < record.First; next++)
+                    Entries.Add(read[next]);
+                Entries.Add(record.Generator);
+                next = record.First + record.Count;
+            }
+            for (; next < read.Count; next++)
+                Entries.Add(read[next]);
+
+            foreach (var entry in GetAllEntries(EntryList))
+            {
+                for (var link = entry.MoverLink; link != null; link = link.Mover?.MoverLink)
+                {
+                    if (!link.OwnsMover)
+                    {
+                        if (link.Mover != null && replaced.TryGetValue(link.Mover, out var mover))
+                            link.InternalMover = mover;
+                        break;
+                    }
+                }
+            }
+        }
 
         /// <summary>
-        /// Gets the entries of the level, including the destination entries of holes, in file order.
+        /// What was found of PeggleEdit's data when the level was read.
         /// </summary>
-        private IEnumerable<LevelEntry> GetAllEntries()
-        {
-            foreach (LevelEntry entry in Entries)
-            {
-                for (var e = entry; e != null; e = (e as Hole)?.DestinationEntry)
-                    yield return e;
-            }
-        }
+        public EditorData.Status EditorDataStatus { get; internal set; }
 
         /// <summary>
         /// Gets the objects that links can refer to, in the order the game numbers them: each entry, then the movers it
         /// owns, then the destination entry of a hole and its movers, and so on. A null element is a mover link
         /// without a mover, which the game still counts.
         /// </summary>
-        private IEnumerable<object> GetLinkableObjects()
+        private static IEnumerable<object> GetLinkableObjects(IReadOnlyList<LevelEntry> entries)
         {
-            foreach (var entry in GetAllEntries())
+            foreach (var entry in GetAllEntries(entries))
             {
                 yield return entry;
                 var link = entry.MoverLink;

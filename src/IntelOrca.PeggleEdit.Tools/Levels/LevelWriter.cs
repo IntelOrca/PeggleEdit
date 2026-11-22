@@ -46,12 +46,15 @@ namespace IntelOrca.PeggleEdit.Tools.Levels
 
         public bool Write(Level level, int version)
         {
-            level.UpdateMoverLinksWrite();
-
             mLevel = level;
             mFileVersion = version;
 
-            BinaryWriter bw = new BinaryWriter(mBaseStream);
+            // The game sees the entries the generators generate, in their place
+            var entries = level.ExpandGenerators(out var generators);
+            level.UpdateMoverLinksWrite(entries, generators);
+
+            var ms = new MemoryStream();
+            BinaryWriter bw = new BinaryWriter(ms);
 
             //Level version
             bw.Write(version);
@@ -61,20 +64,32 @@ namespace IntelOrca.PeggleEdit.Tools.Levels
 
             //Num. entries
             var nullEntries = mLevel.NullEntries;
-            bw.Write(mLevel.Entries.Count + nullEntries.Count);
+            bw.Write(entries.Count + nullEntries.Count);
 
             //Entry loop, with any null entries put back where they were read
             int nullIndex = 0;
-            for (int i = 0; i < mLevel.Entries.Count; i++)
+            for (int i = 0; i < entries.Count; i++)
             {
                 for (; nullIndex < nullEntries.Count && nullEntries[nullIndex].Index <= i; nullIndex++)
                     bw.Write(nullEntries[nullIndex].Magic);
-                mLevel.Entries[i].Write(bw, version);
+                entries[i].Write(bw, version);
             }
             for (; nullIndex < nullEntries.Count; nullIndex++)
                 bw.Write(nullEntries[nullIndex].Magic);
 
-            bw.Close();
+            // PeggleEdit's own data goes after the last entry, where the game does not read
+            if (generators.Count != 0)
+            {
+                bw.Flush();
+                EditorData.Write(bw, ms.ToArray(), generators, version);
+
+                // Put the link ids back as the editor numbers its entries
+                level.UpdateMoverLinksWrite();
+            }
+
+            bw.Flush();
+            ms.WriteTo(mBaseStream);
+            mBaseStream.Close();
 
             return true;
         }

@@ -1,7 +1,8 @@
-using System;
+﻿using System;
 using System.IO;
 using System.Linq;
 using System.Text;
+using System.Text.RegularExpressions;
 using IntelOrca.PeggleEdit.Tools.Levels;
 using IntelOrca.PeggleEdit.Tools.Levels.Xml;
 using Xunit;
@@ -108,8 +109,10 @@ namespace IntelOrca.PeggleEdit.Tools.Tests
         [Fact]
         public void Everything_RoundTripsThroughLevelModel()
         {
-            // The level model and the XML converter must agree on the format
-            var data = LevelXml.Import(EverythingXml);
+            // The level model and the XML converter must agree on the format. Generators in the entries are from
+            // levels saved by older versions; the model saves them as the entries they generate (see GeneratorTests).
+            var xml = Regex.Replace(EverythingXml, @"\s*<[A-Za-z]*Generator [^>]*/>", "");
+            var data = LevelXml.Import(xml);
             Assert.Equal(data, ModelRoundTrip(data));
         }
 

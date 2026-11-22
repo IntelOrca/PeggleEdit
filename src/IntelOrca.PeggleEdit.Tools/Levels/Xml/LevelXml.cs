@@ -39,8 +39,9 @@ namespace IntelOrca.PeggleEdit.Tools.Levels.Xml
     /// (<c>0x…</c>) for NaN and infinity, as there are many different NaNs.</item>
     /// </list>
     /// Files that are not levels, or are damaged (an unknown entry type, a truncated file, text that is not valid
-    /// UTF-8 or has characters XML can not hold), can not be exported. Any data after the last entry is not read,
-    /// as PeggleEdit does not read it either, so it is not in the XML.
+    /// UTF-8 or has characters XML can not hold), can not be exported. PeggleEdit's own data after the last entry
+    /// (<see cref="EditorData"/>) is in a &lt;PeggleEdit&gt; element at the end; any other data after the last entry is
+    /// not part of the level, so it is not in the XML.
     /// Import is strict: unknown attributes or elements, missing fields, out of range values and fields that the
     /// file version can not hold are errors, so that a typo never silently drops data.
     /// </remarks>
@@ -129,8 +130,88 @@ namespace IntelOrca.PeggleEdit.Tools.Levels.Xml
                     throw new InvalidDataException($"Entry {i}: {ex.Message}.", ex);
                 }
             }
-            // Any data after the last entry is not part of the level, and is not kept
+            // PeggleEdit's own data after the last entry is kept; any other data there is not part of the level
+            var editorData = ReadEditorData(data, r.Position, version, count);
+            if (editorData != null)
+                root.Add(editorData);
             return root;
+        }
+
+        const string EditorDataName = "PeggleEdit";
+        // The entries a generator generated, which are in the level in its place
+        const string FirstEntryName = "firstEntry";
+        const string EntryCountName = "entryCount";
+
+        /// <summary>
+        /// Reads PeggleEdit's data after the last entry, if it is there, belongs to this level, and can be read.
+        /// </summary>
+        static XElement ReadEditorData(byte[] data, int levelEnd, int version, int entryCount)
+        {
+            if (EditorData.Find(data, levelEnd, out var chunks) != EditorData.Status.Valid)
+                return null;
+
+            var result = new XElement(EditorDataName);
+            foreach (var chunk in chunks.Where(x => x.Tag == EditorData.GeneratorsTag).Take(1))
+            {
+                try
+                {
+                    var r = new BinReader(data.Skip(chunk.Offset).Take(chunk.Length).ToArray());
+                    int count = r.I32();
+                    if (count < 0)
+                        return null;
+                    int next = 0;
+                    for (int i = 0; i < count; i++)
+                    {
+                        int first = r.I32();
+                        int generated = r.I32();
+                        if (first < next || generated < 0 || generated > entryCount - first)
+                            return null;
+                        next = first + generated;
+
+                        var el = ReadEntry(r, version);
+                        if (!GeneratorNames.Contains(el.Name.LocalName))
+                            return null;
+                        var attributes = el.Attributes().ToList();
+                        el.RemoveAttributes();
+                        el.Add(new XAttribute(FirstEntryName, first), new XAttribute(EntryCountName, generated), attributes);
+                        result.Add(el);
+                    }
+                }
+                catch (Exception ex) when (ex is LevelFormatException || ex is OverflowException)
+                {
+                    return null;
+                }
+            }
+            return result;
+        }
+
+        /// <summary>
+        /// Writes PeggleEdit's data, from a &lt;PeggleEdit&gt; element, for the level written so far.
+        /// </summary>
+        static byte[] WriteEditorData(Node n, byte[] levelPart, int version, int entryCount)
+        {
+            var w = new BinWriter();
+            var generators = n.RemainingChildren();
+            w.I32(generators.Count);
+            int next = 0;
+            foreach (var generator in generators)
+            {
+                n.UseChild(generator.Element);
+                if (!GeneratorNames.Contains(generator.Name))
+                    throw generator.Error($"<{EditorDataName}> can only hold generators, not <{generator.Name}>.");
+                int first = generator.Int32(FirstEntryName);
+                int count = generator.Int32(EntryCountName);
+                if (first < next || first > entryCount)
+                    throw generator.Error($"'{FirstEntryName}' must be from {next} to {entryCount}: generators are in entry order and do not overlap.", FirstEntryName);
+                if (count < 0 || count > entryCount - first)
+                    throw generator.Error($"'{EntryCountName}' must be from 0 to {entryCount - first}.", EntryCountName);
+                next = first + count;
+                w.I32(first);
+                w.I32(count);
+                WriteEntry(generator, w, version);
+            }
+            n.Done();
+            return EditorData.Build(levelPart, new[] { new KeyValuePair<string, byte[]>(EditorData.GeneratorsTag, w.ToArray()) });
         }
 
         /// <summary>
@@ -148,6 +229,12 @@ namespace IntelOrca.PeggleEdit.Tools.Levels.Xml
 
             int version = root.Int32("fileVersion");
             var children = rootElement.Elements().ToList();
+            XElement editorData = null;
+            if (children.Count != 0 && children[children.Count - 1].Name == EditorDataName)
+            {
+                editorData = children[children.Count - 1];
+                children.RemoveAt(children.Count - 1);
+            }
             var w = new BinWriter();
             w.I32(version);
             w.U8(1);
@@ -155,10 +242,20 @@ namespace IntelOrca.PeggleEdit.Tools.Levels.Xml
             foreach (var child in children)
             {
                 root.UseChild(child);
+                if (child.Name == EditorDataName)
+                    throw new Node(child).Error($"<{EditorDataName}> must be the last element.");
                 WriteEntry(new Node(child), w, version);
             }
+            var data = w.ToArray();
+            if (editorData != null)
+            {
+                root.UseChild(editorData);
+                var levelPart = data;
+                var trailer = WriteEditorData(new Node(editorData), levelPart, version, children.Count);
+                data = levelPart.Concat(trailer).ToArray();
+            }
             root.Done();
-            return w.ToArray();
+            return data;
         }
 
         #endregion
@@ -179,6 +276,10 @@ namespace IntelOrca.PeggleEdit.Tools.Levels.Xml
             { LevelEntryTypes.BrickCurveGenerator, "BrickCurveGenerator" },
         };
         static readonly Dictionary<string, int> EntryTypes = EntryNames.ToDictionary(kv => kv.Value, kv => kv.Key);
+        static readonly HashSet<string> GeneratorNames = new HashSet<string>
+        {
+            "PegGenerator", "BrickGenerator", "PegCurveGenerator", "BrickCurveGenerator",
+        };
 
         enum Kind { F32, I32, U8, Str, Argb, FlipperFlags }
 

@@ -88,6 +88,7 @@ namespace IntelOrca.PeggleEdit.Tools.Levels
                 }
 
                 mLevel.UpdateMoverLinksRead();
+                ReadEditorData(data, (int)br.BaseStream.Position);
                 mLevel.SetOriginalData(data);
                 return mLevel;
             }
@@ -104,6 +105,37 @@ namespace IntelOrca.PeggleEdit.Tools.Levels
 
                 return null;
             }
+        }
+
+        /// <summary>
+        /// Reads PeggleEdit's data after the last entry, putting the generators back in place of the entries they
+        /// generated. If the data is not usable, the generated entries are kept as ordinary entries.
+        /// </summary>
+        private void ReadEditorData(byte[] data, int levelEnd)
+        {
+            var status = EditorData.Find(data, levelEnd, out var chunks);
+            if (status == EditorData.Status.Valid)
+            {
+                try
+                {
+                    foreach (var chunk in chunks)
+                    {
+                        if (chunk.Tag != EditorData.GeneratorsTag)
+                            continue;
+                        var generators = EditorData.ReadGenerators(data, chunk, mFileVersion);
+                        if (!EditorData.AreRangesValid(generators, mLevel.Entries.Count))
+                            throw new InvalidDataException("generators overlap");
+                        mLevel.RestoreGenerators(generators);
+                        break;
+                    }
+                }
+                catch (Exception)
+                {
+                    // Reading the generators does not change the level, so it is as read
+                    status = EditorData.Status.Unreadable;
+                }
+            }
+            mLevel.EditorDataStatus = status;
         }
 
         private void SeekToNextEntry(BinaryReader br)

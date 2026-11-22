@@ -28,24 +28,25 @@ namespace IntelOrca.PeggleEdit.Tools.Levels.Children
             _cache.Clear();
         }
 
-        public override void Execute()
+        protected override List<LevelEntry> CreateEntries(PointF origin)
         {
-            ProcessBricks(b => CreateBrick(b));
-            Level.Entries.Remove(this);
+            var bricks = new List<LevelEntry>();
+            ProcessBricks(b => bricks.Add(CreateBrick(origin, b)));
+            return bricks;
         }
 
-        private void CreateBrick(BrickData b)
+        private Brick CreateBrick(PointF origin, BrickData b)
         {
             var brick = new Brick(Level);
             brick.PegInfo = new PegInfo(brick, true, false);
             brick.TextureFlip = b.TextureFlip;
             brick.Curved = b.Curved;
-            brick.Location = Location.Add(b.Location);
+            brick.Location = origin.Add(b.Location);
             brick.Thickness = b.Width;
             brick.Radius = b.Length;
             brick.Rotation = b.Rotation;
             brick.Angle = b.SectorAngle;
-            Level.Entries.Add(brick);
+            return brick;
         }
 
         protected override void DrawPregeneratedItems(Graphics g)

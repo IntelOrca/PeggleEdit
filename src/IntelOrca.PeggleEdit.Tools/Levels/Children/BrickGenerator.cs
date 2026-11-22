@@ -15,6 +15,7 @@
 // along with PeggleEdit. If not, see <http://www.gnu.org/licenses/>.
 
 using System;
+using System.Collections.Generic;
 using System.ComponentModel;
 using System.Drawing;
 using System.Drawing.Drawing2D;
@@ -25,7 +26,7 @@ namespace IntelOrca.PeggleEdit.Tools.Levels.Children
     /// <summary>
     /// Represents the brick generator level entry with function capabilities.
     /// </summary>
-    public class BrickGenerator : LevelEntry, ICloneable, IEntryFunction
+    public class BrickGenerator : LevelEntry, ICloneable, IEntryGenerator
     {
         int mNumberOfBricks;
         int mMaxNumberOfBricks;
@@ -44,30 +45,36 @@ namespace IntelOrca.PeggleEdit.Tools.Levels.Children
             mBrickWidth = 20.0f;
         }
 
-        public void Execute()
+        public void Execute() => Generators.Apply(this);
+
+        public IReadOnlyList<LevelEntry> Generate()
         {
+            var origin = Generators.GetOrigin(this);
+            var bricks = new List<LevelEntry>();
             int index = 0;
-            for (float a = mAngularOffset; a < 360 + mAngularOffset; a += SectorAngles)
+            for (float a = mAngularOffset; a < 360 + mAngularOffset && index < mNumberOfBricks; a += SectorAngles)
             {
                 float angle = MathExt.ToRadians(a);
 
                 Brick b = new Brick(Level);
-                b.X = X + ((float)Math.Cos(angle) * BrickRadius);
-                b.Y = Y + ((float)Math.Sin(angle) * BrickRadius);
+                b.X = origin.X + ((float)Math.Cos(angle) * BrickRadius);
+                b.Y = origin.Y + ((float)Math.Sin(angle) * BrickRadius);
                 b.Angle = SectorAngles;
                 b.Thickness = mBrickWidth;
                 b.Radius = mInnerRadius;
                 b.Rotation = -a;
                 b.Curved = true;
-
-                Level.Entries.Add(b);
+                bricks.Add(b);
 
                 index++;
-                if (index == mNumberOfBricks)
-                    break;
             }
+            return Generators.Finish(this, origin, bricks);
+        }
 
-            Level.Entries.Remove(this);
+        public override void RenderShadow(Graphics g)
+        {
+            if (Level.ShowPreview)
+                Generators.DrawGenerated(this, g, true);
         }
 
         public override void ReadData(BinaryReader br, int version)
@@ -110,6 +117,12 @@ namespace IntelOrca.PeggleEdit.Tools.Levels.Children
             //Don't show in show collision mode
             if (Level.ShowCollision)
                 return;
+
+            if (Level.ShowPreview)
+            {
+                Generators.DrawGenerated(this, g, false);
+                return;
+            }
 
             base.Draw(g);
 

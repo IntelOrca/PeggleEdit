@@ -182,6 +182,10 @@ namespace IntelOrca.PeggleEdit.Tools.Pack
                     level.Thumbnail = GetImage(pakFile, Path.Combine("levels", "cached_thumbnails", linfo.Filename));
                     level.Hash = GetLevelData(level).CalculateFnv1a();
                     Levels.Add(level);
+
+                    var warning = EditorData.GetWarning(level.EditorDataStatus);
+                    if (warning != null)
+                        MessageBox.Show($"{linfo.Name}: {warning}", "Open Level Pack", MessageBoxButtons.OK, MessageBoxIcon.Warning);
                 }
             }
 

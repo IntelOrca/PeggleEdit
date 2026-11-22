@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Xml.Linq;
 using IntelOrca.PeggleEdit.Tools.Levels;
 using IntelOrca.PeggleEdit.Tools.Levels.Xml;
 using IntelOrca.PeggleEdit.Tools.Pack;
@@ -62,8 +63,18 @@ namespace IntelOrca.PeggleEdit.Tools.Tests
                     if (!back.SequenceEqual(data))
                         failures.Add($"{name}: dat -> xml -> dat differs");
                     var model = LevelXmlTests.ModelRoundTrip(data);
-                    if (!model.SequenceEqual(data))
+                    if (HasGeneratorEntries(data))
+                    {
+                        // Saved by an older PeggleEdit with its generators in the entries, which the game can not
+                        // read. They are now saved as the entries they generate, and come back as generators.
+                        var problem = CheckGeneratorsSavedForTheGame(data, model);
+                        if (problem != null)
+                            failures.Add($"{name}: {problem}");
+                    }
+                    else if (!model.SequenceEqual(data))
+                    {
                         failures.Add($"{name}: dat -> Level -> dat differs");
+                    }
                 }
                 else
                 {
@@ -88,6 +99,29 @@ namespace IntelOrca.PeggleEdit.Tools.Tests
                 return false;
             using (var reader = new LevelReader(data))
                 return reader.Read() != null;
+        }
+
+        static Level Read(byte[] data)
+        {
+            using (var reader = new LevelReader(data))
+                return reader.Read();
+        }
+
+        static bool HasGeneratorEntries(byte[] data) =>
+            Read(data).Entries.ToArray().Any(x => x is IEntryGenerator);
+
+        static string CheckGeneratorsSavedForTheGame(byte[] data, byte[] saved)
+        {
+            var names = XElement.Parse(LevelXml.Export(saved)).Elements().Select(x => x.Name.LocalName).ToList();
+            if (names.Take(names.Count - 1).Any(x => x.EndsWith("Generator")))
+                return "a generator is still in the entries the game reads";
+            if (names.LastOrDefault() != "PeggleEdit")
+                return "the generators are not in PeggleEdit's data";
+            var before = Read(data).Entries.ToArray().Select(x => x.GetType());
+            var after = Read(saved).Entries.ToArray().Select(x => x.GetType());
+            if (!before.SequenceEqual(after))
+                return "the generators did not come back where they were";
+            return null;
         }
 
         static bool IsLevel(byte[] data)

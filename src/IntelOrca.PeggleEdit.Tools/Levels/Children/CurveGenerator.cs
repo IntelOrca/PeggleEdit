@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.ComponentModel;
 using System.Drawing;
 using System.Drawing.Drawing2D;
@@ -8,7 +9,7 @@ using static IntelOrca.PeggleEdit.Tools.Levels.BezierPath;
 
 namespace IntelOrca.PeggleEdit.Tools.Levels.Children
 {
-    public abstract class CurveGenerator : LevelEntry, ICloneable, IEntryFunction, IPointContainer
+    public abstract class CurveGenerator : LevelEntry, ICloneable, IEntryGenerator, IPointContainer
     {
         public BezierPath BezierPath { get; private set; } = new BezierPath();
 
@@ -17,7 +18,24 @@ namespace IntelOrca.PeggleEdit.Tools.Levels.Children
         {
         }
 
-        public abstract void Execute();
+        public void Execute() => Generators.Apply(this);
+
+        public IReadOnlyList<LevelEntry> Generate()
+        {
+            var origin = Generators.GetOrigin(this);
+            return Generators.Finish(this, origin, CreateEntries(origin));
+        }
+
+        /// <summary>
+        /// Lays out the entries along the path, which is relative to <paramref name="origin"/>.
+        /// </summary>
+        protected abstract List<LevelEntry> CreateEntries(PointF origin);
+
+        public override void RenderShadow(Graphics g)
+        {
+            if (Level.ShowPreview)
+                Generators.DrawGenerated(this, g, true);
+        }
 
         public override void ReadData(BinaryReader br, int version)
         {
@@ -53,6 +71,12 @@ namespace IntelOrca.PeggleEdit.Tools.Levels.Children
             // Don't show in show collision mode
             if (Level.ShowCollision)
                 return;
+
+            if (Level.ShowPreview)
+            {
+                Generators.DrawGenerated(this, g, false);
+                return;
+            }
 
             base.Draw(g);
 

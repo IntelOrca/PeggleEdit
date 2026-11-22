@@ -503,6 +503,10 @@ namespace IntelOrca.PeggleEdit.Designer
                     mPack.Levels.Add(level);
 
                     LevelFolderNode.Nodes.Add(GetLevelNode(level));
+
+                    var warning = EditorData.GetWarning(level.EditorDataStatus);
+                    if (warning != null)
+                        MessageBox.Show(warning, "Import Level", MessageBoxButtons.OK, MessageBoxIcon.Warning);
                 }
                 else
                 {

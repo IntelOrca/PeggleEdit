@@ -363,8 +363,16 @@ namespace IntelOrca.PeggleEdit.Tools.Levels.Children
             }
         }
 
+        /// <summary>
+        /// Whether this is the mover of an entry made by a generator to be drawn, which is not in the level's entries.
+        /// </summary>
+        [Browsable(false)]
+        public bool IsGenerated { get; set; }
+
         public bool HasEntryParent()
         {
+            if (IsGenerated)
+                return true;
             foreach (LevelEntry entry in mLevel.Entries)
             {
                 if (entry.MoverLink?.Mover == this)
