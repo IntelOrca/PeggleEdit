@@ -41,10 +41,10 @@ namespace IntelOrca.PeggleEdit.Tools.Levels.Children
             brick.TextureFlip = b.TextureFlip;
             brick.Curved = b.Curved;
             brick.Location = Location.Add(b.Location);
-            brick.Width = b.Width;
-            brick.Length = b.Length;
+            brick.Thickness = b.Width;
+            brick.Radius = b.Length;
             brick.Rotation = b.Rotation;
-            brick.SectorAngle = b.SectorAngle;
+            brick.Angle = b.SectorAngle;
             Level.Entries.Add(brick);
         }
 

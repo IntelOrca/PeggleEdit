@@ -89,7 +89,7 @@ namespace IntelOrca.PeggleEdit.Designer
                 le.Selected = SelectedEntries.Contains(le);
             }
 
-            mLevel.UpdateMovementLinksWrite();
+            mLevel.UpdateMoverLinksWrite();
             var copies = new LevelEntryCollection();
             foreach (LevelEntry le in mLevel.Entries)
             {
@@ -118,7 +118,7 @@ namespace IntelOrca.PeggleEdit.Designer
                 mLevel.Entries.Clear();
                 mLevel.Entries.AddRange(entries);
 
-                mLevel.UpdateMovementLinksRead();
+                mLevel.UpdateMoverLinksRead();
 
                 if (mSelectedTool is SelectEditorTool)
                     ChangeSelection(entries.Where(x => x.Selected));
@@ -336,7 +336,7 @@ namespace IntelOrca.PeggleEdit.Designer
             var offsetMovements = new HashSet<Mover>();
             foreach (LevelEntry cpyLE in entries)
             {
-                var baseMovement = cpyLE.GetBaseMovement();
+                var baseMovement = cpyLE.GetBaseMover();
                 if (baseMovement == null)
                 {
                     cpyLE.X += 20;
@@ -423,7 +423,7 @@ namespace IntelOrca.PeggleEdit.Designer
             foreach (Brick b in objects)
             {
                 b.Rotation += angle;
-                float radius = b.InnerRadius + (b.Width / 2.0f);
+                float radius = b.InnerRadius + (b.Thickness / 2.0f);
                 b.X = cc.X + ((float)Math.Cos(MathExt.ToRadians(-b.Rotation)) * radius);
                 b.Y = cc.Y + ((float)Math.Sin(MathExt.ToRadians(-b.Rotation)) * radius);
             }

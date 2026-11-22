@@ -28,26 +28,26 @@ namespace IntelOrca.PeggleEdit.Tools.Levels.Children
     /// </summary>
     public class Hole : LevelEntry, IPointContainer
     {
-        LevelEntry mEntry;
+        LevelEntry mDestinationEntry;
 
         int mWidth;
         int mHeight;
 
         // Unknown values, preserved so that they are written back as read
         int mUnknownFlags;
-        bool mHasUnknown0;
-        short mUnknown0;
-        bool mHasUnknown1;
-        int mUnknown1;
-        bool mHasUnknown2;
-        int mUnknown2;
-        bool mHasUnknown3;
-        float mUnknown3X;
-        float mUnknown3Y;
+        bool mHasActiveTimer;
+        short mActiveTimer;
+        bool mHasScore;
+        int mScore;
+        bool mHasOutDelay;
+        int mOutDelay;
+        bool mHasVelocity;
+        float mVelocityX;
+        float mVelocityY;
 
         // Destination entry id when it is not stored inline (1), preserved so that it is written back as read
-        bool mHasEntryId;
-        int mEntryId;
+        bool mHasDestinationLink;
+        int mDestinationLink;
 
         public Hole(Level level)
             : base(level)
@@ -55,9 +55,9 @@ namespace IntelOrca.PeggleEdit.Tools.Levels.Children
             mWidth = 20;
             mHeight = 20;
 
-            mEntry = new Poly(level);
-            mEntry.X = 50;
-            mEntry.Y = 50;
+            mDestinationEntry = new Poly(level);
+            mDestinationEntry.X = 50;
+            mDestinationEntry.Y = 50;
 
         }
 
@@ -67,33 +67,33 @@ namespace IntelOrca.PeggleEdit.Tools.Levels.Children
             mUnknownFlags = fA.Int32 & ((1 << 0) | (1 << 7));
             mWidth = br.ReadInt32();
             mHeight = br.ReadInt32();
-            mHasUnknown0 = fA[1];
+            mHasActiveTimer = fA[1];
             if (fA[1])
-                mUnknown0 = br.ReadInt16();
-            mHasUnknown1 = fA[3];
+                mActiveTimer = br.ReadInt16();
+            mHasScore = fA[3];
             if (fA[3])
-                mUnknown1 = br.ReadInt32();
-            mHasUnknown2 = fA[5];
+                mScore = br.ReadInt32();
+            mHasOutDelay = fA[5];
             if (fA[5])
-                mUnknown2 = br.ReadInt32();
-            mHasEntryId = false;
+                mOutDelay = br.ReadInt32();
+            mHasDestinationLink = false;
             if (fA[4])
             {
                 var entryId = br.ReadInt32();
                 if (entryId == 1)
                 {
-                    mEntry = LevelEntryFactory.CreateLevelEntry(entryId, br, version);
+                    mDestinationEntry = LevelEntryFactory.CreateLevelEntry(entryId, br, version);
                 }
                 else
                 {
-                    mEntry = null;
-                    mHasEntryId = true;
-                    mEntryId = entryId;
+                    mDestinationEntry = null;
+                    mHasDestinationLink = true;
+                    mDestinationLink = entryId;
                 }
             }
             else
             {
-                mEntry = null;
+                mDestinationEntry = null;
             }
             if (fA[2])
             {
@@ -101,11 +101,11 @@ namespace IntelOrca.PeggleEdit.Tools.Levels.Children
                 Y = br.ReadSingle();
             }
 
-            mHasUnknown3 = fA[6];
+            mHasVelocity = fA[6];
             if (fA[6])
             {
-                mUnknown3X = br.ReadSingle();
-                mUnknown3Y = br.ReadSingle();
+                mVelocityX = br.ReadSingle();
+                mVelocityY = br.ReadSingle();
             }
         }
 
@@ -113,15 +113,15 @@ namespace IntelOrca.PeggleEdit.Tools.Levels.Children
         {
             FlagGroup fA = new FlagGroup(mUnknownFlags);
 
-            fA[1] = mHasUnknown0;
-            fA[3] = mHasUnknown1;
-            fA[5] = mHasUnknown2;
-            fA[6] = mHasUnknown3;
+            fA[1] = mHasActiveTimer;
+            fA[3] = mHasScore;
+            fA[5] = mHasOutDelay;
+            fA[6] = mHasVelocity;
 
-            if (!HasMovementInfo)
+            if (!HasMover)
                 fA[2] = true;
 
-            if (mEntry != null || mHasEntryId)
+            if (mDestinationEntry != null || mHasDestinationLink)
                 fA[4] = true;
 
             //Write data
@@ -130,18 +130,18 @@ namespace IntelOrca.PeggleEdit.Tools.Levels.Children
             bw.Write(mHeight);
 
             if (fA[1])
-                bw.Write(mUnknown0);
+                bw.Write(mActiveTimer);
             if (fA[3])
-                bw.Write(mUnknown1);
+                bw.Write(mScore);
             if (fA[5])
-                bw.Write(mUnknown2);
+                bw.Write(mOutDelay);
 
             if (fA[4])
             {
-                if (mEntry != null)
-                    mEntry.Write(bw, version);
+                if (mDestinationEntry != null)
+                    mDestinationEntry.Write(bw, version);
                 else
-                    bw.Write(mEntryId);
+                    bw.Write(mDestinationLink);
             }
 
             if (fA[2])
@@ -152,8 +152,8 @@ namespace IntelOrca.PeggleEdit.Tools.Levels.Children
 
             if (fA[6])
             {
-                bw.Write(mUnknown3X);
-                bw.Write(mUnknown3Y);
+                bw.Write(mVelocityX);
+                bw.Write(mVelocityY);
             }
         }
 
@@ -162,8 +162,8 @@ namespace IntelOrca.PeggleEdit.Tools.Levels.Children
             base.Draw(g);
 
             // Draw the destination entry
-            if (mEntry != null)
-                mEntry.Draw(g);
+            if (mDestinationEntry != null)
+                mDestinationEntry.Draw(g);
 
             // Draw teleport
             var image = LevelPack.Current.GetImage(ImageFilename)?.Image;
@@ -184,7 +184,7 @@ namespace IntelOrca.PeggleEdit.Tools.Levels.Children
             }
 
             // Collision
-            if (Level.ShowCollision && Collision)
+            if (Level.ShowCollision && Collidable)
             {
                 g.FillRectangle(Brushes.White, Bounds);
             }
@@ -211,18 +211,18 @@ namespace IntelOrca.PeggleEdit.Tools.Levels.Children
             cpyTeleport.mWidth = mWidth;
             cpyTeleport.mHeight = mHeight;
             cpyTeleport.mUnknownFlags = mUnknownFlags;
-            cpyTeleport.mHasUnknown0 = mHasUnknown0;
-            cpyTeleport.mUnknown0 = mUnknown0;
-            cpyTeleport.mHasUnknown1 = mHasUnknown1;
-            cpyTeleport.mUnknown1 = mUnknown1;
-            cpyTeleport.mHasUnknown2 = mHasUnknown2;
-            cpyTeleport.mUnknown2 = mUnknown2;
-            cpyTeleport.mHasUnknown3 = mHasUnknown3;
-            cpyTeleport.mUnknown3X = mUnknown3X;
-            cpyTeleport.mUnknown3Y = mUnknown3Y;
-            cpyTeleport.mHasEntryId = mHasEntryId;
-            cpyTeleport.mEntryId = mEntryId;
-            cpyTeleport.mEntry = (LevelEntry)mEntry?.Clone();
+            cpyTeleport.mHasActiveTimer = mHasActiveTimer;
+            cpyTeleport.mActiveTimer = mActiveTimer;
+            cpyTeleport.mHasScore = mHasScore;
+            cpyTeleport.mScore = mScore;
+            cpyTeleport.mHasOutDelay = mHasOutDelay;
+            cpyTeleport.mOutDelay = mOutDelay;
+            cpyTeleport.mHasVelocity = mHasVelocity;
+            cpyTeleport.mVelocityX = mVelocityX;
+            cpyTeleport.mVelocityY = mVelocityY;
+            cpyTeleport.mHasDestinationLink = mHasDestinationLink;
+            cpyTeleport.mDestinationLink = mDestinationLink;
+            cpyTeleport.mDestinationEntry = (LevelEntry)mDestinationEntry?.Clone();
 
             return cpyTeleport;
         }
@@ -235,27 +235,27 @@ namespace IntelOrca.PeggleEdit.Tools.Levels.Children
             }
         }
 
-        public LevelEntry Entry
+        public LevelEntry DestinationEntry
         {
             get
             {
-                return mEntry;
+                return mDestinationEntry;
             }
             set
             {
-                mEntry = value;
+                mDestinationEntry = value;
             }
         }
 
         [Browsable(false)]
         public PointF Destination
         {
-            get => mEntry?.Location ?? new PointF();
+            get => mDestinationEntry?.Location ?? new PointF();
             set
             {
-                if (mEntry != null)
+                if (mDestinationEntry != null)
                 {
-                    mEntry.Location = value;
+                    mDestinationEntry.Location = value;
                 }
             }
         }
@@ -265,15 +265,15 @@ namespace IntelOrca.PeggleEdit.Tools.Levels.Children
         {
             get
             {
-                if (mEntry == null)
+                if (mDestinationEntry == null)
                     return float.NaN;
                 else
-                    return mEntry.X;
+                    return mDestinationEntry.X;
             }
             set
             {
-                if (mEntry != null)
-                    mEntry.X = value;
+                if (mDestinationEntry != null)
+                    mDestinationEntry.X = value;
             }
         }
 
@@ -282,15 +282,15 @@ namespace IntelOrca.PeggleEdit.Tools.Levels.Children
         {
             get
             {
-                if (mEntry == null)
+                if (mDestinationEntry == null)
                     return float.NaN;
                 else
-                    return mEntry.Y;
+                    return mDestinationEntry.Y;
             }
             set
             {
-                if (mEntry != null)
-                    mEntry.Y = value;
+                if (mDestinationEntry != null)
+                    mDestinationEntry.Y = value;
             }
         }
 
@@ -322,8 +322,8 @@ namespace IntelOrca.PeggleEdit.Tools.Levels.Children
         {
             set
             {
-                if (mEntry != null)
-                    mEntry.Level = value;
+                if (mDestinationEntry != null)
+                    mDestinationEntry.Level = value;
 
                 base.Level = value;
             }

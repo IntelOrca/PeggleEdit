@@ -32,10 +32,10 @@ namespace IntelOrca.PeggleEdit.Tools.Levels.Children
         public int InternalLinkId { get; set; }
 
         [Browsable(false)]
-        public Mover InternalMovement { get; set; }
+        public Mover InternalMover { get; set; }
 
         [Browsable(false)]
-        public bool OwnsMovement => InternalLinkId == 1;
+        public bool OwnsMover => InternalLinkId == 1;
 
         public MoverLink(Level level)
         {
@@ -47,8 +47,8 @@ namespace IntelOrca.PeggleEdit.Tools.Levels.Children
             InternalLinkId = br.ReadInt32();
             if (InternalLinkId == 1)
             {
-                InternalMovement = new Mover(Level);
-                InternalMovement.ReadData(br, version);
+                InternalMover = new Mover(Level);
+                InternalMover.ReadData(br, version);
             }
         }
 
@@ -57,7 +57,7 @@ namespace IntelOrca.PeggleEdit.Tools.Levels.Children
             bw.Write(InternalLinkId);
             if (InternalLinkId == 1)
             {
-                InternalMovement.WriteData(bw, version);
+                InternalMover.WriteData(bw, version);
             }
         }
 
@@ -67,7 +67,7 @@ namespace IntelOrca.PeggleEdit.Tools.Levels.Children
         {
             var result = new MoverLink(Level);
             result.InternalLinkId = InternalLinkId;
-            result.InternalMovement = InternalMovement?.Clone();
+            result.InternalMover = InternalMover?.Clone();
             return result;
         }
 
@@ -78,8 +78,8 @@ namespace IntelOrca.PeggleEdit.Tools.Levels.Children
             set
             {
                 mLevel = value;
-                if (InternalMovement != null)
-                    InternalMovement.Level = value;
+                if (InternalMover != null)
+                    InternalMover.Level = value;
             }
         }
 
@@ -92,24 +92,24 @@ namespace IntelOrca.PeggleEdit.Tools.Levels.Children
             {
                 if (InternalLinkId == 0 || InternalLinkId == 1)
                     return InternalLinkId;
-                return mLevel.GetMovementId(InternalMovement);
+                return mLevel.GetMoverId(InternalMover);
             }
             set
             {
                 if (value == 0)
                 {
                     InternalLinkId = value;
-                    InternalMovement = null;
+                    InternalMover = null;
                 }
                 if (value == 1)
                 {
                     InternalLinkId = value;
-                    InternalMovement = new Mover(mLevel);
+                    InternalMover = new Mover(mLevel);
                 }
-                else if (value != InternalLinkId && InternalMovement?.MUID != value)
+                else if (value != InternalLinkId && InternalMover?.MUID != value)
                 {
-                    InternalMovement = Level.GetMovementFromId(value);
-                    if (InternalMovement != null)
+                    InternalMover = Level.GetMoverFromId(value);
+                    if (InternalMover != null)
                     {
                         InternalLinkId = value;
                     }
@@ -123,7 +123,7 @@ namespace IntelOrca.PeggleEdit.Tools.Levels.Children
 
         public Mover Mover
         {
-            get => InternalMovement;
+            get => InternalMover;
             set
             {
                 if (value == null)
@@ -133,7 +133,7 @@ namespace IntelOrca.PeggleEdit.Tools.Levels.Children
                 else
                 {
                     LinkId = 1;
-                    InternalMovement = value;
+                    InternalMover = value;
                 }
             }
         }

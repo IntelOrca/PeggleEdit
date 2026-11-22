@@ -34,14 +34,14 @@ namespace IntelOrca.PeggleEdit.Tools.Levels.Children
 
         // Unknown values, preserved so that they are written back as read
         private int mUnknownFlags;
-        private bool mHasUnknown0;
-        private int mUnknown0;
-        private bool mHasUnknown1;
-        private int mUnknown1;
-        private bool mHasUnknown2;
-        private byte mUnknown2;
-        private bool mHasUnknown3;
-        private byte mUnknown3;
+        private bool mHasHitTime;
+        private int mHitTime;
+        private bool mHasGlowTimer;
+        private int mGlowTimer;
+        private bool mHasGlowState;
+        private byte mGlowState;
+        private bool mHasCrumbleTimer;
+        private byte mCrumbleTimer;
 
         public PegInfo(LevelEntry parent)
         {
@@ -62,20 +62,20 @@ namespace IntelOrca.PeggleEdit.Tools.Levels.Children
             mUnknownFlags = f2.Int32 & ((1 << 0) | (1 << 6));
             if (f2[1])
                 mVariable = true;
-            mHasUnknown0 = f2[2];
+            mHasHitTime = f2[2];
             if (f2[2])
-                mUnknown0 = br.ReadInt32();
+                mHitTime = br.ReadInt32();
             if (f2[3])
                 mCrumble = true;
-            mHasUnknown1 = f2[4];
+            mHasGlowTimer = f2[4];
             if (f2[4])
-                mUnknown1 = br.ReadInt32();
-            mHasUnknown2 = f2[5];
+                mGlowTimer = br.ReadInt32();
+            mHasGlowState = f2[5];
             if (f2[5])
-                mUnknown2 = br.ReadByte();
-            mHasUnknown3 = f2[7];
+                mGlowState = br.ReadByte();
+            mHasCrumbleTimer = f2[7];
             if (f2[7])
-                mUnknown3 = br.ReadByte();
+                mCrumbleTimer = br.ReadByte();
         }
 
         public void WriteData(BinaryWriter bw, int version)
@@ -84,35 +84,35 @@ namespace IntelOrca.PeggleEdit.Tools.Levels.Children
             FlagGroup f2 = new FlagGroup(mUnknownFlags);
             if (mVariable)
                 f2[1] = true;
-            f2[2] = mHasUnknown0;
+            f2[2] = mHasHitTime;
             if (mCrumble)
                 f2[3] = true;
-            f2[4] = mHasUnknown1;
-            f2[5] = mHasUnknown2;
-            f2[7] = mHasUnknown3;
+            f2[4] = mHasGlowTimer;
+            f2[5] = mHasGlowState;
+            f2[7] = mHasCrumbleTimer;
             bw.Write(f2.Int8);
             if (f2[2])
-                bw.Write(mUnknown0);
+                bw.Write(mHitTime);
             if (f2[4])
-                bw.Write(mUnknown1);
+                bw.Write(mGlowTimer);
             if (f2[5])
-                bw.Write(mUnknown2);
+                bw.Write(mGlowState);
             if (f2[7])
-                bw.Write(mUnknown3);
+                bw.Write(mCrumbleTimer);
         }
 
         public Color GetOuterColour()
         {
-            if (CanBeOrange && (!mParent.Level.ShowPreview))
+            if (Variable && (!mParent.Level.ShowPreview))
             {
-                if (QuickDisappear)
+                if (Crumble)
                     return Color.FromArgb(234, 140, 22);
                 else
                     return Color.FromArgb(234, 140, 22);
             }
             else
             {
-                if (QuickDisappear && (!mParent.Level.ShowPreview))
+                if (Crumble && (!mParent.Level.ShowPreview))
                     return Color.FromArgb(83, 124, 217);
                 else
                     return Color.FromArgb(83, 124, 217);
@@ -121,16 +121,16 @@ namespace IntelOrca.PeggleEdit.Tools.Levels.Children
 
         public Color GetInnerColour()
         {
-            if (CanBeOrange && (!mParent.Level.ShowPreview))
+            if (Variable && (!mParent.Level.ShowPreview))
             {
-                if (QuickDisappear)
+                if (Crumble)
                     return Color.FromArgb(255, 250, 202);
                 else
                     return Color.FromArgb(131, 35, 6);
             }
             else
             {
-                if (QuickDisappear && (!mParent.Level.ShowPreview))
+                if (Crumble && (!mParent.Level.ShowPreview))
                     return Color.FromArgb(214, 254, 255);
                 else
                     return Color.FromArgb(13, 50, 167);
@@ -142,7 +142,7 @@ namespace IntelOrca.PeggleEdit.Tools.Levels.Children
         [Description("When enabled, the game may pick this peg to be an orange, purple (bonus) or green (power-up) peg. When disabled, the peg always keeps its own type, e.g. always blue.")]
         [Category("Behaviour")]
         [DefaultValue(true)]
-        public bool CanBeOrange
+        public bool Variable
         {
             get
             {
@@ -159,7 +159,7 @@ namespace IntelOrca.PeggleEdit.Tools.Levels.Children
         [Description("When enabled, the peg crumbles away shortly after the ball hits it, so that the ball can not get stuck on it. Normally used for pegs at the bottom of circles and similar places.")]
         [Category("Behaviour")]
         [DefaultValue(false)]
-        public bool QuickDisappear
+        public bool Crumble
         {
             get
             {
@@ -191,14 +191,14 @@ namespace IntelOrca.PeggleEdit.Tools.Levels.Children
             pi.mCrumble = mCrumble;
             pi.mType = mType;
             pi.mUnknownFlags = mUnknownFlags;
-            pi.mHasUnknown0 = mHasUnknown0;
-            pi.mUnknown0 = mUnknown0;
-            pi.mHasUnknown1 = mHasUnknown1;
-            pi.mUnknown1 = mUnknown1;
-            pi.mHasUnknown2 = mHasUnknown2;
-            pi.mUnknown2 = mUnknown2;
-            pi.mHasUnknown3 = mHasUnknown3;
-            pi.mUnknown3 = mUnknown3;
+            pi.mHasHitTime = mHasHitTime;
+            pi.mHitTime = mHitTime;
+            pi.mHasGlowTimer = mHasGlowTimer;
+            pi.mGlowTimer = mGlowTimer;
+            pi.mHasGlowState = mHasGlowState;
+            pi.mGlowState = mGlowState;
+            pi.mHasCrumbleTimer = mHasCrumbleTimer;
+            pi.mCrumbleTimer = mCrumbleTimer;
             return pi;
         }
     }

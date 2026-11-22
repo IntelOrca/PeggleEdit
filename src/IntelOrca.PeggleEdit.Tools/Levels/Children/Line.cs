@@ -32,10 +32,10 @@ namespace IntelOrca.PeggleEdit.Tools.Levels.Children
 
         // Unknown values, preserved so that they are written back as read
         int mUnknownFlags;
-        bool mHasUnknown0;
-        float mUnknown0;
-        bool mHasUnknown1;
-        float mUnknown1;
+        bool mHasVelocityX;
+        float mVelocityX;
+        bool mHasVelocityY;
+        float mVelocityY;
 
         public Line(Level level)
             : base(level)
@@ -51,24 +51,24 @@ namespace IntelOrca.PeggleEdit.Tools.Levels.Children
             mPointA = new PointF(br.ReadSingle(), br.ReadSingle());
             mPointB = new PointF(br.ReadSingle(), br.ReadSingle());
 
-            mHasUnknown0 = fA[0];
+            mHasVelocityX = fA[0];
             if (fA[0])
             {
-                mUnknown0 = br.ReadSingle();
+                mVelocityX = br.ReadSingle();
             }
 
-            mHasUnknown1 = fA[1];
+            mHasVelocityY = fA[1];
             if (fA[1])
             {
-                mUnknown1 = br.ReadSingle();
+                mVelocityY = br.ReadSingle();
             }
         }
 
         public override void WriteData(BinaryWriter bw, int version)
         {
             FlagGroup fA = new FlagGroup(mUnknownFlags);
-            fA[0] = mHasUnknown0;
-            fA[1] = mHasUnknown1;
+            fA[0] = mHasVelocityX;
+            fA[1] = mHasVelocityY;
             bw.Write(fA.Int8);
 
             bw.Write(mPointA.X);
@@ -77,14 +77,14 @@ namespace IntelOrca.PeggleEdit.Tools.Levels.Children
             bw.Write(mPointB.Y);
 
             if (fA[0])
-                bw.Write(mUnknown0);
+                bw.Write(mVelocityX);
             if (fA[1])
-                bw.Write(mUnknown1);
+                bw.Write(mVelocityY);
         }
 
         public override void Draw(Graphics g)
         {
-            if (Level.ShowCollision && !Collision)
+            if (Level.ShowCollision && !Collidable)
                 return;
             if (Level.ShowPreview)
                 return;
@@ -108,10 +108,10 @@ namespace IntelOrca.PeggleEdit.Tools.Levels.Children
             cpyRod.mPointA = mPointA;
             cpyRod.mPointB = mPointB;
             cpyRod.mUnknownFlags = mUnknownFlags;
-            cpyRod.mHasUnknown0 = mHasUnknown0;
-            cpyRod.mUnknown0 = mUnknown0;
-            cpyRod.mHasUnknown1 = mHasUnknown1;
-            cpyRod.mUnknown1 = mUnknown1;
+            cpyRod.mHasVelocityX = mHasVelocityX;
+            cpyRod.mVelocityX = mVelocityX;
+            cpyRod.mHasVelocityY = mHasVelocityY;
+            cpyRod.mVelocityY = mVelocityY;
 
             return cpyRod;
         }

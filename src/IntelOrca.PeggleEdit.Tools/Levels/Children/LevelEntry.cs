@@ -46,13 +46,13 @@ namespace IntelOrca.PeggleEdit.Tools.Levels.Children
 
         PegInfo mPegInfo;
 
-        string mID;
+        string mId;
         string mLogic;
-        bool mCollision;
+        bool mCollidable;
         bool mVisible;
-        bool mCanMove;
+        bool mMoving;
         bool mBackground;
-        bool mBallStopReset;
+        bool mStopReset;
         bool mForeground;
         bool mDrawSort;
         bool mForeground2;
@@ -60,24 +60,24 @@ namespace IntelOrca.PeggleEdit.Tools.Levels.Children
         bool mBaseObject;
         float mRolly;
         float mBouncy;
-        Color mSolidColour;
-        Color mOutlineColour;
+        Color mSolidColor;
+        Color mOutlineColor;
         float mImageDX;
         float mImageDY;
         float mImageRotation; // In radians, as stored in the level file, so that it round trips exactly
         byte mSound;
         float mMaxBounceVelocity;
-        int mSubID;
+        int mSubId;
         byte mFlipperFlags;
-        bool mShadow = true;
+        bool mDrawShadow = true;
 
         // Unknown values, preserved so that they are written back as read
-        bool mHasUnknown4;
-        int mUnknown4;
-        bool mHasUnknown16;
-        int mUnknown16;
-        bool mHasUnknown18;
-        int mUnknown18;
+        bool mHasMoveTime;
+        int mMoveTime;
+        bool mHasDisappearTimer;
+        int mDisappearTimer;
+        bool mHasStopMovingTimer;
+        int mStopMovingTimer;
         int mUnknownFlags;
 
         // Flags for values that are only written when not the default, so that a default value present in the file is kept
@@ -85,7 +85,8 @@ namespace IntelOrca.PeggleEdit.Tools.Levels.Children
         int mValueFlags;
 
         [EntryProperty(EntryPropertyType.SubElement, null)]
-        [Description("The movement properties of the object.")]
+        [DisplayName("Mover")]
+        [Description("The movement of the object.")]
         [Category("Behaviour")]
         [Editor(typeof(MoverUITypeEditor), typeof(UITypeEditor))]
         public MoverLink MoverLink { get; set; }
@@ -94,12 +95,12 @@ namespace IntelOrca.PeggleEdit.Tools.Levels.Children
         {
             mLevel = level;
 
-            mCanMove = true;
-            mCollision = true;
+            mMoving = true;
+            mCollidable = true;
             mVisible = true;
 
-            mSolidColour = Color.Black;
-            mOutlineColour = Color.Black;
+            mSolidColor = Color.Black;
+            mOutlineColor = Color.Black;
         }
 
         public void ReadGenericData(BinaryReader br, int version)
@@ -113,25 +114,25 @@ namespace IntelOrca.PeggleEdit.Tools.Levels.Children
             if (version < 0x50)
                 mUnknownFlags |= f.Int32 & (1 << 30);
 
-            mCollision = f[5];
+            mCollidable = f[5];
             mVisible = f[6];
-            mCanMove = f[7];
+            mMoving = f[7];
             mBackground = f[14];
             mBaseObject = f[15];
-            mBallStopReset = f[20];
+            mStopReset = f[20];
             mForeground = f[22];
 
             if (f[0])
                 mRolly = br.ReadSingle();
             if (f[1])
                 mBouncy = br.ReadSingle();
-            mHasUnknown4 = f[4];
+            mHasMoveTime = f[4];
             if (f[4])
-                mUnknown4 = br.ReadInt32();
+                mMoveTime = br.ReadInt32();
             if (f[8])
-                mSolidColour = Color.FromArgb(br.ReadInt32());
+                mSolidColor = Color.FromArgb(br.ReadInt32());
             if (f[9])
-                mOutlineColour = Color.FromArgb(br.ReadInt32());
+                mOutlineColor = Color.FromArgb(br.ReadInt32());
             if (f[10])
             {
                 mImageFilename = LevelReader.ReadPopcapString(br);
@@ -142,14 +143,14 @@ namespace IntelOrca.PeggleEdit.Tools.Levels.Children
                 mImageDY = br.ReadSingle();
             if (f[13])
                 mImageRotation = br.ReadSingle();
-            mHasUnknown16 = f[16];
+            mHasDisappearTimer = f[16];
             if (f[16])
-                mUnknown16 = br.ReadInt32();
+                mDisappearTimer = br.ReadInt32();
             if (f[17])
-                mID = LevelReader.ReadPopcapString(br);
-            mHasUnknown18 = f[18];
+                mId = LevelReader.ReadPopcapString(br);
+            mHasStopMovingTimer = f[18];
             if (f[18])
-                mUnknown18 = br.ReadInt32();
+                mStopMovingTimer = br.ReadInt32();
             if (f[19])
                 mSound = br.ReadByte();
             if (f[21])
@@ -161,13 +162,13 @@ namespace IntelOrca.PeggleEdit.Tools.Levels.Children
             if (f[23])
                 mMaxBounceVelocity = br.ReadSingle();
             if (f[26])
-                mSubID = br.ReadInt32();
+                mSubId = br.ReadInt32();
             if (f[27])
                 mFlipperFlags = br.ReadByte();
 
             if (version >= 0x50)
             {
-                mShadow = f[30];
+                mDrawShadow = f[30];
             }
 
             if (f[2])
@@ -194,34 +195,34 @@ namespace IntelOrca.PeggleEdit.Tools.Levels.Children
             f[0] = (mRolly != 0.0f);
             f[1] = (mBouncy != 0.0f);
             f[2] = HasPegInfo;
-            f[3] = HasMovementInfo;
-            f[4] = mHasUnknown4;
-            f[5] = mCollision;
+            f[3] = HasMover;
+            f[4] = mHasMoveTime;
+            f[5] = mCollidable;
             f[6] = mVisible;
-            f[7] = mCanMove;
-            f[8] = (mSolidColour != Color.Black);
-            f[9] = (mOutlineColour != Color.Black);
+            f[7] = mMoving;
+            f[8] = (mSolidColor != Color.Black);
+            f[9] = (mOutlineColor != Color.Black);
             f[10] = !String.IsNullOrEmpty(mImageFilename);
             f[11] = (mImageDX != 0.0f);
             f[12] = (mImageDY != 0.0f);
             f[13] = (mImageRotation != 0.0f);
             f[14] = mBackground;
             f[15] = mBaseObject;
-            f[16] = mHasUnknown16;
-            f[17] = !String.IsNullOrEmpty(mID);
-            f[18] = mHasUnknown18;
+            f[16] = mHasDisappearTimer;
+            f[17] = !String.IsNullOrEmpty(mId);
+            f[18] = mHasStopMovingTimer;
             f[19] = (mSound != 0);
-            f[20] = mBallStopReset;
+            f[20] = mStopReset;
             f[21] = !String.IsNullOrEmpty(mLogic);
             f[22] = mForeground;
             f[23] = (mMaxBounceVelocity != 0.0f);
             f[24] = mDrawSort;
             f[25] = mForeground2;
-            f[26] = (mSubID != 0);
+            f[26] = (mSubId != 0);
             f[27] = (mFlipperFlags != 0);
             f[28] = mDrawFloat;
             if (version >= 0x50)
-                f[30] = mShadow;
+                f[30] = mDrawShadow;
             f.Int32 |= mValueFlags;
 
             //Write data
@@ -232,11 +233,11 @@ namespace IntelOrca.PeggleEdit.Tools.Levels.Children
             if (f[1])
                 bw.Write(mBouncy);
             if (f[4])
-                bw.Write(mUnknown4);
+                bw.Write(mMoveTime);
             if (f[8])
-                bw.Write(mSolidColour.ToArgb());
+                bw.Write(mSolidColor.ToArgb());
             if (f[9])
-                bw.Write(mOutlineColour.ToArgb());
+                bw.Write(mOutlineColor.ToArgb());
             if (f[10])
             {
                 LevelWriter.WritePopcapString(bw, mImageFilename);
@@ -248,13 +249,13 @@ namespace IntelOrca.PeggleEdit.Tools.Levels.Children
             if (f[13])
                 bw.Write(mImageRotation);
             if (f[16])
-                bw.Write(mUnknown16);
+                bw.Write(mDisappearTimer);
             if (f[17])
             {
-                LevelWriter.WritePopcapString(bw, mID);
+                LevelWriter.WritePopcapString(bw, mId);
             }
             if (f[18])
-                bw.Write(mUnknown18);
+                bw.Write(mStopMovingTimer);
             if (f[19])
                 bw.Write(mSound);
             if (f[21])
@@ -264,7 +265,7 @@ namespace IntelOrca.PeggleEdit.Tools.Levels.Children
             if (f[23])
                 bw.Write(mMaxBounceVelocity);
             if (f[26])
-                bw.Write(mSubID);
+                bw.Write(mSubId);
             if (f[27])
                 bw.Write(mFlipperFlags);
             if (f[2])
@@ -283,7 +284,7 @@ namespace IntelOrca.PeggleEdit.Tools.Levels.Children
 
         }
 
-        public virtual void DrawShadow(Graphics g)
+        public virtual void RenderShadow(Graphics g)
         {
 
         }
@@ -311,7 +312,7 @@ namespace IntelOrca.PeggleEdit.Tools.Levels.Children
 
         }
 
-        public Mover GetBaseMovement()
+        public Mover GetBaseMover()
         {
             Mover mb = null;
             var m = MoverLink?.Mover;
@@ -323,12 +324,12 @@ namespace IntelOrca.PeggleEdit.Tools.Levels.Children
             return mb;
         }
 
-        public Mover GetMovement()
+        public Mover GetMover()
         {
             return MoverLink?.Mover;
         }
 
-        private Mover GetHighestSelectedMovement()
+        private Mover GetHighestSelectedMover()
         {
             Mover mb = null;
             var m = MoverLink?.Mover;
@@ -336,7 +337,7 @@ namespace IntelOrca.PeggleEdit.Tools.Levels.Children
             {
                 mb = m;
                 m = m.MoverLink?.Mover;
-                var entry = mLevel.GetFirstLevelEntryWithMovement(m);
+                var entry = mLevel.GetFirstLevelEntryWithMover(m);
                 if (entry == null || !entry.Selected)
                 {
                     break;
@@ -347,7 +348,7 @@ namespace IntelOrca.PeggleEdit.Tools.Levels.Children
 
         public PointF GetSelectedMovePosition()
         {
-            var movement = GetHighestSelectedMovement();
+            var movement = GetHighestSelectedMover();
             if (movement != null)
             {
                 return new PointF(movement.AnchorPointX, movement.AnchorPointY);
@@ -357,7 +358,7 @@ namespace IntelOrca.PeggleEdit.Tools.Levels.Children
 
         public void SetSelectedMovePosition(PointF value)
         {
-            var movement = GetHighestSelectedMovement();
+            var movement = GetHighestSelectedMover();
             if (movement != null)
             {
                 movement.AnchorPointX = value.X;
@@ -426,7 +427,7 @@ namespace IntelOrca.PeggleEdit.Tools.Levels.Children
         }
 
         [Browsable(false)]
-        public bool HasMovementInfo
+        public bool HasMover
         {
             get
             {
@@ -521,13 +522,13 @@ namespace IntelOrca.PeggleEdit.Tools.Levels.Children
 
             dest.MoverLink = MoverLink?.Clone();
             dest.mImageFilename = mImageFilename;
-            dest.mID = mID;
+            dest.mId = mId;
             dest.mLogic = mLogic;
-            dest.mCollision = mCollision;
+            dest.mCollidable = mCollidable;
             dest.mVisible = mVisible;
-            dest.mCanMove = mCanMove;
+            dest.mMoving = mMoving;
             dest.mBackground = mBackground;
-            dest.mBallStopReset = mBallStopReset;
+            dest.mStopReset = mStopReset;
             dest.mForeground = mForeground;
             dest.mDrawSort = mDrawSort;
             dest.mForeground2 = mForeground2;
@@ -535,22 +536,22 @@ namespace IntelOrca.PeggleEdit.Tools.Levels.Children
             dest.mBaseObject = mBaseObject;
             dest.mRolly = mRolly;
             dest.mBouncy = mBouncy;
-            dest.mSolidColour = mSolidColour;
-            dest.mOutlineColour = mOutlineColour;
+            dest.mSolidColor = mSolidColor;
+            dest.mOutlineColor = mOutlineColor;
             dest.mImageDX = mImageDX;
             dest.mImageDY = mImageDY;
             dest.mImageRotation = mImageRotation;
             dest.mSound = mSound;
             dest.mMaxBounceVelocity = mMaxBounceVelocity;
-            dest.mSubID = mSubID;
+            dest.mSubId = mSubId;
             dest.mFlipperFlags = mFlipperFlags;
-            dest.mShadow = mShadow;
-            dest.mHasUnknown4 = mHasUnknown4;
-            dest.mUnknown4 = mUnknown4;
-            dest.mHasUnknown16 = mHasUnknown16;
-            dest.mUnknown16 = mUnknown16;
-            dest.mHasUnknown18 = mHasUnknown18;
-            dest.mUnknown18 = mUnknown18;
+            dest.mDrawShadow = mDrawShadow;
+            dest.mHasMoveTime = mHasMoveTime;
+            dest.mMoveTime = mMoveTime;
+            dest.mHasDisappearTimer = mHasDisappearTimer;
+            dest.mDisappearTimer = mDisappearTimer;
+            dest.mHasStopMovingTimer = mHasStopMovingTimer;
+            dest.mStopMovingTimer = mStopMovingTimer;
             dest.mUnknownFlags = mUnknownFlags;
             dest.mValueFlags = mValueFlags;
         }
@@ -574,15 +575,15 @@ namespace IntelOrca.PeggleEdit.Tools.Levels.Children
         [Description("Whether a shadow is drawn for this object. Only stored in Peggle Nights levels.")]
         [Category("Appearance")]
         [DefaultValue(true)]
-        public bool HasShadow
+        public bool DrawShadow
         {
             get
             {
-                return mShadow;
+                return mDrawShadow;
             }
             set
             {
-                mShadow = value;
+                mDrawShadow = value;
             }
         }
 
@@ -591,15 +592,15 @@ namespace IntelOrca.PeggleEdit.Tools.Levels.Children
         [Description("Whether the ball bounces off this object. When disabled, the ball passes straight through it.")]
         [Category("Behaviour")]
         [DefaultValue(true)]
-        public bool Collision
+        public bool Collidable
         {
             get
             {
-                return mCollision;
+                return mCollidable;
             }
             set
             {
-                mCollision = value;
+                mCollidable = value;
             }
         }
 
@@ -642,15 +643,15 @@ namespace IntelOrca.PeggleEdit.Tools.Levels.Children
         [Description("The identifier of the object, used by the game logic and by other objects to refer to it. Some identifiers have a built-in meaning, e.g. freeball.")]
         [Category("Behaviour")]
         [DefaultValue("")]
-        public string ID
+        public string Id
         {
             get
             {
-                return mID;
+                return mId;
             }
             set
             {
-                mID = value;
+                mId = value;
             }
         }
 
@@ -675,15 +676,15 @@ namespace IntelOrca.PeggleEdit.Tools.Levels.Children
         [Description("Whether the object moves along its movement path. When disabled, the object keeps its movement but stays still until the game logic starts it.")]
         [Category("Behaviour")]
         [DefaultValue(true)]
-        public bool CanMove
+        public bool Moving
         {
             get
             {
-                return mCanMove;
+                return mMoving;
             }
             set
             {
-                mCanMove = value;
+                mMoving = value;
             }
         }
 
@@ -740,15 +741,15 @@ namespace IntelOrca.PeggleEdit.Tools.Levels.Children
         [Description("The exact effect is not known.")]
         [Category("Behaviour")]
         [DefaultValue(false)]
-        public bool BallStopReset
+        public bool StopReset
         {
             get
             {
-                return mBallStopReset;
+                return mStopReset;
             }
             set
             {
-                mBallStopReset = value;
+                mStopReset = value;
             }
         }
 
@@ -842,15 +843,15 @@ namespace IntelOrca.PeggleEdit.Tools.Levels.Children
         [Description("The fill colour of the object when it has no image. Black specifies not to use the attribute.")]
         [Category("Appearance")]
         [DefaultValue(typeof(Color), "Black")]
-        public Color SolidColour
+        public Color SolidColor
         {
             get
             {
-                return mSolidColour;
+                return mSolidColor;
             }
             set
             {
-                mSolidColour = value;
+                mSolidColor = value;
             }
         }
 
@@ -859,15 +860,15 @@ namespace IntelOrca.PeggleEdit.Tools.Levels.Children
         [Description("The outline colour of the object when it has no image. Black specifies not to use the attribute.")]
         [Category("Appearance")]
         [DefaultValue(typeof(Color), "Black")]
-        public Color OutlineColour
+        public Color OutlineColor
         {
             get
             {
-                return mOutlineColour;
+                return mOutlineColor;
             }
             set
             {
-                mOutlineColour = value;
+                mOutlineColor = value;
             }
         }
 
@@ -961,15 +962,15 @@ namespace IntelOrca.PeggleEdit.Tools.Levels.Children
         [Description("A second identifier of the object, used by the game logic.")]
         [Category("Behaviour")]
         [DefaultValue(0)]
-        public int SubID
+        public int SubId
         {
             get
             {
-                return mSubID;
+                return mSubId;
             }
             set
             {
-                mSubID = value;
+                mSubId = value;
             }
         }
 

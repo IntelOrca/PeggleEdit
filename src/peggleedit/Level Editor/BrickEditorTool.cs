@@ -50,11 +50,11 @@ namespace IntelOrca.PeggleEdit.Designer
             if (_curved)
             {
                 _curvedInnerRadius = template.InnerRadius;
-                _curvedSectorAngle = template.SectorAngle;
+                _curvedSectorAngle = template.Angle;
             }
             else
             {
-                _straightLength = template.Length;
+                _straightLength = template.Radius;
             }
         }
 
@@ -208,12 +208,12 @@ namespace IntelOrca.PeggleEdit.Designer
             brick.Curved = _curved;
             if (_curved)
             {
-                brick.SectorAngle = _curvedSectorAngle;
+                brick.Angle = _curvedSectorAngle;
                 brick.InnerRadius = _curvedInnerRadius;
             }
             else
             {
-                brick.Length = _straightLength;
+                brick.Radius = _straightLength;
             }
             brick.Rotation = _rotation;
             if (_solid)

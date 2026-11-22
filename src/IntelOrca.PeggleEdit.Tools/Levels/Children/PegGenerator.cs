@@ -84,7 +84,7 @@ namespace IntelOrca.PeggleEdit.Tools.Levels.Children
 
         public override void WriteData(BinaryWriter bw, int version)
         {
-            if (!HasMovementInfo)
+            if (!HasMover)
             {
                 bw.Write((byte)1);
                 bw.Write(X);

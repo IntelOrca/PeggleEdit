@@ -28,134 +28,134 @@ namespace IntelOrca.PeggleEdit.Tools.Levels.Children
     /// </summary>
     public class Emitter : LevelEntry
     {
-        bool mTransparancy;
-        bool mRandomStartPosition;
+        bool mAdditive;
+        bool mRandomStart;
 
-        string mImage;
+        string mImageFirstCopy;
         int mWidth;
         int mHeight;
 
-        int mMainVar;
-        int mMainVar0;
-        float mMainVar1;
-        string mMainVar2;
-        byte mMainVar3;
-        bool mHasUnknown01;
-        int mUnknownFlags = 1 << 14; // Needed to make it visible?
-        CurvedVal mUnknown0 = new CurvedVal();
-        CurvedVal mUnknown1 = new CurvedVal();
+        int mDataVersion;
+        int mFastForward;
+        float mHardwareRate;
+        string mTriggerObj;
+        byte mRateIsLooping;
+        bool mHasPosCurves;
+        int mUnknownFlags = 1 << 14; // Unknown flag bits; bit 14 is TriggerSleep, which PopCap sets on almost every emitter
+        CurvedVal mPosX = new CurvedVal();
+        CurvedVal mPosY = new CurvedVal();
 
-        string mEmitImage;
-        float mUnknownEmitRate;
-        float mUnknown2;
-        int mMaxQuantity;
-        float mRotation;
-        float mTimeBeforeFadeOut;
-        float mFadeInTime;
-        float mLifeDuration;
-        CurvedVal mEmitRate = new CurvedVal();
-        CurvedVal mEmitAreaMultiplier = new CurvedVal();
+        string mImage;
+        float mRandRate;
+        float mSoftwareRate;
+        int mMax;
+        float mSpiralCount;
+        float mAlphaFadeAt;
+        float mAlphaInto;
+        float mDuration;
+        CurvedVal mRate = new CurvedVal();
+        CurvedVal mDistrib = new CurvedVal();
 
         bool mChangeRotation;
-        CurvedVal mInitialRotation = new CurvedVal();
-        CurvedVal mRotationVelocity = new CurvedVal();
-        float mRotationUnknown;
+        CurvedVal mRotation = new CurvedVal();
+        CurvedVal mRotationVel = new CurvedVal();
+        float mRotationRand;
 
         bool mChangeScale;
-        CurvedVal mMinScale = new CurvedVal();
-        CurvedVal mScaleVelocity = new CurvedVal();
-        float mMaxRandScale;
+        CurvedVal mScale = new CurvedVal();
+        CurvedVal mScaleVel = new CurvedVal();
+        float mScaleRand;
 
-        bool mChangeColour;
-        CurvedVal mColourRed = new CurvedVal();
-        CurvedVal mColourGreen = new CurvedVal();
-        CurvedVal mColourBlue = new CurvedVal();
+        bool mChangeColor;
+        CurvedVal mColorR = new CurvedVal();
+        CurvedVal mColorG = new CurvedVal();
+        CurvedVal mColorB = new CurvedVal();
 
-        bool mChangeOpacity;
-        CurvedVal mOpacity = new CurvedVal();
+        bool mChangeAlpha;
+        CurvedVal mAlpha = new CurvedVal();
 
         bool mChangeVelocity;
-        CurvedVal mMinVelocityX = new CurvedVal();
-        CurvedVal mMinVelocityY = new CurvedVal();
-        float mMaxVelocityX;
-        float mMaxVelocityY;
-        float mAccelerationX;
-        float mAccelerationY;
+        CurvedVal mVelX = new CurvedVal();
+        CurvedVal mVelY = new CurvedVal();
+        float mVelXRand;
+        float mVelYRand;
+        float mAccX;
+        float mGravity;
 
-        bool mChangeDirection;
-        float mDirectionSpeed;
-        float mDirectionRandomSpeed;
-        float mDirectionAcceleration;
-        float mDirectionAngle;
-        float mDirectionRandomAngle;
+        bool mChangePolar;
+        float mPolarVel;
+        float mPolarVelRand;
+        float mPolarAcc;
+        float mVelRot;
+        float mVelRotRand;
 
-        bool mChangeUnknown;
-        float mUnknownA;
-        float mUnknownB;
+        bool mHasVelocity;
+        float mVelocityX;
+        float mVelocityY;
 
         public Emitter(Level level)
             : base(level)
         {
             Visible = true;
-            OutlineColour = Color.Black;
+            OutlineColor = Color.Black;
 
             DefaultValues();
         }
 
         public void DefaultValues()
         {
-            mMainVar = 2;
-            mMainVar0 = (int)0;
-            mMainVar1 = 1.0f;
-            mMainVar3 = (byte)1;
+            mDataVersion = 2;
+            mFastForward = (int)0;
+            mHardwareRate = 1.0f;
+            mRateIsLooping = (byte)1;
 
-            mOpacity = 1.0f;
-            mMaxQuantity = 100;
+            mAlpha = 1.0f;
+            mMax = 100;
             mWidth = 100;
             mHeight = 100;
-            mEmitAreaMultiplier = 1.0f;
-            mEmitRate = 0.01f;
-            mTimeBeforeFadeOut = 1.9f;
-            mFadeInTime = 0.1f;
-            mLifeDuration = 2.0f;
+            mDistrib = 1.0f;
+            mRate = 0.01f;
+            mAlphaFadeAt = 1.9f;
+            mAlphaInto = 0.1f;
+            mDuration = 2.0f;
         }
 
         public override void ReadData(BinaryReader br, int version)
         {
             FlagGroup fA;
 
-            mMainVar = br.ReadInt32();
+            mDataVersion = br.ReadInt32();
 
             fA = new FlagGroup(br.ReadInt16());
             mUnknownFlags = fA.Int32 & ((1 << 0) | (1 << 1) | (1 << 3) | (1 << 14) | (1 << 15));
 
-            mTransparancy = fA[2];
+            mAdditive = fA[2];
 
-            mRandomStartPosition = fA[4];
-            mChangeUnknown = fA[6];
+            mRandomStart = fA[4];
+            mHasVelocity = fA[6];
             mChangeScale = fA[7];
-            mChangeColour = fA[8];
-            mChangeOpacity = fA[9];
+            mChangeColor = fA[8];
+            mChangeAlpha = fA[9];
             mChangeVelocity = fA[10];
-            mChangeDirection = fA[11];
+            mChangePolar = fA[11];
             mChangeRotation = fA[12];
-            mHasUnknown01 = fA[13];
+            mHasPosCurves = fA[13];
 
-            mImage = LevelReader.ReadPopcapString(br);
+            mImageFirstCopy = LevelReader.ReadPopcapString(br);
             mWidth = br.ReadInt32();
             mHeight = br.ReadInt32();
 
-            if (mMainVar == 2)
+            if (mDataVersion == 2)
             {
-                mMainVar0 = br.ReadInt32();
-                mMainVar1 = br.ReadSingle();
-                mMainVar2 = LevelReader.ReadPopcapString(br);
-                mMainVar3 = br.ReadByte();
+                mFastForward = br.ReadInt32();
+                mHardwareRate = br.ReadSingle();
+                mTriggerObj = LevelReader.ReadPopcapString(br);
+                mRateIsLooping = br.ReadByte();
 
                 if (fA[13])
                 {
-                    mUnknown0 = new CurvedVal(br);
-                    mUnknown1 = new CurvedVal(br);
+                    mPosX = new CurvedVal(br);
+                    mPosY = new CurvedVal(br);
                 }
             }
 
@@ -165,68 +165,68 @@ namespace IntelOrca.PeggleEdit.Tools.Levels.Children
                 Y = br.ReadSingle();
             }
 
-            mEmitImage = LevelReader.ReadPopcapString(br);
-            mUnknownEmitRate = br.ReadSingle();
-            mUnknown2 = br.ReadSingle();
-            mRotation = br.ReadSingle();
-            mMaxQuantity = br.ReadInt32();
+            mImage = LevelReader.ReadPopcapString(br);
+            mRandRate = br.ReadSingle();
+            mSoftwareRate = br.ReadSingle();
+            mSpiralCount = br.ReadSingle();
+            mMax = br.ReadInt32();
 
-            mTimeBeforeFadeOut = br.ReadSingle();
-            mFadeInTime = br.ReadSingle();
-            mLifeDuration = br.ReadSingle();
+            mAlphaFadeAt = br.ReadSingle();
+            mAlphaInto = br.ReadSingle();
+            mDuration = br.ReadSingle();
 
-            mEmitRate = new CurvedVal(br);
-            mEmitAreaMultiplier = new CurvedVal(br);
+            mRate = new CurvedVal(br);
+            mDistrib = new CurvedVal(br);
 
             if (fA[12])
             {
-                mInitialRotation = new CurvedVal(br);
-                mRotationVelocity = new CurvedVal(br);
-                mRotationUnknown = br.ReadSingle();
+                mRotation = new CurvedVal(br);
+                mRotationVel = new CurvedVal(br);
+                mRotationRand = br.ReadSingle();
             }
 
             if (fA[7])
             {
-                mMinScale = new CurvedVal(br);
-                mScaleVelocity = new CurvedVal(br);
-                mMaxRandScale = br.ReadSingle();
+                mScale = new CurvedVal(br);
+                mScaleVel = new CurvedVal(br);
+                mScaleRand = br.ReadSingle();
             }
 
             if (fA[8])
             {
-                mColourRed = new CurvedVal(br);
-                mColourGreen = new CurvedVal(br);
-                mColourBlue = new CurvedVal(br);
+                mColorR = new CurvedVal(br);
+                mColorG = new CurvedVal(br);
+                mColorB = new CurvedVal(br);
             }
 
             if (fA[9])
             {
-                mOpacity = new CurvedVal(br);
+                mAlpha = new CurvedVal(br);
             }
 
             if (fA[10])
             {
-                mMinVelocityX = new CurvedVal(br);
-                mMinVelocityY = new CurvedVal(br);
-                mMaxVelocityX = br.ReadSingle();
-                mMaxVelocityY = br.ReadSingle();
-                mAccelerationX = br.ReadSingle();
-                mAccelerationY = br.ReadSingle();
+                mVelX = new CurvedVal(br);
+                mVelY = new CurvedVal(br);
+                mVelXRand = br.ReadSingle();
+                mVelYRand = br.ReadSingle();
+                mAccX = br.ReadSingle();
+                mGravity = br.ReadSingle();
             }
 
             if (fA[11])
             {
-                mDirectionSpeed = br.ReadSingle();
-                mDirectionRandomSpeed = br.ReadSingle();
-                mDirectionAcceleration = br.ReadSingle();
-                mDirectionAngle = br.ReadSingle();
-                mDirectionRandomAngle = br.ReadSingle();
+                mPolarVel = br.ReadSingle();
+                mPolarVelRand = br.ReadSingle();
+                mPolarAcc = br.ReadSingle();
+                mVelRot = br.ReadSingle();
+                mVelRotRand = br.ReadSingle();
             }
 
             if (fA[6])
             {
-                mUnknownA = br.ReadSingle();
-                mUnknownB = br.ReadSingle();
+                mVelocityX = br.ReadSingle();
+                mVelocityY = br.ReadSingle();
             }
 
 
@@ -236,40 +236,40 @@ namespace IntelOrca.PeggleEdit.Tools.Levels.Children
         {
             FlagGroup fA = new FlagGroup(mUnknownFlags);
 
-            fA[2] = mTransparancy;
-            fA[4] = mRandomStartPosition;
+            fA[2] = mAdditive;
+            fA[4] = mRandomStart;
 
-            if (!HasMovementInfo)
+            if (!HasMover)
                 fA[5] = true;
 
-            fA[6] = mChangeUnknown;
+            fA[6] = mHasVelocity;
             fA[7] = mChangeScale;
-            fA[8] = mChangeColour;
-            fA[9] = mChangeOpacity;
+            fA[8] = mChangeColor;
+            fA[9] = mChangeAlpha;
             fA[10] = mChangeVelocity;
-            fA[11] = mChangeDirection;
+            fA[11] = mChangePolar;
             fA[12] = mChangeRotation;
-            fA[13] = mHasUnknown01;
+            fA[13] = mHasPosCurves;
 
-            bw.Write(mMainVar);
+            bw.Write(mDataVersion);
 
             bw.Write(fA.Int16);
 
-            LevelWriter.WritePopcapString(bw, mImage);
+            LevelWriter.WritePopcapString(bw, mImageFirstCopy);
             bw.Write(mWidth);
             bw.Write(mHeight);
 
-            if (mMainVar == 2)
+            if (mDataVersion == 2)
             {
-                bw.Write(mMainVar0);
-                bw.Write(mMainVar1);
-                LevelWriter.WritePopcapString(bw, mMainVar2);
-                bw.Write(mMainVar3);
+                bw.Write(mFastForward);
+                bw.Write(mHardwareRate);
+                LevelWriter.WritePopcapString(bw, mTriggerObj);
+                bw.Write(mRateIsLooping);
 
                 if (fA[13])
                 {
-                    mUnknown0.WriteData(bw);
-                    mUnknown1.WriteData(bw);
+                    mPosX.WriteData(bw);
+                    mPosY.WriteData(bw);
                 }
             }
 
@@ -279,69 +279,69 @@ namespace IntelOrca.PeggleEdit.Tools.Levels.Children
                 bw.Write(Y);
             }
 
-            LevelWriter.WritePopcapString(bw, mEmitImage);
-            bw.Write(mUnknownEmitRate);
-            bw.Write(mUnknown2);
-            bw.Write(mRotation);
-            bw.Write(mMaxQuantity);
+            LevelWriter.WritePopcapString(bw, mImage);
+            bw.Write(mRandRate);
+            bw.Write(mSoftwareRate);
+            bw.Write(mSpiralCount);
+            bw.Write(mMax);
 
-            bw.Write(mTimeBeforeFadeOut);
-            bw.Write(mFadeInTime);
-            bw.Write(mLifeDuration);
+            bw.Write(mAlphaFadeAt);
+            bw.Write(mAlphaInto);
+            bw.Write(mDuration);
 
-            mEmitRate.WriteData(bw);
-            mEmitAreaMultiplier.WriteData(bw);
+            mRate.WriteData(bw);
+            mDistrib.WriteData(bw);
 
             if (fA[12])
             {
-                mInitialRotation.WriteData(bw);
-                mRotationVelocity.WriteData(bw);
-                bw.Write(mRotationUnknown);
+                mRotation.WriteData(bw);
+                mRotationVel.WriteData(bw);
+                bw.Write(mRotationRand);
             }
 
             if (fA[7])
             {
-                mMinScale.WriteData(bw);
-                mScaleVelocity.WriteData(bw);
-                bw.Write(mMaxRandScale);
+                mScale.WriteData(bw);
+                mScaleVel.WriteData(bw);
+                bw.Write(mScaleRand);
             }
 
             if (fA[8])
             {
-                mColourRed.WriteData(bw);
-                mColourGreen.WriteData(bw);
-                mColourBlue.WriteData(bw);
+                mColorR.WriteData(bw);
+                mColorG.WriteData(bw);
+                mColorB.WriteData(bw);
             }
 
             if (fA[9])
             {
-                mOpacity.WriteData(bw);
+                mAlpha.WriteData(bw);
             }
 
             if (fA[10])
             {
-                mMinVelocityX.WriteData(bw);
-                mMinVelocityY.WriteData(bw);
+                mVelX.WriteData(bw);
+                mVelY.WriteData(bw);
 
-                bw.Write(mMaxVelocityX);
-                bw.Write(mMaxVelocityY);
-                bw.Write(mAccelerationX);
-                bw.Write(mAccelerationY);
+                bw.Write(mVelXRand);
+                bw.Write(mVelYRand);
+                bw.Write(mAccX);
+                bw.Write(mGravity);
             }
 
             if (fA[11])
             {
-                bw.Write(mDirectionSpeed);
-                bw.Write(mDirectionRandomSpeed);
-                bw.Write(mDirectionAcceleration);
-                bw.Write(mDirectionAngle);
-                bw.Write(mDirectionRandomAngle);
+                bw.Write(mPolarVel);
+                bw.Write(mPolarVelRand);
+                bw.Write(mPolarAcc);
+                bw.Write(mVelRot);
+                bw.Write(mVelRotRand);
             }
 
             if (fA[6])
             {
-                bw.Write(mUnknownA);
-                bw.Write(mUnknownB);
+                bw.Write(mVelocityX);
+                bw.Write(mVelocityY);
             }
         }
 
@@ -349,7 +349,7 @@ namespace IntelOrca.PeggleEdit.Tools.Levels.Children
         {
             base.Draw(g);
 
-            var hasOutline = OutlineColour.R != 0 || OutlineColour.G != 0 || OutlineColour.B != 0;
+            var hasOutline = OutlineColor.R != 0 || OutlineColor.G != 0 || OutlineColor.B != 0;
             if (!Level.ShowPreview && !hasOutline)
             {
                 var bounds = Bounds;
@@ -363,7 +363,7 @@ namespace IntelOrca.PeggleEdit.Tools.Levels.Children
                 var bounds = Bounds;
                 g.DrawRectangle(Pens.Black, bounds);
                 bounds.Inflate(-2, -2);
-                g.DrawRectangle(new Pen(OutlineColour, 3), bounds);
+                g.DrawRectangle(new Pen(OutlineColor, 3), bounds);
                 g.SmoothingMode = SmoothingMode.HighQuality;
             }
         }
@@ -373,71 +373,71 @@ namespace IntelOrca.PeggleEdit.Tools.Levels.Children
             Emitter cpyEmitter = new Emitter(Level);
             base.CloneTo(cpyEmitter);
 
+            cpyEmitter.mImageFirstCopy = mImageFirstCopy;
             cpyEmitter.mImage = mImage;
-            cpyEmitter.mEmitImage = mEmitImage;
-            cpyEmitter.mTransparancy = mTransparancy;
+            cpyEmitter.mAdditive = mAdditive;
 
-            cpyEmitter.mChangeOpacity = mChangeOpacity;
-            cpyEmitter.mOpacity = (CurvedVal)mOpacity.Clone();
+            cpyEmitter.mChangeAlpha = mChangeAlpha;
+            cpyEmitter.mAlpha = (CurvedVal)mAlpha.Clone();
 
-            cpyEmitter.mRandomStartPosition = mRandomStartPosition;
-            cpyEmitter.mMaxQuantity = mMaxQuantity;
-            cpyEmitter.mRotation = mRotation;
+            cpyEmitter.mRandomStart = mRandomStart;
+            cpyEmitter.mMax = mMax;
+            cpyEmitter.mSpiralCount = mSpiralCount;
 
             cpyEmitter.mWidth = mWidth;
             cpyEmitter.mHeight = mHeight;
-            cpyEmitter.mEmitAreaMultiplier = (CurvedVal)mEmitAreaMultiplier.Clone();
+            cpyEmitter.mDistrib = (CurvedVal)mDistrib.Clone();
 
-            cpyEmitter.mEmitRate = (CurvedVal)mEmitRate.Clone();
-            cpyEmitter.mTimeBeforeFadeOut = mTimeBeforeFadeOut;
-            cpyEmitter.mFadeInTime = mFadeInTime;
-            cpyEmitter.mLifeDuration = mLifeDuration;
+            cpyEmitter.mRate = (CurvedVal)mRate.Clone();
+            cpyEmitter.mAlphaFadeAt = mAlphaFadeAt;
+            cpyEmitter.mAlphaInto = mAlphaInto;
+            cpyEmitter.mDuration = mDuration;
 
             cpyEmitter.mChangeRotation = mChangeRotation;
-            cpyEmitter.mInitialRotation = (CurvedVal)mInitialRotation.Clone();
-            cpyEmitter.mRotationVelocity = (CurvedVal)mRotationVelocity.Clone();
-            cpyEmitter.mRotationUnknown = mRotationUnknown;
+            cpyEmitter.mRotation = (CurvedVal)mRotation.Clone();
+            cpyEmitter.mRotationVel = (CurvedVal)mRotationVel.Clone();
+            cpyEmitter.mRotationRand = mRotationRand;
 
             cpyEmitter.mChangeScale = mChangeScale;
-            cpyEmitter.mMinScale = (CurvedVal)mMinScale.Clone();
-            cpyEmitter.mScaleVelocity = (CurvedVal)mScaleVelocity.Clone();
-            cpyEmitter.mMaxRandScale = mMaxRandScale;
+            cpyEmitter.mScale = (CurvedVal)mScale.Clone();
+            cpyEmitter.mScaleVel = (CurvedVal)mScaleVel.Clone();
+            cpyEmitter.mScaleRand = mScaleRand;
 
             cpyEmitter.mChangeVelocity = mChangeVelocity;
-            cpyEmitter.mMinVelocityX = (CurvedVal)mMinVelocityX.Clone();
-            cpyEmitter.mMinVelocityY = (CurvedVal)mMinVelocityY.Clone();
-            cpyEmitter.mMaxVelocityX = mMaxVelocityX;
-            cpyEmitter.mMaxVelocityY = mMaxVelocityY;
-            cpyEmitter.mAccelerationX = mAccelerationX;
-            cpyEmitter.mAccelerationY = mAccelerationY;
+            cpyEmitter.mVelX = (CurvedVal)mVelX.Clone();
+            cpyEmitter.mVelY = (CurvedVal)mVelY.Clone();
+            cpyEmitter.mVelXRand = mVelXRand;
+            cpyEmitter.mVelYRand = mVelYRand;
+            cpyEmitter.mAccX = mAccX;
+            cpyEmitter.mGravity = mGravity;
 
-            cpyEmitter.mMainVar = mMainVar;
-            cpyEmitter.mMainVar0 = mMainVar0;
-            cpyEmitter.mMainVar1 = mMainVar1;
-            cpyEmitter.mMainVar2 = mMainVar2;
-            cpyEmitter.mMainVar3 = mMainVar3;
-            cpyEmitter.mHasUnknown01 = mHasUnknown01;
+            cpyEmitter.mDataVersion = mDataVersion;
+            cpyEmitter.mFastForward = mFastForward;
+            cpyEmitter.mHardwareRate = mHardwareRate;
+            cpyEmitter.mTriggerObj = mTriggerObj;
+            cpyEmitter.mRateIsLooping = mRateIsLooping;
+            cpyEmitter.mHasPosCurves = mHasPosCurves;
             cpyEmitter.mUnknownFlags = mUnknownFlags;
-            cpyEmitter.mUnknown0 = (CurvedVal)mUnknown0.Clone();
-            cpyEmitter.mUnknown1 = (CurvedVal)mUnknown1.Clone();
-            cpyEmitter.mUnknownEmitRate = mUnknownEmitRate;
-            cpyEmitter.mUnknown2 = mUnknown2;
+            cpyEmitter.mPosX = (CurvedVal)mPosX.Clone();
+            cpyEmitter.mPosY = (CurvedVal)mPosY.Clone();
+            cpyEmitter.mRandRate = mRandRate;
+            cpyEmitter.mSoftwareRate = mSoftwareRate;
 
-            cpyEmitter.mChangeColour = mChangeColour;
-            cpyEmitter.mColourRed = (CurvedVal)mColourRed.Clone();
-            cpyEmitter.mColourGreen = (CurvedVal)mColourGreen.Clone();
-            cpyEmitter.mColourBlue = (CurvedVal)mColourBlue.Clone();
+            cpyEmitter.mChangeColor = mChangeColor;
+            cpyEmitter.mColorR = (CurvedVal)mColorR.Clone();
+            cpyEmitter.mColorG = (CurvedVal)mColorG.Clone();
+            cpyEmitter.mColorB = (CurvedVal)mColorB.Clone();
 
-            cpyEmitter.mChangeDirection = mChangeDirection;
-            cpyEmitter.mDirectionSpeed = mDirectionSpeed;
-            cpyEmitter.mDirectionRandomSpeed = mDirectionRandomSpeed;
-            cpyEmitter.mDirectionAcceleration = mDirectionAcceleration;
-            cpyEmitter.mDirectionAngle = mDirectionAngle;
-            cpyEmitter.mDirectionRandomAngle = mDirectionRandomAngle;
+            cpyEmitter.mChangePolar = mChangePolar;
+            cpyEmitter.mPolarVel = mPolarVel;
+            cpyEmitter.mPolarVelRand = mPolarVelRand;
+            cpyEmitter.mPolarAcc = mPolarAcc;
+            cpyEmitter.mVelRot = mVelRot;
+            cpyEmitter.mVelRotRand = mVelRotRand;
 
-            cpyEmitter.mChangeUnknown = mChangeUnknown;
-            cpyEmitter.mUnknownA = mUnknownA;
-            cpyEmitter.mUnknownB = mUnknownB;
+            cpyEmitter.mHasVelocity = mHasVelocity;
+            cpyEmitter.mVelocityX = mVelocityX;
+            cpyEmitter.mVelocityY = mVelocityY;
 
             return cpyEmitter;
         }
@@ -458,68 +458,84 @@ namespace IntelOrca.PeggleEdit.Tools.Levels.Children
             }
         }
 
-        public float Rotation
+        public float SpiralCount
         {
             get
             {
-                return mRotation;
+                return mSpiralCount;
             }
             set
             {
-                mRotation = value;
+                mSpiralCount = value;
             }
         }
 
-        public int MainVar
+        public int DataVersion
         {
             get
             {
-                return mMainVar;
+                return mDataVersion;
             }
             set
             {
-                mMainVar = value;
+                mDataVersion = value;
             }
         }
 
-        public CurvedVal Unknown0
+        public CurvedVal PosX
         {
             get
             {
-                return mUnknown0;
+                return mPosX;
             }
             set
             {
-                mUnknown0 = value;
+                mPosX = value;
             }
         }
 
-        public CurvedVal Unknown1
+        public CurvedVal PosY
         {
             get
             {
-                return mUnknown1;
+                return mPosY;
             }
             set
             {
-                mUnknown1 = value;
+                mPosY = value;
             }
         }
 
-        public float Unknown2
+        public float SoftwareRate
         {
             get
             {
-                return mUnknown2;
+                return mSoftwareRate;
             }
             set
             {
-                mUnknown2 = value;
+                mSoftwareRate = value;
             }
         }
 
-        [DisplayName("Image (first copy)")]
-        [Description("The game stores the image of the emitted objects twice and uses the second copy, Emission Image. Normally both are the same (PopCap: Image).")]
+        [DisplayName("Particle Image (first copy)")]
+        [Description("The game stores the image twice and only uses the second copy, Particle Image. Normally both are the same.")]
+        [Category("Appearance")]
+        [DefaultValue("")]
+        public string ImageFirstCopy
+        {
+            get
+            {
+                return mImageFirstCopy;
+            }
+            set
+            {
+                mImageFirstCopy = value;
+            }
+        }
+
+        [DisplayName("Particle Image")]
+        [Description("The image of the emitted objects.")]
         [Category("Appearance")]
         [DefaultValue("")]
         public string Image
@@ -534,35 +550,19 @@ namespace IntelOrca.PeggleEdit.Tools.Levels.Children
             }
         }
 
-        [DisplayName("Emission Image")]
-        [Description("The image of the emitted objects (PopCap: Image).")]
-        [Category("Appearance")]
-        [DefaultValue("")]
-        public string EmitImageFilename
-        {
-            get
-            {
-                return mEmitImage;
-            }
-            set
-            {
-                mEmitImage = value;
-            }
-        }
-
         [DisplayName("Additive")]
         [Description("Draw the emitted objects with additive blending, so dark areas become transparent.")]
         [Category("Appearance")]
         [DefaultValue(false)]
-        public bool Transparancy
+        public bool Additive
         {
             get
             {
-                return mTransparancy;
+                return mAdditive;
             }
             set
             {
-                mTransparancy = value;
+                mAdditive = value;
             }
         }
 
@@ -570,30 +570,30 @@ namespace IntelOrca.PeggleEdit.Tools.Levels.Children
         [Description("If this is set to false, the opacity attributes will be ignored.")]
         [Category("Opacity")]
         [DefaultValue(false)]
-        public bool ChangeOpacity
+        public bool ChangeAlpha
         {
             get
             {
-                return mChangeOpacity;
+                return mChangeAlpha;
             }
             set
             {
-                mChangeOpacity = value;
+                mChangeAlpha = value;
             }
         }
 
         [Description("How opaque the emitted objects are. 0.0 is transparent, 1.0 is opaque (PopCap: Alpha).")]
         [Category("Opacity")]
         [DefaultValue(1.0f)]
-        public CurvedVal Opacity
+        public CurvedVal Alpha
         {
             get
             {
-                return mOpacity;
+                return mAlpha;
             }
             set
             {
-                mOpacity = value;
+                mAlpha = value;
             }
         }
 
@@ -601,15 +601,15 @@ namespace IntelOrca.PeggleEdit.Tools.Levels.Children
         [Description("Whether objects are emitted at random positions within the area.")]
         [Category("Behaviour")]
         [DefaultValue(false)]
-        public bool RandomStartPosition
+        public bool RandomStart
         {
             get
             {
-                return mRandomStartPosition;
+                return mRandomStart;
             }
             set
             {
-                mRandomStartPosition = value;
+                mRandomStart = value;
             }
         }
 
@@ -617,15 +617,15 @@ namespace IntelOrca.PeggleEdit.Tools.Levels.Children
         [Description("The maximum number of emitted objects at one time.")]
         [Category("Behaviour")]
         [DefaultValue(100)]
-        public int MaxQuantity
+        public int Max
         {
             get
             {
-                return mMaxQuantity;
+                return mMax;
             }
             set
             {
-                mMaxQuantity = value;
+                mMax = value;
             }
         }
 
@@ -634,15 +634,15 @@ namespace IntelOrca.PeggleEdit.Tools.Levels.Children
         [Description("How the emitted objects are distributed over the area given by the width and height, e.g. 0.5 for half of the area.")]
         [Category("Layout")]
         [DefaultValue(1.0f)]
-        public CurvedVal EmitAreaMultiplier
+        public CurvedVal Distrib
         {
             get
             {
-                return mEmitAreaMultiplier;
+                return mDistrib;
             }
             set
             {
-                mEmitAreaMultiplier = value;
+                mDistrib = value;
             }
         }
 
@@ -680,15 +680,15 @@ namespace IntelOrca.PeggleEdit.Tools.Levels.Children
         [Description("How long each emitted object lasts before disappearing.")]
         [Category("Timing")]
         [DefaultValue(0.0f)]
-        public float LifeDuration
+        public float Duration
         {
             get
             {
-                return mLifeDuration;
+                return mDuration;
             }
             set
             {
-                mLifeDuration = value;
+                mDuration = value;
             }
         }
 
@@ -696,15 +696,15 @@ namespace IntelOrca.PeggleEdit.Tools.Levels.Children
         [Description("The time interval between each object being emitted in hundredths of a second. 1.0 = 100 times per second.")]
         [Category("Timing")]
         [DefaultValue(0.0f)]
-        public CurvedVal EmitRate
+        public CurvedVal Rate
         {
             get
             {
-                return mEmitRate;
+                return mRate;
             }
             set
             {
-                mEmitRate = value;
+                mRate = value;
             }
         }
 
@@ -712,15 +712,15 @@ namespace IntelOrca.PeggleEdit.Tools.Levels.Children
         [Description("Random variation of the emit rate.")]
         [Category("Timing")]
         [DefaultValue(0.0f)]
-        public float UnknownEmitRate
+        public float RandRate
         {
             get
             {
-                return mUnknownEmitRate;
+                return mRandRate;
             }
             set
             {
-                mUnknownEmitRate = value;
+                mRandRate = value;
             }
         }
 
@@ -728,15 +728,15 @@ namespace IntelOrca.PeggleEdit.Tools.Levels.Children
         [Description("How long an emitted object takes to fade in.")]
         [Category("Timing")]
         [DefaultValue(0.1f)]
-        public float FadeInTime
+        public float AlphaInto
         {
             get
             {
-                return mFadeInTime;
+                return mAlphaInto;
             }
             set
             {
-                mFadeInTime = value;
+                mAlphaInto = value;
             }
         }
 
@@ -748,11 +748,11 @@ namespace IntelOrca.PeggleEdit.Tools.Levels.Children
         {
             get
             {
-                return (float)Math.Round(mLifeDuration - mTimeBeforeFadeOut, 4);
+                return (float)Math.Round(mDuration - mAlphaFadeAt, 4);
             }
             set
             {
-                mTimeBeforeFadeOut = (float)Math.Round(mLifeDuration - value, 4);
+                mAlphaFadeAt = (float)Math.Round(mDuration - value, 4);
             }
         }
 
@@ -760,15 +760,15 @@ namespace IntelOrca.PeggleEdit.Tools.Levels.Children
         [Description("How long before an emitted object starts to fade out, in seconds.")]
         [Category("Timing")]
         [DefaultValue(0.0f)]
-        public float TimeBeforeFadeOut
+        public float AlphaFadeAt
         {
             get
             {
-                return mTimeBeforeFadeOut;
+                return mAlphaFadeAt;
             }
             set
             {
-                mTimeBeforeFadeOut = value;
+                mAlphaFadeAt = value;
             }
         }
 
@@ -792,15 +792,15 @@ namespace IntelOrca.PeggleEdit.Tools.Levels.Children
         [Description("The horizontal velocity of the emitted objects. Negative moves left and positive moves right.")]
         [Category("Velocity")]
         [DefaultValue(0.0f)]
-        public CurvedVal MinVelocityX
+        public CurvedVal VelX
         {
             get
             {
-                return mMinVelocityX;
+                return mVelX;
             }
             set
             {
-                mMinVelocityX = value;
+                mVelX = value;
             }
         }
 
@@ -808,15 +808,15 @@ namespace IntelOrca.PeggleEdit.Tools.Levels.Children
         [Description("The vertical velocity of the emitted objects. Negative moves up and positive moves down.")]
         [Category("Velocity")]
         [DefaultValue(0.0f)]
-        public CurvedVal MinVelocityY
+        public CurvedVal VelY
         {
             get
             {
-                return mMinVelocityY;
+                return mVelY;
             }
             set
             {
-                mMinVelocityY = value;
+                mVelY = value;
             }
         }
 
@@ -824,15 +824,15 @@ namespace IntelOrca.PeggleEdit.Tools.Levels.Children
         [Description("A random amount added to the horizontal velocity of each emitted object.")]
         [Category("Velocity")]
         [DefaultValue(0.0f)]
-        public float MaxVelocityX
+        public float VelXRand
         {
             get
             {
-                return mMaxVelocityX;
+                return mVelXRand;
             }
             set
             {
-                mMaxVelocityX = value;
+                mVelXRand = value;
             }
         }
 
@@ -840,15 +840,15 @@ namespace IntelOrca.PeggleEdit.Tools.Levels.Children
         [Description("A random amount added to the vertical velocity of each emitted object.")]
         [Category("Velocity")]
         [DefaultValue(0.0f)]
-        public float MaxVelocityY
+        public float VelYRand
         {
             get
             {
-                return mMaxVelocityY;
+                return mVelYRand;
             }
             set
             {
-                mMaxVelocityY = value;
+                mVelYRand = value;
             }
         }
 
@@ -856,15 +856,15 @@ namespace IntelOrca.PeggleEdit.Tools.Levels.Children
         [Description("The horizontal acceleration of the emitted objects. Negative accelerates left and positive accelerates right.")]
         [Category("Velocity")]
         [DefaultValue(0.0f)]
-        public float AccelerationX
+        public float AccX
         {
             get
             {
-                return mAccelerationX;
+                return mAccX;
             }
             set
             {
-                mAccelerationX = value;
+                mAccX = value;
             }
         }
 
@@ -872,15 +872,15 @@ namespace IntelOrca.PeggleEdit.Tools.Levels.Children
         [Description("The vertical acceleration of the emitted objects. Negative accelerates up and positive accelerates down.")]
         [Category("Velocity")]
         [DefaultValue(0.0f)]
-        public float AccelerationY
+        public float Gravity
         {
             get
             {
-                return mAccelerationY;
+                return mGravity;
             }
             set
             {
-                mAccelerationY = value;
+                mGravity = value;
             }
         }
 
@@ -904,15 +904,15 @@ namespace IntelOrca.PeggleEdit.Tools.Levels.Children
         [Description("The initial scale of the emitted objects.")]
         [Category("Scale")]
         [DefaultValue(0.0f)]
-        public CurvedVal MinScale
+        public CurvedVal Scale
         {
             get
             {
-                return mMinScale;
+                return mScale;
             }
             set
             {
-                mMinScale = value;
+                mScale = value;
             }
         }
 
@@ -920,15 +920,15 @@ namespace IntelOrca.PeggleEdit.Tools.Levels.Children
         [Description("How fast the scale of the emitted objects changes. Negative makes them smaller, positive makes them larger.")]
         [Category("Scale")]
         [DefaultValue(0.0f)]
-        public CurvedVal ScaleVelocity
+        public CurvedVal ScaleVel
         {
             get
             {
-                return mScaleVelocity;
+                return mScaleVel;
             }
             set
             {
-                mScaleVelocity = value;
+                mScaleVel = value;
             }
         }
 
@@ -936,15 +936,15 @@ namespace IntelOrca.PeggleEdit.Tools.Levels.Children
         [Description("A random amount added to the initial scale of each emitted object.")]
         [Category("Scale")]
         [DefaultValue(0.0f)]
-        public float MaxRandScale
+        public float ScaleRand
         {
             get
             {
-                return mMaxRandScale;
+                return mScaleRand;
             }
             set
             {
-                mMaxRandScale = value;
+                mScaleRand = value;
             }
         }
 
@@ -968,15 +968,15 @@ namespace IntelOrca.PeggleEdit.Tools.Levels.Children
         [Description("The initial rotation of the emitted objects in degrees.")]
         [Category("Rotation")]
         [DefaultValue(0.0f)]
-        public CurvedVal InitialRotation
+        public CurvedVal Rotation
         {
             get
             {
-                return mInitialRotation;
+                return mRotation;
             }
             set
             {
-                mInitialRotation = value;
+                mRotation = value;
             }
         }
 
@@ -984,15 +984,15 @@ namespace IntelOrca.PeggleEdit.Tools.Levels.Children
         [Description("The angular velocity of the emitted objects. 0.01 = 1 degree per second.")]
         [Category("Rotation")]
         [DefaultValue(0.0f)]
-        public CurvedVal RotationVelocity
+        public CurvedVal RotationVel
         {
             get
             {
-                return mRotationVelocity;
+                return mRotationVel;
             }
             set
             {
-                mRotationVelocity = value;
+                mRotationVel = value;
             }
         }
 
@@ -1000,15 +1000,15 @@ namespace IntelOrca.PeggleEdit.Tools.Levels.Children
         [Description("A random amount added to the initial rotation of each emitted object.")]
         [Category("Rotation")]
         [DefaultValue(0.0f)]
-        public float RotationUnknown
+        public float RotationRand
         {
             get
             {
-                return mRotationUnknown;
+                return mRotationRand;
             }
             set
             {
-                mRotationUnknown = value;
+                mRotationRand = value;
             }
         }
 
@@ -1016,15 +1016,15 @@ namespace IntelOrca.PeggleEdit.Tools.Levels.Children
         [Description("If this is set to false, the colour attributes will be ignored.")]
         [Category("Colour")]
         [DefaultValue(false)]
-        public bool ChangeColour
+        public bool ChangeColor
         {
             get
             {
-                return mChangeColour;
+                return mChangeColor;
             }
             set
             {
-                mChangeColour = value;
+                mChangeColor = value;
             }
         }
 
@@ -1032,15 +1032,15 @@ namespace IntelOrca.PeggleEdit.Tools.Levels.Children
         [Description("The red component of the colour of the emitted objects.")]
         [Category("Colour")]
         [DefaultValue(1.0f)]
-        public CurvedVal ColourRed
+        public CurvedVal ColorR
         {
             get
             {
-                return mColourRed;
+                return mColorR;
             }
             set
             {
-                mColourRed = value;
+                mColorR = value;
             }
         }
 
@@ -1048,15 +1048,15 @@ namespace IntelOrca.PeggleEdit.Tools.Levels.Children
         [Description("The green component of the colour of the emitted objects.")]
         [Category("Colour")]
         [DefaultValue(1.0f)]
-        public CurvedVal ColourGreen
+        public CurvedVal ColorG
         {
             get
             {
-                return mColourGreen;
+                return mColorG;
             }
             set
             {
-                mColourGreen = value;
+                mColorG = value;
             }
         }
 
@@ -1064,15 +1064,15 @@ namespace IntelOrca.PeggleEdit.Tools.Levels.Children
         [Description("The blue component of the colour of the emitted objects.")]
         [Category("Colour")]
         [DefaultValue(1.0f)]
-        public CurvedVal ColourBlue
+        public CurvedVal ColorB
         {
             get
             {
-                return mColourBlue;
+                return mColorB;
             }
             set
             {
-                mColourBlue = value;
+                mColorB = value;
             }
         }
 
@@ -1080,15 +1080,15 @@ namespace IntelOrca.PeggleEdit.Tools.Levels.Children
         [Description("If this is set to false, the direction attributes will be ignored.")]
         [Category("Direction")]
         [DefaultValue(false)]
-        public bool ChangeDirection
+        public bool ChangePolar
         {
             get
             {
-                return mChangeDirection;
+                return mChangePolar;
             }
             set
             {
-                mChangeDirection = value;
+                mChangePolar = value;
             }
         }
 
@@ -1096,15 +1096,15 @@ namespace IntelOrca.PeggleEdit.Tools.Levels.Children
         [Description("The speed of the emitted objects in the direction given by Vel Rot.")]
         [Category("Direction")]
         [DefaultValue(0.0f)]
-        public float DirectionVelocity
+        public float PolarVel
         {
             get
             {
-                return mDirectionSpeed;
+                return mPolarVel;
             }
             set
             {
-                mDirectionSpeed = value;
+                mPolarVel = value;
             }
         }
 
@@ -1112,15 +1112,15 @@ namespace IntelOrca.PeggleEdit.Tools.Levels.Children
         [Description("A random amount added to Polar Vel for each emitted object.")]
         [Category("Direction")]
         [DefaultValue(0.0f)]
-        public float DirectionRandomSpeed
+        public float PolarVelRand
         {
             get
             {
-                return mDirectionRandomSpeed;
+                return mPolarVelRand;
             }
             set
             {
-                mDirectionRandomSpeed = value;
+                mPolarVelRand = value;
             }
         }
 
@@ -1128,15 +1128,15 @@ namespace IntelOrca.PeggleEdit.Tools.Levels.Children
         [Description("The acceleration of the emitted objects in the direction given by Vel Rot.")]
         [Category("Direction")]
         [DefaultValue(0.0f)]
-        public float DirectionAcceleration
+        public float PolarAcc
         {
             get
             {
-                return mDirectionAcceleration;
+                return mPolarAcc;
             }
             set
             {
-                mDirectionAcceleration = value;
+                mPolarAcc = value;
             }
         }
 
@@ -1144,15 +1144,15 @@ namespace IntelOrca.PeggleEdit.Tools.Levels.Children
         [Description("The direction of the polar velocity and acceleration in degrees.")]
         [Category("Direction")]
         [DefaultValue(0.0f)]
-        public float DirectionAngle
+        public float VelRot
         {
             get
             {
-                return mDirectionAngle;
+                return mVelRot;
             }
             set
             {
-                mDirectionAngle = value;
+                mVelRot = value;
             }
         }
 
@@ -1160,123 +1160,123 @@ namespace IntelOrca.PeggleEdit.Tools.Levels.Children
         [Description("A random amount added to Vel Rot for each emitted object, in degrees.")]
         [Category("Direction")]
         [DefaultValue(0.0f)]
-        public float DirectionRandomAngle
+        public float VelRotRand
         {
             get
             {
-                return mDirectionRandomAngle;
+                return mVelRotRand;
             }
             set
             {
-                mDirectionRandomAngle = value;
+                mVelRotRand = value;
             }
         }
 
-        [DisplayName("Has Move Delta")]
+        [DisplayName("Has Velocity")]
         [Description("Whether the level stores how far the emitter moved in the last frame. This is game state, not a setting.")]
         [Category("Game State")]
         [DefaultValue(false)]
-        public bool ChangeUnknown
+        public bool HasVelocity
         {
             get
             {
-                return mChangeUnknown;
+                return mHasVelocity;
             }
             set
             {
-                mChangeUnknown = value;
+                mHasVelocity = value;
             }
         }
 
-        [DisplayName("Move Delta X")]
+        [DisplayName("Velocity X")]
         [Description("How far the emitter moved horizontally in the last frame. This is game state, not a setting.")]
         [Category("Game State")]
         [DefaultValue(0.0f)]
-        public float UnknownA
+        public float VelocityX
         {
             get
             {
-                return mUnknownA;
+                return mVelocityX;
             }
             set
             {
-                mUnknownA = value;
+                mVelocityX = value;
             }
         }
 
-        [DisplayName("Move Delta Y")]
+        [DisplayName("Velocity Y")]
         [Description("How far the emitter moved vertically in the last frame. This is game state, not a setting.")]
         [Category("Game State")]
         [DefaultValue(0.0f)]
-        public float UnknownB
+        public float VelocityY
         {
             get
             {
-                return mUnknownB;
+                return mVelocityY;
             }
             set
             {
-                mUnknownB = value;
+                mVelocityY = value;
             }
         }
 
         [DisplayName("Fast Forward")]
         [Description("How far the emitter is run ahead when the level starts, in hundredths of a second.")]
         [Category("Timing")]
-        public int MainVar0
+        public int FastForward
         {
             get
             {
-                return mMainVar0;
+                return mFastForward;
             }
             set
             {
-                mMainVar0 = value;
+                mFastForward = value;
             }
         }
 
         [DisplayName("Hardware Rate")]
         [Description("The emit rate multiplier used with hardware acceleration.")]
         [Category("Timing")]
-        public float MainVar1
+        public float HardwareRate
         {
             get
             {
-                return mMainVar1;
+                return mHardwareRate;
             }
             set
             {
-                mMainVar1 = value;
+                mHardwareRate = value;
             }
         }
 
         [DisplayName("Trigger Object")]
         [Description("The id of an object that triggers the emitter (PopCap: TriggerObj).")]
         [Category("Behaviour")]
-        public string MainVar2
+        public string TriggerObj
         {
             get
             {
-                return mMainVar2;
+                return mTriggerObj;
             }
             set
             {
-                mMainVar2 = value;
+                mTriggerObj = value;
             }
         }
 
         [DisplayName("Rate Is Looping")]
         [Description("Whether the emit rate curve loops (1) or plays once (0).")]
         [Category("Timing")]
-        public byte MainVar3
+        public byte RateIsLooping
         {
             get
             {
-                return mMainVar3;
+                return mRateIsLooping;
             }
             set
             {
-                mMainVar3 = value;
+                mRateIsLooping = value;
             }
         }
     }

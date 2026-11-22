@@ -42,12 +42,12 @@ namespace IntelOrca.PeggleEdit.Tools.Levels.Children
         int mUnknownFlagsA;
         int mUnknownFlagsB;
         bool mHasRotation;
-        bool mHasUnknown0;
-        float mUnknown0;
+        bool mHasAngularVelocity;
+        float mAngularVelocity;
         bool mHasScale;
         bool mHasNormalDir;
-        bool mHasUnknown1;
-        byte mUnknown1;
+        bool mHasGrowTimer;
+        byte mGrowTimer;
         bool mHasGrowType;
 
         public Poly(Level level)
@@ -69,9 +69,9 @@ namespace IntelOrca.PeggleEdit.Tools.Levels.Children
             mHasRotation = fA[2];
             if (fA[2])
                 mRotation = br.ReadSingle();
-            mHasUnknown0 = fA[3];
+            mHasAngularVelocity = fA[3];
             if (fA[3])
-                mUnknown0 = br.ReadSingle();
+                mAngularVelocity = br.ReadSingle();
             mHasScale = fA[5];
             if (fA[5])
                 mScale = br.ReadSingle();
@@ -90,9 +90,9 @@ namespace IntelOrca.PeggleEdit.Tools.Levels.Children
                 mPoints.Add(new PointF(br.ReadSingle(), br.ReadSingle()));
             }
 
-            mHasUnknown1 = fB[0];
+            mHasGrowTimer = fB[0];
             if (fB[0])
-                mUnknown1 = br.ReadByte();
+                mGrowTimer = br.ReadByte();
 
             mHasGrowType = fB[1];
             if (fB[1])
@@ -106,12 +106,12 @@ namespace IntelOrca.PeggleEdit.Tools.Levels.Children
 
             fA[1] = mHasNormalDir;
             fA[2] = mHasRotation;
-            fA[3] = mHasUnknown0;
+            fA[3] = mHasAngularVelocity;
             fA[5] = mHasScale;
-            fB[0] = mHasUnknown1;
+            fB[0] = mHasGrowTimer;
             fB[1] = mHasGrowType;
 
-            if (!HasMovementInfo)
+            if (!HasMover)
                 fA[4] = true;
 
             //Write data
@@ -124,7 +124,7 @@ namespace IntelOrca.PeggleEdit.Tools.Levels.Children
             if (fA[2])
                 bw.Write(mRotation);
             if (fA[3])
-                bw.Write(mUnknown0);
+                bw.Write(mAngularVelocity);
             if (fA[5])
                 bw.Write(mScale);
             if (fA[1])
@@ -145,7 +145,7 @@ namespace IntelOrca.PeggleEdit.Tools.Levels.Children
             if (version >= 0x23)
             {
                 if (fB[0])
-                    bw.Write(mUnknown1);
+                    bw.Write(mGrowTimer);
                 if (fB[1])
                     bw.Write(mGrowType);
             }
@@ -153,7 +153,7 @@ namespace IntelOrca.PeggleEdit.Tools.Levels.Children
 
         public override void Draw(Graphics g)
         {
-            if (Level.ShowCollision && !Collision)
+            if (Level.ShowCollision && !Collidable)
                 return;
 
             base.Draw(g);
@@ -236,12 +236,12 @@ namespace IntelOrca.PeggleEdit.Tools.Levels.Children
             cpyPolygon.mUnknownFlagsA = mUnknownFlagsA;
             cpyPolygon.mUnknownFlagsB = mUnknownFlagsB;
             cpyPolygon.mHasRotation = mHasRotation;
-            cpyPolygon.mHasUnknown0 = mHasUnknown0;
-            cpyPolygon.mUnknown0 = mUnknown0;
+            cpyPolygon.mHasAngularVelocity = mHasAngularVelocity;
+            cpyPolygon.mAngularVelocity = mAngularVelocity;
             cpyPolygon.mHasScale = mHasScale;
             cpyPolygon.mHasNormalDir = mHasNormalDir;
-            cpyPolygon.mHasUnknown1 = mHasUnknown1;
-            cpyPolygon.mUnknown1 = mUnknown1;
+            cpyPolygon.mHasGrowTimer = mHasGrowTimer;
+            cpyPolygon.mGrowTimer = mGrowTimer;
             cpyPolygon.mHasGrowType = mHasGrowType;
 
             return cpyPolygon;

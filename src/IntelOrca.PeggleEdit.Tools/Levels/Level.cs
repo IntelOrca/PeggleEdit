@@ -179,8 +179,8 @@ namespace IntelOrca.PeggleEdit.Tools.Levels
                     if (hidetype.Contains(le.Type))
                         continue;
 
-                    if (le.HasShadow)
-                        le.DrawShadow(g);
+                    if (le.DrawShadow)
+                        le.RenderShadow(g);
                 }
 
                 foreach (LevelEntry le in mEntries)
@@ -342,7 +342,7 @@ namespace IntelOrca.PeggleEdit.Tools.Levels
             return false;
         }
 
-        public LevelEntry GetFirstLevelEntryWithMovement(Mover movement)
+        public LevelEntry GetFirstLevelEntryWithMover(Mover movement)
         {
             foreach (LevelEntry entry in Entries)
             {
@@ -354,16 +354,16 @@ namespace IntelOrca.PeggleEdit.Tools.Levels
             return null;
         }
 
-        public void UpdateMovementLinksRead()
+        public void UpdateMoverLinksRead()
         {
             foreach (LevelEntry entry in Entries)
             {
                 var link = entry.MoverLink;
                 while (link != null)
                 {
-                    if (!link.OwnsMovement)
+                    if (!link.OwnsMover)
                     {
-                        link.InternalMovement = GetMovementFromId(link.InternalLinkId);
+                        link.InternalMover = GetMoverFromId(link.InternalLinkId);
                         break;
                     }
                     else
@@ -374,16 +374,16 @@ namespace IntelOrca.PeggleEdit.Tools.Levels
             }
         }
 
-        public void UpdateMovementLinksWrite()
+        public void UpdateMoverLinksWrite()
         {
             foreach (LevelEntry entry in Entries)
             {
                 var link = entry.MoverLink;
                 while (link != null)
                 {
-                    if (!link.OwnsMovement)
+                    if (!link.OwnsMover)
                     {
-                        link.InternalLinkId = GetMovementId(link.Mover);
+                        link.InternalLinkId = GetMoverId(link.Mover);
                         break;
                     }
                     else
@@ -394,7 +394,7 @@ namespace IntelOrca.PeggleEdit.Tools.Levels
             }
         }
 
-        public Mover GetMovementFromId(int id)
+        public Mover GetMoverFromId(int id)
         {
             int mi = 2;
             foreach (LevelEntry entry in Entries)
@@ -416,7 +416,7 @@ namespace IntelOrca.PeggleEdit.Tools.Levels
             return null;
         }
 
-        public int GetMovementId(Mover movement)
+        public int GetMoverId(Mover movement)
         {
             int mi = 2;
             foreach (LevelEntry le in Entries)

@@ -67,7 +67,7 @@ namespace IntelOrca.PeggleEdit.Tools.Levels.Children
             FlagGroup fA = new FlagGroup(mUnknownFlagsA);
             FlagGroup fB = new FlagGroup(mUnknownFlagsB);
 
-            if (!HasMovementInfo)
+            if (!HasMover)
                 fA[1] = true;
 
             bw.Write(fA.Int8);
@@ -86,7 +86,7 @@ namespace IntelOrca.PeggleEdit.Tools.Levels.Children
             bw.Write(mRadius);
         }
 
-        public override void DrawShadow(Graphics g)
+        public override void RenderShadow(Graphics g)
         {
             if (Level.ShowCollision)
                 return;
@@ -107,7 +107,7 @@ namespace IntelOrca.PeggleEdit.Tools.Levels.Children
             //Show only if its collidable
             if (!HasPegInfo)
             {
-                if (Level.ShowCollision && !Collision)
+                if (Level.ShowCollision && !Collidable)
                     return;
             }
 
@@ -123,9 +123,9 @@ namespace IntelOrca.PeggleEdit.Tools.Levels.Children
                     var srcRect = new Rectangle(0, 0, 20, 20);
                     if (!Level.ShowPreview)
                     {
-                        if (PegInfo.CanBeOrange)
+                        if (PegInfo.Variable)
                             srcRect.Y += 20;
-                        if (PegInfo.QuickDisappear)
+                        if (PegInfo.Crumble)
                             srcRect.Y += 80;
                     }
 
@@ -145,7 +145,7 @@ namespace IntelOrca.PeggleEdit.Tools.Levels.Children
                 // Draw the circle image
                 if (circleImage == null)
                 {
-                    var colour = OutlineColour;
+                    var colour = OutlineColor;
                     if (colour == Color.Black)
                         colour = Color.White;
 
@@ -159,7 +159,7 @@ namespace IntelOrca.PeggleEdit.Tools.Levels.Children
                 }
             }
 
-            if (Level.ShowCollision && Collision)
+            if (Level.ShowCollision && Collidable)
             {
                 g.FillEllipse(Brushes.White, drawbounds);
             }

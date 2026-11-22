@@ -68,7 +68,7 @@ namespace IntelOrca.PeggleEdit.Tools.Levels
         private void UpdateEmitter(Emitter emitter)
         {
             var edata = GetEmitterData(emitter);
-            var interval = 0.01 / (emitter.EmitRate.StaticValue + emitter.UnknownEmitRate);
+            var interval = 0.01 / (emitter.Rate.StaticValue + emitter.RandRate);
             if (interval == 0)
                 return;
 
@@ -86,10 +86,10 @@ namespace IntelOrca.PeggleEdit.Tools.Levels
             }
 
             p.Location = emitter.DrawLocation;
-            if (emitter.RandomStartPosition)
+            if (emitter.RandomStart)
             {
-                var width = emitter.Width * emitter.EmitAreaMultiplier.StaticValue;
-                var height = emitter.Height * emitter.EmitAreaMultiplier.StaticValue;
+                var width = emitter.Width * emitter.Distrib.StaticValue;
+                var height = emitter.Height * emitter.Distrib.StaticValue;
                 var minX = p.Location.X - (width / 2);
                 var maxX = p.Location.X + (width / 2);
                 var minY = p.Location.Y - (height / 2);
@@ -101,29 +101,29 @@ namespace IntelOrca.PeggleEdit.Tools.Levels
 
             if (emitter.ChangeScale)
             {
-                var scale = RandomRange(emitter.MinScale.StaticValue, emitter.MinScale.StaticValue + emitter.MaxRandScale);
+                var scale = RandomRange(emitter.Scale.StaticValue, emitter.Scale.StaticValue + emitter.ScaleRand);
                 p.Size = new SizeF(p.Size.Width * scale, p.Size.Height * scale);
             }
 
             if (emitter.ChangeRotation)
             {
-                p.RotationVelocity = emitter.RotationVelocity.StaticValue;
+                p.RotationVelocity = emitter.RotationVel.StaticValue;
             }
 
-            p.Acceleration = new PointF(emitter.AccelerationX, emitter.AccelerationY);
+            p.Acceleration = new PointF(emitter.AccX, emitter.Gravity);
             if (emitter.ChangeVelocity)
             {
                 p.Velocity = new PointF(
-                    RandomRange(emitter.MinVelocityX.StaticValue, emitter.MinVelocityX.StaticValue + emitter.MaxVelocityX),
-                    RandomRange(emitter.MinVelocityY.StaticValue, emitter.MinVelocityY.StaticValue + emitter.MaxVelocityY));
+                    RandomRange(emitter.VelX.StaticValue, emitter.VelX.StaticValue + emitter.VelXRand),
+                    RandomRange(emitter.VelY.StaticValue, emitter.VelY.StaticValue + emitter.VelYRand));
             }
-            p.Life = emitter.LifeDuration;
+            p.Life = emitter.Duration;
 
-            if (emitter.ChangeOpacity)
+            if (emitter.ChangeAlpha)
             {
-                p.MaxOpacity = emitter.Opacity.StaticValue;
-                p.FadeIn = emitter.FadeInTime;
-                p.TimeBeforeFadeOut = emitter.TimeBeforeFadeOut;
+                p.MaxOpacity = emitter.Alpha.StaticValue;
+                p.FadeIn = emitter.AlphaInto;
+                p.TimeBeforeFadeOut = emitter.AlphaFadeAt;
             }
             else
             {
@@ -143,7 +143,7 @@ namespace IntelOrca.PeggleEdit.Tools.Levels
 
         private Image GetImage(Emitter emitter)
         {
-            return LevelPack.Current.GetImage(emitter.EmitImageFilename)?.Image;
+            return LevelPack.Current.GetImage(emitter.Image)?.Image;
         }
 
         private void UpdateParticles(float delta)

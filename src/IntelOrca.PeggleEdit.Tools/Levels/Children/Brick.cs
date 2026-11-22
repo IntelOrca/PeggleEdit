@@ -27,10 +27,10 @@ namespace IntelOrca.PeggleEdit.Tools.Levels.Children
     public class Brick : LevelEntry, ICloneable
     {
         private byte mType;
-        private float mSectorAngle;
-        private float mWidth;
-        private float mLength;
         private float mAngle;
+        private float mThickness;
+        private float mRadius;
+        private float mRotation;
 
         private int mCurvePoints;
         private bool mCurved;
@@ -42,40 +42,40 @@ namespace IntelOrca.PeggleEdit.Tools.Levels.Children
         private int mUnknownFlagsC;
         private bool mHasType;
         private bool mHasCurvePoints;
-        private bool mHasSectorAngle;
-        private bool mHasWidth = true;
-        private bool mHasUnknownLeftAngle;
-        private float mUnknownLeftAngle;
-        private bool mHasUnknownRightAngle;
-        private float mUnknownRightAngle;
-        private float mUnknownRightAngle2;
-        private bool mHasUnknown0;
-        private float mUnknown0;
-        private bool mHasUnknown1;
-        private float mUnknown1;
-        private bool mHasUnknown2;
-        private float mUnknown2;
-        private bool mHasUnknown3;
-        private byte mUnknown3;
-        private bool mHasUnknown4;
-        private byte mUnknown4;
-        private bool mHasUnknown5;
-        private int mUnknown5;
-        private bool mHasUnknown6;
-        private short mUnknown6;
-        private bool mHasUnknown7;
-        private float mUnknown7;
-        private bool mHasUnknown8;
-        private float mUnknown8;
-        private uint mUnknown9;
+        private bool mHasAngle;
+        private bool mHasThickness = true;
+        private bool mHasLeftAngle;
+        private float mLeftAngle;
+        private bool mHasRightAngle;
+        private float mRightAngle;
+        private float mRightAngle2;
+        private bool mHasPolyRotation;
+        private float mPolyRotation;
+        private bool mHasAngularVelocity;
+        private float mAngularVelocity;
+        private bool mHasScale;
+        private float mScale;
+        private bool mHasNormalDir;
+        private byte mNormalDir;
+        private bool mHasGrowTimer;
+        private byte mGrowTimer;
+        private bool mHasGrowType;
+        private int mGrowType;
+        private bool mHasFlashTimer;
+        private short mFlashTimer;
+        private bool mHasPivotOffsetX;
+        private float mPivotOffsetX;
+        private bool mHasPivotOffsetY;
+        private float mPivotOffsetY;
+        private uint mOutlineIndices;
 
         public Brick(Level level)
             : base(level)
         {
             PegInfo = new PegInfo(this, true, false);
 
-            mWidth = 20.0f;
-            mLength = 30.0f;
+            mThickness = 20.0f;
+            mRadius = 30.0f;
             mCurvePoints = 4;
             mCurved = false;
         }
@@ -88,18 +88,18 @@ namespace IntelOrca.PeggleEdit.Tools.Levels.Children
                 fB = new FlagGroup(br.ReadByte());
             mUnknownFlagsA = fA.Int32 & ((1 << 0) | (1 << 6) | (1 << 7));
             mUnknownFlagsB = fB.Int32 & ~((1 << 0) | (1 << 1) | (1 << 2));
-            mHasUnknown0 = fA[2];
+            mHasPolyRotation = fA[2];
             if (fA[2])
-                mUnknown0 = br.ReadSingle();
-            mHasUnknown1 = fA[3];
+                mPolyRotation = br.ReadSingle();
+            mHasAngularVelocity = fA[3];
             if (fA[3])
-                mUnknown1 = br.ReadSingle();
-            mHasUnknown2 = fA[5];
+                mAngularVelocity = br.ReadSingle();
+            mHasScale = fA[5];
             if (fA[5])
-                mUnknown2 = br.ReadSingle();
-            mHasUnknown3 = fA[1];
+                mScale = br.ReadSingle();
+            mHasNormalDir = fA[1];
             if (fA[1])
-                mUnknown3 = br.ReadByte();
+                mNormalDir = br.ReadByte();
             if (fA[4])
             {
                 X = br.ReadSingle();
@@ -108,26 +108,26 @@ namespace IntelOrca.PeggleEdit.Tools.Levels.Children
 
             //if arg0 (lots)
 
-            mHasUnknown4 = fB[0];
+            mHasGrowTimer = fB[0];
             if (fB[0])
-                mUnknown4 = br.ReadByte();
-            mHasUnknown5 = fB[1];
+                mGrowTimer = br.ReadByte();
+            mHasGrowType = fB[1];
             if (fB[1])
-                mUnknown5 = br.ReadInt32();
-            mHasUnknown6 = fB[2];
+                mGrowType = br.ReadInt32();
+            mHasFlashTimer = fB[2];
             if (fB[2])
-                mUnknown6 = br.ReadInt16();
+                mFlashTimer = br.ReadInt16();
 
             mCurved = true;
 
             FlagGroup fC = new FlagGroup(br.ReadInt16());
             mUnknownFlagsC = fC.Int32 & ((1 << 0) | (1 << 1) | (0x1F << 11));
-            mHasUnknown7 = fC[8];
+            mHasPivotOffsetX = fC[8];
             if (fC[8])
-                mUnknown7 = br.ReadSingle();
-            mHasUnknown8 = fC[9];
+                mPivotOffsetX = br.ReadSingle();
+            mHasPivotOffsetY = fC[9];
             if (fC[9])
-                mUnknown8 = br.ReadSingle();
+                mPivotOffsetY = br.ReadSingle();
             mHasType = fC[2];
             if (fC[2])
             {
@@ -141,32 +141,32 @@ namespace IntelOrca.PeggleEdit.Tools.Levels.Children
                 mCurvePoints = br.ReadByte() + 2;
             }
 
-            mHasUnknownLeftAngle = fC[5];
+            mHasLeftAngle = fC[5];
             if (fC[5])
             {
-                mUnknownLeftAngle = br.ReadSingle();
+                mLeftAngle = br.ReadSingle();
             }
-            mHasUnknownRightAngle = fC[6];
+            mHasRightAngle = fC[6];
             if (fC[6])
             {
-                mUnknownRightAngle = br.ReadSingle();
-                mUnknownRightAngle2 = br.ReadSingle();
+                mRightAngle = br.ReadSingle();
+                mRightAngle2 = br.ReadSingle();
             }
 
-            mHasSectorAngle = fC[4];
+            mHasAngle = fC[4];
             if (fC[4])
-                mSectorAngle = br.ReadSingle();
+                mAngle = br.ReadSingle();
 
-            mHasWidth = fC[7];
+            mHasThickness = fC[7];
             if (fC[7])
-                mWidth = br.ReadSingle();
+                mThickness = br.ReadSingle();
 
             mTextureFlip = fC[10];
 
-            mLength = br.ReadSingle();
-            mAngle = br.ReadSingle();
+            mRadius = br.ReadSingle();
+            mRotation = br.ReadSingle();
 
-            mUnknown9 = br.ReadUInt32();
+            mOutlineIndices = br.ReadUInt32();
         }
 
         public override void WriteData(BinaryWriter bw, int version)
@@ -175,28 +175,28 @@ namespace IntelOrca.PeggleEdit.Tools.Levels.Children
             FlagGroup fB = new FlagGroup(mUnknownFlagsB);
             FlagGroup fC = new FlagGroup(mUnknownFlagsC);
 
-            fA[1] = mHasUnknown3;
-            fA[2] = mHasUnknown0;
-            fA[3] = mHasUnknown1;
-            fA[5] = mHasUnknown2;
-            fB[0] = mHasUnknown4;
-            fB[1] = mHasUnknown5;
-            fB[2] = mHasUnknown6;
-            fC[8] = mHasUnknown7;
-            fC[9] = mHasUnknown8;
+            fA[1] = mHasNormalDir;
+            fA[2] = mHasPolyRotation;
+            fA[3] = mHasAngularVelocity;
+            fA[5] = mHasScale;
+            fB[0] = mHasGrowTimer;
+            fB[1] = mHasGrowType;
+            fB[2] = mHasFlashTimer;
+            fC[8] = mHasPivotOffsetX;
+            fC[9] = mHasPivotOffsetY;
 
-            if (!HasMovementInfo)
+            if (!HasMover)
                 fA[4] = true;
 
-            fC[5] = mHasUnknownLeftAngle;
-            fC[6] = mHasUnknownRightAngle;
+            fC[5] = mHasLeftAngle;
+            fC[6] = mHasRightAngle;
 
             // Keep the curve values that were in the file, otherwise only write them if needed
             fC[3] = mHasCurvePoints;
-            fC[4] = mHasSectorAngle;
+            fC[4] = mHasAngle;
             if (mCurved)
             {
-                if (mSectorAngle != 0.0f)
+                if (mAngle != 0.0f)
                     fC[4] = true;
 
                 if (mCurvePoints != 4)
@@ -211,7 +211,7 @@ namespace IntelOrca.PeggleEdit.Tools.Levels.Children
             }
 
             // Only write the width if it was in the file or has been changed from the default
-            fC[7] = (mHasWidth || mWidth != 20.0f);
+            fC[7] = (mHasThickness || mThickness != 20.0f);
 
             if (mTextureFlip)
                 fC[10] = true;
@@ -224,13 +224,13 @@ namespace IntelOrca.PeggleEdit.Tools.Levels.Children
                 bw.Write(fB.Int8);
 
             if (fA[2])
-                bw.Write(mUnknown0);
+                bw.Write(mPolyRotation);
             if (fA[3])
-                bw.Write(mUnknown1);
+                bw.Write(mAngularVelocity);
             if (fA[5])
-                bw.Write(mUnknown2);
+                bw.Write(mScale);
             if (fA[1])
-                bw.Write(mUnknown3);
+                bw.Write(mNormalDir);
             if (fA[4])
             {
                 bw.Write(X);
@@ -240,19 +240,19 @@ namespace IntelOrca.PeggleEdit.Tools.Levels.Children
             if (version >= 0x23)
             {
                 if (fB[0])
-                    bw.Write(mUnknown4);
+                    bw.Write(mGrowTimer);
                 if (fB[1])
-                    bw.Write(mUnknown5);
+                    bw.Write(mGrowType);
                 if (fB[2])
-                    bw.Write(mUnknown6);
+                    bw.Write(mFlashTimer);
             }
 
             bw.Write(fC.Int16);
 
             if (fC[8])
-                bw.Write(mUnknown7);
+                bw.Write(mPivotOffsetX);
             if (fC[9])
-                bw.Write(mUnknown8);
+                bw.Write(mPivotOffsetY);
             if (fC[2])
             {
                 bw.Write(mCurved ? mType : (byte)5);
@@ -264,26 +264,26 @@ namespace IntelOrca.PeggleEdit.Tools.Levels.Children
             }
 
             if (fC[5])
-                bw.Write(mUnknownLeftAngle);
+                bw.Write(mLeftAngle);
             if (fC[6])
             {
-                bw.Write(mUnknownRightAngle);
-                bw.Write(mUnknownRightAngle2);
+                bw.Write(mRightAngle);
+                bw.Write(mRightAngle2);
             }
 
             if (fC[4])
-                bw.Write(mSectorAngle);
+                bw.Write(mAngle);
             if (fC[7])
-                bw.Write(mWidth);
+                bw.Write(mThickness);
 
-            bw.Write(mLength);
-            bw.Write(mAngle);
+            bw.Write(mRadius);
+            bw.Write(mRotation);
 
-            bw.Write(mUnknown9);
+            bw.Write(mOutlineIndices);
         }
 
         public override void Draw(Graphics g) => Draw(g, false);
-        public override void DrawShadow(Graphics g) => Draw(g, true);
+        public override void RenderShadow(Graphics g) => Draw(g, true);
 
         private void Draw(Graphics g, bool shadow)
         {
@@ -293,7 +293,7 @@ namespace IntelOrca.PeggleEdit.Tools.Levels.Children
             // Show only if its collidable
             if (!HasPegInfo)
             {
-                if (Level.ShowCollision && !Collision)
+                if (Level.ShowCollision && !Collidable)
                     return;
             }
 
@@ -301,10 +301,10 @@ namespace IntelOrca.PeggleEdit.Tools.Levels.Children
 
             //Get location and angle
             PointF location = DrawLocation;
-            float angle = mAngle;
+            float angle = mRotation;
             if (MoverLink?.Mover is Mover movement)
             {
-                angle = movement.GetEstimatedMoveAngle(mAngle);
+                angle = movement.GetEstimatedMoveAngle(mRotation);
             }
 
             if (Level.UsePegTextures)
@@ -344,7 +344,7 @@ namespace IntelOrca.PeggleEdit.Tools.Levels.Children
 
         private void DrawStrightBrick(Graphics g, PointF location, bool shadow)
         {
-            var dest = new RectangleF(location.X - (Length / 2), location.Y - (Width / 2), Length, Width);
+            var dest = new RectangleF(location.X - (Radius / 2), location.Y - (Thickness / 2), Radius, Thickness);
             if (shadow)
             {
                 g.FillRectangle(new SolidBrush(Level.ShadowColour), dest);
@@ -384,11 +384,11 @@ namespace IntelOrca.PeggleEdit.Tools.Levels.Children
             {
                 var shadingOffset = mTextureFlip ? 2 : 8;
                 DrawCurvedBrick(g, GetOuterColour(), location, false);
-                mWidth /= 2.0f;
+                mThickness /= 2.0f;
                 location.X += shadingOffset;
                 DrawCurvedBrick(g, GetInnerColour(), location, true);
                 location.X -= shadingOffset;
-                mWidth *= 2.0f;
+                mThickness *= 2.0f;
             }
             else
             {
@@ -407,11 +407,11 @@ namespace IntelOrca.PeggleEdit.Tools.Levels.Children
             location.X += offset.X;
             location.Y += offset.Y;
 
-            float hangle = mSectorAngle / 2.0f;
-            float hhangle = (mSectorAngle / 2.0f) * (0.4f);
-            float width = mWidth;
-            float inner_radius = mLength;
-            float outer_radius = inner_radius + mWidth;
+            float hangle = mAngle / 2.0f;
+            float hhangle = (mAngle / 2.0f) * (0.4f);
+            float width = mThickness;
+            float inner_radius = mRadius;
+            float outer_radius = inner_radius + mThickness;
             PointF circleCentre = new PointF(location.X - inner_radius, location.Y);
 
             /*
@@ -427,8 +427,8 @@ namespace IntelOrca.PeggleEdit.Tools.Levels.Children
 			pnts[7] = GetBrickAngularPoint(circleCentre, -hangle, radius);
 			*/
 
-            float div_angle = mSectorAngle / (mCurvePoints - 1);
-            float cur_angle = -(mSectorAngle / 2.0f);
+            float div_angle = mAngle / (mCurvePoints - 1);
+            float cur_angle = -(mAngle / 2.0f);
 
             PointF[] o_pnts = new PointF[mCurvePoints];
             PointF[] i_pnts = new PointF[mCurvePoints];
@@ -524,8 +524,8 @@ namespace IntelOrca.PeggleEdit.Tools.Levels.Children
         public PointF GetCentrePoint()
         {
             PointF cc = new PointF();
-            cc.X = X - (mLength * (float)Math.Cos(MathExt.ToRadians(mAngle)));
-            cc.Y = Y - (mLength * (float)Math.Sin(MathExt.ToRadians(mAngle)));
+            cc.X = X - (mRadius * (float)Math.Cos(MathExt.ToRadians(mRotation)));
+            cc.Y = Y - (mRadius * (float)Math.Sin(MathExt.ToRadians(mRotation)));
             return cc;
         }
 
@@ -535,10 +535,10 @@ namespace IntelOrca.PeggleEdit.Tools.Levels.Children
             base.CloneTo(cpyBrick);
 
             cpyBrick.mType = mType;
-            cpyBrick.mSectorAngle = mSectorAngle;
-            cpyBrick.mWidth = mWidth;
-            cpyBrick.mLength = mLength;
             cpyBrick.mAngle = mAngle;
+            cpyBrick.mThickness = mThickness;
+            cpyBrick.mRadius = mRadius;
+            cpyBrick.mRotation = mRotation;
 
             cpyBrick.mCurvePoints = mCurvePoints;
             cpyBrick.mCurved = mCurved;
@@ -546,47 +546,47 @@ namespace IntelOrca.PeggleEdit.Tools.Levels.Children
 
             cpyBrick.mHasType = mHasType;
             cpyBrick.mHasCurvePoints = mHasCurvePoints;
-            cpyBrick.mHasSectorAngle = mHasSectorAngle;
-            cpyBrick.mHasWidth = mHasWidth;
-            cpyBrick.mHasUnknownLeftAngle = mHasUnknownLeftAngle;
-            cpyBrick.mUnknownLeftAngle = mUnknownLeftAngle;
-            cpyBrick.mHasUnknownRightAngle = mHasUnknownRightAngle;
-            cpyBrick.mUnknownRightAngle = mUnknownRightAngle;
-            cpyBrick.mUnknownRightAngle2 = mUnknownRightAngle2;
+            cpyBrick.mHasAngle = mHasAngle;
+            cpyBrick.mHasThickness = mHasThickness;
+            cpyBrick.mHasLeftAngle = mHasLeftAngle;
+            cpyBrick.mLeftAngle = mLeftAngle;
+            cpyBrick.mHasRightAngle = mHasRightAngle;
+            cpyBrick.mRightAngle = mRightAngle;
+            cpyBrick.mRightAngle2 = mRightAngle2;
             cpyBrick.mUnknownFlagsA = mUnknownFlagsA;
             cpyBrick.mUnknownFlagsB = mUnknownFlagsB;
             cpyBrick.mUnknownFlagsC = mUnknownFlagsC;
-            cpyBrick.mHasUnknown0 = mHasUnknown0;
-            cpyBrick.mUnknown0 = mUnknown0;
-            cpyBrick.mHasUnknown1 = mHasUnknown1;
-            cpyBrick.mUnknown1 = mUnknown1;
-            cpyBrick.mHasUnknown2 = mHasUnknown2;
-            cpyBrick.mUnknown2 = mUnknown2;
-            cpyBrick.mHasUnknown3 = mHasUnknown3;
-            cpyBrick.mUnknown3 = mUnknown3;
-            cpyBrick.mHasUnknown4 = mHasUnknown4;
-            cpyBrick.mUnknown4 = mUnknown4;
-            cpyBrick.mHasUnknown5 = mHasUnknown5;
-            cpyBrick.mUnknown5 = mUnknown5;
-            cpyBrick.mHasUnknown6 = mHasUnknown6;
-            cpyBrick.mUnknown6 = mUnknown6;
-            cpyBrick.mHasUnknown7 = mHasUnknown7;
-            cpyBrick.mUnknown7 = mUnknown7;
-            cpyBrick.mHasUnknown8 = mHasUnknown8;
-            cpyBrick.mUnknown8 = mUnknown8;
-            cpyBrick.mUnknown9 = mUnknown9;
+            cpyBrick.mHasPolyRotation = mHasPolyRotation;
+            cpyBrick.mPolyRotation = mPolyRotation;
+            cpyBrick.mHasAngularVelocity = mHasAngularVelocity;
+            cpyBrick.mAngularVelocity = mAngularVelocity;
+            cpyBrick.mHasScale = mHasScale;
+            cpyBrick.mScale = mScale;
+            cpyBrick.mHasNormalDir = mHasNormalDir;
+            cpyBrick.mNormalDir = mNormalDir;
+            cpyBrick.mHasGrowTimer = mHasGrowTimer;
+            cpyBrick.mGrowTimer = mGrowTimer;
+            cpyBrick.mHasGrowType = mHasGrowType;
+            cpyBrick.mGrowType = mGrowType;
+            cpyBrick.mHasFlashTimer = mHasFlashTimer;
+            cpyBrick.mFlashTimer = mFlashTimer;
+            cpyBrick.mHasPivotOffsetX = mHasPivotOffsetX;
+            cpyBrick.mPivotOffsetX = mPivotOffsetX;
+            cpyBrick.mHasPivotOffsetY = mHasPivotOffsetY;
+            cpyBrick.mPivotOffsetY = mPivotOffsetY;
+            cpyBrick.mOutlineIndices = mOutlineIndices;
 
             return cpyBrick;
         }
 
         private float GetHeight()
         {
-            return (2 * (float)Math.Sin((SectorAngle / 2) / 180.0 * Math.PI) * Length);
+            return (2 * (float)Math.Sin((Angle / 2) / 180.0 * Math.PI) * Radius);
         }
 
         private PointF GetOrigin(PointF location, float rotation)
         {
-            var radius = Radius;
+            var radius = MidRadius;
             var angle = MathExt.ToRadians(-rotation);
             var originDelta = new PointF(
                 (float)(Math.Cos(angle) * radius),
@@ -601,25 +601,25 @@ namespace IntelOrca.PeggleEdit.Tools.Levels.Children
                 var brickData = new BrickData();
                 if (!Level.ShowPreview && HasPegInfo)
                 {
-                    brickData.CanBeOrange = PegInfo.CanBeOrange;
-                    brickData.QuickDisappear = PegInfo.QuickDisappear;
+                    brickData.CanBeOrange = PegInfo.Variable;
+                    brickData.QuickDisappear = PegInfo.Crumble;
                 }
                 brickData.TextureFlip = TextureFlip;
-                brickData.Length = Length;
-                brickData.Width = Width;
+                brickData.Length = Radius;
+                brickData.Width = Thickness;
                 if (Curved)
                 {
                     brickData.Curved = true;
-                    brickData.SectorAngle = SectorAngle;
+                    brickData.SectorAngle = Angle;
                 }
                 return brickData;
             }
         }
 
-        public float Radius
+        public float MidRadius
         {
-            get => InnerRadius + (Width / 2);
-            set => InnerRadius = value - (Width / 2);
+            get => InnerRadius + (Thickness / 2);
+            set => InnerRadius = value - (Thickness / 2);
         }
 
         public PointF Origin
@@ -640,14 +640,14 @@ namespace IntelOrca.PeggleEdit.Tools.Levels.Children
             get
             {
                 if (Curved)
-                    return MathExt.FixAngle((360 - Rotation) - 90 - (SectorAngle / 2));
+                    return MathExt.FixAngle((360 - Rotation) - 90 - (Angle / 2));
                 else
                     return MathExt.FixAngle(360 - Rotation - 90);
             }
             set
             {
                 if (Curved)
-                    Rotation = MathExt.FixAngle(360 + 90 - (SectorAngle / 2) - value);
+                    Rotation = MathExt.FixAngle(360 + 90 - (Angle / 2) - value);
                 else
                     Rotation = MathExt.FixAngle(360 - 90 - value);
             }
@@ -659,8 +659,8 @@ namespace IntelOrca.PeggleEdit.Tools.Levels.Children
             {
                 if (Curved)
                 {
-                    var angle = MathExt.ToRadians(-Rotation - (SectorAngle / 2));
-                    var radius = Radius;
+                    var angle = MathExt.ToRadians(-Rotation - (Angle / 2));
+                    var radius = MidRadius;
                     return Origin.Add(new PointF(
                         (float)(radius * Math.Cos(angle)),
                         (float)(radius * Math.Sin(angle))));
@@ -668,8 +668,8 @@ namespace IntelOrca.PeggleEdit.Tools.Levels.Children
                 else
                 {
                     var delta = new PointF(
-                        (float)((Length / 2) * Math.Cos(MathExt.ToRadians(LeftSideAngle))),
-                        (float)((Length / 2) * Math.Sin(MathExt.ToRadians(LeftSideAngle))));
+                        (float)((Radius / 2) * Math.Cos(MathExt.ToRadians(LeftSideAngle))),
+                        (float)((Radius / 2) * Math.Sin(MathExt.ToRadians(LeftSideAngle))));
                     return Location.Add(delta);
                 }
             }
@@ -685,14 +685,14 @@ namespace IntelOrca.PeggleEdit.Tools.Levels.Children
             get
             {
                 if (Curved)
-                    return MathExt.FixAngle((360 - Rotation) + 90 + (SectorAngle / 2));
+                    return MathExt.FixAngle((360 - Rotation) + 90 + (Angle / 2));
                 else
                     return MathExt.FixAngle(360 - Rotation - 90 + 180);
             }
             set
             {
                 if (Curved)
-                    Rotation = MathExt.FixAngle(90 + (SectorAngle / 2) + 360 - value);
+                    Rotation = MathExt.FixAngle(90 + (Angle / 2) + 360 - value);
                 else
                     Rotation = MathExt.FixAngle(360 - 90 + 180 - value);
             }
@@ -704,8 +704,8 @@ namespace IntelOrca.PeggleEdit.Tools.Levels.Children
             {
                 if (Curved)
                 {
-                    var angle = MathExt.ToRadians(-Rotation + (SectorAngle / 2));
-                    var radius = Radius;
+                    var angle = MathExt.ToRadians(-Rotation + (Angle / 2));
+                    var radius = MidRadius;
                     return Origin.Add(new PointF(
                         (float)(radius * Math.Cos(angle)),
                         (float)(radius * Math.Sin(angle))));
@@ -713,8 +713,8 @@ namespace IntelOrca.PeggleEdit.Tools.Levels.Children
                 else
                 {
                     var delta = new PointF(
-                        (float)((Length / 2) * Math.Cos(MathExt.ToRadians(RightSideAngle))),
-                        (float)((Length / 2) * Math.Sin(MathExt.ToRadians(RightSideAngle))));
+                        (float)((Radius / 2) * Math.Cos(MathExt.ToRadians(RightSideAngle))),
+                        (float)((Radius / 2) * Math.Sin(MathExt.ToRadians(RightSideAngle))));
                     return Location.Add(delta);
                 }
             }
@@ -733,6 +733,23 @@ namespace IntelOrca.PeggleEdit.Tools.Levels.Children
         {
             get
             {
+                return mRotation;
+            }
+            set
+            {
+                mRotation = value;
+            }
+        }
+
+        [EntryProperty(EntryPropertyType.Element, 0.0f)]
+        [DisplayName("Angle")]
+        [Description("The angle of the arc of a curved brick in degrees.")]
+        [Category("Layout")]
+        [DefaultValue(0.0f)]
+        public float Angle
+        {
+            get
+            {
                 return mAngle;
             }
             set
@@ -742,36 +759,19 @@ namespace IntelOrca.PeggleEdit.Tools.Levels.Children
         }
 
         [EntryProperty(EntryPropertyType.Element, 0.0f)]
-        [DisplayName("Angle")]
-        [Description("The angle of the arc of a curved brick in degrees.")]
-        [Category("Layout")]
-        [DefaultValue(0.0f)]
-        public float SectorAngle
-        {
-            get
-            {
-                return mSectorAngle;
-            }
-            set
-            {
-                mSectorAngle = value;
-            }
-        }
-
-        [EntryProperty(EntryPropertyType.Element, 0.0f)]
         [DisplayName("Radius")]
         [Description("The radius of a curved brick, or the length of a straight brick.")]
         [Category("Layout")]
         [DefaultValue(30.0f)]
-        public float Length
+        public float Radius
         {
             get
             {
-                return mLength;
+                return mRadius;
             }
             set
             {
-                mLength = value;
+                mRadius = value;
             }
         }
 
@@ -784,11 +784,11 @@ namespace IntelOrca.PeggleEdit.Tools.Levels.Children
         {
             get
             {
-                return mLength;
+                return mRadius;
             }
             set
             {
-                mLength = value;
+                mRadius = value;
             }
         }
 
@@ -801,11 +801,11 @@ namespace IntelOrca.PeggleEdit.Tools.Levels.Children
         {
             get
             {
-                return mLength + mWidth;
+                return mRadius + mThickness;
             }
             set
             {
-                mLength = value - mWidth;
+                mRadius = value - mThickness;
             }
         }
 
@@ -814,15 +814,15 @@ namespace IntelOrca.PeggleEdit.Tools.Levels.Children
         [Description("The thickness of the brick.")]
         [Category("Layout")]
         [DefaultValue(20.0f)]
-        public float Width
+        public float Thickness
         {
             get
             {
-                return mWidth;
+                return mThickness;
             }
             set
             {
-                mWidth = value;
+                mThickness = value;
             }
         }
 
@@ -859,9 +859,9 @@ namespace IntelOrca.PeggleEdit.Tools.Levels.Children
             set
             {
                 mCurved = value;
-                if (mSectorAngle == 0)
+                if (mAngle == 0)
                 {
-                    mSectorAngle = 30;
+                    mAngle = 30;
                 }
             }
         }
@@ -896,9 +896,9 @@ namespace IntelOrca.PeggleEdit.Tools.Levels.Children
             get
             {
                 return new RectangleF(
-                    DrawX - (mWidth / 2),
-                    DrawY - (mWidth / 2),
-                    mWidth, mWidth);
+                    DrawX - (mThickness / 2),
+                    DrawY - (mThickness / 2),
+                    mThickness, mThickness);
             }
         }
     }

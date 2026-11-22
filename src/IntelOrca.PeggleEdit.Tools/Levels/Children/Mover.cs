@@ -33,7 +33,7 @@ namespace IntelOrca.PeggleEdit.Tools.Levels.Children
         HorizontalCycle,
         Circle,
         HorizontalInfinity,
-        VericalInfinity,
+        VerticalInfinity,
         HorizontalArc,
         VerticalArc,
         Rotate,
@@ -42,8 +42,8 @@ namespace IntelOrca.PeggleEdit.Tools.Levels.Children
         VerticalWrap,
         HorizontalWrap,
         RotateAroundCircle,
-        RetraceCircle,
-        WeirdShape,
+        SwingAroundCircle,
+        FlowerLoop,
     }
 
     /// <summary>
@@ -55,15 +55,15 @@ namespace IntelOrca.PeggleEdit.Tools.Levels.Children
         Level mLevel;
 
         MoverType mType;
-        short mRadius1;
-        short mTimePeriod;
+        short mRadius;
+        short mTime;
         short mRadius2;
         short mOffset;
         short mPause1;
         short mPause2;
         byte mPhase1;
         byte mPhase2;
-        float mStartPhase;
+        float mPhase;
         float mPostDelayPhase;
         // Angles are kept in radians, as stored in the level file, so that they round trip exactly
         float mMoveRotation;
@@ -74,24 +74,24 @@ namespace IntelOrca.PeggleEdit.Tools.Levels.Children
 
         PointF mAnchorPoint;
 
-        float mUnknown8;
+        float mCurrentAngle;
 
-        float mObjectX;
-        float mObjectY;
+        float mCurrentX;
+        float mCurrentY;
 
         // Flags as read, excluding the sub-movement, so that values present in the file but zero are kept
         int mValueFlags;
 
         [DefaultValue(0.0f)]
         [DisplayName("Sub-movement X Offset")]
-        public float SubMovementOffsetX { get; set; }
+        public float ParentLastX { get; set; }
 
         [DefaultValue(0.0f)]
         [DisplayName("Sub-movement Y Offset")]
-        public float SubMovementOffsetY { get; set; }
+        public float ParentLastY { get; set; }
 
-        [DisplayName("Sub Mover")]
-        [Description("The movement properties of the movement properties.")]
+        [DisplayName("Parent Mover")]
+        [Description("Another mover that this mover moves along with, so that its whole path follows the other mover.")]
         [Editor(typeof(MoverUITypeEditor), typeof(UITypeEditor))]
         public MoverLink MoverLink { get; set; }
 
@@ -116,7 +116,7 @@ namespace IntelOrca.PeggleEdit.Tools.Levels.Children
             mAnchorPoint.X = br.ReadSingle();
             mAnchorPoint.Y = br.ReadSingle();
 
-            mTimePeriod = br.ReadInt16();
+            mTime = br.ReadInt16();
 
             FlagGroup fA = new FlagGroup(br.ReadInt16());
             mValueFlags = fA.Int32 & ~(1 << 12);
@@ -124,9 +124,9 @@ namespace IntelOrca.PeggleEdit.Tools.Levels.Children
             if (fA[0])
                 mOffset = br.ReadInt16();
             if (fA[1])
-                mRadius1 = br.ReadInt16();
+                mRadius = br.ReadInt16();
             if (fA[2])
-                mStartPhase = br.ReadSingle();
+                mPhase = br.ReadSingle();
             if (fA[3])
                 mMoveRotation = br.ReadSingle();
             if (fA[4])
@@ -144,20 +144,20 @@ namespace IntelOrca.PeggleEdit.Tools.Levels.Children
             if (fA[10])
                 mMaxAngle = br.ReadSingle();
             if (fA[11])
-                mUnknown8 = br.ReadSingle();
+                mCurrentAngle = br.ReadSingle();
             if (fA[14])
                 mRotation = br.ReadSingle();
             if (fA[12])
             {
-                SubMovementOffsetX = br.ReadSingle();
-                SubMovementOffsetY = br.ReadSingle();
+                ParentLastX = br.ReadSingle();
+                ParentLastY = br.ReadSingle();
                 MoverLink = new MoverLink(mLevel);
                 MoverLink.ReadData(br, version);
             }
             if (fA[13])
             {
-                mObjectX = br.ReadSingle();
-                mObjectY = br.ReadSingle();
+                mCurrentX = br.ReadSingle();
+                mCurrentY = br.ReadSingle();
             }
         }
 
@@ -166,8 +166,8 @@ namespace IntelOrca.PeggleEdit.Tools.Levels.Children
             FlagGroup fA = new FlagGroup();
 
             fA[0] = (mOffset != 0.0f);
-            fA[1] = (mRadius1 != 0.0f);
-            fA[2] = (mStartPhase != 0.0f);
+            fA[1] = (mRadius != 0.0f);
+            fA[2] = (mPhase != 0.0f);
             fA[3] = (mMoveRotation != 0.0f);
             fA[4] = (mRadius2 != 0.0f);
             fA[5] = (mPause1 != 0.0f);
@@ -176,10 +176,10 @@ namespace IntelOrca.PeggleEdit.Tools.Levels.Children
             fA[8] = (mPhase2 != 0.0f);
             fA[9] = (mPostDelayPhase != 0.0f);
             fA[10] = (mMaxAngle != 0.0f);
-            fA[11] = (mUnknown8 != 0.0f);
+            fA[11] = (mCurrentAngle != 0.0f);
             fA[14] = (mRotation != 0.0f);
-            fA[12] = (SubMovementOffsetX != 0.0f || SubMovementOffsetY != 0.0f);
-            fA[13] = (mObjectX != 0.0f || mObjectY != 0.0f);
+            fA[12] = (ParentLastX != 0.0f || ParentLastY != 0.0f);
+            fA[13] = (mCurrentX != 0.0f || mCurrentY != 0.0f);
 
             if (MoverLink != null)
                 fA[12] = true;
@@ -194,16 +194,16 @@ namespace IntelOrca.PeggleEdit.Tools.Levels.Children
             bw.Write(mAnchorPoint.X);
             bw.Write(mAnchorPoint.Y);
 
-            bw.Write((short)mTimePeriod);
+            bw.Write((short)mTime);
 
             bw.Write(fA.Int16);
 
             if (fA[0])
                 bw.Write(mOffset);
             if (fA[1])
-                bw.Write((short)mRadius1);
+                bw.Write((short)mRadius);
             if (fA[2])
-                bw.Write(mStartPhase);
+                bw.Write(mPhase);
             if (fA[3])
                 bw.Write(mMoveRotation);
             if (fA[4])
@@ -221,13 +221,13 @@ namespace IntelOrca.PeggleEdit.Tools.Levels.Children
             if (fA[10])
                 bw.Write(mMaxAngle);
             if (fA[11])
-                bw.Write(mUnknown8);
+                bw.Write(mCurrentAngle);
             if (fA[14])
                 bw.Write(mRotation);
             if (fA[12])
             {
-                bw.Write(SubMovementOffsetX);
-                bw.Write(SubMovementOffsetY);
+                bw.Write(ParentLastX);
+                bw.Write(ParentLastY);
 
                 var movementLink = MoverLink;
                 if (MoverLink == null)
@@ -236,8 +236,8 @@ namespace IntelOrca.PeggleEdit.Tools.Levels.Children
             }
             if (fA[13])
             {
-                bw.Write(mObjectX);
-                bw.Write(mObjectY);
+                bw.Write(mCurrentX);
+                bw.Write(mCurrentY);
             }
         }
 
@@ -264,8 +264,8 @@ namespace IntelOrca.PeggleEdit.Tools.Levels.Children
             {
                 using (Matrix mx = g.Transform)
                 {
-                    mx.Translate(-SubMovementOffsetX, -SubMovementOffsetY);
-                    mx.RotateAt(-MovementAngle, new PointF(anchor.X, anchor.Y));
+                    mx.Translate(-ParentLastX, -ParentLastY);
+                    mx.RotateAt(-MoveRotation, new PointF(anchor.X, anchor.Y));
                     g.Transform = mx;
                 }
 
@@ -300,7 +300,7 @@ namespace IntelOrca.PeggleEdit.Tools.Levels.Children
                             anchor.X + (GetXRadius() * 1.35f), anchor.Y + (GetYRadius() * 1.8f),
                             anchor.X, anchor.Y);
                         break;
-                    case MoverType.VericalInfinity:
+                    case MoverType.VerticalInfinity:
                         g.DrawBezier(pen,
                             anchor.X, anchor.Y,
                             anchor.X - GetXRadius(), anchor.Y - GetYRadius(),
@@ -344,7 +344,7 @@ namespace IntelOrca.PeggleEdit.Tools.Levels.Children
                                 anchor.X, anchor.Y - GetYRadius());
                         }
                         break;
-                    case MoverType.RetraceCircle:
+                    case MoverType.SwingAroundCircle:
                         g.DrawEllipse(pen, anchor.X - GetXRadius(), anchor.Y - GetYRadius(),
                             GetXRadius() * 2, GetYRadius() * 2);
                         break;
@@ -383,12 +383,12 @@ namespace IntelOrca.PeggleEdit.Tools.Levels.Children
 
             PointF locationB = GetMyEstimatedMovePosition();
 
-            return AddPoints(new PointF(-SubMovementOffsetX, -SubMovementOffsetY), AddPoints(locationA, locationB));
+            return AddPoints(new PointF(-ParentLastX, -ParentLastY), AddPoints(locationA, locationB));
         }
 
         public PointF GetMyEstimatedMovePosition()
         {
-            if (mTimePeriod == 0 || !HasEntryParent())
+            if (mTime == 0 || !HasEntryParent())
                 return mAnchorPoint;
 
             float angle, circle_x, circle_y;
@@ -397,7 +397,7 @@ namespace IntelOrca.PeggleEdit.Tools.Levels.Children
                 phase = 100.0f - phase;
 
             Matrix matrix = new Matrix();
-            matrix.RotateAt(-MovementAngle, new PointF(mAnchorPoint.X, mAnchorPoint.Y));
+            matrix.RotateAt(-MoveRotation, new PointF(mAnchorPoint.X, mAnchorPoint.Y));
 
             switch (mType)
             {
@@ -424,7 +424,7 @@ namespace IntelOrca.PeggleEdit.Tools.Levels.Children
                     circle_y = (float)Math.Sin(2 * angle) * GetYRadius() * 0.5f;
                     return TransformPoint(matrix, new PointF(mAnchorPoint.X + circle_x, mAnchorPoint.Y + circle_y));
 
-                case MoverType.VericalInfinity:
+                case MoverType.VerticalInfinity:
                     angle = phase * (float)(2 * Math.PI);
                     circle_x = (float)Math.Sin(2 * angle) * GetXRadius();
                     circle_y = (float)Math.Sin(angle + (Math.PI / 2)) * GetYRadius();
@@ -455,9 +455,9 @@ namespace IntelOrca.PeggleEdit.Tools.Levels.Children
                         return TransformPoint(matrix, new PointF(mAnchorPoint.X, mAnchorPoint.Y + angle));
                     else
                         return TransformPoint(matrix, new PointF(mAnchorPoint.X, mAnchorPoint.Y - angle));
-                case MoverType.RetraceCircle:
+                case MoverType.SwingAroundCircle:
                     var phase2 = (float)Math.Sin(phase * 2 * Math.PI);
-                    angle = (float)(phase2 * Math.PI - (mStartPhase * 2 * Math.PI));
+                    angle = (float)(phase2 * Math.PI - (mPhase * 2 * Math.PI));
                     circle_x = (float)Math.Cos(angle) * GetXRadius();
                     circle_y = (float)Math.Sin(angle) * GetYRadius();
                     return TransformPoint(matrix, new PointF(mAnchorPoint.X + circle_x, mAnchorPoint.Y + circle_y));
@@ -481,9 +481,9 @@ namespace IntelOrca.PeggleEdit.Tools.Levels.Children
                     return (initialAngle + Rotation) - (phase * 360.0f);
                 case MoverType.RotateBackAndForth:
                     return (initialAngle) - (((float)Math.Sin(MathExt.ToRadians(phase * 360.0f))) * 180.0f);
-                case MoverType.RetraceCircle:
+                case MoverType.SwingAroundCircle:
                     var phase2 = (float)Math.Sin(phase * 2 * Math.PI);
-                    return initialAngle + Rotation + (mStartPhase * 360) - (phase2 * 180);
+                    return initialAngle + Rotation + (mPhase * 360) - (phase2 * 180);
                 default:
                     return initialAngle;
             }
@@ -491,14 +491,14 @@ namespace IntelOrca.PeggleEdit.Tools.Levels.Children
 
         private float GetCurrentPhase()
         {
-            var startPhrase = mStartPhase;
-            if (mType == MoverType.RetraceCircle)
+            var startPhrase = mPhase;
+            if (mType == MoverType.SwingAroundCircle)
                 startPhrase = 0;
             if (mLevel.ShowPreview)
             {
                 ulong previewTime = mLevel.PreviewTime;
 
-                double time_period = mTimePeriod;
+                double time_period = mTime;
                 double total_time = GetTotalCycleTime();
                 double ph1, ph2;
                 double pa1, pa2;
@@ -580,7 +580,7 @@ namespace IntelOrca.PeggleEdit.Tools.Levels.Children
 
         public float GetTotalCycleTime()
         {
-            return mTimePeriod + mPause1 + mPause2;
+            return mTime + mPause1 + mPause2;
         }
 
         private PointF TransformPoint(Matrix matrix, PointF pnt)
@@ -619,7 +619,7 @@ namespace IntelOrca.PeggleEdit.Tools.Levels.Children
         private float GetSpeed()
         {
             //Get time in seconds
-            float time = mTimePeriod / 100;
+            float time = mTime / 100;
 
             //Stop divide by zero
             if (time == 0.0f)
@@ -635,10 +635,10 @@ namespace IntelOrca.PeggleEdit.Tools.Levels.Children
                 case MoverType.RotateAroundCircle:
                 case MoverType.VerticalArc:
                 case MoverType.HorizontalArc:
-                case MoverType.RetraceCircle:
-                    return GetEllipseCircumference(mRadius1 * 2, mRadius2 * 2) / time;
+                case MoverType.SwingAroundCircle:
+                    return GetEllipseCircumference(mRadius * 2, mRadius2 * 2) / time;
                 case MoverType.HorizontalInfinity:
-                case MoverType.VericalInfinity:
+                case MoverType.VerticalInfinity:
                     return 0.0f;
                 case MoverType.HorizontalWrap:
                     return GetXRadius() / time;
@@ -651,13 +651,13 @@ namespace IntelOrca.PeggleEdit.Tools.Levels.Children
 
         private float GetXRadius()
         {
-            return mRadius1;
+            return mRadius;
         }
 
         private float GetYRadius()
         {
             if (mRadius2 == 0.0f)
-                return mRadius1;
+                return mRadius;
             else
                 return mRadius2;
         }
@@ -686,7 +686,7 @@ namespace IntelOrca.PeggleEdit.Tools.Levels.Children
             }
         }
 
-        [Description("The movement path.")]
+        [Description("The shape of the movement path.")]
         public MoverType Type
         {
             get
@@ -714,35 +714,35 @@ namespace IntelOrca.PeggleEdit.Tools.Levels.Children
         }
 
         [DisplayName("Time")]
-        [Description("The time to go once around the path, in hundredths of a second (100 = 1 second).")]
-        public short TimePeriod
+        [Description("How long one full trip around the path takes, in hundredths of a second (100 = 1 second), not counting pauses. Smaller is faster.")]
+        public short Time
         {
             get
             {
-                return mTimePeriod;
+                return mTime;
             }
             set
             {
-                mTimePeriod = value;
+                mTime = value;
             }
         }
 
         [DisplayName("Radius")]
-        [Description("The radius of the movement path.")]
-        public short Radius1
+        [Description("The horizontal size of the movement path.")]
+        public short Radius
         {
             get
             {
-                return mRadius1;
+                return mRadius;
             }
             set
             {
-                mRadius1 = value;
+                mRadius = value;
             }
         }
 
         [DisplayName("Y Radius")]
-        [Description("The vertical (Y) radius of the movement path. If 0, Radius is used.")]
+        [Description("The vertical size of the movement path. 0 uses Radius.")]
         public short Radius2
         {
             get
@@ -755,25 +755,25 @@ namespace IntelOrca.PeggleEdit.Tools.Levels.Children
             }
         }
 
-        [Description("Where along the path the object starts, as a fraction (e.g. 0.4 is 40%).")]
+        [Description("Where on the path the object starts, as a fraction of the way round (e.g. 0.25 is a quarter of the way). Phase 1 and Phase 2 are measured from this point.")]
         [DefaultValue(0.0f)]
         [TypeConverter(typeof(PercentageConverter))]
         public float Phase
         {
             get
             {
-                return mStartPhase;
+                return mPhase;
             }
             set
             {
-                mStartPhase = value;
+                mPhase = value;
             }
         }
 
         [DisplayName("Path Rotate")]
-        [Description("The rotation of the movement path in degrees.")]
+        [Description("Rotates the whole movement path around its centre, in degrees.")]
         [DefaultValue(0.0f)]
-        public float MovementAngle
+        public float MoveRotation
         {
             get
             {
@@ -804,10 +804,10 @@ namespace IntelOrca.PeggleEdit.Tools.Levels.Children
             cpyMovement.MoverLink = MoverLink?.Clone();
             cpyMovement.mType = mType;
             cpyMovement.mReverse = mReverse;
-            cpyMovement.mTimePeriod = mTimePeriod;
-            cpyMovement.mRadius1 = mRadius1;
+            cpyMovement.mTime = mTime;
+            cpyMovement.mRadius = mRadius;
             cpyMovement.mRadius2 = mRadius2;
-            cpyMovement.mStartPhase = mStartPhase;
+            cpyMovement.mPhase = mPhase;
             cpyMovement.mMoveRotation = mMoveRotation;
             cpyMovement.mAnchorPoint = mAnchorPoint;
 
@@ -818,12 +818,12 @@ namespace IntelOrca.PeggleEdit.Tools.Levels.Children
             cpyMovement.mPhase2 = mPhase2;
             cpyMovement.mPostDelayPhase = mPostDelayPhase;
             cpyMovement.mMaxAngle = mMaxAngle;
-            cpyMovement.mUnknown8 = mUnknown8;
+            cpyMovement.mCurrentAngle = mCurrentAngle;
             cpyMovement.mRotation = mRotation;
-            cpyMovement.SubMovementOffsetX = SubMovementOffsetX;
-            cpyMovement.SubMovementOffsetY = SubMovementOffsetY;
-            cpyMovement.mObjectX = mObjectX;
-            cpyMovement.mObjectY = mObjectY;
+            cpyMovement.ParentLastX = ParentLastX;
+            cpyMovement.ParentLastY = ParentLastY;
+            cpyMovement.mCurrentX = mCurrentX;
+            cpyMovement.mCurrentY = mCurrentY;
             cpyMovement.mValueFlags = mValueFlags;
 
             return cpyMovement;
@@ -842,7 +842,7 @@ namespace IntelOrca.PeggleEdit.Tools.Levels.Children
             }
         }
 
-        [Description("An offset along the movement path.")]
+        [Description("Moves the object's timing forward by this many hundredths of a second, as if it had already been moving that long. Use it to stagger objects that share the same path.")]
         [DefaultValue(0)]
         public short Offset
         {
@@ -857,7 +857,7 @@ namespace IntelOrca.PeggleEdit.Tools.Levels.Children
         }
 
         [DisplayName("Pause 1")]
-        [Description("When the object reaches Phase 1 along the path, it pauses for this time, in hundredths of a second (100 = 1 second).")]
+        [Description("How long the object stops when it reaches Phase 1, in hundredths of a second (100 = 1 second). 0 turns off both pauses.")]
         [DefaultValue(0)]
         public short Pause1
         {
@@ -872,7 +872,7 @@ namespace IntelOrca.PeggleEdit.Tools.Levels.Children
         }
 
         [DisplayName("Pause 2")]
-        [Description("When the object reaches Phase 2 along the path, it pauses for this time, in hundredths of a second (100 = 1 second).")]
+        [Description("How long the object stops when it reaches Phase 2, in hundredths of a second (100 = 1 second). Only works when Pause 1 is set.")]
         [DefaultValue(0)]
         public short Pause2
         {
@@ -887,7 +887,7 @@ namespace IntelOrca.PeggleEdit.Tools.Levels.Children
         }
 
         [DisplayName("Phase 1")]
-        [Description("The percentage along the path at which the object pauses for Pause 1.")]
+        [Description("How far round the path, in percent from the starting Phase, the object goes before it stops for Pause 1.")]
         [DefaultValue(0)]
         public byte Phase1
         {
@@ -902,7 +902,7 @@ namespace IntelOrca.PeggleEdit.Tools.Levels.Children
         }
 
         [DisplayName("Phase 2")]
-        [Description("The percentage along the path at which the object pauses for Pause 2.")]
+        [Description("How far round the path, in percent from the starting Phase, the object goes before it stops for Pause 2. Should be at least Phase 1.")]
         [DefaultValue(0)]
         public byte Phase2
         {
@@ -917,7 +917,7 @@ namespace IntelOrca.PeggleEdit.Tools.Levels.Children
         }
 
         [DisplayName("Post Phase")]
-        [Description("The phase along the path after a pause.")]
+        [Description("Only used with pauses: where the object starts in the whole cycle including the pauses, as a fraction. Use it to start an object part way through a pause.")]
         [DefaultValue(0.0f)]
         public float PostDelayPhase
         {
@@ -932,7 +932,7 @@ namespace IntelOrca.PeggleEdit.Tools.Levels.Children
         }
 
         [DisplayName("Max Angle")]
-        [Description("The maximum angle in degrees.")]
+        [Description("How far the object swings either side of the middle for Rotate Back And Forth and Swing Around Circle, in radians. 0 means a half turn either side.")]
         [DefaultValue(0.0f)]
         public float MaxAngle
         {
@@ -949,19 +949,19 @@ namespace IntelOrca.PeggleEdit.Tools.Levels.Children
         [DisplayName("Current Angle")]
         [Description("The angle of the object when the level was saved. This is game state that the game recalculates, not a setting.")]
         [DefaultValue(0.0f)]
-        public float Unknown8
+        public float CurrentAngle
         {
             get
             {
-                return mUnknown8;
+                return mCurrentAngle;
             }
             set
             {
-                mUnknown8 = value;
+                mCurrentAngle = value;
             }
         }
 
-        [Description("The rotation of the object as it moves, in degrees.")]
+        [Description("Extra rotation added to the object's own angle, in degrees.")]
         [DefaultValue(0.0f)]
         public float Rotation
         {
@@ -975,27 +975,27 @@ namespace IntelOrca.PeggleEdit.Tools.Levels.Children
             }
         }
 
-        public float ObjectX
+        public float CurrentX
         {
             get
             {
-                return mObjectX;
+                return mCurrentX;
             }
             set
             {
-                mObjectX = value;
+                mCurrentX = value;
             }
         }
 
-        public float ObjectY
+        public float CurrentY
         {
             get
             {
-                return mObjectY;
+                return mCurrentY;
             }
             set
             {
-                mObjectY = value;
+                mCurrentY = value;
             }
         }
 
@@ -1015,7 +1015,7 @@ namespace IntelOrca.PeggleEdit.Tools.Levels.Children
         }
 
         [Description("The movement link IDX of this object. Other objects can reference this object's movement information by setting their Mover Link IDX to this number.")]
-        public int MUID => mLevel.GetMovementId(this);
+        public int MUID => mLevel.GetMoverId(this);
 
         public override string ToString() => $"Mover #{MUID}";
     }

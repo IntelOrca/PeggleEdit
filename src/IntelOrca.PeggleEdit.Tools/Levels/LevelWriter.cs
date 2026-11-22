@@ -46,7 +46,7 @@ namespace IntelOrca.PeggleEdit.Tools.Levels
 
         public bool Write(Level level, int version)
         {
-            level.UpdateMovementLinksWrite();
+            level.UpdateMoverLinksWrite();
 
             mLevel = level;
             mFileVersion = version;

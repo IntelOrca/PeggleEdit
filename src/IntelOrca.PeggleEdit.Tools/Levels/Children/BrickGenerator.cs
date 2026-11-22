@@ -54,9 +54,9 @@ namespace IntelOrca.PeggleEdit.Tools.Levels.Children
                 Brick b = new Brick(Level);
                 b.X = X + ((float)Math.Cos(angle) * BrickRadius);
                 b.Y = Y + ((float)Math.Sin(angle) * BrickRadius);
-                b.SectorAngle = SectorAngles;
-                b.Width = mBrickWidth;
-                b.Length = mInnerRadius;
+                b.Angle = SectorAngles;
+                b.Thickness = mBrickWidth;
+                b.Radius = mInnerRadius;
                 b.Rotation = -a;
                 b.Curved = true;
 
@@ -88,7 +88,7 @@ namespace IntelOrca.PeggleEdit.Tools.Levels.Children
 
         public override void WriteData(BinaryWriter bw, int version)
         {
-            if (!HasMovementInfo)
+            if (!HasMover)
             {
                 bw.Write((byte)1);
                 bw.Write(X);

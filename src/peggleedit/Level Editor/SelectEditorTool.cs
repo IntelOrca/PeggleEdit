@@ -324,9 +324,9 @@ namespace IntelOrca.PeggleEdit.Designer
                             {
                                 var brick = new Brick(level);
                                 brick.Curved = true;
-                                brick.Width = prevBrick.Width;
-                                brick.Length = prevBrick.Length;
-                                brick.SectorAngle = prevBrick.SectorAngle;
+                                brick.Thickness = prevBrick.Thickness;
+                                brick.Radius = prevBrick.Radius;
+                                brick.Angle = prevBrick.Angle;
 
                                 if (swapDirection)
                                 {
@@ -346,15 +346,15 @@ namespace IntelOrca.PeggleEdit.Designer
                                     brick.TextureFlip = prevBrick.TextureFlip;
                                     if (i == 0)
                                     {
-                                        brick.Rotation = prevBrick.Rotation - prevBrick.SectorAngle;
+                                        brick.Rotation = prevBrick.Rotation - prevBrick.Angle;
                                     }
                                     else
                                     {
-                                        brick.Rotation = prevBrick.Rotation + prevBrick.SectorAngle;
+                                        brick.Rotation = prevBrick.Rotation + prevBrick.Angle;
                                     }
 
                                     var newRotation = MathExt.ToRadians(-brick.Rotation);
-                                    var radius = prevBrick.Radius;
+                                    var radius = prevBrick.MidRadius;
                                     var origin = prevBrick.Origin;
                                     brick.Location = origin.Add(new PointF(
                                         (float)(Math.Cos(newRotation) * radius),
@@ -369,11 +369,11 @@ namespace IntelOrca.PeggleEdit.Designer
                             {
                                 var brick = new Brick(level);
                                 brick.Curved = true;
-                                brick.Width = prevBrick.Width;
-                                brick.Length = prevBrick.Length;
-                                brick.Radius = prevBrick.Length * 1.875f;
-                                brick.SectorAngle = (int)Math.Floor(prevBrick.Length * 360 / (Math.PI * brick.Radius * 2));
-                                brick.SectorAngle = 360.0f / (int)(360 / brick.SectorAngle);
+                                brick.Thickness = prevBrick.Thickness;
+                                brick.Radius = prevBrick.Radius;
+                                brick.MidRadius = prevBrick.Radius * 1.875f;
+                                brick.Angle = (int)Math.Floor(prevBrick.Radius * 360 / (Math.PI * brick.MidRadius * 2));
+                                brick.Angle = 360.0f / (int)(360 / brick.Angle);
 
                                 if (i == 0)
                                 {
@@ -409,11 +409,11 @@ namespace IntelOrca.PeggleEdit.Designer
                         {
                             var brick = new Brick(level);
                             brick.TextureFlip = prevBrick.TextureFlip;
-                            brick.Width = prevBrick.Width;
+                            brick.Thickness = prevBrick.Thickness;
                             if (prevBrick.Curved)
-                                brick.Length = (int)Math.Round(Math.PI * prevBrick.Radius * 2 * prevBrick.SectorAngle / 360);
+                                brick.Radius = (int)Math.Round(Math.PI * prevBrick.MidRadius * 2 * prevBrick.Angle / 360);
                             else
-                                brick.Length = prevBrick.Length;
+                                brick.Radius = prevBrick.Radius;
 
                             if (i == 0)
                             {
@@ -471,7 +471,7 @@ namespace IntelOrca.PeggleEdit.Designer
                 {
                     brick.Curved = true;
                     brick.InnerRadius = 35;
-                    brick.SectorAngle = 30;
+                    brick.Angle = 30;
                 }
                 if (provisional)
                 {

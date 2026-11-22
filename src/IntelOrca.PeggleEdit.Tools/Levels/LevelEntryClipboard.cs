@@ -55,7 +55,7 @@ namespace IntelOrca.PeggleEdit.Tools.Levels
             {
                 var srcLink = sources[i].MoverLink;
                 var dstLink = clones[i].MoverLink;
-                while (srcLink != null && dstLink != null && srcLink.OwnsMovement && srcLink.Mover != null)
+                while (srcLink != null && dstLink != null && srcLink.OwnsMover && srcLink.Mover != null)
                 {
                     movementMap[srcLink.Mover] = dstLink.Mover;
                     srcLink = srcLink.Mover.MoverLink;
@@ -69,11 +69,11 @@ namespace IntelOrca.PeggleEdit.Tools.Levels
                 var dstLink = clones[i].MoverLink;
                 while (srcLink != null && dstLink != null && srcLink.Mover != null)
                 {
-                    if (!srcLink.OwnsMovement)
+                    if (!srcLink.OwnsMover)
                     {
                         if (movementMap.TryGetValue(srcLink.Mover, out var linkedMovement))
                         {
-                            dstLink.InternalMovement = linkedMovement;
+                            dstLink.InternalMover = linkedMovement;
                             break;
                         }
 

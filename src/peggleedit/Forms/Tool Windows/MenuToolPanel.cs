@@ -436,7 +436,7 @@ namespace IntelOrca.PeggleEdit.Designer
             btnMovementType.Image = Resources.peg_move_type_32;
             btnMovementType.Style = RibbonButtonStyle.DropDown;
 
-            for (int i = 0; i <= (int)MoverType.WeirdShape; i++)
+            for (int i = 0; i <= (int)MoverType.FlowerLoop; i++)
             {
                 RibbonButton ritem = new RibbonButton();
                 ritem.Text = ((MoverType)i).ToString();
@@ -998,7 +998,7 @@ namespace IntelOrca.PeggleEdit.Designer
             List<Mover> movements = new List<Mover>();
             foreach (LevelEntry m in LevelEditor.GetSelectedObjects())
             {
-                if (m.MoverLink.OwnsMovement)
+                if (m.MoverLink.OwnsMover)
                 {
                     movements.Add(m.MoverLink.Mover);
                 }
@@ -1035,7 +1035,7 @@ namespace IntelOrca.PeggleEdit.Designer
             }
 
             //Check if the peg has moving details
-            if (movementPeg.MoverLink?.OwnsMovement != true)
+            if (movementPeg.MoverLink?.OwnsMover != true)
             {
                 MessageBox.Show("The peg must have unshared movement properties.");
                 return;
@@ -1095,7 +1095,7 @@ namespace IntelOrca.PeggleEdit.Designer
                     if (movement.MoverLink == null)
                         movement.MoverLink = new MoverLink(LevelEditor.Level);
                     movement.MoverLink.InternalLinkId = muid;
-                    movement.MoverLink.InternalMovement = primaryMovement;
+                    movement.MoverLink.InternalMover = primaryMovement;
                     movement.AnchorPointX = 0;
                     movement.AnchorPointY = 0;
                 }
@@ -1134,8 +1134,8 @@ namespace IntelOrca.PeggleEdit.Designer
                         {
                             Location = m.Location,
                             Type = movementType,
-                            TimePeriod = 400,
-                            Radius1 = 90
+                            Time = 400,
+                            Radius = 90
                         }
                     };
                 }
