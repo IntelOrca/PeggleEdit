@@ -18,6 +18,8 @@ using System;
 using System.Collections.Generic;
 using System.Drawing;
 using System.Drawing.Drawing2D;
+using System.IO;
+using IntelOrca.PeggleEdit.Tools.Extensions;
 using IntelOrca.PeggleEdit.Tools.Levels.Children;
 using IntelOrca.PeggleEdit.Tools.Pack;
 using IntelOrca.PeggleEdit.Tools.Properties;
@@ -96,6 +98,43 @@ namespace IntelOrca.PeggleEdit.Tools.Levels
         {
             mNullEntriesVersion = Entries.Version;
         }
+
+        /// <summary>
+        /// The level file this level was read from, if any.
+        /// </summary>
+        public byte[] OriginalData { get; private set; }
+
+        private ulong mOriginalModelHash;
+
+        /// <summary>
+        /// Records the file this level was read from, so that an unchanged level can be exported exactly as it was.
+        /// </summary>
+        internal void SetOriginalData(byte[] data)
+        {
+            OriginalData = data;
+            mOriginalModelHash = GetData(FileVersion).CalculateFnv1a();
+        }
+
+        /// <summary>
+        /// Gets the level as a level file in the given file version.
+        /// </summary>
+        public byte[] GetData(int version)
+        {
+            var ms = new MemoryStream();
+            new LevelWriter(ms).Write(this, version);
+            return ms.ToArray();
+        }
+
+        /// <summary>
+        /// Whether the level is the same as when it was read.
+        /// </summary>
+        public bool IsUnchanged => OriginalData != null && GetData(FileVersion).CalculateFnv1a() == mOriginalModelHash;
+
+        /// <summary>
+        /// Gets the level file to export: exactly the file it was read from if it is unchanged, otherwise the level in the
+        /// Peggle Nights file version, as a level pack saves it.
+        /// </summary>
+        public byte[] GetExportData() => IsUnchanged ? OriginalData : GetData(LevelWriter.DefaultFileVersion);
 
         public Level()
         {

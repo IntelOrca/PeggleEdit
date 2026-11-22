@@ -9,6 +9,10 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "System.Windows.Forms.Ribbon
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Crom.Controls", "src\Crom.Controls\Crom.Controls.csproj", "{F2999C1D-BED3-4D47-A8AC-8027334ECDC1}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "peggleedit-cli", "src\peggleedit-cli\peggleedit-cli.csproj", "{1A81B79E-4589-4C92-9962-6FA72E4416E9}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "IntelOrca.PeggleEdit.Tools.Tests", "tests\IntelOrca.PeggleEdit.Tools.Tests\IntelOrca.PeggleEdit.Tools.Tests.csproj", "{54FEE220-B7E9-4D8E-9482-9FE5D164FD63}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -31,6 +35,14 @@ Global
 		{F2999C1D-BED3-4D47-A8AC-8027334ECDC1}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{F2999C1D-BED3-4D47-A8AC-8027334ECDC1}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{F2999C1D-BED3-4D47-A8AC-8027334ECDC1}.Release|Any CPU.Build.0 = Release|Any CPU
+		{1A81B79E-4589-4C92-9962-6FA72E4416E9}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{1A81B79E-4589-4C92-9962-6FA72E4416E9}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{1A81B79E-4589-4C92-9962-6FA72E4416E9}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{1A81B79E-4589-4C92-9962-6FA72E4416E9}.Release|Any CPU.Build.0 = Release|Any CPU
+		{54FEE220-B7E9-4D8E-9482-9FE5D164FD63}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{54FEE220-B7E9-4D8E-9482-9FE5D164FD63}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{54FEE220-B7E9-4D8E-9482-9FE5D164FD63}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{54FEE220-B7E9-4D8E-9482-9FE5D164FD63}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

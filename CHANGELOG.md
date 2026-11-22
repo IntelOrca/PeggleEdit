@@ -9,6 +9,8 @@ PeggleEdit 5.2.0 (Flamingo) (TBC)
 * [Feature] PeggleEdit is DPI aware: it is sharp on high DPI displays, with the ribbon, windows, dialogs and level scaled to match
 * [Feature] Choose any of the game's brick types: normal, outer and inner curved, their 90 variants, and straight
 * [Feature] Show more of the game's settings in the property grid: peg type, brick anchor and end angles, poly normal direction, rotation, scale, grow type, mirror and image tile, and hole score, out delay and circular
+* [Feature] Export levels to XML and import them back, losslessly (Pack Explorer: level > Export (XML), Levels > Import Level)
+* [Feature] peggleedit-cli command line tool for converting levels to and from XML
 * [Change] Rename Circle, Polygon, Rod and Teleport to Ball, Poly, Line and Hole, the names Peggle itself uses
 * [Change] Use the names from PopCap's own level editor in the property grid, with clearer descriptions
 * [Enhancement] Fall back to main.pak or Peggle Nights directory for images

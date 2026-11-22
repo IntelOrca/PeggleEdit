@@ -628,10 +628,6 @@ namespace IntelOrca.PeggleEdit.Designer
 
             //OpenNewPackWithLevelImport(@"C:\Program Files\PopCap Games\Peggle Nights\Test\levels\bjorn2.dat");
 
-
-
-            //LevelXMLWriter lw = new LevelXMLWriter(level);
-            //File.WriteAllText(@"C:\Users\Ted\Desktop\bjorn3.xml", lw.GetXML());
         }
 
         public void OpenNewPackWithLevelImport(string path)

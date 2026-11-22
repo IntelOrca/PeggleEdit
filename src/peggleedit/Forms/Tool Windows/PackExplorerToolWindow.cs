@@ -21,9 +21,11 @@ using System.Drawing;
 using System.Drawing.Drawing2D;
 using System.IO;
 using System.Runtime.InteropServices;
+using System.Text;
 using System.Windows.Forms;
 using IntelOrca.PeggleEdit.Designer.Properties;
 using IntelOrca.PeggleEdit.Tools.Levels;
+using IntelOrca.PeggleEdit.Tools.Levels.Xml;
 using IntelOrca.PeggleEdit.Tools.Pack;
 using IntelOrca.PeggleEdit.Tools.Pack.Challenge;
 
@@ -469,13 +471,25 @@ namespace IntelOrca.PeggleEdit.Designer
         {
             OpenFileDialog dialog = new OpenFileDialog();
             dialog.Title = "Import level";
-            dialog.Filter = "Peggle Level Files (*.dat)|*.dat";
+            dialog.Filter = "Peggle Levels (*.dat;*.xml)|*.dat;*.xml|Peggle Level Files (*.dat)|*.dat|Peggle Level XML (*.xml)|*.xml";
             if (dialog.ShowDialog() == DialogResult.OK)
             {
-                LevelReader lreader = new LevelReader(dialog.FileName);
-                Level level = lreader.Read();
+                byte[] data;
+                try
+                {
+                    data = File.ReadAllBytes(dialog.FileName);
+                    if (Path.GetExtension(dialog.FileName).Equals(".xml", StringComparison.OrdinalIgnoreCase))
+                        data = LevelXml.Import(File.ReadAllText(dialog.FileName));
+                }
+                catch (Exception ex) when (ex is IOException || ex is UnauthorizedAccessException || ex is LevelXmlException)
+                {
+                    MessageBox.Show(ex.Message, "Import Level", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                    return;
+                }
 
-                lreader.Dispose();
+                Level level;
+                using (var lreader = new LevelReader(data))
+                    level = lreader.Read();
 
                 if (level != null)
                 {
@@ -511,6 +525,7 @@ namespace IntelOrca.PeggleEdit.Designer
             mContextMenu.Items.Add(new ToolStripMenuItem("Export (Pego)", Resources.export_16, mnuLevelExportPego_Click));
             mContextMenu.Items.Add(new ToolStripMenuItem("Export (Deluxe)", Resources.export_16, mnuLevelExportDeluxe_Click));
             mContextMenu.Items.Add(new ToolStripMenuItem("Export (Nights)", Resources.export_16, mnuLevelExportNights_Click));
+            mContextMenu.Items.Add(new ToolStripMenuItem("Export (XML)...", Resources.export_16, mnuLevelExportXml_Click));
             mContextMenu.Items.Add(new ToolStripSeparator());
             mContextMenu.Items.Add(new ToolStripMenuItem("Properties", Resources.properties_16, mnuLevelProperties_Click));
             mContextMenu.Items.Add(new ToolStripMenuItem("Set Background", Resources.image_16, mnuSetBackground_Click));
@@ -555,6 +570,29 @@ namespace IntelOrca.PeggleEdit.Designer
                 {
                     var writer = new LevelWriter(dialog.FileName);
                     writer.Write(level, version);
+                }
+            }
+        }
+
+        private void mnuLevelExportXml_Click(object sender, EventArgs e)
+        {
+            var level = SelectedNode.Tag as Level;
+            using (var dialog = new SaveFileDialog())
+            {
+                dialog.Title = "Export level as XML";
+                dialog.Filter = "Peggle Level XML (*.xml)|*.xml";
+                dialog.FileName = (string.IsNullOrEmpty(level.Info.Filename) ? level.Info.Name : level.Info.Filename) + ".xml";
+                if (dialog.ShowDialog() == DialogResult.OK)
+                {
+                    try
+                    {
+                        // An unchanged level exports exactly as it was read; a changed one as the pack saves it
+                        File.WriteAllText(dialog.FileName, LevelXml.Export(level.GetExportData()), new UTF8Encoding(false));
+                    }
+                    catch (Exception ex) when (ex is IOException || ex is UnauthorizedAccessException || ex is InvalidDataException)
+                    {
+                        MessageBox.Show(ex.Message, "Export Level", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                    }
                 }
             }
         }

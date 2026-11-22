@@ -55,7 +55,13 @@ namespace IntelOrca.PeggleEdit.Tools.Levels
 
             try
             {
-                BinaryReader br = new BinaryReader(mBaseStream);
+                byte[] data;
+                using (var ms = new MemoryStream())
+                {
+                    mBaseStream.CopyTo(ms);
+                    data = ms.ToArray();
+                }
+                BinaryReader br = new BinaryReader(new MemoryStream(data));
 
                 //Read file version
                 mFileVersion = br.ReadInt32();
@@ -83,6 +89,7 @@ namespace IntelOrca.PeggleEdit.Tools.Levels
 
                 mLevel.UpdateMoverLinksRead();
                 mLevel.PreserveNullEntries();
+                mLevel.SetOriginalData(data);
                 return mLevel;
             }
             catch (Exception ex)

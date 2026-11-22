@@ -9,6 +9,9 @@
     <PackageReference Include="CSJ2K" Version="3.0.0" />
   </ItemGroup>
   <ItemGroup>
+    <InternalsVisibleTo Include="IntelOrca.PeggleEdit.Tools.Tests" />
+  </ItemGroup>
+  <ItemGroup>
     <Compile Update="Levels\PolyEditor.cs">
       <SubType>Form</SubType>
     </Compile>

@@ -1,0 +1,11 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <RootNamespace>IntelOrca.PeggleEdit.Cli</RootNamespace>
+    <AssemblyName>peggleedit-cli</AssemblyName>
+    <Description>Command line tools for PeggleEdit, such as converting levels to and from XML.</Description>
+  </PropertyGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\IntelOrca.PeggleEdit.Tools\IntelOrca.PeggleEdit.Tools.csproj" />
+  </ItemGroup>
+</Project>

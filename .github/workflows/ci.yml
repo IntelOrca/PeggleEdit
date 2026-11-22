@@ -10,7 +10,7 @@ jobs:
     - name: Setup .NET Core SDK
       uses: actions/setup-dotnet@v4
       with:
-        dotnet-version: '6.0.x'
+        dotnet-version: '10.0.x'
     # A v* tag builds a release; a push to master builds the rolling nightly. The channel, commit and
     # commit date are baked into peggleedit.exe (as MSBuild properties via the environment) so that the
     # in-app updater knows which build it is running.
@@ -50,6 +50,7 @@ jobs:
     - name: Publish
       run: |
         dotnet publish src/peggleedit -c Release -o out
+        dotnet publish src/peggleedit-cli -c Release -o out
         cd out
         cp ../CHANGELOG.md .
         cp ../LICENSE .
