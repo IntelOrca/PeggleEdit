@@ -742,8 +742,8 @@ namespace IntelOrca.PeggleEdit.Tools.Levels.Children
         }
 
         [EntryProperty(EntryPropertyType.Element, 0.0f)]
-        [DisplayName("Sector Angle")]
-        [Description("The angle of the sector if curved in degrees.")]
+        [DisplayName("Angle")]
+        [Description("The angle of the arc of a curved brick in degrees.")]
         [Category("Layout")]
         [DefaultValue(0.0f)]
         public float SectorAngle
@@ -759,7 +759,8 @@ namespace IntelOrca.PeggleEdit.Tools.Levels.Children
         }
 
         [EntryProperty(EntryPropertyType.Element, 0.0f)]
-        [Description("The length of the brick or radius of the sector if the brick is curved.")]
+        [DisplayName("Radius")]
+        [Description("The radius of a curved brick, or the length of a straight brick.")]
         [Category("Layout")]
         [DefaultValue(30.0f)]
         public float Length
@@ -809,7 +810,8 @@ namespace IntelOrca.PeggleEdit.Tools.Levels.Children
         }
 
         [EntryProperty(EntryPropertyType.Element, 0.0f)]
-        [Description("The width of the brick.")]
+        [DisplayName("Thickness")]
+        [Description("The thickness of the brick.")]
         [Category("Layout")]
         [DefaultValue(20.0f)]
         public float Width
@@ -826,7 +828,7 @@ namespace IntelOrca.PeggleEdit.Tools.Levels.Children
 
         [EntryProperty(EntryPropertyType.Element, 0)]
         [DisplayName("Curve Points")]
-        [Description("The number of cuts in the brick which make up the curve. Basically how round the brick is, you would set a higher value if the sector angle was higher.")]
+        [Description("The number of points along the curve: how round the brick is. Use a higher value for a larger angle. Stored as the number of subdivisions, which is this value minus 2 (PopCap: Subdivisions).")]
         [Category("Layout")]
         [DefaultValue(4)]
         public int CurvePoints
@@ -845,7 +847,7 @@ namespace IntelOrca.PeggleEdit.Tools.Levels.Children
         }
 
         [EntryProperty(EntryPropertyType.Element, false)]
-        [Description("Whether the brick is curved or not.")]
+        [Description("Whether the brick is curved or straight. PopCap's brick type also has outer and inner curved variants, which are kept but can not be changed here.")]
         [Category("Layout")]
         [DefaultValue(false)]
         public bool Curved
@@ -866,7 +868,7 @@ namespace IntelOrca.PeggleEdit.Tools.Levels.Children
 
         [EntryProperty(EntryPropertyType.Element, false)]
         [DisplayName("Texture Flip")]
-        [Description("Whether to flip the brick texture or not (i.e. change which side the light reflection is). Used to maintain the light reflection along a path of bricks.")]
+        [Description("Whether to flip the brick texture (i.e. change which side the light reflection is). Used to keep the light reflection consistent along a path of bricks.")]
         [Category("Appearance")]
         [DefaultValue(false)]
         public bool TextureFlip

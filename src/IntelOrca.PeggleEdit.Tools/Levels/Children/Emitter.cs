@@ -518,8 +518,8 @@ namespace IntelOrca.PeggleEdit.Tools.Levels.Children
             }
         }
 
-        [DisplayName("Unknown Image")]
-        [Description("The image is the same as the emission image but doesn't seem to affect anything.")]
+        [DisplayName("Image (first copy)")]
+        [Description("The game stores the image of the emitted objects twice and uses the second copy, Emission Image. Normally both are the same (PopCap: Image).")]
         [Category("Appearance")]
         [DefaultValue("")]
         public string Image
@@ -535,7 +535,7 @@ namespace IntelOrca.PeggleEdit.Tools.Levels.Children
         }
 
         [DisplayName("Emission Image")]
-        [Description("The image of emitted objects.")]
+        [Description("The image of the emitted objects (PopCap: Image).")]
         [Category("Appearance")]
         [DefaultValue("")]
         public string EmitImageFilename
@@ -550,7 +550,8 @@ namespace IntelOrca.PeggleEdit.Tools.Levels.Children
             }
         }
 
-        [Description("Adds transparancy to the picture by calculating an alpha value from the luminosity.")]
+        [DisplayName("Additive")]
+        [Description("Draw the emitted objects with additive blending, so dark areas become transparent.")]
         [Category("Appearance")]
         [DefaultValue(false)]
         public bool Transparancy
@@ -581,7 +582,7 @@ namespace IntelOrca.PeggleEdit.Tools.Levels.Children
             }
         }
 
-        [Description("How transparant the emitted object is. 0.0 is completely transparant, 1.0 is completely opaque.")]
+        [Description("How opaque the emitted objects are. 0.0 is transparent, 1.0 is opaque (PopCap: Alpha).")]
         [Category("Opacity")]
         [DefaultValue(1.0f)]
         public VariableFloat Opacity
@@ -596,8 +597,8 @@ namespace IntelOrca.PeggleEdit.Tools.Levels.Children
             }
         }
 
-        [DisplayName("Random Start Position")]
-        [Description("Whether objects get emitted in random locations with in the boundary or not.")]
+        [DisplayName("Random Start")]
+        [Description("Whether objects are emitted at random positions within the area.")]
         [Category("Behaviour")]
         [DefaultValue(false)]
         public bool RandomStartPosition
@@ -612,8 +613,8 @@ namespace IntelOrca.PeggleEdit.Tools.Levels.Children
             }
         }
 
-        [DisplayName("Maximum Quantity")]
-        [Description("The maximum number of emitted objects there can at one time.")]
+        [DisplayName("Max")]
+        [Description("The maximum number of emitted objects at one time.")]
         [Category("Behaviour")]
         [DefaultValue(100)]
         public int MaxQuantity
@@ -629,7 +630,8 @@ namespace IntelOrca.PeggleEdit.Tools.Levels.Children
         }
 
 
-        [Description("The multiplier of the area in which the objects can be emitted. For example 0.5 would be half of the area given by the width and height.")]
+        [DisplayName("Distrib")]
+        [Description("How the emitted objects are distributed over the area given by the width and height, e.g. 0.5 for half of the area.")]
         [Category("Layout")]
         [DefaultValue(1.0f)]
         public VariableFloat EmitAreaMultiplier
@@ -674,8 +676,8 @@ namespace IntelOrca.PeggleEdit.Tools.Levels.Children
             }
         }
 
-        [DisplayName("Life Duration")]
-        [Description("The duration of the emitted object before disappearing.")]
+        [DisplayName("Duration")]
+        [Description("How long each emitted object lasts before disappearing.")]
         [Category("Timing")]
         [DefaultValue(0.0f)]
         public float LifeDuration
@@ -690,8 +692,8 @@ namespace IntelOrca.PeggleEdit.Tools.Levels.Children
             }
         }
 
-        [DisplayName("Emit Rate")]
-        [Description("The time inteval between each object emission in hectoseconds. 1.0 = 100 times per second.")]
+        [DisplayName("Rate")]
+        [Description("The time interval between each object being emitted in hundredths of a second. 1.0 = 100 times per second.")]
         [Category("Timing")]
         [DefaultValue(0.0f)]
         public VariableFloat EmitRate
@@ -706,8 +708,8 @@ namespace IntelOrca.PeggleEdit.Tools.Levels.Children
             }
         }
 
-        [DisplayName("Unknown Emit Rate")]
-        [Description("Affects the emit rate in some way. Best to leave at 0.")]
+        [DisplayName("Rand Rate")]
+        [Description("Random variation of the emit rate.")]
         [Category("Timing")]
         [DefaultValue(0.0f)]
         public float UnknownEmitRate
@@ -722,8 +724,8 @@ namespace IntelOrca.PeggleEdit.Tools.Levels.Children
             }
         }
 
-        [DisplayName("Fade In Duration")]
-        [Description("The duration of the fading in when the object gets emitted. Independent of life duration.")]
+        [DisplayName("Alpha Into")]
+        [Description("How long an emitted object takes to fade in.")]
         [Category("Timing")]
         [DefaultValue(0.1f)]
         public float FadeInTime
@@ -754,8 +756,8 @@ namespace IntelOrca.PeggleEdit.Tools.Levels.Children
             }
         }
 
-        [DisplayName("Pre-Fade Out Duration")]
-        [Description("The duration before the object starts to fade out in seconds. Independent of life duration.")]
+        [DisplayName("Alpha Fade At")]
+        [Description("How long before an emitted object starts to fade out, in seconds.")]
         [Category("Timing")]
         [DefaultValue(0.0f)]
         public float TimeBeforeFadeOut
@@ -786,8 +788,8 @@ namespace IntelOrca.PeggleEdit.Tools.Levels.Children
             }
         }
 
-        [DisplayName("Velocity, X")]
-        [Description("The horizontal velocity and the lower boundary of the random initial horizontal velocity of the emitted object. Negative velocity will go up and positive will go down.")]
+        [DisplayName("Vel X")]
+        [Description("The horizontal velocity of the emitted objects. Negative moves left and positive moves right.")]
         [Category("Velocity")]
         [DefaultValue(0.0f)]
         public VariableFloat MinVelocityX
@@ -802,8 +804,8 @@ namespace IntelOrca.PeggleEdit.Tools.Levels.Children
             }
         }
 
-        [DisplayName("Velocity, Y")]
-        [Description("The vertical velocity and the lower boundary of the random initial vertical velocity of the emitted object. Negative velocity will go up and positive will go down.")]
+        [DisplayName("Vel Y")]
+        [Description("The vertical velocity of the emitted objects. Negative moves up and positive moves down.")]
         [Category("Velocity")]
         [DefaultValue(0.0f)]
         public VariableFloat MinVelocityY
@@ -818,8 +820,8 @@ namespace IntelOrca.PeggleEdit.Tools.Levels.Children
             }
         }
 
-        [DisplayName("Random Velocity, X")]
-        [Description("The upper boundary of the random initial horizontal velocity of the emitted object.")]
+        [DisplayName("Vel X Rand")]
+        [Description("A random amount added to the horizontal velocity of each emitted object.")]
         [Category("Velocity")]
         [DefaultValue(0.0f)]
         public float MaxVelocityX
@@ -834,8 +836,8 @@ namespace IntelOrca.PeggleEdit.Tools.Levels.Children
             }
         }
 
-        [DisplayName("Random Velocity, Y")]
-        [Description("The upper boundary of the random initial vertical velocity of the emitted object.")]
+        [DisplayName("Vel Y Rand")]
+        [Description("A random amount added to the vertical velocity of each emitted object.")]
         [Category("Velocity")]
         [DefaultValue(0.0f)]
         public float MaxVelocityY
@@ -850,8 +852,8 @@ namespace IntelOrca.PeggleEdit.Tools.Levels.Children
             }
         }
 
-        [DisplayName("Acceleration, X")]
-        [Description("The horizontal acceleration of the emitted object. Negative acceleration to accelerate to the left and positive to accelerate to the right.")]
+        [DisplayName("Acc X")]
+        [Description("The horizontal acceleration of the emitted objects. Negative accelerates left and positive accelerates right.")]
         [Category("Velocity")]
         [DefaultValue(0.0f)]
         public float AccelerationX
@@ -866,8 +868,8 @@ namespace IntelOrca.PeggleEdit.Tools.Levels.Children
             }
         }
 
-        [DisplayName("Acceleration, Y")]
-        [Description("The vertical acceleration of the emitted object. Negative acceleration to accelerate upwards and positive to accelerate downwards.")]
+        [DisplayName("Gravity")]
+        [Description("The vertical acceleration of the emitted objects. Negative accelerates up and positive accelerates down.")]
         [Category("Velocity")]
         [DefaultValue(0.0f)]
         public float AccelerationY
@@ -898,8 +900,8 @@ namespace IntelOrca.PeggleEdit.Tools.Levels.Children
             }
         }
 
-        [DisplayName("Inital Scale")]
-        [Description("The initial scale and the lower boundary of the random initial scale of the emmited object.")]
+        [DisplayName("Scale")]
+        [Description("The initial scale of the emitted objects.")]
         [Category("Scale")]
         [DefaultValue(0.0f)]
         public VariableFloat MinScale
@@ -914,8 +916,8 @@ namespace IntelOrca.PeggleEdit.Tools.Levels.Children
             }
         }
 
-        [DisplayName("Scale Velocity")]
-        [Description("How fast the scale changes of the emmited object. Negative number to make it smaller, positive to make it larger.")]
+        [DisplayName("Scale Vel")]
+        [Description("How fast the scale of the emitted objects changes. Negative makes them smaller, positive makes them larger.")]
         [Category("Scale")]
         [DefaultValue(0.0f)]
         public VariableFloat ScaleVelocity
@@ -930,8 +932,8 @@ namespace IntelOrca.PeggleEdit.Tools.Levels.Children
             }
         }
 
-        [DisplayName("Random Scale")]
-        [Description("The upper boundary of the random initial scale of the emmited object.")]
+        [DisplayName("Scale Rand")]
+        [Description("A random amount added to the initial scale of each emitted object.")]
         [Category("Scale")]
         [DefaultValue(0.0f)]
         public float MaxRandScale
@@ -962,8 +964,8 @@ namespace IntelOrca.PeggleEdit.Tools.Levels.Children
             }
         }
 
-        [DisplayName("Initial Rotation")]
-        [Description("What rotation angle the emitted object starts at in degrees.")]
+        [DisplayName("Rotation")]
+        [Description("The initial rotation of the emitted objects in degrees.")]
         [Category("Rotation")]
         [DefaultValue(0.0f)]
         public VariableFloat InitialRotation
@@ -978,8 +980,8 @@ namespace IntelOrca.PeggleEdit.Tools.Levels.Children
             }
         }
 
-        [DisplayName("Rotation Velocity")]
-        [Description("The angular velocity of the rotation of the emitted object. 0.01 = 1 degree per second.")]
+        [DisplayName("Rotation Vel")]
+        [Description("The angular velocity of the emitted objects. 0.01 = 1 degree per second.")]
         [Category("Rotation")]
         [DefaultValue(0.0f)]
         public VariableFloat RotationVelocity
@@ -994,8 +996,8 @@ namespace IntelOrca.PeggleEdit.Tools.Levels.Children
             }
         }
 
-        [DisplayName("Rotation Unknown")]
-        [Description("Unknown rotation variable")]
+        [DisplayName("Rotation Rand")]
+        [Description("A random amount added to the initial rotation of each emitted object.")]
         [Category("Rotation")]
         [DefaultValue(0.0f)]
         public float RotationUnknown
@@ -1026,10 +1028,10 @@ namespace IntelOrca.PeggleEdit.Tools.Levels.Children
             }
         }
 
-        [DisplayName("Red")]
-        [Description("The red component of the colour the emitted object is.")]
+        [DisplayName("Color R")]
+        [Description("The red component of the colour of the emitted objects.")]
         [Category("Colour")]
-        [DefaultValue(0.0f)]
+        [DefaultValue(1.0f)]
         public VariableFloat ColourRed
         {
             get
@@ -1042,10 +1044,10 @@ namespace IntelOrca.PeggleEdit.Tools.Levels.Children
             }
         }
 
-        [DisplayName("Green")]
-        [Description("The green component of the colour the emitted object is.")]
+        [DisplayName("Color G")]
+        [Description("The green component of the colour of the emitted objects.")]
         [Category("Colour")]
-        [DefaultValue(0.0f)]
+        [DefaultValue(1.0f)]
         public VariableFloat ColourGreen
         {
             get
@@ -1058,10 +1060,10 @@ namespace IntelOrca.PeggleEdit.Tools.Levels.Children
             }
         }
 
-        [DisplayName("Blue")]
-        [Description("The blue component of the colour the emitted object is.")]
+        [DisplayName("Color B")]
+        [Description("The blue component of the colour of the emitted objects.")]
         [Category("Colour")]
-        [DefaultValue(0.0f)]
+        [DefaultValue(1.0f)]
         public VariableFloat ColourBlue
         {
             get
@@ -1090,8 +1092,8 @@ namespace IntelOrca.PeggleEdit.Tools.Levels.Children
             }
         }
 
-        [DisplayName("Directional Speed")]
-        [Description("The speed or the minimum random speed that the emitted object will have.")]
+        [DisplayName("Polar Vel")]
+        [Description("The speed of the emitted objects in the direction given by Vel Rot.")]
         [Category("Direction")]
         [DefaultValue(0.0f)]
         public float DirectionVelocity
@@ -1106,8 +1108,8 @@ namespace IntelOrca.PeggleEdit.Tools.Levels.Children
             }
         }
 
-        [DisplayName("Directional Random Speed")]
-        [Description("The maximum random speed the emitted object will have.")]
+        [DisplayName("Polar Vel Rand")]
+        [Description("A random amount added to Polar Vel for each emitted object.")]
         [Category("Direction")]
         [DefaultValue(0.0f)]
         public float DirectionRandomSpeed
@@ -1122,8 +1124,8 @@ namespace IntelOrca.PeggleEdit.Tools.Levels.Children
             }
         }
 
-        [DisplayName("Directional Acceleration")]
-        [Description("The acceleration the emitted object will have.")]
+        [DisplayName("Polar Acc")]
+        [Description("The acceleration of the emitted objects in the direction given by Vel Rot.")]
         [Category("Direction")]
         [DefaultValue(0.0f)]
         public float DirectionAcceleration
@@ -1138,8 +1140,8 @@ namespace IntelOrca.PeggleEdit.Tools.Levels.Children
             }
         }
 
-        [DisplayName("Angle (Direction)")]
-        [Description("The direction and the random minimum direction of the velocity and acceleration of the emitted object in degrees.")]
+        [DisplayName("Vel Rot")]
+        [Description("The direction of the polar velocity and acceleration in degrees.")]
         [Category("Direction")]
         [DefaultValue(0.0f)]
         public float DirectionAngle
@@ -1154,8 +1156,8 @@ namespace IntelOrca.PeggleEdit.Tools.Levels.Children
             }
         }
 
-        [DisplayName("Random Angle (Direction)")]
-        [Description("The maximum minimum direction of the velocity and acceleration of the emitted object in degrees.")]
+        [DisplayName("Vel Rot Rand")]
+        [Description("A random amount added to Vel Rot for each emitted object, in degrees.")]
         [Category("Direction")]
         [DefaultValue(0.0f)]
         public float DirectionRandomAngle
@@ -1170,9 +1172,9 @@ namespace IntelOrca.PeggleEdit.Tools.Levels.Children
             }
         }
 
-        [DisplayName("Change Unknown")]
-        [Description("If this is set to false, the unknown attributes will be ignored.")]
-        [Category("Unknown")]
+        [DisplayName("Has Move Delta")]
+        [Description("Whether the level stores how far the emitter moved in the last frame. This is game state, not a setting.")]
+        [Category("Game State")]
         [DefaultValue(false)]
         public bool ChangeUnknown
         {
@@ -1186,8 +1188,9 @@ namespace IntelOrca.PeggleEdit.Tools.Levels.Children
             }
         }
 
-        [DisplayName("Unknown A")]
-        [Category("Unknown")]
+        [DisplayName("Move Delta X")]
+        [Description("How far the emitter moved horizontally in the last frame. This is game state, not a setting.")]
+        [Category("Game State")]
         [DefaultValue(0.0f)]
         public float UnknownA
         {
@@ -1201,8 +1204,9 @@ namespace IntelOrca.PeggleEdit.Tools.Levels.Children
             }
         }
 
-        [DisplayName("Unknown B")]
-        [Category("Unknown")]
+        [DisplayName("Move Delta Y")]
+        [Description("How far the emitter moved vertically in the last frame. This is game state, not a setting.")]
+        [Category("Game State")]
         [DefaultValue(0.0f)]
         public float UnknownB
         {
@@ -1216,6 +1220,9 @@ namespace IntelOrca.PeggleEdit.Tools.Levels.Children
             }
         }
 
+        [DisplayName("Fast Forward")]
+        [Description("How far the emitter is run ahead when the level starts, in hundredths of a second.")]
+        [Category("Timing")]
         public int MainVar0
         {
             get
@@ -1228,6 +1235,9 @@ namespace IntelOrca.PeggleEdit.Tools.Levels.Children
             }
         }
 
+        [DisplayName("Hardware Rate")]
+        [Description("The emit rate multiplier used with hardware acceleration.")]
+        [Category("Timing")]
         public float MainVar1
         {
             get
@@ -1240,6 +1250,9 @@ namespace IntelOrca.PeggleEdit.Tools.Levels.Children
             }
         }
 
+        [DisplayName("Trigger Object")]
+        [Description("The id of an object that triggers the emitter (PopCap: TriggerObj).")]
+        [Category("Behaviour")]
         public string MainVar2
         {
             get
@@ -1252,6 +1265,9 @@ namespace IntelOrca.PeggleEdit.Tools.Levels.Children
             }
         }
 
+        [DisplayName("Rate Is Looping")]
+        [Description("Whether the emit rate curve loops (1) or plays once (0).")]
+        [Category("Timing")]
         public byte MainVar3
         {
             get

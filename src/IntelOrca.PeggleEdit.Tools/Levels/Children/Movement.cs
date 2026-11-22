@@ -686,7 +686,7 @@ namespace IntelOrca.PeggleEdit.Tools.Levels.Children
             }
         }
 
-        [Description("The type of movement path.")]
+        [Description("The movement path.")]
         public MovementType Type
         {
             get
@@ -713,8 +713,8 @@ namespace IntelOrca.PeggleEdit.Tools.Levels.Children
             }
         }
 
-        [DisplayName("Time Period")]
-        [Description("The time period in deciseconds. (100 = 1 second)")]
+        [DisplayName("Time")]
+        [Description("The time to go once around the path, in hundredths of a second (100 = 1 second).")]
         public short TimePeriod
         {
             get
@@ -727,8 +727,8 @@ namespace IntelOrca.PeggleEdit.Tools.Levels.Children
             }
         }
 
-        [DisplayName("Radius 1")]
-        [Description("The horizontal (X) radius of the movement cycle.")]
+        [DisplayName("Radius")]
+        [Description("The radius of the movement path.")]
         public short Radius1
         {
             get
@@ -741,8 +741,8 @@ namespace IntelOrca.PeggleEdit.Tools.Levels.Children
             }
         }
 
-        [DisplayName("Radius 2")]
-        [Description("The vertical (X) radius of the movement cycle. If this is set to 0, then it will take the value of radius 1.")]
+        [DisplayName("Y Radius")]
+        [Description("The vertical (Y) radius of the movement path. If 0, Radius is used.")]
         public short Radius2
         {
             get
@@ -755,7 +755,7 @@ namespace IntelOrca.PeggleEdit.Tools.Levels.Children
             }
         }
 
-        [Description("The percentage phase of the current object. The value is written as a decimal (e.g. 0.4 is 40%).")]
+        [Description("Where along the path the object starts, as a fraction (e.g. 0.4 is 40%).")]
         [DefaultValue(0.0f)]
         [TypeConverter(typeof(PercentageConverter))]
         public float Phase
@@ -770,8 +770,8 @@ namespace IntelOrca.PeggleEdit.Tools.Levels.Children
             }
         }
 
-        [DisplayName("Movement Angle")]
-        [Description("The angle of the movement path in degrees.")]
+        [DisplayName("Path Rotate")]
+        [Description("The rotation of the movement path in degrees.")]
         [DefaultValue(0.0f)]
         public float MovementAngle
         {
@@ -842,6 +842,7 @@ namespace IntelOrca.PeggleEdit.Tools.Levels.Children
             }
         }
 
+        [Description("An offset along the movement path.")]
         [DefaultValue(0)]
         public short Offset
         {
@@ -855,7 +856,8 @@ namespace IntelOrca.PeggleEdit.Tools.Levels.Children
             }
         }
 
-        [Description("When the object reaches the percentage specified in Phase 1 of moving around the path, the object will pause for this amount of time in deciseconds. (100 = 1 second).")]
+        [DisplayName("Pause 1")]
+        [Description("When the object reaches Phase 1 along the path, it pauses for this time, in hundredths of a second (100 = 1 second).")]
         [DefaultValue(0)]
         public short Pause1
         {
@@ -869,7 +871,8 @@ namespace IntelOrca.PeggleEdit.Tools.Levels.Children
             }
         }
 
-        [Description("When the object reaches the percentage specified in Phase 2 of moving around the path, the object will pause for this amount of time in deciseconds. (100 = 1 second).")]
+        [DisplayName("Pause 2")]
+        [Description("When the object reaches Phase 2 along the path, it pauses for this time, in hundredths of a second (100 = 1 second).")]
         [DefaultValue(0)]
         public short Pause2
         {
@@ -883,7 +886,8 @@ namespace IntelOrca.PeggleEdit.Tools.Levels.Children
             }
         }
 
-        [Description("When the object reaches this percentage of moving around the path, the object will pause for the amount of time specified in Pause 1.")]
+        [DisplayName("Phase 1")]
+        [Description("The percentage along the path at which the object pauses for Pause 1.")]
         [DefaultValue(0)]
         public byte Phase1
         {
@@ -897,7 +901,8 @@ namespace IntelOrca.PeggleEdit.Tools.Levels.Children
             }
         }
 
-        [Description("When the object reaches this percentage of moving around the path, the object will pause for the amount of time specified in Pause 2.")]
+        [DisplayName("Phase 2")]
+        [Description("The percentage along the path at which the object pauses for Pause 2.")]
         [DefaultValue(0)]
         public byte Phase2
         {
@@ -911,6 +916,8 @@ namespace IntelOrca.PeggleEdit.Tools.Levels.Children
             }
         }
 
+        [DisplayName("Post Phase")]
+        [Description("The phase along the path after a pause.")]
         [DefaultValue(0.0f)]
         public float PostDelayPhase
         {
@@ -924,6 +931,8 @@ namespace IntelOrca.PeggleEdit.Tools.Levels.Children
             }
         }
 
+        [DisplayName("Max Angle")]
+        [Description("The maximum angle in degrees.")]
         [DefaultValue(0.0f)]
         public float MaxAngle
         {
@@ -937,6 +946,8 @@ namespace IntelOrca.PeggleEdit.Tools.Levels.Children
             }
         }
 
+        [DisplayName("Current Angle")]
+        [Description("The angle of the object when the level was saved. This is game state that the game recalculates, not a setting.")]
         [DefaultValue(0.0f)]
         public float Unknown8
         {
@@ -950,7 +961,7 @@ namespace IntelOrca.PeggleEdit.Tools.Levels.Children
             }
         }
 
-        [Description("An offset to the angle of rotation in degrees.")]
+        [Description("The rotation of the object as it moves, in degrees.")]
         [DefaultValue(0.0f)]
         public float Rotation
         {

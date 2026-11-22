@@ -138,8 +138,8 @@ namespace IntelOrca.PeggleEdit.Tools.Levels.Children
         }
 
         [EntryProperty(EntryPropertyType.Element, false)]
-        [DisplayName("Can be Orange")]
-        [Description("States whether the peg(s) can be orange or not. You may want to set this for pegs that are harder to get.")]
+        [DisplayName("Variable")]
+        [Description("When enabled, the game may pick this peg to be an orange, purple (bonus) or green (power-up) peg. When disabled, the peg always keeps its own type, e.g. always blue.")]
         [Category("Behaviour")]
         [DefaultValue(true)]
         public bool CanBeOrange
@@ -155,8 +155,8 @@ namespace IntelOrca.PeggleEdit.Tools.Levels.Children
         }
 
         [EntryProperty(EntryPropertyType.Element, false)]
-        [DisplayName("Quick Disappear")]
-        [Description("States whether the peg will disappear shortly after the ball has touched it. This is normally set for pegs at the bottom of circles etc. to make sure the ball does not get stuck for too long.")]
+        [DisplayName("Crumble")]
+        [Description("When enabled, the peg crumbles away shortly after the ball hits it, so that the ball can not get stuck on it. Normally used for pegs at the bottom of circles and similar places.")]
         [Category("Behaviour")]
         [DefaultValue(false)]
         public bool QuickDisappear

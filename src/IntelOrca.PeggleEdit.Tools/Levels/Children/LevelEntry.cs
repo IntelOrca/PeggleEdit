@@ -570,8 +570,8 @@ namespace IntelOrca.PeggleEdit.Tools.Levels.Children
         }
 
         [EntryProperty(EntryPropertyType.Attribute, false)]
-        [DisplayName("Has Shadow")]
-        [Description("Whether or not to display a shadow for this object.")]
+        [DisplayName("Draw Shadow")]
+        [Description("Whether a shadow is drawn for this object. Only stored in Peggle Nights levels.")]
         [Category("Appearance")]
         [DefaultValue(true)]
         public bool HasShadow
@@ -587,7 +587,8 @@ namespace IntelOrca.PeggleEdit.Tools.Levels.Children
         }
 
         [EntryProperty(EntryPropertyType.Attribute, false)]
-        [Description("Whether or not the ball reacts with the object or not. Pegs and Bricks seem to ignore this attribute.")]
+        [DisplayName("Collidable")]
+        [Description("Whether the ball bounces off this object. When disabled, the ball passes straight through it.")]
         [Category("Behaviour")]
         [DefaultValue(true)]
         public bool Collision
@@ -603,7 +604,8 @@ namespace IntelOrca.PeggleEdit.Tools.Levels.Children
         }
 
         [EntryProperty(EntryPropertyType.Attribute, false)]
-        [Description("Whether or not object can be seen or not. Pegs and Bricks seem to ignore this attribute.")]
+        [DisplayName("Visible")]
+        [Description("Whether the object is drawn.")]
         [Category("Appearance")]
         [DefaultValue(true)]
         public bool Visible
@@ -619,8 +621,8 @@ namespace IntelOrca.PeggleEdit.Tools.Levels.Children
         }
 
         [EntryProperty(EntryPropertyType.Attribute, null)]
-        [DisplayName("Image Filename")]
-        [Description("The filename to the image in the PAK file.")]
+        [DisplayName("Image")]
+        [Description("The image drawn for this object: a path in the PAK file, without the extension (PopCap: Image Name).")]
         [Category("Appearance")]
         [DefaultValue("")]
         public string ImageFilename
@@ -636,7 +638,8 @@ namespace IntelOrca.PeggleEdit.Tools.Levels.Children
         }
 
         [EntryProperty(EntryPropertyType.Attribute, null)]
-        [Description("The identifier of the object. There are pre-defined identifiers for the objects to be certain things.")]
+        [DisplayName("Id")]
+        [Description("The identifier of the object, used by the game logic and by other objects to refer to it. Some identifiers have a built-in meaning, e.g. freeball.")]
         [Category("Behaviour")]
         [DefaultValue("")]
         public string ID
@@ -652,6 +655,9 @@ namespace IntelOrca.PeggleEdit.Tools.Levels.Children
         }
 
         [EntryProperty(EntryPropertyType.Attribute, null)]
+        [DisplayName("Logic")]
+        [Description("Game logic attached to this object.")]
+        [Category("Behaviour")]
         public string Logic
         {
             get
@@ -665,8 +671,8 @@ namespace IntelOrca.PeggleEdit.Tools.Levels.Children
         }
 
         [EntryProperty(EntryPropertyType.Attribute, false)]
-        [DisplayName("Can Move")]
-        [Description("This attribute must be set to true if the object has movement information but does not make the object move itself. Use Movement for that.")]
+        [DisplayName("Moving")]
+        [Description("Whether the object moves along its movement path. When disabled, the object keeps its movement but stays still until the game logic starts it.")]
         [Category("Behaviour")]
         [DefaultValue(true)]
         public bool CanMove
@@ -730,6 +736,9 @@ namespace IntelOrca.PeggleEdit.Tools.Levels.Children
         }
 
         [EntryProperty(EntryPropertyType.Attribute, false)]
+        [DisplayName("Stop Reset")]
+        [Description("The exact effect is not known.")]
+        [Category("Behaviour")]
         [DefaultValue(false)]
         public bool BallStopReset
         {
@@ -744,6 +753,9 @@ namespace IntelOrca.PeggleEdit.Tools.Levels.Children
         }
 
         [EntryProperty(EntryPropertyType.Attribute, false)]
+        [DisplayName("Draw Sort")]
+        [Description("The exact effect is not known.")]
+        [Category("Appearance")]
         [DefaultValue(false)]
         public bool DrawSort
         {
@@ -758,6 +770,9 @@ namespace IntelOrca.PeggleEdit.Tools.Levels.Children
         }
 
         [EntryProperty(EntryPropertyType.Attribute, false)]
+        [DisplayName("Draw Float")]
+        [Description("The exact effect is not known.")]
+        [Category("Appearance")]
         [DefaultValue(false)]
         public bool DrawFloat
         {
@@ -772,6 +787,9 @@ namespace IntelOrca.PeggleEdit.Tools.Levels.Children
         }
 
         [EntryProperty(EntryPropertyType.Attribute, false)]
+        [DisplayName("Base Object")]
+        [Description("The exact effect is not known.")]
+        [Category("Behaviour")]
         [DefaultValue(false)]
         public bool BaseObject
         {
@@ -787,7 +805,7 @@ namespace IntelOrca.PeggleEdit.Tools.Levels.Children
 
         [EntryProperty(EntryPropertyType.Attribute, 0.0f)]
         [DisplayName("Rolly")]
-        [Description("The multiplier of how rolly the object is. 1.0 would be no effect, 0.5 would be half as rolly and 2.0 would be double as rolly. 0.0 indicates not to use the attribute.")]
+        [Description("How rolly the surface of the object is. 0 uses the game default.")]
         [Category("Behaviour")]
         [DefaultValue(0.0f)]
         public float Rolly
@@ -804,7 +822,7 @@ namespace IntelOrca.PeggleEdit.Tools.Levels.Children
 
         [EntryProperty(EntryPropertyType.Attribute, 0.0f)]
         [DisplayName("Bouncy")]
-        [Description("The multiplier of how bouncy the object is. 1.0 would be no effect, 0.5 would be half as bouncy and 2.0 would be double as bouncy. 0.0 indicates not to use the attribute.")]
+        [Description("How bouncy the object is. 0 uses the game default. The PopCap level editor offers 0.9 (ball standard), 0.8 (semi bouncy), 0.75 (poly standard), 0.65 (less bouncy) and 0.55 (little bounce).")]
         [Category("Behaviour")]
         [DefaultValue(0.0f)]
         public float Bouncy
@@ -820,8 +838,8 @@ namespace IntelOrca.PeggleEdit.Tools.Levels.Children
         }
 
         [EntryProperty(EntryPropertyType.Attribute, typeof(Color), "Black")]
-        [DisplayName("Solid Colour")]
-        [Description("The colour of the inside of the object if there is no image specified. Black specifies not to use the attribute.")]
+        [DisplayName("Solid Color")]
+        [Description("The fill colour of the object when it has no image. Black specifies not to use the attribute.")]
         [Category("Appearance")]
         [DefaultValue(typeof(Color), "Black")]
         public Color SolidColour
@@ -837,8 +855,8 @@ namespace IntelOrca.PeggleEdit.Tools.Levels.Children
         }
 
         [EntryProperty(EntryPropertyType.Attribute, typeof(Color), "Black")]
-        [DisplayName("Outline Colour")]
-        [Description("The colour of the outline of the object if there is no image specified. Black specifies not to use the attribute.")]
+        [DisplayName("Outline Color")]
+        [Description("The outline colour of the object when it has no image. Black specifies not to use the attribute.")]
         [Category("Appearance")]
         [DefaultValue(typeof(Color), "Black")]
         public Color OutlineColour
@@ -854,8 +872,8 @@ namespace IntelOrca.PeggleEdit.Tools.Levels.Children
         }
 
         [EntryProperty(EntryPropertyType.Attribute, 0.0f)]
-        [DisplayName("Image DX")]
-        [Description("The horizontal offset for where the specified image is drawn.")]
+        [DisplayName("Image Center DX")]
+        [Description("The horizontal offset of the centre of the image (PopCap: center-dx).")]
         [Category("Appearance")]
         [DefaultValue(0.0f)]
         public float ImageDX
@@ -871,8 +889,8 @@ namespace IntelOrca.PeggleEdit.Tools.Levels.Children
         }
 
         [EntryProperty(EntryPropertyType.Attribute, 0.0f)]
-        [DisplayName("Image DY")]
-        [Description("The vertical offset for where the specified image is drawn.")]
+        [DisplayName("Image Center DY")]
+        [Description("The vertical offset of the centre of the image (PopCap: center-dy).")]
         [Category("Appearance")]
         [DefaultValue(0.0f)]
         public float ImageDY
@@ -889,7 +907,7 @@ namespace IntelOrca.PeggleEdit.Tools.Levels.Children
 
         [EntryProperty(EntryPropertyType.Attribute, 0.0f)]
         [DisplayName("Image Rotation")]
-        [Description("The angular offset for where the specified image is drawn in degrees.")]
+        [Description("The rotation of the image in degrees.")]
         [Category("Appearance")]
         [DefaultValue(0.0f)]
         public float ImageRotation
@@ -905,6 +923,9 @@ namespace IntelOrca.PeggleEdit.Tools.Levels.Children
         }
 
         [EntryProperty(EntryPropertyType.Attribute, (byte)0)]
+        [DisplayName("Sound")]
+        [Description("The sound played when the ball hits the object. PopCap levels use 1 for free ball holes, 2 for bumper holes, 3 for flippers and 4 for fever bonus objects.")]
+        [Category("Behaviour")]
         [DefaultValue((byte)0)]
         public byte Sound
         {
@@ -919,6 +940,9 @@ namespace IntelOrca.PeggleEdit.Tools.Levels.Children
         }
 
         [EntryProperty(EntryPropertyType.Attribute, 0.0f)]
+        [DisplayName("Max Bounce Vel")]
+        [Description("The maximum speed of the ball after it bounces off this object. 0 specifies not to use the attribute.")]
+        [Category("Behaviour")]
         [DefaultValue(0.0f)]
         public float MaxBounceVelocity
         {
@@ -933,6 +957,9 @@ namespace IntelOrca.PeggleEdit.Tools.Levels.Children
         }
 
         [EntryProperty(EntryPropertyType.Attribute, 0)]
+        [DisplayName("Sub Id")]
+        [Description("A second identifier of the object, used by the game logic.")]
+        [Category("Behaviour")]
         [DefaultValue(0)]
         public int SubID
         {
@@ -947,6 +974,9 @@ namespace IntelOrca.PeggleEdit.Tools.Levels.Children
         }
 
         [EntryProperty(EntryPropertyType.Attribute, (byte)0)]
+        [DisplayName("Flipper Flags")]
+        [Description("0 = default, 1 = off, 2 = on.")]
+        [Category("Behaviour")]
         [DefaultValue((byte)0)]
         public byte FlipperFlags
         {
