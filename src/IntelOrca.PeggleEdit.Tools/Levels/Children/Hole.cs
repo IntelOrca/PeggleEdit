@@ -318,6 +318,56 @@ namespace IntelOrca.PeggleEdit.Tools.Levels.Children
             }
         }
 
+        [DisplayName("Score")]
+        [Description("The points scored when the ball goes into the hole.")]
+        [Category("Behaviour")]
+        [DefaultValue(0)]
+        public int Score
+        {
+            get
+            {
+                return mScore;
+            }
+            set
+            {
+                mScore = value;
+                mHasScore |= value != 0;
+            }
+        }
+
+        [DisplayName("Out Delay")]
+        [Description("How long the ball stays in the hole before it comes out of the destination.")]
+        [Category("Behaviour")]
+        [DefaultValue(0)]
+        public int OutDelay
+        {
+            get
+            {
+                return mOutDelay;
+            }
+            set
+            {
+                mOutDelay = value;
+                mHasOutDelay |= value != 0;
+            }
+        }
+
+        [DisplayName("Circular")]
+        [Description("Whether the hole is round rather than rectangular.")]
+        [Category("Behaviour")]
+        [DefaultValue(false)]
+        public bool Circular
+        {
+            get
+            {
+                return (mUnknownFlags & 1) != 0;
+            }
+            set
+            {
+                mUnknownFlags = value ? mUnknownFlags | 1 : mUnknownFlags & ~1;
+            }
+        }
+
         public override Level Level
         {
             set

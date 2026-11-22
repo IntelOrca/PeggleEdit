@@ -25,6 +25,18 @@ namespace IntelOrca.PeggleEdit.Tools.Levels.Children
     /// Represents the information about a level entry which is a peg.
     /// </summary>
     [TypeConverterAttribute(typeof(ExpandableObjectConverter))]
+    /// <summary>
+    /// The kind of a peg, from peg_type in PopCap's level editor.
+    /// </summary>
+    public enum PegType : byte
+    {
+        None,
+        Normal,
+        Goal,
+        Score,
+        Powerup,
+    }
+
     public sealed class PegInfo : ICloneable
     {
         private LevelEntry mParent;
@@ -168,6 +180,22 @@ namespace IntelOrca.PeggleEdit.Tools.Levels.Children
             set
             {
                 mCrumble = value;
+            }
+        }
+
+        [DisplayName("Type")]
+        [Description("The kind of peg: Normal (blue), Goal (orange), Score (purple) or Powerup (green). When Variable is enabled, the game chooses the orange, purple and green pegs itself.")]
+        [Category("Behaviour")]
+        [DefaultValue(PegType.Normal)]
+        public PegType Type
+        {
+            get
+            {
+                return (PegType)mType;
+            }
+            set
+            {
+                mType = (byte)value;
             }
         }
 

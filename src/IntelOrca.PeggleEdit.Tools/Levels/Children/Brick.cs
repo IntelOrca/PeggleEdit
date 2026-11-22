@@ -35,6 +35,17 @@ namespace IntelOrca.PeggleEdit.Tools.Levels.Children
     }
 
     /// <summary>
+    /// Which ends of a brick are anchored, from brick_anchor in PopCap's level editor.
+    /// </summary>
+    public enum BrickAnchor
+    {
+        None,
+        Left,
+        Right,
+        Both,
+    }
+
+    /// <summary>
     /// Represents the brick level entry.
     /// </summary>
     public class Brick : LevelEntry, ICloneable
@@ -891,6 +902,58 @@ namespace IntelOrca.PeggleEdit.Tools.Levels.Children
                 {
                     mAngle = 30;
                 }
+            }
+        }
+
+        [DisplayName("Anchor")]
+        [Description("Which ends of the brick are anchored. Changing the thickness in PopCap's level editor clears the anchors.")]
+        [Category("Layout")]
+        [DefaultValue(BrickAnchor.None)]
+        public BrickAnchor Anchor
+        {
+            get
+            {
+                return (BrickAnchor)(mUnknownFlagsC & 3);
+            }
+            set
+            {
+                mUnknownFlagsC = (mUnknownFlagsC & ~3) | ((int)value & 3);
+            }
+        }
+
+        [DisplayName("Left Angle")]
+        [Description("The angle of the left end of the brick. PeggleEdit does not show it when drawing the brick.")]
+        [Category("Layout")]
+        [DefaultValue(0.0f)]
+        public float LeftAngle
+        {
+            get
+            {
+                return mLeftAngle;
+            }
+            set
+            {
+                mLeftAngle = value;
+                mHasLeftAngle |= value != 0;
+            }
+        }
+
+        [DisplayName("Right Angle")]
+        [Description("The angle of the right end of the brick. PeggleEdit does not show it when drawing the brick.")]
+        [Category("Layout")]
+        [DefaultValue(0.0f)]
+        public float RightAngle
+        {
+            get
+            {
+                return mRightAngle;
+            }
+            set
+            {
+                // The game stores the right angle twice
+                mRightAngle = value;
+                mRightAngle2 = value;
+                mHasRightAngle |= value != 0;
             }
         }
 

@@ -29,6 +29,16 @@ namespace IntelOrca.PeggleEdit.Tools.Levels.Children
     /// <summary>
     /// Represents the polygon level entry.
     /// </summary>
+    /// <summary>
+    /// Which side of a poly the ball is kept on, from poly_normaldir in PopCap's level editor.
+    /// </summary>
+    public enum PolyNormalDir : sbyte
+    {
+        KeepIn = -1,
+        Both = 0,
+        KeepOut = 1,
+    }
+
     public class Poly : LevelEntry, ICloneable, IPointContainer
     {
         byte mNormalDir;
@@ -287,6 +297,106 @@ namespace IntelOrca.PeggleEdit.Tools.Levels.Children
             set
             {
                 mPoints = new List<PointF>(value);
+            }
+        }
+
+        [DisplayName("Normal Dir")]
+        [Description("Which side of the poly the ball is kept on: Keep Out keeps the ball outside, Keep In keeps it inside, Both collides on both sides.")]
+        [Category("Behaviour")]
+        [DefaultValue(PolyNormalDir.KeepOut)]
+        public PolyNormalDir NormalDir
+        {
+            get
+            {
+                return mHasNormalDir ? (PolyNormalDir)(sbyte)mNormalDir : PolyNormalDir.KeepOut;
+            }
+            set
+            {
+                mNormalDir = (byte)(sbyte)value;
+                mHasNormalDir |= value != PolyNormalDir.KeepOut;
+            }
+        }
+
+        [DisplayName("Rotation")]
+        [Description("The rotation of the poly in degrees, used when it has no movement. PeggleEdit does not show it when drawing the poly.")]
+        [Category("Layout")]
+        [DefaultValue(0.0f)]
+        public float Rotation
+        {
+            get
+            {
+                return MathExt.ToDegrees(mRotation);
+            }
+            set
+            {
+                mRotation = MathExt.ToRadians(value);
+                mHasRotation |= value != 0;
+            }
+        }
+
+        [DisplayName("Scale")]
+        [Description("How much larger or smaller the poly is drawn and collides, 1 being its normal size. PeggleEdit does not show it when drawing the poly.")]
+        [Category("Layout")]
+        [DefaultValue(1.0f)]
+        public float Scale
+        {
+            get
+            {
+                return mHasScale ? mScale : 1.0f;
+            }
+            set
+            {
+                mScale = value;
+                mHasScale |= value != 1.0f;
+            }
+        }
+
+        [DisplayName("Grow Type")]
+        [Description("How the poly appears and disappears when it is shown or hidden: 0 none, 1 reveal left to right, 2 reveal right to left, 3 move left to right, 4 move right to left, 5 from the middle out. Add 0x1000 (4096) to flash when it has finished. Only stored from file version 0x23 (Peggle).")]
+        [Category("Behaviour")]
+        [DefaultValue(0)]
+        public int GrowType
+        {
+            get
+            {
+                return mGrowType;
+            }
+            set
+            {
+                mGrowType = value;
+                mHasGrowType |= value != 0;
+            }
+        }
+
+        [DisplayName("Mirror")]
+        [Description("Whether the image is drawn mirrored.")]
+        [Category("Appearance")]
+        [DefaultValue(false)]
+        public bool Mirror
+        {
+            get
+            {
+                return (mUnknownFlagsA & (1 << 7)) != 0;
+            }
+            set
+            {
+                mUnknownFlagsA = value ? mUnknownFlagsA | (1 << 7) : mUnknownFlagsA & ~(1 << 7);
+            }
+        }
+
+        [DisplayName("Image Tile")]
+        [Description("Whether the image is tiled across the poly.")]
+        [Category("Appearance")]
+        [DefaultValue(false)]
+        public bool ImageTile
+        {
+            get
+            {
+                return (mUnknownFlagsA & (1 << 6)) != 0;
+            }
+            set
+            {
+                mUnknownFlagsA = value ? mUnknownFlagsA | (1 << 6) : mUnknownFlagsA & ~(1 << 6);
             }
         }
 

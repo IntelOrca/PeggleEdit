@@ -24,6 +24,16 @@ using IntelOrca.PeggleEdit.Tools.Extensions;
 namespace IntelOrca.PeggleEdit.Tools.Levels.Children
 {
     /// <summary>
+    /// The values of FlipperFlags, from physobj_flipperflags in PopCap's level editor.
+    /// </summary>
+    public enum FlipperSetting : byte
+    {
+        Default,
+        Off,
+        On,
+    }
+
+    /// <summary>
     /// The base class for all level entries which are stored in levels.
     /// </summary>
     [TypeConverterAttribute(typeof(ExpandableObjectConverter))]
@@ -994,20 +1004,20 @@ namespace IntelOrca.PeggleEdit.Tools.Levels.Children
             }
         }
 
-        [EntryProperty(EntryPropertyType.Attribute, (byte)0)]
+        [EntryProperty(EntryPropertyType.Attribute, FlipperSetting.Default)]
         [DisplayName("Flipper Flags")]
-        [Description("0 = default, 1 = off, 2 = on.")]
+        [Description("PopCap's FlipperFlags setting: Default, Off or On. The exact effect is not known; PopCap's levels only use On.")]
         [Category("Behaviour")]
-        [DefaultValue((byte)0)]
-        public byte FlipperFlags
+        [DefaultValue(FlipperSetting.Default)]
+        public FlipperSetting FlipperFlags
         {
             get
             {
-                return mFlipperFlags;
+                return (FlipperSetting)mFlipperFlags;
             }
             set
             {
-                mFlipperFlags = value;
+                mFlipperFlags = (byte)value;
             }
         }
 
