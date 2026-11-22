@@ -22,6 +22,19 @@ using System.IO;
 namespace IntelOrca.PeggleEdit.Tools.Levels.Children
 {
     /// <summary>
+    /// The shape of a brick, from brick_type in PopCap's level editor.
+    /// </summary>
+    public enum BrickType : byte
+    {
+        NormalCurved,
+        OuterCurved,
+        OuterCurved90,
+        InnerCurved,
+        InnerCurved90,
+        Straight,
+    }
+
+    /// <summary>
     /// Represents the brick level entry.
     /// </summary>
     public class Brick : LevelEntry, ICloneable
@@ -33,7 +46,6 @@ namespace IntelOrca.PeggleEdit.Tools.Levels.Children
         private float mRotation;
 
         private int mCurvePoints;
-        private bool mCurved;
         private bool mTextureFlip;
 
         // Unknown values, preserved so that they are written back as read
@@ -77,7 +89,7 @@ namespace IntelOrca.PeggleEdit.Tools.Levels.Children
             mThickness = 20.0f;
             mRadius = 30.0f;
             mCurvePoints = 4;
-            mCurved = false;
+            mType = (byte)BrickType.Straight;
         }
 
         public override void ReadData(BinaryReader br, int version)
@@ -118,7 +130,8 @@ namespace IntelOrca.PeggleEdit.Tools.Levels.Children
             if (fB[2])
                 mFlashTimer = br.ReadInt16();
 
-            mCurved = true;
+            // The game's default when the type is not stored
+            mType = (byte)BrickType.NormalCurved;
 
             FlagGroup fC = new FlagGroup(br.ReadInt16());
             mUnknownFlagsC = fC.Int32 & ((1 << 0) | (1 << 1) | (0x1F << 11));
@@ -132,8 +145,6 @@ namespace IntelOrca.PeggleEdit.Tools.Levels.Children
             if (fC[2])
             {
                 mType = br.ReadByte();
-                if (mType == 5)
-                    mCurved = false;
             }
             mHasCurvePoints = fC[3];
             if (fC[3])
@@ -194,21 +205,17 @@ namespace IntelOrca.PeggleEdit.Tools.Levels.Children
             // Keep the curve values that were in the file, otherwise only write them if needed
             fC[3] = mHasCurvePoints;
             fC[4] = mHasAngle;
-            if (mCurved)
+            if (Curved)
             {
                 if (mAngle != 0.0f)
                     fC[4] = true;
 
                 if (mCurvePoints != 4)
                     fC[3] = true;
+            }
 
-                if (mHasType && mType != 5)
-                    fC[2] = true;
-            }
-            else
-            {
-                fC[2] = true;
-            }
+            // The type is only needed when it is not the game's default, normal curved
+            fC[2] = mHasType || mType != (byte)BrickType.NormalCurved;
 
             // Only write the width if it was in the file or has been changed from the default
             fC[7] = (mHasThickness || mThickness != 20.0f);
@@ -255,7 +262,7 @@ namespace IntelOrca.PeggleEdit.Tools.Levels.Children
                 bw.Write(mPivotOffsetY);
             if (fC[2])
             {
-                bw.Write(mCurved ? mType : (byte)5);
+                bw.Write(mType);
             }
 
             if (fC[3])
@@ -541,7 +548,6 @@ namespace IntelOrca.PeggleEdit.Tools.Levels.Children
             cpyBrick.mRotation = mRotation;
 
             cpyBrick.mCurvePoints = mCurvePoints;
-            cpyBrick.mCurved = mCurved;
             cpyBrick.mTextureFlip = mTextureFlip;
 
             cpyBrick.mHasType = mHasType;
@@ -846,19 +852,41 @@ namespace IntelOrca.PeggleEdit.Tools.Levels.Children
             }
         }
 
-        [EntryProperty(EntryPropertyType.Element, false)]
-        [Description("Whether the brick is curved or straight. PopCap's brick type also has outer and inner curved variants, which are kept but can not be changed here.")]
+        [DisplayName("Type")]
+        [Description("The shape of the brick: curved (normal, outer, inner, and the 90 variants) or straight. PeggleEdit draws all of the curved types like a normal curved brick.")]
         [Category("Layout")]
-        [DefaultValue(false)]
+        public BrickType BrickType
+        {
+            get
+            {
+                return (BrickType)mType;
+            }
+            set
+            {
+                mType = (byte)value;
+                if (Curved && mAngle == 0)
+                {
+                    mAngle = 30;
+                }
+            }
+        }
+
+        /// <summary>
+        /// Whether the brick is any of the curved types rather than straight.
+        /// </summary>
+        [Browsable(false)]
         public bool Curved
         {
             get
             {
-                return mCurved;
+                return mType != (byte)BrickType.Straight;
             }
             set
             {
-                mCurved = value;
+                if (value != Curved)
+                {
+                    mType = (byte)(value ? BrickType.NormalCurved : BrickType.Straight);
+                }
                 if (mAngle == 0)
                 {
                     mAngle = 30;
