@@ -146,8 +146,6 @@ namespace IntelOrca.PeggleEdit.Tools.Levels.Children
                 if (circleImage == null)
                 {
                     var colour = OutlineColor;
-                    if (colour == Color.Black)
-                        colour = Color.White;
 
                     var dst = new RectangleF(location.X - Radius, location.Y - Radius, Radius * 2, Radius * 2);
                     g.DrawImageWithColour(Resources.circle_outer, dst, colour);

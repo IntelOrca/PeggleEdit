@@ -60,8 +60,12 @@ namespace IntelOrca.PeggleEdit.Tools.Levels.Children
         bool mBaseObject;
         float mRolly;
         float mBouncy;
-        Color mSolidColor;
-        Color mOutlineColor;
+        // Colours are stored as the game stores them, 0xRRGGBB (the top byte is kept as read). The game treats a solid
+        // colour of 0 as no colour, and its default outline colour is 0xFFFFFF.
+        const uint NoSolidColor = 0;
+        const uint DefaultOutlineColor = 0xFFFFFF;
+        uint mSolidColor = NoSolidColor;
+        uint mOutlineColor = DefaultOutlineColor;
         float mImageDX;
         float mImageDY;
         float mImageRotation; // In radians, as stored in the level file, so that it round trips exactly
@@ -98,9 +102,6 @@ namespace IntelOrca.PeggleEdit.Tools.Levels.Children
             mMoving = true;
             mCollidable = true;
             mVisible = true;
-
-            mSolidColor = Color.Black;
-            mOutlineColor = Color.Black;
         }
 
         public void ReadGenericData(BinaryReader br, int version)
@@ -130,9 +131,9 @@ namespace IntelOrca.PeggleEdit.Tools.Levels.Children
             if (f[4])
                 mMoveTime = br.ReadInt32();
             if (f[8])
-                mSolidColor = Color.FromArgb(br.ReadInt32());
+                mSolidColor = br.ReadUInt32();
             if (f[9])
-                mOutlineColor = Color.FromArgb(br.ReadInt32());
+                mOutlineColor = br.ReadUInt32();
             if (f[10])
             {
                 mImageFilename = LevelReader.ReadPopcapString(br);
@@ -200,8 +201,8 @@ namespace IntelOrca.PeggleEdit.Tools.Levels.Children
             f[5] = mCollidable;
             f[6] = mVisible;
             f[7] = mMoving;
-            f[8] = (mSolidColor != Color.Black);
-            f[9] = (mOutlineColor != Color.Black);
+            f[8] = (mSolidColor != NoSolidColor);
+            f[9] = (mOutlineColor != DefaultOutlineColor);
             f[10] = !String.IsNullOrEmpty(mImageFilename);
             f[11] = (mImageDX != 0.0f);
             f[12] = (mImageDY != 0.0f);
@@ -235,9 +236,9 @@ namespace IntelOrca.PeggleEdit.Tools.Levels.Children
             if (f[4])
                 bw.Write(mMoveTime);
             if (f[8])
-                bw.Write(mSolidColor.ToArgb());
+                bw.Write(mSolidColor);
             if (f[9])
-                bw.Write(mOutlineColor.ToArgb());
+                bw.Write(mOutlineColor);
             if (f[10])
             {
                 LevelWriter.WritePopcapString(bw, mImageFilename);
@@ -838,39 +839,58 @@ namespace IntelOrca.PeggleEdit.Tools.Levels.Children
             }
         }
 
-        [EntryProperty(EntryPropertyType.Attribute, typeof(Color), "Black")]
+        [EntryProperty(EntryPropertyType.Attribute, typeof(Color), "")]
         [DisplayName("Solid Color")]
-        [Description("The fill colour of the object when it has no image. Black specifies not to use the attribute.")]
+        [Description("The fill colour of the object when it has no image. Leave empty for no fill colour.")]
         [Category("Appearance")]
-        [DefaultValue(typeof(Color), "Black")]
+        [DefaultValue(typeof(Color), "")]
         public Color SolidColor
         {
             get
             {
-                return mSolidColor;
+                return (mSolidColor & 0xFFFFFF) == NoSolidColor ? Color.Empty : ToColor(mSolidColor);
             }
             set
             {
-                mSolidColor = value;
+                if (value.IsEmpty)
+                {
+                    mSolidColor = NoSolidColor;
+                }
+                else
+                {
+                    // 0 means no colour, so black is stored as 0x000001, as PopCap's level editor does
+                    uint rgb = FromColor(value);
+                    mSolidColor = (mSolidColor & 0xFF000000) | (rgb == 0 ? 1 : rgb);
+                }
             }
         }
 
-        [EntryProperty(EntryPropertyType.Attribute, typeof(Color), "Black")]
+        [EntryProperty(EntryPropertyType.Attribute, typeof(Color), "White")]
         [DisplayName("Outline Color")]
-        [Description("The outline colour of the object when it has no image. Black specifies not to use the attribute.")]
+        [Description("The outline colour of the object when it has no image.")]
         [Category("Appearance")]
-        [DefaultValue(typeof(Color), "Black")]
+        [DefaultValue(typeof(Color), "White")]
         public Color OutlineColor
         {
             get
             {
-                return mOutlineColor;
+                return ToColor(mOutlineColor);
             }
             set
             {
-                mOutlineColor = value;
+                mOutlineColor = (mOutlineColor & 0xFF000000) | FromColor(value);
             }
         }
+
+        /// <summary>
+        /// Whether an outline colour other than the game's default is set.
+        /// </summary>
+        [Browsable(false)]
+        public bool HasOutlineColor => mOutlineColor != DefaultOutlineColor;
+
+        private static Color ToColor(uint rgb) => Color.FromArgb(255, (int)((rgb >> 16) & 0xFF), (int)((rgb >> 8) & 0xFF), (int)(rgb & 0xFF));
+
+        private static uint FromColor(Color colour) => (uint)colour.ToArgb() & 0xFFFFFF;
 
         [EntryProperty(EntryPropertyType.Attribute, 0.0f)]
         [DisplayName("Image Center DX")]

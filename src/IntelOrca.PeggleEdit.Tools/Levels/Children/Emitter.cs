@@ -97,7 +97,6 @@ namespace IntelOrca.PeggleEdit.Tools.Levels.Children
             : base(level)
         {
             Visible = true;
-            OutlineColor = Color.Black;
 
             DefaultValues();
         }
@@ -349,7 +348,7 @@ namespace IntelOrca.PeggleEdit.Tools.Levels.Children
         {
             base.Draw(g);
 
-            var hasOutline = OutlineColor.R != 0 || OutlineColor.G != 0 || OutlineColor.B != 0;
+            var hasOutline = HasOutlineColor && OutlineColor.ToArgb() != Color.Black.ToArgb();
             if (!Level.ShowPreview && !hasOutline)
             {
                 var bounds = Bounds;

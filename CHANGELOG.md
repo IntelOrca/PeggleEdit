@@ -29,6 +29,7 @@ PeggleEdit 5.2.0 (Flamingo) (TBC)
 * [Fix] Fix #28, #6: PeggleEdit can not be launched on Linux with Mono, and draws moving pegs incorrectly under Wine
 * [Fix] Fix solid (non-peg) bricks becoming pegs, and objects without a shadow gaining one, when saved
 * [Fix] Fix unknown data, and values stored in the level that match the default, being lost from level objects when saved
+* [Fix] Use the game's defaults for solid and outline colours: black could not be used as a colour, and colours from the level showed as transparent
 
 PeggleEdit 5.1.1 (Eagle) (2023-09-13)
 
