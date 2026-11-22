@@ -48,7 +48,15 @@ namespace IntelOrca.PeggleEdit.Tools.Levels.Children
             if (InternalLinkId == 1)
             {
                 InternalMover = new Mover(Level);
-                InternalMover.ReadData(br, version);
+                NestingLimit.Enter();
+                try
+                {
+                    InternalMover.ReadData(br, version);
+                }
+                finally
+                {
+                    NestingLimit.Exit();
+                }
             }
         }
 

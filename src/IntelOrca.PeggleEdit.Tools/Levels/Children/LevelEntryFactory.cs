@@ -90,8 +90,16 @@ namespace IntelOrca.PeggleEdit.Tools.Levels.Children
 
             var type = br.ReadInt32();
             var entry = CreateLevelEntry(type, null);
-            entry.ReadGenericData(br, version);
-            entry.ReadData(br, version);
+            NestingLimit.Enter();
+            try
+            {
+                entry.ReadGenericData(br, version);
+                entry.ReadData(br, version);
+            }
+            finally
+            {
+                NestingLimit.Exit();
+            }
             return entry;
         }
     }

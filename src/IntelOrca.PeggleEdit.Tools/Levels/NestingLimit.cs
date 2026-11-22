@@ -1,0 +1,45 @@
+// This file is part of PeggleEdit.
+// Copyright Ted John 2010 - 2026. http://tedtycoon.co.uk
+//
+// PeggleEdit is free software: you can redistribute it and/or modify
+// it under the terms of the GNU General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+//
+// PeggleEdit is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+// GNU General Public License for more details.
+//
+// You should have received a copy of the GNU General Public License
+// along with PeggleEdit. If not, see <http://www.gnu.org/licenses/>.
+
+using System;
+using System.IO;
+
+namespace IntelOrca.PeggleEdit.Tools.Levels
+{
+    /// <summary>
+    /// Limits how deeply objects can be nested when reading a level (hole destinations and parent movers), so that a
+    /// damaged or crafted file gives a read error rather than a stack overflow, which can not be caught.
+    /// </summary>
+    internal static class NestingLimit
+    {
+        public const int MaxDepth = 256;
+
+        [ThreadStatic]
+        static int sDepth;
+
+        public static void Enter()
+        {
+            if (sDepth >= MaxDepth)
+                throw new InvalidDataException($"Objects are nested more than {MaxDepth} deep.");
+            sDepth++;
+        }
+
+        public static void Exit()
+        {
+            sDepth--;
+        }
+    }
+}
