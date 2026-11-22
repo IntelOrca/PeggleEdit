@@ -27,7 +27,7 @@ namespace IntelOrca.PeggleEdit.Tools.Levels.Children
     /// <summary>
     /// Represents the circle / peg level entry.
     /// </summary>
-    public class Circle : LevelEntry, ICloneable
+    public class Ball : LevelEntry, ICloneable
     {
         private float mRadius;
 
@@ -35,7 +35,7 @@ namespace IntelOrca.PeggleEdit.Tools.Levels.Children
         private int mUnknownFlagsA = 1 << 0; // Make it bounce
         private int mUnknownFlagsB;
 
-        public Circle(Level level)
+        public Ball(Level level)
             : base(level)
         {
             mRadius = 10.0f;
@@ -94,7 +94,7 @@ namespace IntelOrca.PeggleEdit.Tools.Levels.Children
                 return;
 
             PointF location = DrawLocation;
-            if (MovementLink?.Movement is Movement movement)
+            if (MoverLink?.Mover is Mover movement)
             {
                 location = movement.GetEstimatedMovePosition();
             }
@@ -192,7 +192,7 @@ namespace IntelOrca.PeggleEdit.Tools.Levels.Children
         {
             get
             {
-                return LevelEntryTypes.Circle;
+                return LevelEntryTypes.Ball;
             }
         }
 
@@ -206,7 +206,7 @@ namespace IntelOrca.PeggleEdit.Tools.Levels.Children
 
         public override object Clone()
         {
-            Circle newCircle = new Circle(Level);
+            Ball newCircle = new Ball(Level);
             base.CloneTo(newCircle);
             newCircle.mRadius = mRadius;
             newCircle.mUnknownFlagsA = mUnknownFlagsA;

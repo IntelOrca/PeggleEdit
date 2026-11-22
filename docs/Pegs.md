@@ -1,7 +1,7 @@
 In PeggleEdit, pegs can be round or rectangular ([bricks](bricks.md)). They can be defined as normal (blue) or objective (orange). When playing the game Peggle will,  at random, change two blue pegs to green (powerup) and one to purple (bonus).
 
 ## Peg Info ##
-Pegs are [circles](Circle.md) objects with additional information which defines the circle as a peg. This information is stored in a small set of properties called PegInfo.
+Pegs are [balls](Balls.md) or [bricks](Bricks.md) with additional information which defines the object as a peg. This information is stored in a small set of properties called PegInfo.
 
 You can place pegs by using the Peg tool found on the tools tab of the ribbon at the top of the main window.
 

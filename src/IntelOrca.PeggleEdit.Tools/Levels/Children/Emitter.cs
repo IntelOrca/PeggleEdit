@@ -42,8 +42,8 @@ namespace IntelOrca.PeggleEdit.Tools.Levels.Children
         byte mMainVar3;
         bool mHasUnknown01;
         int mUnknownFlags = 1 << 14; // Needed to make it visible?
-        VariableFloat mUnknown0 = new VariableFloat();
-        VariableFloat mUnknown1 = new VariableFloat();
+        CurvedVal mUnknown0 = new CurvedVal();
+        CurvedVal mUnknown1 = new CurvedVal();
 
         string mEmitImage;
         float mUnknownEmitRate;
@@ -53,30 +53,30 @@ namespace IntelOrca.PeggleEdit.Tools.Levels.Children
         float mTimeBeforeFadeOut;
         float mFadeInTime;
         float mLifeDuration;
-        VariableFloat mEmitRate = new VariableFloat();
-        VariableFloat mEmitAreaMultiplier = new VariableFloat();
+        CurvedVal mEmitRate = new CurvedVal();
+        CurvedVal mEmitAreaMultiplier = new CurvedVal();
 
         bool mChangeRotation;
-        VariableFloat mInitialRotation = new VariableFloat();
-        VariableFloat mRotationVelocity = new VariableFloat();
+        CurvedVal mInitialRotation = new CurvedVal();
+        CurvedVal mRotationVelocity = new CurvedVal();
         float mRotationUnknown;
 
         bool mChangeScale;
-        VariableFloat mMinScale = new VariableFloat();
-        VariableFloat mScaleVelocity = new VariableFloat();
+        CurvedVal mMinScale = new CurvedVal();
+        CurvedVal mScaleVelocity = new CurvedVal();
         float mMaxRandScale;
 
         bool mChangeColour;
-        VariableFloat mColourRed = new VariableFloat();
-        VariableFloat mColourGreen = new VariableFloat();
-        VariableFloat mColourBlue = new VariableFloat();
+        CurvedVal mColourRed = new CurvedVal();
+        CurvedVal mColourGreen = new CurvedVal();
+        CurvedVal mColourBlue = new CurvedVal();
 
         bool mChangeOpacity;
-        VariableFloat mOpacity = new VariableFloat();
+        CurvedVal mOpacity = new CurvedVal();
 
         bool mChangeVelocity;
-        VariableFloat mMinVelocityX = new VariableFloat();
-        VariableFloat mMinVelocityY = new VariableFloat();
+        CurvedVal mMinVelocityX = new CurvedVal();
+        CurvedVal mMinVelocityY = new CurvedVal();
         float mMaxVelocityX;
         float mMaxVelocityY;
         float mAccelerationX;
@@ -154,8 +154,8 @@ namespace IntelOrca.PeggleEdit.Tools.Levels.Children
 
                 if (fA[13])
                 {
-                    mUnknown0 = new VariableFloat(br);
-                    mUnknown1 = new VariableFloat(br);
+                    mUnknown0 = new CurvedVal(br);
+                    mUnknown1 = new CurvedVal(br);
                 }
             }
 
@@ -175,39 +175,39 @@ namespace IntelOrca.PeggleEdit.Tools.Levels.Children
             mFadeInTime = br.ReadSingle();
             mLifeDuration = br.ReadSingle();
 
-            mEmitRate = new VariableFloat(br);
-            mEmitAreaMultiplier = new VariableFloat(br);
+            mEmitRate = new CurvedVal(br);
+            mEmitAreaMultiplier = new CurvedVal(br);
 
             if (fA[12])
             {
-                mInitialRotation = new VariableFloat(br);
-                mRotationVelocity = new VariableFloat(br);
+                mInitialRotation = new CurvedVal(br);
+                mRotationVelocity = new CurvedVal(br);
                 mRotationUnknown = br.ReadSingle();
             }
 
             if (fA[7])
             {
-                mMinScale = new VariableFloat(br);
-                mScaleVelocity = new VariableFloat(br);
+                mMinScale = new CurvedVal(br);
+                mScaleVelocity = new CurvedVal(br);
                 mMaxRandScale = br.ReadSingle();
             }
 
             if (fA[8])
             {
-                mColourRed = new VariableFloat(br);
-                mColourGreen = new VariableFloat(br);
-                mColourBlue = new VariableFloat(br);
+                mColourRed = new CurvedVal(br);
+                mColourGreen = new CurvedVal(br);
+                mColourBlue = new CurvedVal(br);
             }
 
             if (fA[9])
             {
-                mOpacity = new VariableFloat(br);
+                mOpacity = new CurvedVal(br);
             }
 
             if (fA[10])
             {
-                mMinVelocityX = new VariableFloat(br);
-                mMinVelocityY = new VariableFloat(br);
+                mMinVelocityX = new CurvedVal(br);
+                mMinVelocityY = new CurvedVal(br);
                 mMaxVelocityX = br.ReadSingle();
                 mMaxVelocityY = br.ReadSingle();
                 mAccelerationX = br.ReadSingle();
@@ -378,7 +378,7 @@ namespace IntelOrca.PeggleEdit.Tools.Levels.Children
             cpyEmitter.mTransparancy = mTransparancy;
 
             cpyEmitter.mChangeOpacity = mChangeOpacity;
-            cpyEmitter.mOpacity = (VariableFloat)mOpacity.Clone();
+            cpyEmitter.mOpacity = (CurvedVal)mOpacity.Clone();
 
             cpyEmitter.mRandomStartPosition = mRandomStartPosition;
             cpyEmitter.mMaxQuantity = mMaxQuantity;
@@ -386,26 +386,26 @@ namespace IntelOrca.PeggleEdit.Tools.Levels.Children
 
             cpyEmitter.mWidth = mWidth;
             cpyEmitter.mHeight = mHeight;
-            cpyEmitter.mEmitAreaMultiplier = (VariableFloat)mEmitAreaMultiplier.Clone();
+            cpyEmitter.mEmitAreaMultiplier = (CurvedVal)mEmitAreaMultiplier.Clone();
 
-            cpyEmitter.mEmitRate = (VariableFloat)mEmitRate.Clone();
+            cpyEmitter.mEmitRate = (CurvedVal)mEmitRate.Clone();
             cpyEmitter.mTimeBeforeFadeOut = mTimeBeforeFadeOut;
             cpyEmitter.mFadeInTime = mFadeInTime;
             cpyEmitter.mLifeDuration = mLifeDuration;
 
             cpyEmitter.mChangeRotation = mChangeRotation;
-            cpyEmitter.mInitialRotation = (VariableFloat)mInitialRotation.Clone();
-            cpyEmitter.mRotationVelocity = (VariableFloat)mRotationVelocity.Clone();
+            cpyEmitter.mInitialRotation = (CurvedVal)mInitialRotation.Clone();
+            cpyEmitter.mRotationVelocity = (CurvedVal)mRotationVelocity.Clone();
             cpyEmitter.mRotationUnknown = mRotationUnknown;
 
             cpyEmitter.mChangeScale = mChangeScale;
-            cpyEmitter.mMinScale = (VariableFloat)mMinScale.Clone();
-            cpyEmitter.mScaleVelocity = (VariableFloat)mScaleVelocity.Clone();
+            cpyEmitter.mMinScale = (CurvedVal)mMinScale.Clone();
+            cpyEmitter.mScaleVelocity = (CurvedVal)mScaleVelocity.Clone();
             cpyEmitter.mMaxRandScale = mMaxRandScale;
 
             cpyEmitter.mChangeVelocity = mChangeVelocity;
-            cpyEmitter.mMinVelocityX = (VariableFloat)mMinVelocityX.Clone();
-            cpyEmitter.mMinVelocityY = (VariableFloat)mMinVelocityY.Clone();
+            cpyEmitter.mMinVelocityX = (CurvedVal)mMinVelocityX.Clone();
+            cpyEmitter.mMinVelocityY = (CurvedVal)mMinVelocityY.Clone();
             cpyEmitter.mMaxVelocityX = mMaxVelocityX;
             cpyEmitter.mMaxVelocityY = mMaxVelocityY;
             cpyEmitter.mAccelerationX = mAccelerationX;
@@ -418,15 +418,15 @@ namespace IntelOrca.PeggleEdit.Tools.Levels.Children
             cpyEmitter.mMainVar3 = mMainVar3;
             cpyEmitter.mHasUnknown01 = mHasUnknown01;
             cpyEmitter.mUnknownFlags = mUnknownFlags;
-            cpyEmitter.mUnknown0 = (VariableFloat)mUnknown0.Clone();
-            cpyEmitter.mUnknown1 = (VariableFloat)mUnknown1.Clone();
+            cpyEmitter.mUnknown0 = (CurvedVal)mUnknown0.Clone();
+            cpyEmitter.mUnknown1 = (CurvedVal)mUnknown1.Clone();
             cpyEmitter.mUnknownEmitRate = mUnknownEmitRate;
             cpyEmitter.mUnknown2 = mUnknown2;
 
             cpyEmitter.mChangeColour = mChangeColour;
-            cpyEmitter.mColourRed = (VariableFloat)mColourRed.Clone();
-            cpyEmitter.mColourGreen = (VariableFloat)mColourGreen.Clone();
-            cpyEmitter.mColourBlue = (VariableFloat)mColourBlue.Clone();
+            cpyEmitter.mColourRed = (CurvedVal)mColourRed.Clone();
+            cpyEmitter.mColourGreen = (CurvedVal)mColourGreen.Clone();
+            cpyEmitter.mColourBlue = (CurvedVal)mColourBlue.Clone();
 
             cpyEmitter.mChangeDirection = mChangeDirection;
             cpyEmitter.mDirectionSpeed = mDirectionSpeed;
@@ -482,7 +482,7 @@ namespace IntelOrca.PeggleEdit.Tools.Levels.Children
             }
         }
 
-        public VariableFloat Unknown0
+        public CurvedVal Unknown0
         {
             get
             {
@@ -494,7 +494,7 @@ namespace IntelOrca.PeggleEdit.Tools.Levels.Children
             }
         }
 
-        public VariableFloat Unknown1
+        public CurvedVal Unknown1
         {
             get
             {
@@ -585,7 +585,7 @@ namespace IntelOrca.PeggleEdit.Tools.Levels.Children
         [Description("How opaque the emitted objects are. 0.0 is transparent, 1.0 is opaque (PopCap: Alpha).")]
         [Category("Opacity")]
         [DefaultValue(1.0f)]
-        public VariableFloat Opacity
+        public CurvedVal Opacity
         {
             get
             {
@@ -634,7 +634,7 @@ namespace IntelOrca.PeggleEdit.Tools.Levels.Children
         [Description("How the emitted objects are distributed over the area given by the width and height, e.g. 0.5 for half of the area.")]
         [Category("Layout")]
         [DefaultValue(1.0f)]
-        public VariableFloat EmitAreaMultiplier
+        public CurvedVal EmitAreaMultiplier
         {
             get
             {
@@ -696,7 +696,7 @@ namespace IntelOrca.PeggleEdit.Tools.Levels.Children
         [Description("The time interval between each object being emitted in hundredths of a second. 1.0 = 100 times per second.")]
         [Category("Timing")]
         [DefaultValue(0.0f)]
-        public VariableFloat EmitRate
+        public CurvedVal EmitRate
         {
             get
             {
@@ -792,7 +792,7 @@ namespace IntelOrca.PeggleEdit.Tools.Levels.Children
         [Description("The horizontal velocity of the emitted objects. Negative moves left and positive moves right.")]
         [Category("Velocity")]
         [DefaultValue(0.0f)]
-        public VariableFloat MinVelocityX
+        public CurvedVal MinVelocityX
         {
             get
             {
@@ -808,7 +808,7 @@ namespace IntelOrca.PeggleEdit.Tools.Levels.Children
         [Description("The vertical velocity of the emitted objects. Negative moves up and positive moves down.")]
         [Category("Velocity")]
         [DefaultValue(0.0f)]
-        public VariableFloat MinVelocityY
+        public CurvedVal MinVelocityY
         {
             get
             {
@@ -904,7 +904,7 @@ namespace IntelOrca.PeggleEdit.Tools.Levels.Children
         [Description("The initial scale of the emitted objects.")]
         [Category("Scale")]
         [DefaultValue(0.0f)]
-        public VariableFloat MinScale
+        public CurvedVal MinScale
         {
             get
             {
@@ -920,7 +920,7 @@ namespace IntelOrca.PeggleEdit.Tools.Levels.Children
         [Description("How fast the scale of the emitted objects changes. Negative makes them smaller, positive makes them larger.")]
         [Category("Scale")]
         [DefaultValue(0.0f)]
-        public VariableFloat ScaleVelocity
+        public CurvedVal ScaleVelocity
         {
             get
             {
@@ -968,7 +968,7 @@ namespace IntelOrca.PeggleEdit.Tools.Levels.Children
         [Description("The initial rotation of the emitted objects in degrees.")]
         [Category("Rotation")]
         [DefaultValue(0.0f)]
-        public VariableFloat InitialRotation
+        public CurvedVal InitialRotation
         {
             get
             {
@@ -984,7 +984,7 @@ namespace IntelOrca.PeggleEdit.Tools.Levels.Children
         [Description("The angular velocity of the emitted objects. 0.01 = 1 degree per second.")]
         [Category("Rotation")]
         [DefaultValue(0.0f)]
-        public VariableFloat RotationVelocity
+        public CurvedVal RotationVelocity
         {
             get
             {
@@ -1032,7 +1032,7 @@ namespace IntelOrca.PeggleEdit.Tools.Levels.Children
         [Description("The red component of the colour of the emitted objects.")]
         [Category("Colour")]
         [DefaultValue(1.0f)]
-        public VariableFloat ColourRed
+        public CurvedVal ColourRed
         {
             get
             {
@@ -1048,7 +1048,7 @@ namespace IntelOrca.PeggleEdit.Tools.Levels.Children
         [Description("The green component of the colour of the emitted objects.")]
         [Category("Colour")]
         [DefaultValue(1.0f)]
-        public VariableFloat ColourGreen
+        public CurvedVal ColourGreen
         {
             get
             {
@@ -1064,7 +1064,7 @@ namespace IntelOrca.PeggleEdit.Tools.Levels.Children
         [Description("The blue component of the colour of the emitted objects.")]
         [Category("Colour")]
         [DefaultValue(1.0f)]
-        public VariableFloat ColourBlue
+        public CurvedVal ColourBlue
         {
             get
             {

@@ -26,7 +26,7 @@ namespace IntelOrca.PeggleEdit.Tools.Levels.Children
     /// <summary>
     /// The type of movement.
     /// </summary>
-    public enum MovementType
+    public enum MoverType
     {
         NoMovement,
         VerticalCycle,
@@ -50,11 +50,11 @@ namespace IntelOrca.PeggleEdit.Tools.Levels.Children
     /// Represents information about the movement path of a level entry and contains methods for calculating and drawing the path.
     /// </summary>
     [TypeConverter(typeof(ExpandableObjectConverter))]
-    public class Movement : ICloneable, ILocation, IMovable, ILevelChild
+    public class Mover : ICloneable, ILocation, IMovable, ILevelChild
     {
         Level mLevel;
 
-        MovementType mType;
+        MoverType mType;
         short mRadius1;
         short mTimePeriod;
         short mRadius2;
@@ -90,12 +90,12 @@ namespace IntelOrca.PeggleEdit.Tools.Levels.Children
         [DisplayName("Sub-movement Y Offset")]
         public float SubMovementOffsetY { get; set; }
 
-        [DisplayName("Sub Movement")]
+        [DisplayName("Sub Mover")]
         [Description("The movement properties of the movement properties.")]
-        [Editor(typeof(MovementUITypeEditor), typeof(UITypeEditor))]
-        public MovementLink MovementLink { get; set; }
+        [Editor(typeof(MoverUITypeEditor), typeof(UITypeEditor))]
+        public MoverLink MoverLink { get; set; }
 
-        public Movement(Level level)
+        public Mover(Level level)
         {
             mLevel = level;
         }
@@ -103,7 +103,7 @@ namespace IntelOrca.PeggleEdit.Tools.Levels.Children
         public void ReadData(BinaryReader br, int version)
         {
             sbyte movementShape = br.ReadSByte();
-            mType = (MovementType)Math.Abs(movementShape);
+            mType = (MoverType)Math.Abs(movementShape);
             if (movementShape < 0)
             {
                 mReverse = true;
@@ -151,8 +151,8 @@ namespace IntelOrca.PeggleEdit.Tools.Levels.Children
             {
                 SubMovementOffsetX = br.ReadSingle();
                 SubMovementOffsetY = br.ReadSingle();
-                MovementLink = new MovementLink(mLevel);
-                MovementLink.ReadData(br, version);
+                MoverLink = new MoverLink(mLevel);
+                MoverLink.ReadData(br, version);
             }
             if (fA[13])
             {
@@ -181,7 +181,7 @@ namespace IntelOrca.PeggleEdit.Tools.Levels.Children
             fA[12] = (SubMovementOffsetX != 0.0f || SubMovementOffsetY != 0.0f);
             fA[13] = (mObjectX != 0.0f || mObjectY != 0.0f);
 
-            if (MovementLink != null)
+            if (MoverLink != null)
                 fA[12] = true;
 
             fA.Int32 |= mValueFlags;
@@ -229,9 +229,9 @@ namespace IntelOrca.PeggleEdit.Tools.Levels.Children
                 bw.Write(SubMovementOffsetX);
                 bw.Write(SubMovementOffsetY);
 
-                var movementLink = MovementLink;
-                if (MovementLink == null)
-                    movementLink = new MovementLink(mLevel);
+                var movementLink = MoverLink;
+                if (MoverLink == null)
+                    movementLink = new MoverLink(mLevel);
                 movementLink.WriteData(bw, version);
             }
             if (fA[13])
@@ -246,12 +246,12 @@ namespace IntelOrca.PeggleEdit.Tools.Levels.Children
             PointF position = GetAnchorPoint();
             level.DrawAnchorPoint(g, position.X, position.Y);
 
-            MovementLink?.Movement?.DrawAnchors(g, level);
+            MoverLink?.Mover?.DrawAnchors(g, level);
         }
 
         public void DrawPath(Graphics g)
         {
-            MovementLink?.Movement?.DrawPath(g);
+            MoverLink?.Mover?.DrawPath(g);
 
             PointF anchor = GetAnchorPoint();
 
@@ -275,20 +275,20 @@ namespace IntelOrca.PeggleEdit.Tools.Levels.Children
 
                 switch (mType)
                 {
-                    case MovementType.VerticalCycle:
+                    case MoverType.VerticalCycle:
                         g.DrawLine(pen, anchor.X, anchor.Y - GetYRadius(),
                             anchor.X, anchor.Y + GetYRadius());
                         break;
-                    case MovementType.HorizontalCycle:
+                    case MoverType.HorizontalCycle:
                         g.DrawLine(pen, anchor.X - GetXRadius(), anchor.Y,
                             anchor.X + GetXRadius(), anchor.Y);
                         break;
-                    case MovementType.Circle:
-                    case MovementType.RotateAroundCircle:
+                    case MoverType.Circle:
+                    case MoverType.RotateAroundCircle:
                         g.DrawEllipse(pen, anchor.X - GetXRadius(), anchor.Y - GetYRadius(),
                                         GetXRadius() * 2, GetYRadius() * 2);
                         break;
-                    case MovementType.HorizontalInfinity:
+                    case MoverType.HorizontalInfinity:
                         g.DrawBezier(pen,
                             anchor.X, anchor.Y,
                             anchor.X - (GetXRadius() * 1.35f), anchor.Y - (GetYRadius() * 1.8f),
@@ -300,7 +300,7 @@ namespace IntelOrca.PeggleEdit.Tools.Levels.Children
                             anchor.X + (GetXRadius() * 1.35f), anchor.Y + (GetYRadius() * 1.8f),
                             anchor.X, anchor.Y);
                         break;
-                    case MovementType.VericalInfinity:
+                    case MoverType.VericalInfinity:
                         g.DrawBezier(pen,
                             anchor.X, anchor.Y,
                             anchor.X - GetXRadius(), anchor.Y - GetYRadius(),
@@ -312,15 +312,15 @@ namespace IntelOrca.PeggleEdit.Tools.Levels.Children
                             anchor.X + GetXRadius(), anchor.Y + GetYRadius(),
                             anchor.X, anchor.Y);
                         break;
-                    case MovementType.VerticalArc:
+                    case MoverType.VerticalArc:
                         g.DrawArc(pen, anchor.X - GetXRadius(), anchor.Y - GetYRadius(),
                             GetXRadius() * 2, GetYRadius() * 2, -90.0f, 180.0f);
                         break;
-                    case MovementType.HorizontalArc:
+                    case MoverType.HorizontalArc:
                         g.DrawArc(pen, anchor.X - GetXRadius(), anchor.Y - GetYRadius(),
                                         GetXRadius() * 2, GetYRadius() * 2, 180.0f, 180.0f);
                         break;
-                    case MovementType.HorizontalWrap:
+                    case MoverType.HorizontalWrap:
                         if (mReverse)
                         {
                             g.DrawLine(pen, anchor.X, anchor.Y,
@@ -332,7 +332,7 @@ namespace IntelOrca.PeggleEdit.Tools.Levels.Children
                                 anchor.X + GetXRadius(), anchor.Y);
                         }
                         break;
-                    case MovementType.VerticalWrap:
+                    case MoverType.VerticalWrap:
                         if (mReverse)
                         {
                             g.DrawLine(pen, anchor.X, anchor.Y,
@@ -344,7 +344,7 @@ namespace IntelOrca.PeggleEdit.Tools.Levels.Children
                                 anchor.X, anchor.Y - GetYRadius());
                         }
                         break;
-                    case MovementType.RetraceCircle:
+                    case MoverType.RetraceCircle:
                         g.DrawEllipse(pen, anchor.X - GetXRadius(), anchor.Y - GetYRadius(),
                             GetXRadius() * 2, GetYRadius() * 2);
                         break;
@@ -367,7 +367,7 @@ namespace IntelOrca.PeggleEdit.Tools.Levels.Children
         {
             foreach (LevelEntry entry in mLevel.Entries)
             {
-                if (entry.MovementLink?.Movement == this)
+                if (entry.MoverLink?.Mover == this)
                 {
                     return true;
                 }
@@ -378,7 +378,7 @@ namespace IntelOrca.PeggleEdit.Tools.Levels.Children
         public PointF GetEstimatedMovePosition()
         {
             PointF locationA = PointF.Empty;
-            if (MovementLink?.Movement is Movement subMovement)
+            if (MoverLink?.Mover is Mover subMovement)
                 locationA = subMovement.GetEstimatedMovePosition();
 
             PointF locationB = GetMyEstimatedMovePosition();
@@ -393,7 +393,7 @@ namespace IntelOrca.PeggleEdit.Tools.Levels.Children
 
             float angle, circle_x, circle_y;
             float phase = GetCurrentPhase();
-            if (!mReverse && mType != MovementType.HorizontalWrap && mType != MovementType.VerticalWrap)
+            if (!mReverse && mType != MoverType.HorizontalWrap && mType != MoverType.VerticalWrap)
                 phase = 100.0f - phase;
 
             Matrix matrix = new Matrix();
@@ -401,61 +401,61 @@ namespace IntelOrca.PeggleEdit.Tools.Levels.Children
 
             switch (mType)
             {
-                case MovementType.VerticalCycle:
+                case MoverType.VerticalCycle:
                     angle = (phase * (float)(2 * Math.PI)) + (float)Math.PI;
                     circle_y = (float)Math.Sin(angle) * (float)GetYRadius();
                     return TransformPoint(matrix, new PointF(mAnchorPoint.X, mAnchorPoint.Y + circle_y));
 
-                case MovementType.HorizontalCycle:
+                case MoverType.HorizontalCycle:
                     angle = (phase * (float)(2 * Math.PI)) + (float)Math.PI;
                     circle_x = (float)Math.Cos(angle) * (float)GetXRadius();
                     return TransformPoint(matrix, new PointF(mAnchorPoint.X + circle_x, mAnchorPoint.Y));
 
-                case MovementType.Circle:
-                case MovementType.RotateAroundCircle:
+                case MoverType.Circle:
+                case MoverType.RotateAroundCircle:
                     angle = phase * (float)(2 * Math.PI);
                     circle_x = (float)Math.Cos(angle) * (float)GetXRadius();
                     circle_y = (float)Math.Sin(angle) * (float)GetYRadius();
                     return TransformPoint(matrix, new PointF(mAnchorPoint.X + circle_x, mAnchorPoint.Y + circle_y));
 
-                case MovementType.HorizontalInfinity:
+                case MoverType.HorizontalInfinity:
                     angle = phase * (float)(2 * Math.PI);
                     circle_x = (float)Math.Sin(angle + (Math.PI / 2)) * GetXRadius();
                     circle_y = (float)Math.Sin(2 * angle) * GetYRadius() * 0.5f;
                     return TransformPoint(matrix, new PointF(mAnchorPoint.X + circle_x, mAnchorPoint.Y + circle_y));
 
-                case MovementType.VericalInfinity:
+                case MoverType.VericalInfinity:
                     angle = phase * (float)(2 * Math.PI);
                     circle_x = (float)Math.Sin(2 * angle) * GetXRadius();
                     circle_y = (float)Math.Sin(angle + (Math.PI / 2)) * GetYRadius();
                     return TransformPoint(matrix, new PointF(mAnchorPoint.X + circle_x, mAnchorPoint.Y + circle_y));
 
-                case MovementType.HorizontalArc:
+                case MoverType.HorizontalArc:
                     angle = phase * (float)(2 * Math.PI);
                     circle_x = (float)Math.Cos(angle) * (float)GetXRadius();
                     circle_y = (float)Math.Sin(angle) * (float)GetYRadius();
                     return TransformPoint(matrix, new PointF(mAnchorPoint.X + circle_x, mAnchorPoint.Y - Math.Abs(circle_y)));
 
-                case MovementType.VerticalArc:
+                case MoverType.VerticalArc:
                     angle = phase * (float)(2 * Math.PI) + (float)(Math.PI / 2);
                     circle_x = (float)Math.Cos(angle) * (float)GetXRadius();
                     circle_y = (float)Math.Sin(angle) * (float)GetYRadius();
                     return TransformPoint(matrix, new PointF(mAnchorPoint.X + Math.Abs(circle_x), mAnchorPoint.Y - circle_y));
 
-                case MovementType.HorizontalWrap:
+                case MoverType.HorizontalWrap:
                     angle = (phase * GetXRadius()) % GetXRadius();
                     if (mReverse)
                         return TransformPoint(matrix, new PointF(mAnchorPoint.X - angle, mAnchorPoint.Y));
                     else
                         return TransformPoint(matrix, new PointF(mAnchorPoint.X + angle, mAnchorPoint.Y));
 
-                case MovementType.VerticalWrap:
+                case MoverType.VerticalWrap:
                     angle = (phase * GetYRadius()) % GetYRadius();
                     if (mReverse)
                         return TransformPoint(matrix, new PointF(mAnchorPoint.X, mAnchorPoint.Y + angle));
                     else
                         return TransformPoint(matrix, new PointF(mAnchorPoint.X, mAnchorPoint.Y - angle));
-                case MovementType.RetraceCircle:
+                case MoverType.RetraceCircle:
                     var phase2 = (float)Math.Sin(phase * 2 * Math.PI);
                     angle = (float)(phase2 * Math.PI - (mStartPhase * 2 * Math.PI));
                     circle_x = (float)Math.Cos(angle) * GetXRadius();
@@ -475,13 +475,13 @@ namespace IntelOrca.PeggleEdit.Tools.Levels.Children
 
             switch (mType)
             {
-                case MovementType.Rotate:
+                case MoverType.Rotate:
                     return (initialAngle) - (phase * 360.0f);
-                case MovementType.RotateAroundCircle:
+                case MoverType.RotateAroundCircle:
                     return (initialAngle + Rotation) - (phase * 360.0f);
-                case MovementType.RotateBackAndForth:
+                case MoverType.RotateBackAndForth:
                     return (initialAngle) - (((float)Math.Sin(MathExt.ToRadians(phase * 360.0f))) * 180.0f);
-                case MovementType.RetraceCircle:
+                case MoverType.RetraceCircle:
                     var phase2 = (float)Math.Sin(phase * 2 * Math.PI);
                     return initialAngle + Rotation + (mStartPhase * 360) - (phase2 * 180);
                 default:
@@ -492,7 +492,7 @@ namespace IntelOrca.PeggleEdit.Tools.Levels.Children
         private float GetCurrentPhase()
         {
             var startPhrase = mStartPhase;
-            if (mType == MovementType.RetraceCircle)
+            if (mType == MoverType.RetraceCircle)
                 startPhrase = 0;
             if (mLevel.ShowPreview)
             {
@@ -592,7 +592,7 @@ namespace IntelOrca.PeggleEdit.Tools.Levels.Children
 
         private PointF GetAnchorPoint()
         {
-            if (MovementLink?.Movement is Movement subMovement)
+            if (MoverLink?.Mover is Mover subMovement)
             {
                 return AddPoints(subMovement.GetEstimatedMovePosition(), mAnchorPoint);
             }
@@ -627,22 +627,22 @@ namespace IntelOrca.PeggleEdit.Tools.Levels.Children
 
             switch (mType)
             {
-                case MovementType.VerticalCycle:
+                case MoverType.VerticalCycle:
                     return (GetYRadius() * 2) / time;
-                case MovementType.HorizontalCycle:
+                case MoverType.HorizontalCycle:
                     return (GetXRadius() * 2) / time;
-                case MovementType.Circle:
-                case MovementType.RotateAroundCircle:
-                case MovementType.VerticalArc:
-                case MovementType.HorizontalArc:
-                case MovementType.RetraceCircle:
+                case MoverType.Circle:
+                case MoverType.RotateAroundCircle:
+                case MoverType.VerticalArc:
+                case MoverType.HorizontalArc:
+                case MoverType.RetraceCircle:
                     return GetEllipseCircumference(mRadius1 * 2, mRadius2 * 2) / time;
-                case MovementType.HorizontalInfinity:
-                case MovementType.VericalInfinity:
+                case MoverType.HorizontalInfinity:
+                case MoverType.VericalInfinity:
                     return 0.0f;
-                case MovementType.HorizontalWrap:
+                case MoverType.HorizontalWrap:
                     return GetXRadius() / time;
-                case MovementType.VerticalWrap:
+                case MoverType.VerticalWrap:
                     return GetYRadius() / time;
             }
 
@@ -687,7 +687,7 @@ namespace IntelOrca.PeggleEdit.Tools.Levels.Children
         }
 
         [Description("The movement path.")]
-        public MovementType Type
+        public MoverType Type
         {
             get
             {
@@ -797,11 +797,11 @@ namespace IntelOrca.PeggleEdit.Tools.Levels.Children
 
         object ICloneable.Clone() => Clone();
 
-        public Movement Clone()
+        public Mover Clone()
         {
-            Movement cpyMovement = new Movement(mLevel);
+            Mover cpyMovement = new Mover(mLevel);
 
-            cpyMovement.MovementLink = MovementLink?.Clone();
+            cpyMovement.MoverLink = MoverLink?.Clone();
             cpyMovement.mType = mType;
             cpyMovement.mReverse = mReverse;
             cpyMovement.mTimePeriod = mTimePeriod;
@@ -1009,14 +1009,14 @@ namespace IntelOrca.PeggleEdit.Tools.Levels.Children
             set
             {
                 mLevel = value;
-                if (MovementLink != null)
-                    MovementLink.Level = value;
+                if (MoverLink != null)
+                    MoverLink.Level = value;
             }
         }
 
-        [Description("The movement link IDX of this object. Other objects can reference this object's movement information by setting their Movement Link IDX to this number.")]
+        [Description("The movement link IDX of this object. Other objects can reference this object's movement information by setting their Mover Link IDX to this number.")]
         public int MUID => mLevel.GetMovementId(this);
 
-        public override string ToString() => $"Movement #{MUID}";
+        public override string ToString() => $"Mover #{MUID}";
     }
 }

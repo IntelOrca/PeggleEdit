@@ -1,6 +1,6 @@
 ﻿namespace IntelOrca.PeggleEdit.Tools.Levels
 {
-    partial class PolygonEditor
+    partial class PolyEditor
     {
         /// <summary>
         /// Required designer variable.
@@ -147,7 +147,7 @@
             this.btnCentre.UseVisualStyleBackColor = true;
             this.btnCentre.Click += new System.EventHandler(this.btnCentre_Click);
             // 
-            // PolygonEditor
+            // PolyEditor
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(12F, 25F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
@@ -164,10 +164,10 @@
             this.DoubleBuffered = true;
             this.Margin = new System.Windows.Forms.Padding(6);
             this.MinimumSize = new System.Drawing.Size(800, 600);
-            this.Name = "PolygonEditor";
+            this.Name = "PolyEditor";
             this.ShowIcon = false;
             this.StartPosition = System.Windows.Forms.FormStartPosition.CenterParent;
-            this.Text = "Polygon Editor";
+            this.Text = "Poly Editor";
             this.ResumeLayout(false);
             this.PerformLayout();
 

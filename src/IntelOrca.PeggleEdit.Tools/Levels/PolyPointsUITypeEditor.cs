@@ -16,6 +16,7 @@
 
 using System;
 using System.ComponentModel;
+using System.Drawing;
 using System.Drawing.Design;
 using System.Windows.Forms;
 using IntelOrca.PeggleEdit.Tools.Levels.Children;
@@ -23,9 +24,9 @@ using IntelOrca.PeggleEdit.Tools.Levels.Children;
 namespace IntelOrca.PeggleEdit.Tools.Levels
 {
     /// <summary>
-    /// Represents the user interface when editing a Movement property.
+    /// Represents the user interface when editing the collision points property of a polygon.
     /// </summary>
-    class MovementUITypeEditor : UITypeEditor
+    class PolyPointsUITypeEditor : UITypeEditor
     {
         public override UITypeEditorEditStyle GetEditStyle(ITypeDescriptorContext context)
         {
@@ -34,30 +35,20 @@ namespace IntelOrca.PeggleEdit.Tools.Levels
 
         public override object EditValue(ITypeDescriptorContext context, IServiceProvider provider, object value)
         {
+            Poly lc = context.Instance as Poly;
+            if (lc == null)
+                return value;
+
             if (value == null)
-            {
-                if (!(context.Instance is ILevelChild lc))
-                    return null;
+                value = new PointF[0];
 
-                if (!(context.Instance is ILocation location))
-                    return null;
-
-                return new MovementLink(lc.Level)
-                {
-                    Movement = new Movement(lc.Level)
-                    {
-                        Location = location.Location
-                    }
-                };
-            }
-            else
+            var form = new PolyEditor(lc.GetPolygonImage(), (PointF[])value);
+            if (form.ShowDialog() == DialogResult.OK)
             {
-                var result = MessageBox.Show("Do you want to delete this movement link?", "Delete Movement Link", MessageBoxButtons.OKCancel, MessageBoxIcon.Question);
-                if (result == DialogResult.OK)
-                    return null;
-                else
-                    return value;
+                return form.GetFinalPoints();
             }
+
+            return value;
         }
     }
 }

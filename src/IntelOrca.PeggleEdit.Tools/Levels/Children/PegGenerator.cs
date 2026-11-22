@@ -51,7 +51,7 @@ namespace IntelOrca.PeggleEdit.Tools.Levels.Children
             {
                 float angle = MathExt.ToRadians(a);
 
-                Circle p = new Circle(Level);
+                Ball p = new Ball(Level);
                 p.PegInfo = new PegInfo(p, true, false);
                 p.X = X + ((float)Math.Cos(angle) * mRadiusX);
                 p.Y = Y + ((float)Math.Sin(angle) * mRadiusY);

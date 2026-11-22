@@ -2,7 +2,7 @@
 {
     public enum PegKind
     {
-        Circle,
+        Ball,
         Brick
     }
 }

@@ -24,20 +24,20 @@ namespace IntelOrca.PeggleEdit.Tools.Levels
     /// <summary>
     /// Represents a variable float which can be a static value or a scripted variable value.
     /// </summary>
-    [TypeConverterAttribute(typeof(VariableFloatTypeConverter))]
-    public class VariableFloat : ICloneable
+    [TypeConverterAttribute(typeof(CurvedValTypeConverter))]
+    public class CurvedVal : ICloneable
     {
         bool mIsVariable;
         float mStaticValue;
         string mVariableValue;
 
-        public VariableFloat()
+        public CurvedVal()
         {
             mIsVariable = false;
             mStaticValue = 0.0f;
         }
 
-        public VariableFloat(string variableValue)
+        public CurvedVal(string variableValue)
         {
             if (float.TryParse(variableValue, out var f))
             {
@@ -53,14 +53,14 @@ namespace IntelOrca.PeggleEdit.Tools.Levels
             }
         }
 
-        public VariableFloat(float staticValue)
+        public CurvedVal(float staticValue)
         {
             mIsVariable = false;
             mStaticValue = staticValue;
             mVariableValue = default;
         }
 
-        public VariableFloat(BinaryReader br)
+        public CurvedVal(BinaryReader br)
         {
             ReadData(br);
         }
@@ -128,7 +128,7 @@ namespace IntelOrca.PeggleEdit.Tools.Levels
 
         public override bool Equals(object obj)
         {
-            VariableFloat vf = obj as VariableFloat;
+            CurvedVal vf = obj as CurvedVal;
             if (vf == null)
                 return false;
 
@@ -145,19 +145,19 @@ namespace IntelOrca.PeggleEdit.Tools.Levels
             }
         }
 
-        public static implicit operator VariableFloat(float f)
+        public static implicit operator CurvedVal(float f)
         {
-            return new VariableFloat(f);
+            return new CurvedVal(f);
         }
 
-        public static implicit operator VariableFloat(string s)
+        public static implicit operator CurvedVal(string s)
         {
-            return new VariableFloat(s);
+            return new CurvedVal(s);
         }
 
         public object Clone()
         {
-            VariableFloat vf = new VariableFloat();
+            CurvedVal vf = new CurvedVal();
             vf.mIsVariable = mIsVariable;
             vf.mStaticValue = mStaticValue;
             vf.mVariableValue = mVariableValue;

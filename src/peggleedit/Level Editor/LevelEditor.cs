@@ -333,7 +333,7 @@ namespace IntelOrca.PeggleEdit.Designer
 
             // Only the anchor of the base movement is absolute, so move each base movement once
             // to keep entries that share movements in the same relative position
-            var offsetMovements = new HashSet<Movement>();
+            var offsetMovements = new HashSet<Mover>();
             foreach (LevelEntry cpyLE in entries)
             {
                 var baseMovement = cpyLE.GetBaseMovement();
@@ -767,7 +767,7 @@ namespace IntelOrca.PeggleEdit.Designer
                     if (obj1 == obj2)
                         continue;
 
-                    if (obj1.MovementLink != null || obj2.MovementLink != null)
+                    if (obj1.MoverLink != null || obj2.MoverLink != null)
                         continue;
 
                     if (obj1.X == obj2.X && obj1.Y == obj2.Y)

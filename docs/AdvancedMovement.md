@@ -13,7 +13,7 @@ This can go one step further again with your second anchor point moving around a
 
 All objects can have movement info attached to them, and movement info can have another movement info attached to them giving an unlimited cycle. This is the best way to setup your advanced movement path, and is explained below in the tutorial. Each movement info has a unique ID (MUID) associated with it, relative to where the entry is stored in the file.
 
-If you were to save a level like this, your object with two anchor points would only do one movement around the first anchor point. This is because you need another object to "activate" / "override" the second movement info (an odd design feature of Peggle that makes using the editor less intuitive). This should be an object such as a circle or polygon which is invisible and has collision set to false. This object needs to have movement info and have the property Movement Link IDX set to the unique ID (MUID) associated with the second movement info. Once you have set this is in the editor, the link will remain even if the object changes location in the file as the editor links it by reference and not by a number.
+If you were to save a level like this, your object with two anchor points would only do one movement around the first anchor point. This is because you need another object to "activate" / "override" the second movement info (an odd design feature of Peggle that makes using the editor less intuitive). This should be an object such as a ball or poly which is invisible and has Collidable set to false. This object needs to have movement info and have the property Movement Link IDX set to the unique ID (MUID) associated with the second movement info. Once you have set this is in the editor, the link will remain even if the object changes location in the file as the editor links it by reference and not by a number.
 
 
 What will happen now is that the object you created to "override" the second movement info will now be essentially anchor point 1. If you set visibility to true, you will be able to see how it works and see why these objects, that are normally off screen, are there. The editor provides a button which will generate these link objects for you, so most of the time you shouldn't need to worry too much about this, once you understand the concept. Just follow the tutorial and you should get the hang of it.
@@ -52,6 +52,6 @@ Now with the peg still selected and still on the object tab of the ribbon at the
 ![img/advanced-movement/step6.png](img/advanced-movement/step6.png)
 
 ## Step 7 ##
-Doing this will produce a white circle above the level. Although the circle is at this location for now, when you next re-open the level, the circle will have a location reset to (0, 0). The circle has visible and collision set to false so that the ball does not collide with it and you cannot see the circle in the game.
+Doing this will produce a white ball object above the level. Although the object is at this location for now, when you next re-open the level, it will have a location reset to (0, 0). It has Visible and Collidable set to false so that the ball in play does not collide with it and you cannot see it in the game.
 
 ![img/advanced-movement/step7.png](img/advanced-movement/step7.png)

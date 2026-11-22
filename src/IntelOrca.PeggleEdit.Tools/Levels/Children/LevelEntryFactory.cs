@@ -33,16 +33,16 @@ namespace IntelOrca.PeggleEdit.Tools.Levels.Children
         {
             switch (type)
             {
-                case LevelEntryTypes.Rod:
-                    return new Rod(level);
-                case LevelEntryTypes.Polygon:
-                    return new Polygon(level);
-                case LevelEntryTypes.Circle:
-                    return new Circle(level);
+                case LevelEntryTypes.Line:
+                    return new Line(level);
+                case LevelEntryTypes.Poly:
+                    return new Poly(level);
+                case LevelEntryTypes.Ball:
+                    return new Ball(level);
                 case LevelEntryTypes.Brick:
                     return new Brick(level);
-                case LevelEntryTypes.Teleport:
-                    return new Teleport(level);
+                case LevelEntryTypes.Hole:
+                    return new Hole(level);
                 case LevelEntryTypes.Emitter:
                     return new Emitter(level);
 

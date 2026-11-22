@@ -64,7 +64,7 @@ namespace IntelOrca.PeggleEdit.Tools.Levels
                 entries = mLevel.GetObjectsIn(new RectangleF(spot.X - 10, spot.Y - 10, 20, 20));
             } while (entries.Length > 0);
 
-            Circle peg = new Circle(mLevel);
+            Ball peg = new Ball(mLevel);
             peg.X = spot.X;
             peg.Y = spot.Y;
             peg.PegInfo = new PegInfo(peg, true, false);

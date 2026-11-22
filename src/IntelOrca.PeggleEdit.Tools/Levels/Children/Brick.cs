@@ -302,7 +302,7 @@ namespace IntelOrca.PeggleEdit.Tools.Levels.Children
             //Get location and angle
             PointF location = DrawLocation;
             float angle = mAngle;
-            if (MovementLink?.Movement is Movement movement)
+            if (MoverLink?.Mover is Mover movement)
             {
                 angle = movement.GetEstimatedMoveAngle(mAngle);
             }

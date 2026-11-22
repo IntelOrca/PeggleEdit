@@ -25,7 +25,7 @@ namespace IntelOrca.PeggleEdit.Tools.Levels.Children
     /// <summary>
     /// Represents the rod level entry.
     /// </summary>
-    public class Rod : LevelEntry, IPointContainer
+    public class Line : LevelEntry, IPointContainer
     {
         PointF mPointA;
         PointF mPointB;
@@ -37,7 +37,7 @@ namespace IntelOrca.PeggleEdit.Tools.Levels.Children
         bool mHasUnknown1;
         float mUnknown1;
 
-        public Rod(Level level)
+        public Line(Level level)
             : base(level)
         {
 
@@ -103,7 +103,7 @@ namespace IntelOrca.PeggleEdit.Tools.Levels.Children
 
         public override object Clone()
         {
-            Rod cpyRod = new Rod(Level);
+            Line cpyRod = new Line(Level);
             base.CloneTo(cpyRod);
             cpyRod.mPointA = mPointA;
             cpyRod.mPointB = mPointB;
@@ -248,7 +248,7 @@ namespace IntelOrca.PeggleEdit.Tools.Levels.Children
         {
             get
             {
-                return LevelEntryTypes.Rod;
+                return LevelEntryTypes.Line;
             }
         }
 

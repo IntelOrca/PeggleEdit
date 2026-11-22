@@ -25,12 +25,12 @@ namespace IntelOrca.PeggleEdit.Tools.Levels
     /// <summary>
     /// Represents a form for editing the collision points in a polygon.
     /// </summary>
-    public partial class PolygonEditor : Form
+    public partial class PolyEditor : Form
     {
         Image mImage;
         List<PointF> mPoints = new List<PointF>();
 
-        public PolygonEditor(Image img, PointF[] points)
+        public PolyEditor(Image img, PointF[] points)
         {
             InitializeComponent();
             mImage = img;

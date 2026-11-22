@@ -26,7 +26,7 @@ namespace IntelOrca.PeggleEdit.Tools.Levels.Children
     /// <summary>
     /// Represents the teleport level entry.
     /// </summary>
-    public class Teleport : LevelEntry, IPointContainer
+    public class Hole : LevelEntry, IPointContainer
     {
         LevelEntry mEntry;
 
@@ -49,13 +49,13 @@ namespace IntelOrca.PeggleEdit.Tools.Levels.Children
         bool mHasEntryId;
         int mEntryId;
 
-        public Teleport(Level level)
+        public Hole(Level level)
             : base(level)
         {
             mWidth = 20;
             mHeight = 20;
 
-            mEntry = new Polygon(level);
+            mEntry = new Poly(level);
             mEntry.X = 50;
             mEntry.Y = 50;
 
@@ -206,7 +206,7 @@ namespace IntelOrca.PeggleEdit.Tools.Levels.Children
 
         public override object Clone()
         {
-            Teleport cpyTeleport = new Teleport(Level);
+            Hole cpyTeleport = new Hole(Level);
             base.CloneTo(cpyTeleport);
             cpyTeleport.mWidth = mWidth;
             cpyTeleport.mHeight = mHeight;
@@ -231,7 +231,7 @@ namespace IntelOrca.PeggleEdit.Tools.Levels.Children
         {
             get
             {
-                return LevelEntryTypes.Teleport;
+                return LevelEntryTypes.Hole;
             }
         }
 

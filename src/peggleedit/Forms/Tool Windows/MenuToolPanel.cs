@@ -341,19 +341,19 @@ namespace IntelOrca.PeggleEdit.Designer
             btnBrickPenTool.Image = Resources.brick_pen_32;
             btnBrickPenTool.Click += new EventHandler(brickPenRibbonButton_Click);
 
-            btnCircle = new RibbonButton("Circle");
+            btnCircle = new RibbonButton("Ball");
             btnCircle.Image = Resources.material_32;
             btnCircle.Click += new EventHandler(circleRibbonButton_Click);
 
-            btnPolygon = new RibbonButton("Polygon");
+            btnPolygon = new RibbonButton("Poly");
             btnPolygon.Image = Resources.polygon_32;
             btnPolygon.Click += new EventHandler(polygonRibbonButton_Click);
 
-            btnRod = new RibbonButton("Rod");
+            btnRod = new RibbonButton("Line");
             btnRod.Image = Resources.rod_32;
             btnRod.Click += new EventHandler(rodRibbonButton_Click);
 
-            btnTeleport = new RibbonButton("Teleport");
+            btnTeleport = new RibbonButton("Hole");
             btnTeleport.Image = Resources.teleport_32;
             btnTeleport.Click += new EventHandler(teleportRibbonButton_Click);
 
@@ -436,10 +436,10 @@ namespace IntelOrca.PeggleEdit.Designer
             btnMovementType.Image = Resources.peg_move_type_32;
             btnMovementType.Style = RibbonButtonStyle.DropDown;
 
-            for (int i = 0; i <= (int)MovementType.WeirdShape; i++)
+            for (int i = 0; i <= (int)MoverType.WeirdShape; i++)
             {
                 RibbonButton ritem = new RibbonButton();
-                ritem.Text = ((MovementType)i).ToString();
+                ritem.Text = ((MoverType)i).ToString();
                 ritem.Tag = i;
                 ritem.Click += new EventHandler(movementTypeRibbonButton_Click);
 
@@ -845,7 +845,7 @@ namespace IntelOrca.PeggleEdit.Designer
 
         private void pegRibbonButton_Click(object sender, EventArgs e)
         {
-            var circle = new Circle(null);
+            var circle = new Ball(null);
             circle.PegInfo = new PegInfo(circle, true, false);
             mParent.SetEditorTool(new DrawEditorTool(circle, true, 30, 30));
         }
@@ -862,7 +862,7 @@ namespace IntelOrca.PeggleEdit.Designer
 
         private void pegPenRibbonButton_Click(object sender, EventArgs e)
         {
-            mParent.SetEditorTool(new PenEditorTool(PegKind.Circle));
+            mParent.SetEditorTool(new PenEditorTool(PegKind.Ball));
         }
 
         private void brickPenRibbonButton_Click(object sender, EventArgs e)
@@ -872,21 +872,21 @@ namespace IntelOrca.PeggleEdit.Designer
 
         private void circleRibbonButton_Click(object sender, EventArgs e)
         {
-            var circle = new Circle(null);
+            var circle = new Ball(null);
             circle.Radius = 20.0f;
             mParent.SetEditorTool(new DrawEditorTool(circle, false));
         }
 
         private void polygonRibbonButton_Click(object sender, EventArgs e)
         {
-            var p = new Polygon(null);
+            var p = new Poly(null);
             p.SetPoints(new PointF[] { new PointF(0, 0), new PointF(0, 40), new PointF(40, 40), new PointF(40, 0), new PointF(0, 0) });
             mParent.SetEditorTool(new DrawEditorTool(p, false));
         }
 
         private void rodRibbonButton_Click(object sender, EventArgs e)
         {
-            var rod = new Rod(null);
+            var rod = new Line(null);
             rod.PointA = new PointF(300, 200);
             rod.PointB = new PointF(400, 250);
             mParent.SetEditorTool(new DrawEditorTool(rod, false));
@@ -894,7 +894,7 @@ namespace IntelOrca.PeggleEdit.Designer
 
         private void teleportRibbonButton_Click(object sender, EventArgs e)
         {
-            var teleport = new Teleport(null);
+            var teleport = new Hole(null);
             teleport.DestinationX = 50.0f;
             teleport.DestinationY = 50.0f;
             mParent.SetEditorTool(new DrawEditorTool(teleport, false));
@@ -995,12 +995,12 @@ namespace IntelOrca.PeggleEdit.Designer
             if (!IsEditorAvailable())
                 return;
 
-            List<Movement> movements = new List<Movement>();
+            List<Mover> movements = new List<Mover>();
             foreach (LevelEntry m in LevelEditor.GetSelectedObjects())
             {
-                if (m.MovementLink.OwnsMovement)
+                if (m.MoverLink.OwnsMovement)
                 {
-                    movements.Add(m.MovementLink.Movement);
+                    movements.Add(m.MoverLink.Mover);
                 }
             }
 
@@ -1035,7 +1035,7 @@ namespace IntelOrca.PeggleEdit.Designer
             }
 
             //Check if the peg has moving details
-            if (movementPeg.MovementLink?.OwnsMovement != true)
+            if (movementPeg.MoverLink?.OwnsMovement != true)
             {
                 MessageBox.Show("The peg must have unshared movement properties.");
                 return;
@@ -1080,7 +1080,7 @@ namespace IntelOrca.PeggleEdit.Designer
             }
 
             var primary = selectedObjects[0];
-            if (!(primary.MovementLink?.Movement is Movement primaryMovement))
+            if (!(primary.MoverLink?.Mover is Mover primaryMovement))
             {
                 MessageBox.Show("First selected object must have movement information.");
                 return;
@@ -1090,12 +1090,12 @@ namespace IntelOrca.PeggleEdit.Designer
             for (int i = 1; i < selectedObjects.Count; i++)
             {
                 var secondary = selectedObjects[i];
-                if (secondary.MovementLink?.Movement is Movement movement)
+                if (secondary.MoverLink?.Mover is Mover movement)
                 {
-                    if (movement.MovementLink == null)
-                        movement.MovementLink = new MovementLink(LevelEditor.Level);
-                    movement.MovementLink.InternalLinkId = muid;
-                    movement.MovementLink.InternalMovement = primaryMovement;
+                    if (movement.MoverLink == null)
+                        movement.MoverLink = new MoverLink(LevelEditor.Level);
+                    movement.MoverLink.InternalLinkId = muid;
+                    movement.MoverLink.InternalMovement = primaryMovement;
                     movement.AnchorPointX = 0;
                     movement.AnchorPointY = 0;
                 }
@@ -1109,11 +1109,11 @@ namespace IntelOrca.PeggleEdit.Designer
             if (!IsEditorAvailable())
                 return;
 
-            MovementType movementType;
+            MoverType movementType;
             if (sender is RibbonButton)
             {
                 RibbonButton ribbonButton = (RibbonButton)sender;
-                movementType = (MovementType)ribbonButton.Tag;
+                movementType = (MoverType)ribbonButton.Tag;
             }
             else
             {
@@ -1122,15 +1122,15 @@ namespace IntelOrca.PeggleEdit.Designer
 
             foreach (LevelEntry m in LevelEditor.GetSelectedObjects())
             {
-                if (m.MovementLink?.Movement is Movement movement)
+                if (m.MoverLink?.Mover is Mover movement)
                 {
                     movement.Type = movementType;
                 }
                 else
                 {
-                    m.MovementLink = new MovementLink(LevelEditor.Level)
+                    m.MoverLink = new MoverLink(LevelEditor.Level)
                     {
-                        Movement = new Movement(LevelEditor.Level)
+                        Mover = new Mover(LevelEditor.Level)
                         {
                             Location = m.Location,
                             Type = movementType,
@@ -1297,7 +1297,7 @@ namespace IntelOrca.PeggleEdit.Designer
                         btnStraightBrickTool.Checked = true;
                     break;
                 case PenEditorTool penEditorTool:
-                    if (penEditorTool.PegKind == PegKind.Circle)
+                    if (penEditorTool.PegKind == PegKind.Ball)
                         btnPegPenTool.Checked = true;
                     else
                         btnBrickPenTool.Checked = true;
@@ -1305,19 +1305,19 @@ namespace IntelOrca.PeggleEdit.Designer
                 case DrawEditorTool drawEditorTool:
                     switch (drawEditorTool.Template)
                     {
-                        case Circle circle when circle.HasPegInfo:
+                        case Ball circle when circle.HasPegInfo:
                             btnPegTool.Checked = true;
                             break;
-                        case Circle _:
+                        case Ball _:
                             btnCircle.Checked = true;
                             break;
-                        case Polygon _:
+                        case Poly _:
                             btnPolygon.Checked = true;
                             break;
-                        case Rod _:
+                        case Line _:
                             btnRod.Checked = true;
                             break;
-                        case Teleport _:
+                        case Hole _:
                             btnTeleport.Checked = true;
                             break;
                         case Emitter _:

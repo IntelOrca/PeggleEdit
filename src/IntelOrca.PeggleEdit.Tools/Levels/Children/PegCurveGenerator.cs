@@ -32,7 +32,7 @@ namespace IntelOrca.PeggleEdit.Tools.Levels.Children
         {
             ProcessPegs(p =>
             {
-                var peg = new Circle(Level);
+                var peg = new Ball(Level);
                 peg.PegInfo = new PegInfo(peg, true, false);
                 peg.Location = Location.Add(new PointF(p.X, p.Y)).Round();
                 Level.Entries.Add(peg);

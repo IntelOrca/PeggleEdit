@@ -87,8 +87,8 @@ namespace IntelOrca.PeggleEdit.Tools.Levels.Children
         [EntryProperty(EntryPropertyType.SubElement, null)]
         [Description("The movement properties of the object.")]
         [Category("Behaviour")]
-        [Editor(typeof(MovementUITypeEditor), typeof(UITypeEditor))]
-        public MovementLink MovementLink { get; set; }
+        [Editor(typeof(MoverUITypeEditor), typeof(UITypeEditor))]
+        public MoverLink MoverLink { get; set; }
 
         public LevelEntry(Level level)
         {
@@ -181,8 +181,8 @@ namespace IntelOrca.PeggleEdit.Tools.Levels.Children
             }
             if (f[3])
             {
-                MovementLink = new MovementLink(mLevel);
-                MovementLink.ReadData(br, version);
+                MoverLink = new MoverLink(mLevel);
+                MoverLink.ReadData(br, version);
             }
         }
 
@@ -270,7 +270,7 @@ namespace IntelOrca.PeggleEdit.Tools.Levels.Children
             if (f[2])
                 mPegInfo.WriteData(bw, version);
             if (f[3])
-                MovementLink.WriteData(bw, version);
+                MoverLink.WriteData(bw, version);
         }
 
         public virtual void ReadData(BinaryReader br, int version)
@@ -293,7 +293,7 @@ namespace IntelOrca.PeggleEdit.Tools.Levels.Children
             if (Level.ShowPreview && !mVisible)
                 return;
 
-            if (MovementLink?.Movement is Movement movement)
+            if (MoverLink?.Mover is Mover movement)
             {
                 if (MouseOver || Selected)
                 {
@@ -311,31 +311,31 @@ namespace IntelOrca.PeggleEdit.Tools.Levels.Children
 
         }
 
-        public Movement GetBaseMovement()
+        public Mover GetBaseMovement()
         {
-            Movement mb = null;
-            var m = MovementLink?.Movement;
+            Mover mb = null;
+            var m = MoverLink?.Mover;
             while (m != null)
             {
                 mb = m;
-                m = m.MovementLink?.Movement;
+                m = m.MoverLink?.Mover;
             }
             return mb;
         }
 
-        public Movement GetMovement()
+        public Mover GetMovement()
         {
-            return MovementLink?.Movement;
+            return MoverLink?.Mover;
         }
 
-        private Movement GetHighestSelectedMovement()
+        private Mover GetHighestSelectedMovement()
         {
-            Movement mb = null;
-            var m = MovementLink?.Movement;
+            Mover mb = null;
+            var m = MoverLink?.Mover;
             while (m != null)
             {
                 mb = m;
-                m = m.MovementLink?.Movement;
+                m = m.MoverLink?.Mover;
                 var entry = mLevel.GetFirstLevelEntryWithMovement(m);
                 if (entry == null || !entry.Selected)
                 {
@@ -430,7 +430,7 @@ namespace IntelOrca.PeggleEdit.Tools.Levels.Children
         {
             get
             {
-                return (MovementLink != null);
+                return (MoverLink != null);
             }
         }
 
@@ -489,7 +489,7 @@ namespace IntelOrca.PeggleEdit.Tools.Levels.Children
         {
             get
             {
-                if (MovementLink?.Movement is Movement movement)
+                if (MoverLink?.Mover is Mover movement)
                 {
                     return movement.GetEstimatedMovePosition();
                 }
@@ -519,7 +519,7 @@ namespace IntelOrca.PeggleEdit.Tools.Levels.Children
                 dest.mPegInfo = null;
             }
 
-            dest.MovementLink = MovementLink?.Clone();
+            dest.MoverLink = MoverLink?.Clone();
             dest.mImageFilename = mImageFilename;
             dest.mID = mID;
             dest.mLogic = mLogic;
@@ -1000,8 +1000,8 @@ namespace IntelOrca.PeggleEdit.Tools.Levels.Children
             set
             {
                 mLevel = value;
-                if (MovementLink != null)
-                    MovementLink.Level = Level;
+                if (MoverLink != null)
+                    MoverLink.Level = Level;
             }
         }
     }

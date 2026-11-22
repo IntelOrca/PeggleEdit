@@ -2,11 +2,11 @@
 {
     internal static class LevelEntryTypes
     {
-        public const int Rod = 2;
-        public const int Polygon = 3;
-        public const int Circle = 5;
+        public const int Line = 2;
+        public const int Poly = 3;
+        public const int Ball = 5;
         public const int Brick = 6;
-        public const int Teleport = 8;
+        public const int Hole = 8;
         public const int Emitter = 9;
         public const int PegGenerator = 1001;
         public const int BrickGenerator = 1002;

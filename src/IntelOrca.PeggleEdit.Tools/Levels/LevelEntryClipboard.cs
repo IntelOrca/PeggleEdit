@@ -33,7 +33,7 @@ namespace IntelOrca.PeggleEdit.Tools.Levels
         public const string FormatName = "PeggleEdit.LevelEntries";
 
         /// <summary>
-        /// Serializes the given entries in the level file format. Movement links between the given
+        /// Serializes the given entries in the level file format. Mover links between the given
         /// entries are preserved, links to movements of entries that are not given are replaced by a
         /// copy of that movement.
         /// </summary>
@@ -50,28 +50,28 @@ namespace IntelOrca.PeggleEdit.Tools.Levels
             }
 
             // Map each owned movement to its clone so that links can point to the cloned movements
-            var movementMap = new Dictionary<Movement, Movement>();
+            var movementMap = new Dictionary<Mover, Mover>();
             for (int i = 0; i < sources.Length; i++)
             {
-                var srcLink = sources[i].MovementLink;
-                var dstLink = clones[i].MovementLink;
-                while (srcLink != null && dstLink != null && srcLink.OwnsMovement && srcLink.Movement != null)
+                var srcLink = sources[i].MoverLink;
+                var dstLink = clones[i].MoverLink;
+                while (srcLink != null && dstLink != null && srcLink.OwnsMovement && srcLink.Mover != null)
                 {
-                    movementMap[srcLink.Movement] = dstLink.Movement;
-                    srcLink = srcLink.Movement.MovementLink;
-                    dstLink = dstLink.Movement?.MovementLink;
+                    movementMap[srcLink.Mover] = dstLink.Mover;
+                    srcLink = srcLink.Mover.MoverLink;
+                    dstLink = dstLink.Mover?.MoverLink;
                 }
             }
 
             for (int i = 0; i < sources.Length; i++)
             {
-                var srcLink = sources[i].MovementLink;
-                var dstLink = clones[i].MovementLink;
-                while (srcLink != null && dstLink != null && srcLink.Movement != null)
+                var srcLink = sources[i].MoverLink;
+                var dstLink = clones[i].MoverLink;
+                while (srcLink != null && dstLink != null && srcLink.Mover != null)
                 {
                     if (!srcLink.OwnsMovement)
                     {
-                        if (movementMap.TryGetValue(srcLink.Movement, out var linkedMovement))
+                        if (movementMap.TryGetValue(srcLink.Mover, out var linkedMovement))
                         {
                             dstLink.InternalMovement = linkedMovement;
                             break;
@@ -80,8 +80,8 @@ namespace IntelOrca.PeggleEdit.Tools.Levels
                         // Linked movement is not being copied, so take ownership of a copy of it
                         dstLink.InternalLinkId = 1;
                     }
-                    srcLink = srcLink.Movement.MovementLink;
-                    dstLink = dstLink.Movement?.MovementLink;
+                    srcLink = srcLink.Mover.MoverLink;
+                    dstLink = dstLink.Mover?.MoverLink;
                 }
             }
 

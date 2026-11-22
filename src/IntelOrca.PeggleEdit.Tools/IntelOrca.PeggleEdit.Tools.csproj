@@ -9,11 +9,11 @@
     <PackageReference Include="CSJ2K" Version="3.0.0" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Update="Levels\PolygonEditor.cs">
+    <Compile Update="Levels\PolyEditor.cs">
       <SubType>Form</SubType>
     </Compile>
-    <Compile Update="Levels\PolygonEditor.Designer.cs">
-      <DependentUpon>PolygonEditor.cs</DependentUpon>
+    <Compile Update="Levels\PolyEditor.Designer.cs">
+      <DependentUpon>PolyEditor.cs</DependentUpon>
     </Compile>
     <Compile Update="Properties\Resources.Designer.cs">
       <AutoGen>True</AutoGen>
@@ -22,8 +22,8 @@
     </Compile>
   </ItemGroup>
   <ItemGroup>
-    <EmbeddedResource Update="Levels\PolygonEditor.resx">
-      <DependentUpon>PolygonEditor.cs</DependentUpon>
+    <EmbeddedResource Update="Levels\PolyEditor.resx">
+      <DependentUpon>PolyEditor.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Update="Properties\Resources.resx">
       <Generator>ResXFileCodeGenerator</Generator>

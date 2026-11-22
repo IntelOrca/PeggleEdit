@@ -16,7 +16,6 @@
 
 using System;
 using System.ComponentModel;
-using System.Drawing;
 using System.Drawing.Design;
 using System.Windows.Forms;
 using IntelOrca.PeggleEdit.Tools.Levels.Children;
@@ -24,9 +23,9 @@ using IntelOrca.PeggleEdit.Tools.Levels.Children;
 namespace IntelOrca.PeggleEdit.Tools.Levels
 {
     /// <summary>
-    /// Represents the user interface when editing the collision points property of a polygon.
+    /// Represents the user interface when editing a Mover property.
     /// </summary>
-    class PolygonPointsUITypeEditor : UITypeEditor
+    class MoverUITypeEditor : UITypeEditor
     {
         public override UITypeEditorEditStyle GetEditStyle(ITypeDescriptorContext context)
         {
@@ -35,20 +34,30 @@ namespace IntelOrca.PeggleEdit.Tools.Levels
 
         public override object EditValue(ITypeDescriptorContext context, IServiceProvider provider, object value)
         {
-            Polygon lc = context.Instance as Polygon;
-            if (lc == null)
-                return value;
-
             if (value == null)
-                value = new PointF[0];
-
-            var form = new PolygonEditor(lc.GetPolygonImage(), (PointF[])value);
-            if (form.ShowDialog() == DialogResult.OK)
             {
-                return form.GetFinalPoints();
-            }
+                if (!(context.Instance is ILevelChild lc))
+                    return null;
 
-            return value;
+                if (!(context.Instance is ILocation location))
+                    return null;
+
+                return new MoverLink(lc.Level)
+                {
+                    Mover = new Mover(lc.Level)
+                    {
+                        Location = location.Location
+                    }
+                };
+            }
+            else
+            {
+                var result = MessageBox.Show("Do you want to delete this movement link?", "Delete Mover Link", MessageBoxButtons.OKCancel, MessageBoxIcon.Question);
+                if (result == DialogResult.OK)
+                    return null;
+                else
+                    return value;
+            }
         }
     }
 }

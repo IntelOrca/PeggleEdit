@@ -1,0 +1,4 @@
+Polys (called Polygons in older versions of PeggleEdit) are objects which have a shape defined by points. Although polys are used to create irregular shapes that the ball can collide with, they are also used to display foreground images or link movement objects and holes together. [Balls](Balls.md) can also be used to perform these functions.
+
+## Foreground Images ##
+To create a moving image, polys can be used with the Collidable property set to false, and have movement info applied to them. Sometimes when emitters are placed on levels, they emit particles over the background. Polys can be used to place a foreground image that mimics the background over the top to give particles a 3D perspective.

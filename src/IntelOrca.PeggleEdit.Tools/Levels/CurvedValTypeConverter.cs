@@ -26,7 +26,7 @@ namespace IntelOrca.PeggleEdit.Tools.Levels
     /// <summary>
     /// Represents the type converter for converting between strings, floats and variable floats.
     /// </summary>
-    class VariableFloatTypeConverter : TypeConverter
+    class CurvedValTypeConverter : TypeConverter
     {
         public override bool CanConvertFrom(ITypeDescriptorContext context, Type sourceType)
         {
@@ -43,11 +43,11 @@ namespace IntelOrca.PeggleEdit.Tools.Levels
         {
             if (value is float)
             {
-                return new VariableFloat((float)value);
+                return new CurvedVal((float)value);
             }
             else if (value is string)
             {
-                return new VariableFloat((string)value);
+                return new CurvedVal((string)value);
             }
 
             return base.ConvertFrom(context, culture, value);

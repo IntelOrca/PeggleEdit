@@ -7,6 +7,8 @@ PeggleEdit 5.2.0 (Flamingo) (TBC)
 * [Feature] Choose a Release or Nightly update ring in Options
 * [Feature] PeggleEdit can now update itself when a new version is available
 * [Feature] PeggleEdit is DPI aware: it is sharp on high DPI displays, with the ribbon, windows, dialogs and level scaled to match
+* [Change] Rename Circle, Polygon, Rod and Teleport to Ball, Poly, Line and Hole, the names Peggle itself uses
+* [Change] Use the names from PopCap's own level editor in the property grid, with clearer descriptions
 * [Enhancement] Fall back to main.pak or Peggle Nights directory for images
 * [Change] Remove the unimplemented script button
 * [Fix] Ribbon drop-downs close when clicking elsewhere, pressing Escape or switching to another application

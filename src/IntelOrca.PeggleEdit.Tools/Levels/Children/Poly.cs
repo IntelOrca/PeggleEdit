@@ -29,7 +29,7 @@ namespace IntelOrca.PeggleEdit.Tools.Levels.Children
     /// <summary>
     /// Represents the polygon level entry.
     /// </summary>
-    public class Polygon : LevelEntry, ICloneable, IPointContainer
+    public class Poly : LevelEntry, ICloneable, IPointContainer
     {
         byte mNormalDir;
 
@@ -50,7 +50,7 @@ namespace IntelOrca.PeggleEdit.Tools.Levels.Children
         byte mUnknown1;
         bool mHasGrowType;
 
-        public Polygon(Level level)
+        public Poly(Level level)
             : base(level)
         {
             mPoints = new List<PointF>();
@@ -163,7 +163,7 @@ namespace IntelOrca.PeggleEdit.Tools.Levels.Children
 
             var location = DrawLocation;
             var angle = 0.0f;
-            if (MovementLink?.Movement is Movement movement)
+            if (MoverLink?.Mover is Mover movement)
             {
                 angle = movement.GetEstimatedMoveAngle(angle);
             }
@@ -225,7 +225,7 @@ namespace IntelOrca.PeggleEdit.Tools.Levels.Children
 
         public override object Clone()
         {
-            Polygon cpyPolygon = new Polygon(Level);
+            Poly cpyPolygon = new Poly(Level);
             base.CloneTo(cpyPolygon);
 
             cpyPolygon.mPoints = new List<PointF>(mPoints.ToArray());
@@ -251,7 +251,7 @@ namespace IntelOrca.PeggleEdit.Tools.Levels.Children
         {
             get
             {
-                return LevelEntryTypes.Polygon;
+                return LevelEntryTypes.Poly;
             }
         }
 
@@ -277,7 +277,7 @@ namespace IntelOrca.PeggleEdit.Tools.Levels.Children
         }
 
         [Category("Behaviour")]
-        [EditorAttribute(typeof(PolygonPointsUITypeEditor), typeof(UITypeEditor))]
+        [EditorAttribute(typeof(PolyPointsUITypeEditor), typeof(UITypeEditor))]
         public PointF[] Points
         {
             get

@@ -1,0 +1,1 @@
+Lines (called Rods in older versions of PeggleEdit) are objects which are set with two co-ordinates. They are used to add a thin barrier that balls will bound off. Since lines cannot contain an image, thin [polys](Polys.md) may be used to achieve the desired effect.

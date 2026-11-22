@@ -29,9 +29,9 @@ namespace IntelOrca.PeggleEdit.Designer
             var obj = level.GetObjectAt(pos.X, pos.Y);
             switch (obj)
             {
-                case Circle circle when circle.HasPegInfo:
+                case Ball circle when circle.HasPegInfo:
                 {
-                    var template = new Circle(null);
+                    var template = new Ball(null);
                     template.PegInfo = (PegInfo)circle.PegInfo.Clone();
                     SetTool(new DrawEditorTool(template, true, 30, 30));
                     break;
@@ -44,7 +44,7 @@ namespace IntelOrca.PeggleEdit.Designer
                 case LevelEntry entry:
                 {
                     var template = (LevelEntry)entry.Clone();
-                    template.MovementLink = null;
+                    template.MoverLink = null;
                     SetTool(new DrawEditorTool(template, false));
                     break;
                 }
