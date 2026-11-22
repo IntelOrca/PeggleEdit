@@ -356,7 +356,7 @@ namespace IntelOrca.PeggleEdit.Tools.Levels
 
         public void UpdateMoverLinksRead()
         {
-            foreach (LevelEntry entry in Entries)
+            foreach (LevelEntry entry in GetAllEntries())
             {
                 var link = entry.MoverLink;
                 while (link != null)
@@ -376,7 +376,7 @@ namespace IntelOrca.PeggleEdit.Tools.Levels
 
         public void UpdateMoverLinksWrite()
         {
-            foreach (LevelEntry entry in Entries)
+            foreach (LevelEntry entry in GetAllEntries())
             {
                 var link = entry.MoverLink;
                 while (link != null)
@@ -396,43 +396,60 @@ namespace IntelOrca.PeggleEdit.Tools.Levels
 
         public Mover GetMoverFromId(int id)
         {
-            int mi = 2;
-            foreach (LevelEntry entry in Entries)
+            int mi = FirstLinkId;
+            foreach (var obj in GetLinkableObjects())
             {
-                mi++;
                 if (mi == id)
-                    return null;
-
-                var link = entry.MoverLink;
-                while (link != null && (link.InternalLinkId == 0 || link.InternalLinkId == 1))
-                {
-                    mi++;
-                    if (id == mi)
-                        return link.Mover;
-
-                    link = link.Mover?.MoverLink;
-                }
+                    return obj as Mover;
+                mi++;
             }
             return null;
         }
 
         public int GetMoverId(Mover movement)
         {
-            int mi = 2;
-            foreach (LevelEntry le in Entries)
+            int mi = FirstLinkId;
+            foreach (var obj in GetLinkableObjects())
             {
+                if (obj is Mover && obj == movement)
+                    return mi;
                 mi++;
-                var link = le.MoverLink;
+            }
+            return 0;
+        }
+
+        // The id the game gives to the first object in a level
+        const int FirstLinkId = 3;
+
+        /// <summary>
+        /// Gets the entries of the level, including the destination entries of holes, in file order.
+        /// </summary>
+        private IEnumerable<LevelEntry> GetAllEntries()
+        {
+            foreach (LevelEntry entry in Entries)
+            {
+                for (var e = entry; e != null; e = (e as Hole)?.DestinationEntry)
+                    yield return e;
+            }
+        }
+
+        /// <summary>
+        /// Gets the objects that links can refer to, in the order the game numbers them: each entry, then the movers it
+        /// owns, then the destination entry of a hole and its movers, and so on. A null element is a mover link
+        /// without a mover, which the game still counts.
+        /// </summary>
+        private IEnumerable<object> GetLinkableObjects()
+        {
+            foreach (var entry in GetAllEntries())
+            {
+                yield return entry;
+                var link = entry.MoverLink;
                 while (link != null && (link.InternalLinkId == 0 || link.InternalLinkId == 1))
                 {
-                    mi++;
-                    if (link.Mover == movement)
-                        return mi;
-
+                    yield return link.Mover;
                     link = link.Mover?.MoverLink;
                 }
             }
-            return 0;
         }
 
         #endregion
