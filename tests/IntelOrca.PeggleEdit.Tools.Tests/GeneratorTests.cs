@@ -216,6 +216,29 @@ namespace IntelOrca.PeggleEdit.Tools.Tests
         }
 
         [Fact]
+        public void GeneratorFollowingAnotherGenerator_RoundTripsExactly()
+        {
+            // G2's mover follows G1's mover, so G2's pegs hold links to G1, and X follows G2
+            var level = new Level();
+            var g1 = NewPegGenerator(level, 0, 0, NewMover(level, MoverType.Rotate, 200, 250));
+            var g2 = NewPegGenerator(level, 0, 0, NewMover(level, MoverType.HorizontalCycle, 30, 0));
+            g2.MoverLink.Mover.MoverLink = new MoverLink(level) { InternalLinkId = 99, InternalMover = g1.MoverLink.Mover };
+            var x = NewBall(level, 0, 0);
+            x.MoverLink = new MoverLink(level) { InternalLinkId = 99, InternalMover = g2.MoverLink.Mover };
+            level.Entries.Add(g1);
+            level.Entries.Add(g2);
+            level.Entries.Add(x);
+
+            var data = level.GetData(LevelWriter.DefaultFileVersion);
+            Assert.Equal(data, LevelXml.Import(LevelXml.Export(data)));
+            var again = Read(data);
+            Assert.Equal(EditorData.Status.Valid, again.EditorDataStatus);
+            Assert.Same(again.Entries[0].MoverLink.Mover, again.Entries[1].MoverLink.Mover.MoverLink.Mover);
+            Assert.Same(again.Entries[1].MoverLink.Mover, again.Entries[2].MoverLink.Mover);
+            Assert.Equal(data, again.GetData(LevelWriter.DefaultFileVersion));
+        }
+
+        [Fact]
         public void Links_AroundAGeneratorWithNoEntries_AreKept()
         {
             // F links to T's mover, G generates nothing, X links to G's mover
@@ -448,6 +471,10 @@ namespace IntelOrca.PeggleEdit.Tools.Tests
         [InlineData(MoverType.RotateAroundCircle, 0.6f, true, -45.0f, 30.0f)]
         [InlineData(MoverType.SwingAroundCircle, 0.0f, false, 0.0f, 0.0f)]
         [InlineData(MoverType.SwingAroundCircle, 0.2f, false, 30.0f, 0.0f)]
+        [InlineData(MoverType.SwingAroundCircle, 0.2f, true, 30.0f, 40.0f)]
+        [InlineData(MoverType.RotateBackAndForth, 0.0f, false, 0.0f, 0.0f)]
+        [InlineData(MoverType.RotateBackAndForth, 0.25f, false, 0.0f, 0.0f)]
+        [InlineData(MoverType.RotateBackAndForth, 0.25f, true, 0.0f, 40.0f)]
         public void Movement_MovesTheShapeAsOne(MoverType type, float phase, bool reverse, float rotation, float pathRotation)
         {
             var level = new Level();
@@ -469,6 +496,10 @@ namespace IntelOrca.PeggleEdit.Tools.Tests
                 var bricks = generator.Generate().Cast<Brick>().ToArray();
                 var centre = mover.GetEstimatedMovePosition();
                 float turn = mover.GetEstimatedMoveAngle(0); // anticlockwise
+                // A swing around circle object is not turned by its path rotation in the game, but the shape is, so
+                // that it stays together
+                if (type == MoverType.SwingAroundCircle)
+                    turn += pathRotation;
                 for (int i = 0; i < bricks.Length; i++)
                 {
                     var offset = layout[i].Location.Subtract(new PointF(300, 250));

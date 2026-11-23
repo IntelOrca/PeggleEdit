@@ -37,6 +37,7 @@ PeggleEdit 5.2.0 (Flamingo) (TBC)
 * [Fix] Fix solid (non-peg) bricks becoming pegs, and objects without a shadow gaining one, when saved
 * [Fix] Peg Pen and Brick Pen keep their position and interval when saved, and update straight away when the interval or path is changed
 * [Fix] Peg and brick generators with a maximum of 0 or less no longer hang PeggleEdit
+* [Fix] Preview of Swing Around Circle and Rotate Back And Forth matches the game when reversed, path rotated or with a phase
 * [Fix] Fix unknown data, and values stored in the level that match the default, being lost from level objects when saved
 * [Fix] Use the game's defaults for solid and outline colours: black could not be used as a colour, and colours from the level showed as transparent
 * [Fix] Fix early Pego levels (before file version 0x0F) being corrupted when saved

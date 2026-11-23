@@ -690,7 +690,8 @@ namespace IntelOrca.PeggleEdit.Tools.Levels
             if (targets.Count == 0)
                 return records;
 
-            void Copy(MoverLink holder, int holderGenerator, int holderDepth)
+            // A generated entry needs the copy too, but no record: it is generated again from its generator
+            void Copy(MoverLink holder, int holderGenerator, int holderDepth, bool record)
             {
                 if (holder?.InternalMover == null || !targets.TryGetValue(holder.InternalMover, out var target))
                     return;
@@ -704,6 +705,8 @@ namespace IntelOrca.PeggleEdit.Tools.Levels
                 var copy = CopyWithoutGeneratorLinks(mover, targets, 0);
                 holder.InternalLinkId = 1;
                 holder.InternalMover = copy;
+                if (!record)
+                    return;
                 records.Add(new EditorData.LinkRecord
                 {
                     HolderGenerator = holderGenerator,
@@ -714,15 +717,24 @@ namespace IntelOrca.PeggleEdit.Tools.Levels
                 });
             }
 
-            foreach (var entry in GetAllEntries(gameEntries))
+            var generated = new bool[gameEntries.Count];
+            foreach (var record in generators)
             {
-                var (link, depth) = FindLink(entry.MoverLink);
-                Copy(link, -1, depth);
+                for (int i = record.First; i < record.First + record.Count; i++)
+                    generated[i] = true;
+            }
+            for (int i = 0; i < gameEntries.Count; i++)
+            {
+                foreach (var entry in GetAllEntries(new[] { gameEntries[i] }))
+                {
+                    // An entry's copy is found by its id, not its depth
+                    Copy(FindLink(entry.MoverLink).Link, -1, 0, !generated[i]);
+                }
             }
             for (int i = 0; i < generators.Count; i++)
             {
                 var (link, depth) = FindLink(generators[i].Generator.MoverLink);
-                Copy(link, i, depth);
+                Copy(link, i, depth, true);
             }
             return records;
         }

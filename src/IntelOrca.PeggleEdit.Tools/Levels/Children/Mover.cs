@@ -464,8 +464,7 @@ namespace IntelOrca.PeggleEdit.Tools.Levels.Children
                     else
                         return TransformPoint(matrix, new PointF(mAnchorPoint.X, mAnchorPoint.Y - angle));
                 case MoverType.SwingAroundCircle:
-                    var phase2 = (float)Math.Sin(phase * 2 * Math.PI);
-                    angle = (float)(phase2 * Math.PI - (mPhase * 2 * Math.PI));
+                    angle = (float)GetSwingAngle();
                     circle_x = (float)Math.Cos(angle) * GetXRadius();
                     circle_y = (float)Math.Sin(angle) * GetYRadius();
                     return TransformPoint(matrix, new PointF(mAnchorPoint.X + circle_x, mAnchorPoint.Y + circle_y));
@@ -488,19 +487,35 @@ namespace IntelOrca.PeggleEdit.Tools.Levels.Children
                 case MoverType.RotateAroundCircle:
                     return (initialAngle + Rotation) - (phase * 360.0f);
                 case MoverType.RotateBackAndForth:
-                    return (initialAngle) - (((float)Math.Sin(MathExt.ToRadians(phase * 360.0f))) * 180.0f);
+                    return initialAngle + MoveRotation - (float)MathExt.ToDegrees(GetSwingAngle());
                 case MoverType.SwingAroundCircle:
-                    var phase2 = (float)Math.Sin(phase * 2 * Math.PI);
-                    return initialAngle + Rotation + (mPhase * 360) - (phase2 * 180);
+                    // The object turns as it goes round the circle, but not with the path rotation (seen in the game)
+                    return initialAngle + Rotation - (float)MathExt.ToDegrees(GetSwingAngle());
                 default:
                     return initialAngle;
             }
         }
 
+        /// <summary>
+        /// The angle, in radians clockwise on screen, of rotate back and forth and swing around circle, before the path
+        /// rotation: dir × (MaxAngle × sin(2π × time) + 2π × Phase), where dir is -1, or 1 when reversed, and a max
+        /// angle of 0 is half a turn (0x49D9E0). The phase is the centre of the swing, not when it starts. In the game,
+        /// the path rotation then turns the position anticlockwise around the anchor, reversed or not, without turning
+        /// a swing around circle object (seen in the game; the research notes put it in the angle with dir).
+        /// </summary>
+        private double GetSwingAngle()
+        {
+            double time = GetCurrentPhase();
+            double dir = mReverse ? 1 : -1;
+            double amplitude = mMaxAngle != 0 ? mMaxAngle : Math.PI;
+            return dir * ((amplitude * Math.Sin(2 * Math.PI * time)) + (2 * Math.PI * mPhase));
+        }
+
         private float GetCurrentPhase()
         {
             var startPhrase = mPhase;
-            if (mType == MoverType.SwingAroundCircle)
+            // The phase of a swing is where it is centred, not when it starts
+            if (mType == MoverType.SwingAroundCircle || mType == MoverType.RotateBackAndForth)
                 startPhrase = 0;
             if (mLevel.ShowPreview)
             {

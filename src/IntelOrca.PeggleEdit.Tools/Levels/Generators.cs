@@ -139,6 +139,7 @@ namespace IntelOrca.PeggleEdit.Tools.Levels
                     break;
                 case MoverType.RotateBackAndForth:
                     Orbit(mover, generatorMover, offset, MoverType.SwingAroundCircle, turns, 0);
+                    TurnWithPathRotation(mover, turns);
                     break;
                 case MoverType.RotateAroundCircle when IsCircle(generatorMover):
                 {
@@ -156,6 +157,7 @@ namespace IntelOrca.PeggleEdit.Tools.Levels
                     var start = new PointF(generatorMover.Radius, 0);
                     var shape = Rotate(offset, generatorMover.Rotation);
                     Orbit(mover, generatorMover, start.Add(shape), MoverType.SwingAroundCircle, turns, generatorMover.Rotation);
+                    TurnWithPathRotation(mover, turns);
                     break;
                 }
                 default:
@@ -179,6 +181,17 @@ namespace IntelOrca.PeggleEdit.Tools.Levels
             mover.Phase = Fraction(generatorMover.Phase + (generatorMover.Reverse ? angle : -angle) / 360.0f);
             // Going round turns the entry by its phase, so take off the angle it starts at. A peg does not turn.
             mover.Rotation = turns ? rotation + angle : 0;
+        }
+
+        /// <summary>
+        /// In the game, the path rotation of a swing around circle turns where the object is around the anchor
+        /// (anticlockwise, reversed or not) but not the object itself, so an entry that turns is turned by it as well,
+        /// for the shape to stay together.
+        /// </summary>
+        static void TurnWithPathRotation(Mover mover, bool turns)
+        {
+            if (turns)
+                mover.Rotation += mover.MoveRotation;
         }
 
         static bool IsCircle(Mover mover) => mover.Radius2 == 0 || mover.Radius2 == mover.Radius;
