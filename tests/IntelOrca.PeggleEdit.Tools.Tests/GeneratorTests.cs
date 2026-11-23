@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Drawing;
 using System.Linq;
@@ -475,13 +475,22 @@ namespace IntelOrca.PeggleEdit.Tools.Tests
         [InlineData(MoverType.RotateBackAndForth, 0.0f, false, 0.0f, 0.0f)]
         [InlineData(MoverType.RotateBackAndForth, 0.25f, false, 0.0f, 0.0f)]
         [InlineData(MoverType.RotateBackAndForth, 0.25f, true, 0.0f, 40.0f)]
-        public void Movement_MovesTheShapeAsOne(MoverType type, float phase, bool reverse, float rotation, float pathRotation)
+        [InlineData(MoverType.Rotate, 0.3f, false, 0.0f, 0.0f, 0.5f)]
+        [InlineData(MoverType.Rotate, 0.3f, true, 0.0f, 20.0f, 0.5f)]
+        [InlineData(MoverType.RotateAroundCircle, 0.2f, false, 20.0f, 30.0f, 0.0f, 70)]
+        [InlineData(MoverType.RotateAroundCircle, 0.6f, true, 0.0f, 0.0f, 0.0f, 70)]
+        [InlineData(MoverType.SwingAroundCircle, 0.2f, false, 30.0f, 0.0f, 0.0f, 70)]
+        [InlineData(MoverType.SwingAroundCircle, 0.1f, true, 0.0f, 0.0f, 0.5f, 25)]
+        public void Movement_MovesTheShapeAsOne(MoverType type, float phase, bool reverse, float rotation, float pathRotation,
+            float maxAngle = 0, short radius2 = 0)
         {
             var level = new Level();
             var generator = new BrickGenerator(level) { MaxNumberOfBricks = 10, InnerRadius = 60 };
             var mover = NewMover(level, type, 300, 250, phase, reverse);
             mover.Rotation = rotation;
             mover.MoveRotation = pathRotation;
+            mover.MaxAngle = maxAngle;
+            mover.Radius2 = radius2;
             generator.MoverLink = new MoverLink(level) { Mover = mover };
             level.Entries.Add(generator);
 
@@ -498,7 +507,7 @@ namespace IntelOrca.PeggleEdit.Tools.Tests
                 float turn = mover.GetEstimatedMoveAngle(0); // anticlockwise
                 // A swing around circle object is not turned by its path rotation in the game, but the shape is, so
                 // that it stays together
-                if (type == MoverType.SwingAroundCircle)
+                if (type == MoverType.SwingAroundCircle && radius2 == 0)
                     turn += pathRotation;
                 for (int i = 0; i < bricks.Length; i++)
                 {
@@ -511,37 +520,113 @@ namespace IntelOrca.PeggleEdit.Tools.Tests
         }
 
         [Fact]
-        public void RotateBackAndForth_KeepsTheCentreOfTheSwing()
+        public void RotateBackAndForth_PhaseIsWhenTheSwingStarts()
         {
-            // In the game the phase and path rotation of a swing are where it swings around, not when
-            var mover = NewMover(null, MoverType.RotateBackAndForth, 300, 250, 0.2f);
-            mover.MoveRotation = 30;
-            mover.Offset = 7;
-            var level = LevelWithGenerator(mover);
-            var pegs = ((PegGenerator)level.Entries[1]).Generate();
-            for (int i = 0; i < pegs.Count; i++)
+            // In the game the phase of rotate back and forth is when it starts, unlike swing around circle, whose
+            // phase is where it swings around; its path rotation turns the object the way it swings
+            foreach (var reverse in new[] { false, true })
             {
-                var pegMover = pegs[i].MoverLink.Mover;
-                Assert.Equal(MoverType.SwingAroundCircle, pegMover.Type);
-                Assert.Equal(7, pegMover.Offset);
-                Assert.Equal(30.0f, pegMover.MoveRotation, 3);
-                float angle = i * 45.0f;
-                float expected = 0.2f - angle / 360.0f;
-                expected -= (float)Math.Floor(expected);
-                Assert.Equal(expected, pegMover.Phase, 4);
+                var mover = NewMover(null, MoverType.RotateBackAndForth, 300, 250, 0.2f, reverse);
+                mover.MoveRotation = 30;
+                mover.Offset = 7;
+                var level = LevelWithGenerator(mover);
+                var pegs = ((PegGenerator)level.Entries[1]).Generate();
+                for (int i = 0; i < pegs.Count; i++)
+                {
+                    var pegMover = pegs[i].MoverLink.Mover;
+                    Assert.Equal(MoverType.SwingAroundCircle, pegMover.Type);
+                    Assert.Equal(7 + 100, pegMover.Offset);
+                    // The path rotation turns the swing, which the entries' phase does
+                    Assert.Equal(0.0f, pegMover.MoveRotation, 3);
+                    float angle = i * 45.0f;
+                    float expected = ((reverse ? angle : -angle) + 30.0f) / 360.0f;
+                    expected -= (float)Math.Floor(expected);
+                    Assert.Equal(expected, pegMover.Phase, 4);
+                }
             }
         }
 
-        [Fact]
-        public void RotateWithMaxAngle_DoesNotGoRound()
+        [Theory]
+        // Measured in Peggle Nights: a straight brick swinging around a circle of 70 so little that it stays still.
+        // The path rotation is part of the swing (with the direction's sign) and also turns the position
+        // anticlockwise, so with 40 it is 80 anticlockwise, or not moved at all when reversed; the brick only turns
+        // by the swing: 40 anticlockwise, or 40 clockwise when reversed.
+        [InlineData(false, 0.0f, 0.0f, 0.0f)]
+        [InlineData(false, 40.0f, -80.0f, 40.0f)]
+        [InlineData(true, 0.0f, 0.0f, 0.0f)]
+        [InlineData(true, 40.0f, 0.0f, -40.0f)]
+        public void SwingAroundCircle_PathRotation_AsInTheGame(bool reverse, float pathRotation, float positionAngle, float turn)
         {
-            // The game holds a rotating object with a max angle still, so the entries just stay in place
+            var level = new Level();
+            var mover = new Mover(level)
+            {
+                Type = MoverType.SwingAroundCircle, AnchorPointX = 100, AnchorPointY = 100, Time = 400, Radius = 70,
+                Reverse = reverse, MoveRotation = pathRotation, MaxAngle = 0.001f, IsGenerated = true,
+            };
+            var p = mover.GetEstimatedMovePosition();
+            Assert.Equal(positionAngle, (float)MathExt.ToDegrees(Math.Atan2(p.Y - 100, p.X - 100)), 0);
+            AssertAngle(turn, mover.GetEstimatedMoveAngle(0));
+        }
+
+        [Theory]
+        // Measured in Peggle Nights: rotate back and forth held at the centre of its swing. The path rotation turns
+        // it, the other way when reversed; the phase is when it starts, so it does not turn it.
+        [InlineData(false, 0.0f, 0.0f, 0.0f)]
+        [InlineData(false, 0.0f, 40.0f, 40.0f)]
+        [InlineData(true, 0.0f, 40.0f, -40.0f)]
+        [InlineData(true, 0.125f, 0.0f, 0.0f)]
+        [InlineData(false, 0.125f, 0.0f, 0.0f)]
+        public void RotateBackAndForth_AsInTheGame(bool reverse, float phase, float pathRotation, float turn)
+        {
+            var mover = new Mover(new Level())
+            {
+                Type = MoverType.RotateBackAndForth, Time = 400, Phase = phase, Reverse = reverse,
+                MoveRotation = pathRotation, MaxAngle = 0.001f,
+            };
+            // The swing is too small to see, but not none
+            AssertAngle(turn, mover.GetEstimatedMoveAngle(0), 0.1f);
+        }
+
+        [Theory]
+        // Measured in Peggle Nights: rotate with a max angle holds the object turned by it (0.5 radians), whatever
+        // its phase, the other way when reversed
+        [InlineData(false, 0.0f, 28.648f)]
+        [InlineData(false, 0.25f, 28.648f)]
+        [InlineData(true, 0.0f, -28.648f)]
+        public void RotateWithMaxAngle_AsInTheGame(bool reverse, float phase, float turn)
+        {
+            var mover = new Mover(new Level()) { Type = MoverType.Rotate, Time = 500, Phase = phase, Reverse = reverse, MaxAngle = 0.5f };
+            AssertAngle(turn, mover.GetEstimatedMoveAngle(0));
+        }
+
+        [Fact]
+        public void RotateWithMaxAngle_HoldsTheShapeTurned()
+        {
+            // The game holds a rotating object with a max angle turned by it, so the shape is held turned around the
+            // anchor: the first peg, 90 to the right, is turned 1 radian anticlockwise
             var mover = NewMover(null, MoverType.Rotate, 300, 250);
             mover.MaxAngle = 1;
             var level = LevelWithGenerator(mover);
             var pegs = ((PegGenerator)level.Entries[1]).Generate();
-            Assert.Equal(390.0f, pegs[0].MoverLink.Mover.AnchorPointX, 3);
             Assert.Equal(MoverType.Rotate, pegs[0].MoverLink.Mover.Type);
+            Assert.Equal(300 + 90 * (float)Math.Cos(1), pegs[0].MoverLink.Mover.AnchorPointX, 3);
+            Assert.Equal(250 - 90 * (float)Math.Sin(1), pegs[0].MoverLink.Mover.AnchorPointY, 3);
+        }
+
+        [Fact]
+        public void EllipseGenerator_RoundTrips()
+        {
+            var mover = NewMover(null, MoverType.RotateAroundCircle, 300, 250, 0.2f);
+            mover.Radius2 = 70;
+            var level = LevelWithGenerator(mover);
+            var data = level.GetData(LevelWriter.DefaultFileVersion);
+            Assert.Contains("<ParentMover", LevelXml.Export(data));
+            var again = Read(data);
+            Assert.Equal(EditorData.Status.Valid, again.EditorDataStatus);
+            Assert.IsType<PegGenerator>(again.Entries[1]);
+            Assert.Equal(LevelXml.Export(data), LevelXml.Export(again.GetData(LevelWriter.DefaultFileVersion)));
+            Assert.Equal(data, again.GetData(LevelWriter.DefaultFileVersion));
+            Assert.Equal(data, LevelXml.Import(LevelXml.Export(data)));
         }
 
         [Fact]
@@ -587,10 +672,10 @@ namespace IntelOrca.PeggleEdit.Tools.Tests
             Assert.True(expected.GetLength(actual) < 0.75f, $"expected {expected}, was {actual}");
         }
 
-        static void AssertAngle(float expected, float actual)
+        static void AssertAngle(float expected, float actual, float tolerance = 0.01f)
         {
             var difference = ((expected - actual) % 360 + 540) % 360 - 180;
-            Assert.True(Math.Abs(difference) < 0.01f, $"expected {expected}, was {actual}");
+            Assert.True(Math.Abs(difference) < tolerance, $"expected {expected}, was {actual}");
         }
     }
 }

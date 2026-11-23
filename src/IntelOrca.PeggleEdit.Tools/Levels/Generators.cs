@@ -113,41 +113,60 @@ namespace IntelOrca.PeggleEdit.Tools.Levels
         /// entries move as one shape, the way the generator moves:
         /// <list type="bullet">
         /// <item>Rotate: the shape spins around the anchor, so each entry goes round a circle around it (turning as
-        /// it goes when it is not round), starting at its own angle.</item>
+        /// it goes when it is not round), starting at its own angle. With a max angle, the game holds a rotating
+        /// object turned by the max angle, so the shape is held turned by it around the anchor.</item>
         /// <item>Rotate back and forth: the shape swings around the anchor, so each entry swings around a circle.</item>
         /// <item>Rotate around circle and swing around circle: the shape goes round (or swings around) the circle
         /// turning as it goes, which is the same as spinning (or swinging) around the anchor, so each entry goes
-        /// round (or swings around) its own circle around the anchor.</item>
+        /// round (or swings around) its own circle around the anchor. On an ellipse, each entry instead goes round
+        /// its own circle around a point that follows the generator's path (a parent mover).</item>
         /// <item>Any other movement: each entry follows the generator's path, offset by its place in the shape.</item>
         /// </list>
         /// </summary>
         /// <remarks>
-        /// In the game, the phase of a mover is how far round it starts (the clock is Phase × Time + time), except for
-        /// rotate back and forth and swing around circle, where the phase and path rotation are the centre of the
-        /// swing. Either way, an entry whose phase is a / 360 further round is a degrees further round. Going round
-        /// by phase p is clockwise on screen, or anticlockwise when reversed, and turns an object by the same amount.
+        /// As seen in the game: the phase of a mover is how far round it starts (the clock is Phase × Time + time),
+        /// except for swing around circle, where it is the centre of the swing. Going round by phase p is clockwise on
+        /// screen, or anticlockwise when reversed, and turns an object by the same amount. The path rotation of
+        /// rotate back and forth and swing around circle turns the object the way it swings (so the other way when
+        /// reversed); for swing around circle it is part of the swing's angle, and the position is then turned
+        /// anticlockwise around the anchor by it again, as for every mover.
         /// </remarks>
         internal static Mover CreateMover(Mover generatorMover, PointF offset, bool turns)
         {
             var mover = CloneMover(generatorMover);
             switch (generatorMover.Type)
             {
-                // With a max angle, the game holds a rotating object at a fixed angle, so it does not go round
-                case MoverType.Rotate when generatorMover.MaxAngle == 0:
-                    Orbit(mover, generatorMover, offset, turns ? MoverType.RotateAroundCircle : MoverType.Circle, turns, 0);
+                case MoverType.Rotate when generatorMover.MaxAngle != 0:
+                {
+                    // Each entry is held turned by the max angle where it is, so it is put where the shape turned by
+                    // the max angle has it
+                    float turn = (float)MathExt.ToDegrees(generatorMover.Reverse ? -generatorMover.MaxAngle : generatorMover.MaxAngle);
+                    mover.Location = generatorMover.Location.Add(Rotate(offset, turn));
+                    break;
+                }
+                case MoverType.Rotate:
+                    Orbit(mover, generatorMover, offset, turns ? MoverType.RotateAroundCircle : MoverType.Circle, turns, 0, generatorMover.Phase);
                     mover.MoveRotation = 0;
                     break;
                 case MoverType.RotateBackAndForth:
-                    Orbit(mover, generatorMover, offset, MoverType.SwingAroundCircle, turns, 0);
-                    TurnWithPathRotation(mover, turns);
+                {
+                    // Swing around circle swings around its phase, and always starts its swing at the start of its
+                    // time, so the generator's phase (when its swing starts) becomes a time offset. The generator's
+                    // path rotation turns it the way it swings, which the entries' phase does (a swing around circle
+                    // path rotation would also turn their positions the other way)
+                    Orbit(mover, generatorMover, offset, MoverType.SwingAroundCircle, turns, 0, generatorMover.MoveRotation / 360.0f);
+                    mover.Offset = (short)Math.Max(short.MinValue, Math.Min(short.MaxValue,
+                        generatorMover.Offset + Math.Round(generatorMover.Phase * generatorMover.Time)));
+                    mover.MoveRotation = 0;
                     break;
+                }
                 case MoverType.RotateAroundCircle when IsCircle(generatorMover):
                 {
                     // The generator's place on the circle (rotated by the path rotation) is part of each entry's
                     // circle, as is the generator's extra rotation of its own angle
                     var start = Rotate(new PointF(generatorMover.Radius, 0), generatorMover.MoveRotation);
                     var shape = Rotate(offset, generatorMover.Rotation);
-                    Orbit(mover, generatorMover, start.Add(shape), turns ? MoverType.RotateAroundCircle : MoverType.Circle, turns, generatorMover.Rotation);
+                    Orbit(mover, generatorMover, start.Add(shape), turns ? MoverType.RotateAroundCircle : MoverType.Circle, turns, generatorMover.Rotation, generatorMover.Phase);
                     mover.MoveRotation = 0;
                     break;
                 }
@@ -156,8 +175,30 @@ namespace IntelOrca.PeggleEdit.Tools.Levels
                     // The path rotation is part of the swing, so the entries keep it
                     var start = new PointF(generatorMover.Radius, 0);
                     var shape = Rotate(offset, generatorMover.Rotation);
-                    Orbit(mover, generatorMover, start.Add(shape), MoverType.SwingAroundCircle, turns, generatorMover.Rotation);
+                    Orbit(mover, generatorMover, start.Add(shape), MoverType.SwingAroundCircle, turns, generatorMover.Rotation, generatorMover.Phase);
                     TurnWithPathRotation(mover, turns);
+                    break;
+                }
+                case MoverType.RotateAroundCircle when generatorMover.MoverLink == null:
+                case MoverType.SwingAroundCircle when generatorMover.MoverLink == null:
+                {
+                    // On an ellipse: a copy of the generator's mover carries a point along its path, and the entry
+                    // goes round (or swings around) that point as the generator turns. The parent mover moves the entry
+                    // by how far it has moved from where it starts.
+                    var path = CloneMover(generatorMover);
+                    path.IsGenerated = true;
+                    var start = path.GetStartPosition();
+                    var shape = Rotate(offset, generatorMover.Rotation);
+                    bool swing = generatorMover.Type == MoverType.SwingAroundCircle;
+                    var type = swing ? MoverType.SwingAroundCircle : turns ? MoverType.RotateAroundCircle : MoverType.Circle;
+                    // A swing around circle turns by its path rotation as well as swinging, so the entries do too
+                    float startPhase = generatorMover.Phase + (swing ? generatorMover.MoveRotation / 360.0f : 0);
+                    Orbit(mover, generatorMover, shape, type, turns, generatorMover.Rotation, startPhase);
+                    mover.Location = start;
+                    mover.MoveRotation = 0;
+                    mover.MoverLink = new MoverLink(generatorMover.Level) { Mover = path };
+                    mover.ParentLastX = start.X;
+                    mover.ParentLastY = start.Y;
                     break;
                 }
                 default:
@@ -169,24 +210,24 @@ namespace IntelOrca.PeggleEdit.Tools.Levels
 
         /// <summary>
         /// Makes the mover go round a circle around the generator's anchor through <paramref name="position"/> (relative
-        /// to the anchor), starting there when the generator starts.
+        /// to the anchor), starting there when the generator is at <paramref name="startPhase"/>.
         /// </summary>
-        static void Orbit(Mover mover, Mover generatorMover, PointF position, MoverType type, bool turns, float rotation)
+        static void Orbit(Mover mover, Mover generatorMover, PointF position, MoverType type, bool turns, float rotation, float startPhase)
         {
             float angle = (float)MathExt.ToDegrees(Math.Atan2(position.Y, position.X));
             mover.Type = type;
             mover.Location = generatorMover.Location;
             mover.Radius = (short)Math.Min(short.MaxValue, Math.Round(position.GetLength()));
             mover.Radius2 = 0;
-            mover.Phase = Fraction(generatorMover.Phase + (generatorMover.Reverse ? angle : -angle) / 360.0f);
+            mover.Phase = Fraction(startPhase + (generatorMover.Reverse ? angle : -angle) / 360.0f);
             // Going round turns the entry by its phase, so take off the angle it starts at. A peg does not turn.
             mover.Rotation = turns ? rotation + angle : 0;
         }
 
         /// <summary>
         /// In the game, the path rotation of a swing around circle turns where the object is around the anchor
-        /// (anticlockwise, reversed or not) but not the object itself, so an entry that turns is turned by it as well,
-        /// for the shape to stay together.
+        /// anticlockwise (as for every mover) on top of the swing, which turns the object as well; so an entry that
+        /// turns is turned by the path rotation too, for the shape to stay together.
         /// </summary>
         static void TurnWithPathRotation(Mover mover, bool turns)
         {
@@ -218,6 +259,8 @@ namespace IntelOrca.PeggleEdit.Tools.Levels
         static Mover CloneMover(Mover mover)
         {
             var result = mover.Clone();
+            // The values an entry's mover needs are set below, whatever was in the file the generator was read from
+            result.ForgetFileValues();
             result.MoverLink = mover.MoverLink == null ? null : CloneLink(mover.MoverLink);
             return result;
         }

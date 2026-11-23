@@ -394,9 +394,33 @@ namespace IntelOrca.PeggleEdit.Tools.Levels.Children
             return AddPoints(new PointF(-ParentLastX, -ParentLastY), AddPoints(locationA, locationB));
         }
 
+        // While set, positions are worked out for the start, not for the preview time
+        bool mAtStart;
+
+        /// <summary>
+        /// Gets where this mover's own path puts an object when it starts (not counting a parent mover).
+        /// </summary>
+        public PointF GetStartPosition()
+        {
+            mAtStart = true;
+            try
+            {
+                return GetMyEstimatedMovePosition();
+            }
+            finally
+            {
+                mAtStart = false;
+            }
+        }
+
+        /// <summary>
+        /// Forgets which values were in the file the mover was read from, so that only values that are set are written.
+        /// </summary>
+        internal void ForgetFileValues() => mValueFlags = 0;
+
         public PointF GetMyEstimatedMovePosition()
         {
-            if (mTime == 0 || !HasEntryParent())
+            if (mTime == 0 || (!mAtStart && !HasEntryParent()))
                 return mAnchorPoint;
 
             float angle, circle_x, circle_y;
@@ -483,13 +507,16 @@ namespace IntelOrca.PeggleEdit.Tools.Levels.Children
             switch (mType)
             {
                 case MoverType.Rotate:
+                    // With a max angle, the game holds the object turned by it instead (seen in the game)
+                    if (mMaxAngle != 0)
+                        return initialAngle + (float)MathExt.ToDegrees(mReverse ? -mMaxAngle : mMaxAngle);
                     return (initialAngle) - (phase * 360.0f);
                 case MoverType.RotateAroundCircle:
                     return (initialAngle + Rotation) - (phase * 360.0f);
                 case MoverType.RotateBackAndForth:
-                    return initialAngle + MoveRotation - (float)MathExt.ToDegrees(GetSwingAngle());
+                    return initialAngle - (float)MathExt.ToDegrees(GetBackAndForthAngle());
                 case MoverType.SwingAroundCircle:
-                    // The object turns as it goes round the circle, but not with the path rotation (seen in the game)
+                    // The object turns as it goes round the circle (but not by the path rotation that turns its position)
                     return initialAngle + Rotation - (float)MathExt.ToDegrees(GetSwingAngle());
                 default:
                     return initialAngle;
@@ -497,27 +524,40 @@ namespace IntelOrca.PeggleEdit.Tools.Levels.Children
         }
 
         /// <summary>
-        /// The angle, in radians clockwise on screen, of rotate back and forth and swing around circle, before the path
-        /// rotation: dir × (MaxAngle × sin(2π × time) + 2π × Phase), where dir is -1, or 1 when reversed, and a max
-        /// angle of 0 is half a turn (0x49D9E0). The phase is the centre of the swing, not when it starts. In the game,
-        /// the path rotation then turns the position anticlockwise around the anchor, reversed or not, without turning
-        /// a swing around circle object (seen in the game; the research notes put it in the angle with dir).
+        /// The angle, in radians clockwise on screen, of swing around circle:
+        /// dir × (MaxAngle × sin(2π × time) + 2π × Phase + PathRotate), where dir is -1, or 1 when reversed, and a max
+        /// angle of 0 is half a turn (0x49D9E0). The phase is the centre of the swing, not when it starts. The object
+        /// turns by this angle. Its position is then also turned anticlockwise around the anchor by the path rotation,
+        /// as for every mover, so the path rotation moves it twice (seen in the game).
         /// </summary>
         private double GetSwingAngle()
         {
             double time = GetCurrentPhase();
             double dir = mReverse ? 1 : -1;
-            double amplitude = mMaxAngle != 0 ? mMaxAngle : Math.PI;
-            return dir * ((amplitude * Math.Sin(2 * Math.PI * time)) + (2 * Math.PI * mPhase));
+            return dir * ((SwingAmplitude * Math.Sin(2 * Math.PI * time)) + (2 * Math.PI * mPhase) + mMoveRotation);
         }
+
+        /// <summary>
+        /// The angle, in radians clockwise on screen, that rotate back and forth turns an object by:
+        /// dir × (MaxAngle × sin(2π × time) + PathRotate), where the time starts at the phase, as for other movers
+        /// (seen in the game: unlike swing around circle, the phase is not the centre of the swing).
+        /// </summary>
+        private double GetBackAndForthAngle()
+        {
+            double time = GetCurrentPhase();
+            double dir = mReverse ? 1 : -1;
+            return dir * ((SwingAmplitude * Math.Sin(2 * Math.PI * time)) + mMoveRotation);
+        }
+
+        private double SwingAmplitude => mMaxAngle != 0 ? mMaxAngle : Math.PI;
 
         private float GetCurrentPhase()
         {
             var startPhrase = mPhase;
-            // The phase of a swing is where it is centred, not when it starts
-            if (mType == MoverType.SwingAroundCircle || mType == MoverType.RotateBackAndForth)
+            // The phase of a swing around circle is where it is centred, not when it starts
+            if (mType == MoverType.SwingAroundCircle)
                 startPhrase = 0;
-            if (mLevel.ShowPreview)
+            if (!mAtStart && mLevel != null && mLevel.ShowPreview)
             {
                 ulong previewTime = mLevel.PreviewTime;
 
@@ -555,7 +595,10 @@ namespace IntelOrca.PeggleEdit.Tools.Levels.Children
                 //else
                 //    remainder_time = (mTimePeriod * ph_offset) + pa1 + pa2;
 
-                remainder_time = ((double)previewTime + remainder_time) % total_time;
+                // The offset moves the clock on, as in the game
+                remainder_time = ((double)previewTime + remainder_time + mOffset) % total_time;
+                if (remainder_time < 0)
+                    remainder_time += total_time;
 
                 double stg1time = ph1 * time_period;
                 double stg2time = (ph2 * time_period) - stg1time;
@@ -597,7 +640,8 @@ namespace IntelOrca.PeggleEdit.Tools.Levels.Children
             }
             else
             {
-                return startPhrase;
+                // The offset moves the clock on, as in the game
+                return mTime != 0 ? startPhrase + ((float)mOffset / mTime) : startPhrase;
             }
         }
 

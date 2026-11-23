@@ -12,9 +12,9 @@ If another program changes a level that PeggleEdit saved, PeggleEdit can not tel
 
 A generator can be given a movement, like any other object. Its pegs or bricks then move together as one shape:
 
-* **Rotate**: the shape spins around the generator's anchor. Each peg goes round a circle around it, starting at its own place; each brick also turns as it goes, so a ring of bricks stays a ring.
-* **Rotate Back And Forth**: the shape swings back and forth around the generator's anchor in the same way. As in the game, the phase says where the swing is centred, and the path rotation turns the whole swing around the anchor.
-* **Rotate Around Circle** and **Swing Around Circle**: the shape goes round (or swings around) the circle, turning as it goes, as one object would.
+* **Rotate**: the shape spins around the generator's anchor. Each peg goes round a circle around it, starting at its own place; each brick also turns as it goes, so a ring of bricks stays a ring. With a **Max Angle**, the game holds a rotating object turned by the max angle instead of spinning it, so the shape is held turned by it around the anchor.
+* **Rotate Back And Forth**: the shape swings back and forth around the generator's anchor in the same way, as one object would: the phase is when the swing starts, and the path rotation turns the swing.
+* **Rotate Around Circle** and **Swing Around Circle**: the shape goes round (or swings around) the circle, turning as it goes, as one object would. On an ellipse (a Y Radius different from the Radius), each peg or brick follows a point along the generator's path, and turns around it.
 * **Any other movement** (cycles, circles, infinity, arcs, wraps): each peg or brick follows the generator's path, offset by its place in the shape, so the whole shape moves along the path.
 
 The pause, phase, offset and parent movement settings of the generator's movement are passed on as well.
