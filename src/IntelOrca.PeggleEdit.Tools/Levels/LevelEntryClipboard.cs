@@ -49,12 +49,25 @@ namespace IntelOrca.PeggleEdit.Tools.Levels
                 level.Entries.Add(clones[i]);
             }
 
-            // Map each owned movement to its clone so that links can point to the cloned movements
-            var movementMap = new Dictionary<Mover, Mover>();
+            // Each entry and its clone, including the destination entries of holes
+            var pairs = new List<(LevelEntry Source, LevelEntry Clone)>();
             for (int i = 0; i < sources.Length; i++)
             {
-                var srcLink = sources[i].MoverLink;
-                var dstLink = clones[i].MoverLink;
+                LevelEntry source = sources[i], clone = clones[i];
+                for (int depth = 0; source != null && clone != null && depth <= NestingLimit.MaxDepth; depth++)
+                {
+                    pairs.Add((source, clone));
+                    source = (source as Hole)?.DestinationEntry;
+                    clone = (clone as Hole)?.DestinationEntry;
+                }
+            }
+
+            // Map each owned movement to its clone so that links can point to the cloned movements
+            var movementMap = new Dictionary<Mover, Mover>();
+            foreach (var (source, clone) in pairs)
+            {
+                var srcLink = source.MoverLink;
+                var dstLink = clone.MoverLink;
                 while (srcLink != null && dstLink != null && srcLink.OwnsMover && srcLink.Mover != null)
                 {
                     movementMap[srcLink.Mover] = dstLink.Mover;
@@ -63,10 +76,10 @@ namespace IntelOrca.PeggleEdit.Tools.Levels
                 }
             }
 
-            for (int i = 0; i < sources.Length; i++)
+            foreach (var (source, clone) in pairs)
             {
-                var srcLink = sources[i].MoverLink;
-                var dstLink = clones[i].MoverLink;
+                var srcLink = source.MoverLink;
+                var dstLink = clone.MoverLink;
                 while (srcLink != null && dstLink != null && srcLink.Mover != null)
                 {
                     if (!srcLink.OwnsMover)
