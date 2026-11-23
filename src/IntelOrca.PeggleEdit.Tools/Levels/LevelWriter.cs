@@ -15,8 +15,10 @@
 // along with PeggleEdit. If not, see <http://www.gnu.org/licenses/>.
 
 using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Text;
+using IntelOrca.PeggleEdit.Tools.Extensions;
 using IntelOrca.PeggleEdit.Tools.Levels.Children;
 
 namespace IntelOrca.PeggleEdit.Tools.Levels
@@ -51,8 +53,27 @@ namespace IntelOrca.PeggleEdit.Tools.Levels
 
             // The game sees the entries the generators generate, in their place
             var entries = level.ExpandGenerators(out var generators);
-            level.UpdateMoverLinksWrite(entries, generators);
+            var restore = new List<Action>();
+            try
+            {
+                var links = level.CopyLinksToGenerators(entries, generators, restore);
+                level.UpdateMoverLinksWrite(entries, generators);
+                WriteLevel(level, entries, generators, links, version);
+            }
+            finally
+            {
+                // Put the links back as the editor has them, numbered as the editor numbers its entries
+                foreach (var action in restore)
+                    action();
+                if (generators.Count != 0)
+                    level.UpdateMoverLinksWrite();
+            }
+            return true;
+        }
 
+        private void WriteLevel(Level level, List<LevelEntry> entries, List<EditorData.GeneratorRecord> generators,
+            List<EditorData.LinkRecord> links, int version)
+        {
             var ms = new MemoryStream();
             BinaryWriter bw = new BinaryWriter(ms);
 
@@ -68,12 +89,17 @@ namespace IntelOrca.PeggleEdit.Tools.Levels
 
             //Entry loop, with any null entries put back where they were read
             int nullIndex = 0;
+            var offsets = new long[entries.Count + 1];
             for (int i = 0; i < entries.Count; i++)
             {
                 for (; nullIndex < nullEntries.Count && nullEntries[nullIndex].Index <= i; nullIndex++)
                     bw.Write(nullEntries[nullIndex].Magic);
+                bw.Flush();
+                offsets[i] = ms.Position;
                 entries[i].Write(bw, version);
             }
+            bw.Flush();
+            offsets[entries.Count] = ms.Position;
             for (; nullIndex < nullEntries.Count; nullIndex++)
                 bw.Write(nullEntries[nullIndex].Magic);
 
@@ -81,17 +107,30 @@ namespace IntelOrca.PeggleEdit.Tools.Levels
             if (generators.Count != 0)
             {
                 bw.Flush();
-                EditorData.Write(bw, ms.ToArray(), generators, version);
-
-                // Put the link ids back as the editor numbers its entries
-                level.UpdateMoverLinksWrite();
+                var written = ms.ToArray();
+                for (int i = 0; i < generators.Count; i++)
+                {
+                    var record = generators[i];
+                    long start = offsets[record.First];
+                    long end = offsets[record.First + record.Count];
+                    record.Hash = new ReadOnlySpan<byte>(written, (int)start, (int)(end - start)).CalculateFnv1a();
+                    generators[i] = record;
+                }
+                for (int i = 0; i < links.Count; i++)
+                {
+                    if (links[i].HolderGenerator < 0)
+                    {
+                        var link = links[i];
+                        link.HolderMoverId = Level.GetGameMoverId(link.Copy, entries);
+                        links[i] = link;
+                    }
+                }
+                EditorData.Write(bw, ms.ToArray(), generators, links, version);
             }
 
             bw.Flush();
             ms.WriteTo(mBaseStream);
             mBaseStream.Close();
-
-            return true;
         }
 
         public static void WritePopcapString(BinaryWriter bw, string sz)

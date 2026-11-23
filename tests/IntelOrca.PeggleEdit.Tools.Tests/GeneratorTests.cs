@@ -180,12 +180,145 @@ namespace IntelOrca.PeggleEdit.Tools.Tests
             level.Entries[2].MoverLink = new MoverLink(level) { InternalLinkId = 99, InternalMover = generatorMover };
 
             var data = level.GetData(LevelWriter.DefaultFileVersion);
-            // In the game the ball follows the first generated peg's mover: the peg is object 4, its mover 5
-            Assert.Contains("<MoverRef link=\"5\" />", LevelXml.Export(data));
+            // The game has no generator, so the ball has its own copy of the generator's mover, which moves the same
+            // way. Objects: ball 3, pegs and their movers 4-19, the ball 20 and its copy 21.
+            var xml = XElement.Parse(LevelXml.Export(data));
+            var ball = xml.Elements("Ball").Last();
+            Assert.Equal("horizontalCycle", ball.Element("Mover").Attribute("type").Value);
+            Assert.Equal("300", ball.Element("Mover").Attribute("anchorX").Value);
+            var link = xml.Element("PeggleEdit").Element("Link");
+            Assert.Equal("21", link.Attribute("holderMover").Value);
+            Assert.Equal("0", link.Attribute("generator").Value);
+
+            // The editor still has the link, as before it was saved
+            Assert.Same(generatorMover, level.Entries[2].MoverLink.Mover);
+            Assert.False(level.Entries[2].MoverLink.OwnsMover);
 
             var again = Read(data);
+            Assert.Equal(EditorData.Status.Valid, again.EditorDataStatus);
             Assert.Same(again.Entries[1].MoverLink.Mover, again.Entries[2].MoverLink.Mover);
+            Assert.False(again.Entries[2].MoverLink.OwnsMover);
             Assert.Equal(data, again.GetData(LevelWriter.DefaultFileVersion));
+            Assert.Equal(data, LevelXml.Import(LevelXml.Export(data)));
+        }
+
+        [Fact]
+        public void LinkToASubMoverOfAGenerator_IsKept()
+        {
+            var level = LevelWithGenerator(NewMover(null, MoverType.HorizontalCycle, 300, 250));
+            var parent = NewMover(level, MoverType.VerticalCycle, 10, 20);
+            level.Entries[1].MoverLink.Mover.MoverLink = new MoverLink(level) { Mover = parent };
+            level.Entries[2].MoverLink = new MoverLink(level) { InternalLinkId = 99, InternalMover = parent };
+
+            var again = Read(level.GetData(LevelWriter.DefaultFileVersion));
+            Assert.Equal(EditorData.Status.Valid, again.EditorDataStatus);
+            Assert.Same(again.Entries[1].MoverLink.Mover.MoverLink.Mover, again.Entries[2].MoverLink.Mover);
+        }
+
+        [Fact]
+        public void Links_AroundAGeneratorWithNoEntries_AreKept()
+        {
+            // F links to T's mover, G generates nothing, X links to G's mover
+            var level = new Level();
+            var f = NewBall(level, 1, 1);
+            var g = NewPegGenerator(level, 300, 250, NewMover(level, MoverType.Rotate, 300, 250));
+            g.NumberOfPegs = 0;
+            var x = NewBall(level, 2, 2);
+            var t = NewBall(level, 3, 3);
+            t.MoverLink = new MoverLink(level) { Mover = NewMover(level, MoverType.VerticalCycle, 50, 50) };
+            f.MoverLink = new MoverLink(level) { InternalLinkId = 99, InternalMover = t.MoverLink.Mover };
+            x.MoverLink = new MoverLink(level) { InternalLinkId = 99, InternalMover = g.MoverLink.Mover };
+            level.Entries.Add(f);
+            level.Entries.Add(g);
+            level.Entries.Add(x);
+            level.Entries.Add(t);
+
+            var data = level.GetData(LevelWriter.DefaultFileVersion);
+            // Objects: F 3, X 4 and its copy 5, T 6 and its mover 7
+            Assert.Contains("<MoverRef link=\"7\" />", LevelXml.Export(data));
+
+            var again = Read(data);
+            Assert.Equal(EditorData.Status.Valid, again.EditorDataStatus);
+            Assert.Same(again.Entries[3].MoverLink.Mover, again.Entries[0].MoverLink.Mover);
+            Assert.Same(again.Entries[1].MoverLink.Mover, again.Entries[2].MoverLink.Mover);
+        }
+
+        [Fact]
+        public void Apply_GivesWhatFollowedTheGeneratorItsOwnMover()
+        {
+            var level = LevelWithGenerator(NewMover(null, MoverType.Rotate, 300, 250));
+            var generatorMover = level.Entries[1].MoverLink.Mover;
+            level.Entries[2].MoverLink = new MoverLink(level) { InternalLinkId = 99, InternalMover = generatorMover };
+            ((IEntryFunction)level.Entries[1]).Execute();
+
+            var follower = level.Entries[level.Entries.Count - 1];
+            Assert.True(follower.MoverLink.OwnsMover);
+            Assert.Equal(MoverType.Rotate, follower.MoverLink.Mover.Type);
+            Assert.Equal(300.0f, follower.MoverLink.Mover.AnchorPointX);
+            Assert.Equal(level.Entries.ToArray().Select(e => e.GetType()), Read(level.GetData(LevelWriter.DefaultFileVersion)).Entries.ToArray().Select(e => e.GetType()));
+        }
+
+        [Fact]
+        public void HandEditedXml_KeepsTheEntries()
+        {
+            var xml = LevelXml.Export(LevelWithGenerator().GetData(LevelWriter.DefaultFileVersion));
+
+            // Removing the first ball leaves the generator's range on the wrong entries
+            var removed = XElement.Parse(xml);
+            removed.Elements("Ball").First().Remove();
+            var level = Read(LevelXml.Import(removed.ToString()));
+            Assert.Equal(EditorData.Status.Stale, level.EditorDataStatus);
+            Assert.Equal(9, level.Entries.Count);
+            Assert.All(level.Entries.ToArray(), e => Assert.IsType<Ball>(e));
+
+            // Moving a generated peg would be lost if the generator came back
+            var moved = XElement.Parse(xml);
+            moved.Elements("Ball").ElementAt(1).Attribute("x").Value = "123";
+            level = Read(LevelXml.Import(moved.ToString()));
+            Assert.Equal(EditorData.Status.Stale, level.EditorDataStatus);
+            Assert.Equal(123.0f, level.Entries[1].X);
+        }
+
+        [Fact]
+        public void EditingTheGeneratorInXml_IsUsed()
+        {
+            // Only the generated entries are checked, so the generator itself can be changed: the next save
+            // generates its new entries. This also means that a generator that generates slightly different
+            // numbers elsewhere (e.g. in a 32 bit process) still comes back.
+            var xml = XElement.Parse(LevelXml.Export(LevelWithGenerator().GetData(LevelWriter.DefaultFileVersion)));
+            var generatorElement = xml.Element("PeggleEdit").Element("PegGenerator");
+            generatorElement.Attribute("count").Value = "5";
+            var level = Read(LevelXml.Import(xml.ToString()));
+            Assert.Equal(EditorData.Status.Valid, level.EditorDataStatus);
+            var generator = Assert.IsType<PegGenerator>(level.Entries[1]);
+            Assert.Equal(5, generator.NumberOfPegs);
+            Assert.Equal(7, BitConverter.ToInt32(level.GetData(LevelWriter.DefaultFileVersion), 5));
+        }
+
+        [Fact]
+        public void PenGenerator_KeepsItsInterval()
+        {
+            var level = new Level();
+            var pen = new PegCurveGenerator(level) { Location = new PointF(100, 100) };
+            pen.Path = "M 0 0 L 300 0";
+            pen.Interval = 60;
+            level.Entries.Add(pen);
+            int pegs = pen.Generate().Count;
+            Assert.Equal(5, pegs);
+
+            var data = level.GetData(LevelWriter.DefaultFileVersion);
+            Assert.Equal(pegs, BitConverter.ToInt32(data, 5));
+            var again = Read(data);
+            Assert.Equal(EditorData.Status.Valid, again.EditorDataStatus);
+            var back = Assert.IsType<PegCurveGenerator>(Assert.Single(again.Entries.ToArray()));
+            Assert.Equal(60, back.Interval);
+            Assert.Equal(data, LevelXml.Import(LevelXml.Export(data)));
+            Assert.Contains("interval=\"60\"", LevelXml.Export(data));
+
+            // Changing the interval changes what is generated straight away
+            back.Interval = 30;
+            Assert.True(back.Generate().Count > pegs);
+            Assert.Equal(60, ((PegCurveGenerator)pen.Clone()).Interval);
         }
 
         [Fact]
@@ -305,6 +438,79 @@ namespace IntelOrca.PeggleEdit.Tools.Tests
                 AssertClose(layout[i].Location, bricks[i].DrawLocation);
                 AssertAngle(layout[i].Rotation, mover.GetEstimatedMoveAngle(bricks[i].Rotation));
             }
+        }
+
+        [Theory]
+        [InlineData(MoverType.Rotate, 0.0f, false, 0.0f, 0.0f)]
+        [InlineData(MoverType.Rotate, 0.3f, true, 0.0f, 0.0f)]
+        [InlineData(MoverType.RotateAroundCircle, 0.0f, false, 0.0f, 0.0f)]
+        [InlineData(MoverType.RotateAroundCircle, 0.3f, false, 20.0f, 0.0f)]
+        [InlineData(MoverType.RotateAroundCircle, 0.6f, true, -45.0f, 30.0f)]
+        [InlineData(MoverType.SwingAroundCircle, 0.0f, false, 0.0f, 0.0f)]
+        [InlineData(MoverType.SwingAroundCircle, 0.2f, false, 30.0f, 0.0f)]
+        public void Movement_MovesTheShapeAsOne(MoverType type, float phase, bool reverse, float rotation, float pathRotation)
+        {
+            var level = new Level();
+            var generator = new BrickGenerator(level) { MaxNumberOfBricks = 10, InnerRadius = 60 };
+            var mover = NewMover(level, type, 300, 250, phase, reverse);
+            mover.Rotation = rotation;
+            mover.MoveRotation = pathRotation;
+            generator.MoverLink = new MoverLink(level) { Mover = mover };
+            level.Entries.Add(generator);
+
+            var still = new BrickGenerator(level) { MaxNumberOfBricks = 10, InnerRadius = 60, Location = new PointF(300, 250) };
+            var layout = still.Generate().Cast<Brick>().ToArray();
+
+            // Over a whole cycle, each brick is where the generator's position and turn carry it, at the same angle
+            level.ShowPreview = true;
+            level.ResetPreview();
+            for (int step = 0; step < 8; step++)
+            {
+                var bricks = generator.Generate().Cast<Brick>().ToArray();
+                var centre = mover.GetEstimatedMovePosition();
+                float turn = mover.GetEstimatedMoveAngle(0); // anticlockwise
+                for (int i = 0; i < bricks.Length; i++)
+                {
+                    var offset = layout[i].Location.Subtract(new PointF(300, 250));
+                    AssertClose(RotateAround(centre.Add(offset), centre, -turn), bricks[i].DrawLocation);
+                    AssertAngle(layout[i].Rotation + turn, bricks[i].MoverLink.Mover.GetEstimatedMoveAngle(bricks[i].Rotation));
+                }
+                level.UpdatePreview(700);
+            }
+        }
+
+        [Fact]
+        public void RotateBackAndForth_KeepsTheCentreOfTheSwing()
+        {
+            // In the game the phase and path rotation of a swing are where it swings around, not when
+            var mover = NewMover(null, MoverType.RotateBackAndForth, 300, 250, 0.2f);
+            mover.MoveRotation = 30;
+            mover.Offset = 7;
+            var level = LevelWithGenerator(mover);
+            var pegs = ((PegGenerator)level.Entries[1]).Generate();
+            for (int i = 0; i < pegs.Count; i++)
+            {
+                var pegMover = pegs[i].MoverLink.Mover;
+                Assert.Equal(MoverType.SwingAroundCircle, pegMover.Type);
+                Assert.Equal(7, pegMover.Offset);
+                Assert.Equal(30.0f, pegMover.MoveRotation, 3);
+                float angle = i * 45.0f;
+                float expected = 0.2f - angle / 360.0f;
+                expected -= (float)Math.Floor(expected);
+                Assert.Equal(expected, pegMover.Phase, 4);
+            }
+        }
+
+        [Fact]
+        public void RotateWithMaxAngle_DoesNotGoRound()
+        {
+            // The game holds a rotating object with a max angle still, so the entries just stay in place
+            var mover = NewMover(null, MoverType.Rotate, 300, 250);
+            mover.MaxAngle = 1;
+            var level = LevelWithGenerator(mover);
+            var pegs = ((PegGenerator)level.Entries[1]).Generate();
+            Assert.Equal(390.0f, pegs[0].MoverLink.Mover.AnchorPointX, 3);
+            Assert.Equal(MoverType.Rotate, pegs[0].MoverLink.Mover.Type);
         }
 
         [Fact]

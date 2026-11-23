@@ -1,4 +1,4 @@
-// This file is part of PeggleEdit.
+﻿// This file is part of PeggleEdit.
 // Copyright Ted John 2010 - 2026. http://tedtycoon.co.uk
 //
 // PeggleEdit is free software: you can redistribute it and/or modify
@@ -22,6 +22,7 @@ using System.Linq;
 using System.Text;
 using System.Xml;
 using System.Xml.Linq;
+using IntelOrca.PeggleEdit.Tools.Levels.Children;
 
 namespace IntelOrca.PeggleEdit.Tools.Levels.Xml
 {
@@ -131,7 +132,8 @@ namespace IntelOrca.PeggleEdit.Tools.Levels.Xml
                 }
             }
             // PeggleEdit's own data after the last entry is kept; any other data there is not part of the level
-            var editorData = ReadEditorData(data, r.Position, version, count);
+            int realEntries = root.Elements().Count(x => x.Name != EntryRefName);
+            var editorData = ReadEditorData(data, r.Position, version, realEntries);
             if (editorData != null)
                 root.Add(editorData);
             return root;
@@ -141,46 +143,71 @@ namespace IntelOrca.PeggleEdit.Tools.Levels.Xml
         // The entries a generator generated, which are in the level in its place
         const string FirstEntryName = "firstEntry";
         const string EntryCountName = "entryCount";
+        // A hash of those entries, so that PeggleEdit notices if they were changed
+        const string EntryHashName = "entryHash";
+
+        const string LinkName = "Link";
 
         /// <summary>
         /// Reads PeggleEdit's data after the last entry, if it is there, belongs to this level, and can be read.
         /// </summary>
+        /// <param name="entryCount">The number of entries, not counting references to earlier objects.</param>
         static XElement ReadEditorData(byte[] data, int levelEnd, int version, int entryCount)
         {
             if (EditorData.Find(data, levelEnd, out var chunks) != EditorData.Status.Valid)
                 return null;
+            int generatorsChunk = chunks.FindIndex(x => x.Tag == EditorData.GeneratorsTag);
+            if (generatorsChunk < 0)
+                return null;
 
             var result = new XElement(EditorDataName);
-            foreach (var chunk in chunks.Where(x => x.Tag == EditorData.GeneratorsTag).Take(1))
+            try
             {
-                try
+                var chunk = chunks[generatorsChunk];
+                var r = new BinReader(data.Skip(chunk.Offset).Take(chunk.Length).ToArray());
+                int count = r.I32();
+                if (count < 0)
+                    return null;
+                int next = 0;
+                for (int i = 0; i < count; i++)
                 {
-                    var r = new BinReader(data.Skip(chunk.Offset).Take(chunk.Length).ToArray());
-                    int count = r.I32();
-                    if (count < 0)
+                    int first = r.I32();
+                    int generated = r.I32();
+                    ulong hash = r.U32() | ((ulong)r.U32() << 32);
+                    if (first < next || generated < 0 || generated > entryCount - first)
                         return null;
-                    int next = 0;
-                    for (int i = 0; i < count; i++)
-                    {
-                        int first = r.I32();
-                        int generated = r.I32();
-                        if (first < next || generated < 0 || generated > entryCount - first)
-                            return null;
-                        next = first + generated;
+                    next = first + generated;
 
-                        var el = ReadEntry(r, version);
-                        if (!GeneratorNames.Contains(el.Name.LocalName))
-                            return null;
-                        var attributes = el.Attributes().ToList();
-                        el.RemoveAttributes();
-                        el.Add(new XAttribute(FirstEntryName, first), new XAttribute(EntryCountName, generated), attributes);
+                    var el = ReadEntry(r, version);
+                    if (!GeneratorNames.Contains(el.Name.LocalName))
+                        return null;
+                    var attributes = el.Attributes().ToList();
+                    el.RemoveAttributes();
+                    el.Add(new XAttribute(FirstEntryName, first), new XAttribute(EntryCountName, generated),
+                        new XAttribute(EntryHashName, "0x" + hash.ToString("X16", Inv)), attributes);
+                    result.Add(el);
+                }
+                if (r.Remaining != 0)
+                    return null;
+
+                int linksChunk = chunks.FindIndex(x => x.Tag == EditorData.LinksTag);
+                if (linksChunk >= 0)
+                {
+                    foreach (var link in EditorData.ReadLinks(data, chunks[linksChunk]))
+                    {
+                        var el = new XElement(LinkName);
+                        if (link.HolderGenerator < 0)
+                            el.Add(new XAttribute("holderMover", link.HolderMoverId));
+                        else
+                            el.Add(new XAttribute("holderGenerator", link.HolderGenerator), new XAttribute("holderDepth", link.HolderDepth));
+                        el.Add(new XAttribute("generator", link.Generator), new XAttribute("depth", link.Depth));
                         result.Add(el);
                     }
                 }
-                catch (Exception ex) when (ex is LevelFormatException || ex is OverflowException)
-                {
-                    return null;
-                }
+            }
+            catch (Exception ex) when (ex is LevelFormatException || ex is OverflowException || ex is InvalidDataException || ex is EndOfStreamException)
+            {
+                return null;
             }
             return result;
         }
@@ -188,30 +215,73 @@ namespace IntelOrca.PeggleEdit.Tools.Levels.Xml
         /// <summary>
         /// Writes PeggleEdit's data, from a &lt;PeggleEdit&gt; element, for the level written so far.
         /// </summary>
+        /// <param name="entryCount">The number of entries, not counting references to earlier objects.</param>
         static byte[] WriteEditorData(Node n, byte[] levelPart, int version, int entryCount)
         {
             var w = new BinWriter();
-            var generators = n.RemainingChildren();
+            var children = n.RemainingChildren();
+            var generators = children.Where(x => x.Name != LinkName).ToList();
+            var links = new List<EditorData.LinkRecord>();
             w.I32(generators.Count);
             int next = 0;
-            foreach (var generator in generators)
+            foreach (var child in children)
             {
-                n.UseChild(generator.Element);
-                if (!GeneratorNames.Contains(generator.Name))
-                    throw generator.Error($"<{EditorDataName}> can only hold generators, not <{generator.Name}>.");
-                int first = generator.Int32(FirstEntryName);
-                int count = generator.Int32(EntryCountName);
+                n.UseChild(child.Element);
+                if (child.Name == LinkName)
+                {
+                    links.Add(ReadLinkElement(child, generators.Count));
+                    continue;
+                }
+                if (links.Count != 0)
+                    throw child.Error($"<{LinkName}> elements must come after the generators.");
+                if (!GeneratorNames.Contains(child.Name))
+                    throw child.Error($"<{EditorDataName}> can only hold generators and links, not <{child.Name}>.");
+                int first = child.Int32(FirstEntryName);
+                int count = child.Int32(EntryCountName);
                 if (first < next || first > entryCount)
-                    throw generator.Error($"'{FirstEntryName}' must be from {next} to {entryCount}: generators are in entry order and do not overlap.", FirstEntryName);
+                    throw child.Error($"'{FirstEntryName}' must be from {next} to {entryCount}: generators are in entry order and do not overlap.", FirstEntryName);
                 if (count < 0 || count > entryCount - first)
-                    throw generator.Error($"'{EntryCountName}' must be from 0 to {entryCount - first}.", EntryCountName);
+                    throw child.Error($"'{EntryCountName}' must be from 0 to {entryCount - first}.", EntryCountName);
                 next = first + count;
+                var hashText = child.String(EntryHashName);
+                if (!hashText.StartsWith("0x", StringComparison.OrdinalIgnoreCase) ||
+                    !ulong.TryParse(hashText.Substring(2), NumberStyles.AllowHexSpecifier, Inv, out var hash))
+                    throw child.Error($"'{EntryHashName}' must be a hex number, e.g. 0x0123456789ABCDEF.", EntryHashName);
                 w.I32(first);
                 w.I32(count);
-                WriteEntry(generator, w, version);
+                w.U32((uint)hash);
+                w.U32((uint)(hash >> 32));
+                WriteEntry(child, w, version);
             }
             n.Done();
-            return EditorData.Build(levelPart, new[] { new KeyValuePair<string, byte[]>(EditorData.GeneratorsTag, w.ToArray()) });
+            var chunks = new List<KeyValuePair<string, byte[]>> { new KeyValuePair<string, byte[]>(EditorData.GeneratorsTag, w.ToArray()) };
+            if (links.Count != 0)
+                chunks.Add(new KeyValuePair<string, byte[]>(EditorData.LinksTag, EditorData.WriteLinks(links)));
+            return EditorData.Build(levelPart, chunks);
+        }
+
+        static EditorData.LinkRecord ReadLinkElement(Node n, int generatorCount)
+        {
+            var link = new EditorData.LinkRecord { HolderGenerator = -1 };
+            if (n.Has("holderMover"))
+            {
+                link.HolderMoverId = n.Int32("holderMover");
+                if (n.Has("holderGenerator") || n.Has("holderDepth"))
+                    throw n.Error("A link is held by either a mover ('holderMover') or a generator ('holderGenerator'), not both.");
+            }
+            else
+            {
+                link.HolderGenerator = n.Int32("holderGenerator");
+                link.HolderDepth = n.Int32("holderDepth");
+                if (link.HolderGenerator < 0 || link.HolderGenerator >= generatorCount)
+                    throw n.Error($"'holderGenerator' must be from 0 to {generatorCount - 1}.", "holderGenerator");
+            }
+            link.Generator = n.Int32("generator");
+            link.Depth = n.Int32("depth");
+            if (link.Generator < 0 || link.Generator >= generatorCount)
+                throw n.Error($"'generator' must be from 0 to {generatorCount - 1}.", "generator");
+            n.Done();
+            return link;
         }
 
         /// <summary>
@@ -251,7 +321,7 @@ namespace IntelOrca.PeggleEdit.Tools.Levels.Xml
             {
                 root.UseChild(editorData);
                 var levelPart = data;
-                var trailer = WriteEditorData(new Node(editorData), levelPart, version, children.Count);
+                var trailer = WriteEditorData(new Node(editorData), levelPart, version, children.Count(x => x.Name != EntryRefName));
                 data = levelPart.Concat(trailer).ToArray();
             }
             root.Done();
@@ -1362,7 +1432,10 @@ namespace IntelOrca.PeggleEdit.Tools.Levels.Xml
 
         static void ReadCurveGenerator(BinReader r, XElement el)
         {
-            int numPoints = r.U16();
+            int count = r.U16();
+            if ((count & CurveGenerator.HasPositionFlag) != 0)
+                el.Add(new XAttribute("x", r.F32()), new XAttribute("y", r.F32()));
+            int numPoints = count & CurveGenerator.PointCountMask;
             var path = new StringBuilder();
             for (int i = 0; i < numPoints; i++)
             {
@@ -1373,14 +1446,23 @@ namespace IntelOrca.PeggleEdit.Tools.Levels.Xml
                     path.Append(',').Append(padding.ToString(Inv));
             }
             el.Add(new XAttribute("path", path.ToString()));
+            if ((count & CurveGenerator.HasIntervalFlag) != 0)
+                el.Add(new XAttribute("interval", r.I32()));
         }
 
         static void WriteCurveGenerator(Node n, BinWriter w)
         {
             var points = n.Tuples("path", 3, 4);
-            if (points.Count > ushort.MaxValue)
+            if (points.Count > CurveGenerator.PointCountMask)
                 throw n.Error("Too many path points.", "path");
-            w.U16((ushort)points.Count);
+            bool hasInterval = n.Has("interval");
+            bool hasPosition = n.HasPair("x", "y");
+            w.U16((ushort)(points.Count | (hasInterval ? CurveGenerator.HasIntervalFlag : 0) | (hasPosition ? CurveGenerator.HasPositionFlag : 0)));
+            if (hasPosition)
+            {
+                w.F32(n.Float("x"));
+                w.F32(n.Float("y"));
+            }
             foreach (var p in points)
             {
                 w.F32(n.ParseFloat(p[0], "path"));
@@ -1388,6 +1470,8 @@ namespace IntelOrca.PeggleEdit.Tools.Levels.Xml
                 w.U8(n.ParseByte(p[2], "path"));
                 w.U8(p.Length > 3 ? n.ParseByte(p[3], "path") : (byte)0);
             }
+            if (hasInterval)
+                w.I32(n.Int32("interval"));
         }
 
         #endregion

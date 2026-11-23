@@ -29,7 +29,25 @@ own data about a level there, after the last entry, so that the level stays play
   * 4 byte integer, size of the chunks that follow
   * chunks: a 4 character tag, a 4 byte integer size, then the chunk's data. Unknown chunks are skipped.
 
-The `GENS` chunk holds the level's generators: a 4 byte integer count, then for each generator the index of the first
-entry it generated and the number of entries it generated (4 byte integers), then the generator written as a level
-entry. The entries a generator generated are in the level in its place, so that the game plays them; when PeggleEdit
-opens the level it replaces them by the generator again.
+The `GENS` chunk holds the level's generators: a 4 byte integer count, then for each generator:
+  * 4 byte integer, the index of the first entry it generated (not counting null entries)
+  * 4 byte integer, the number of entries it generated
+  * 8 byte integer, FNV-1a hash of those entries as written
+  * the generator, written as a level entry
+
+The entries a generator generated are in the level in its place, so that the game plays them. When PeggleEdit opens
+the level it replaces them by the generator again, if they still match the hash; otherwise it keeps them as ordinary
+entries, so that nothing changed by another program is lost.
+
+The game has no generators, so an object whose mover links to a generator's mover (or to one of its parent movers) is
+written with its own copy of that mover, which moves the same way. The `LINK` chunk turns those copies back into links:
+a 4 byte integer count, then for each link five 4 byte integers:
+  * the id of the copy, as the game numbers objects, when an entry holds it (otherwise any value)
+  * the index of the generator holding the copy, or -1 when an entry holds it
+  * how many owned movers down the holding generator's movers the copy is
+  * the index of the generator linked to
+  * how many owned movers down that generator's movers the mover linked to is (0 for its own mover)
+
+Peg Pen and Brick Pen generators store, after the generic data, a 2 byte point count whose top bits are flags:
+0x4000, the position (two floats) follows; 0x8000, the interval (4 byte integer) follows the points. Each point is two
+floats, a kind byte and a padding byte.

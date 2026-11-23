@@ -37,10 +37,24 @@ namespace IntelOrca.PeggleEdit.Tools.Levels.Children
                 Generators.DrawGenerated(this, g, true);
         }
 
+        // Flags in the top bits of the point count. Older versions saved neither the position (the path is relative to
+        // it) nor the interval, so each is only written when it is needed: the position when there is no mover (which
+        // is the position otherwise), the interval when it is not the default.
+        internal const int HasIntervalFlag = 0x8000;
+        internal const int HasPositionFlag = 0x4000;
+        internal const int PointCountMask = 0x3FFF;
+        const int DefaultInterval = 30;
+
         public override void ReadData(BinaryReader br, int version)
         {
             BezierPath = new BezierPath();
-            var numPoints = br.ReadUInt16();
+            var count = br.ReadUInt16();
+            if ((count & HasPositionFlag) != 0)
+            {
+                X = br.ReadSingle();
+                Y = br.ReadSingle();
+            }
+            var numPoints = count & PointCountMask;
             for (int i = 0; i < numPoints; i++)
             {
                 var x = br.ReadSingle();
@@ -49,12 +63,22 @@ namespace IntelOrca.PeggleEdit.Tools.Levels.Children
                 br.ReadByte();
                 BezierPath.PushPoint(k, new PointF(x, y));
             }
+            mInterval = (count & HasIntervalFlag) != 0 ? br.ReadInt32() : DefaultInterval;
+            InvalidatePath();
         }
 
         public override void WriteData(BinaryWriter bw, int version)
         {
-            bw.Write((ushort)BezierPath.NumPoints);
-            for (int i = 0; i < BezierPath.NumPoints; i++)
+            int numPoints = Math.Min(BezierPath.NumPoints, PointCountMask);
+            bool hasInterval = mInterval != DefaultInterval;
+            bool hasPosition = !HasMover && (X != 0 || Y != 0);
+            bw.Write((ushort)(numPoints | (hasInterval ? HasIntervalFlag : 0) | (hasPosition ? HasPositionFlag : 0)));
+            if (hasPosition)
+            {
+                bw.Write(X);
+                bw.Write(Y);
+            }
+            for (int i = 0; i < numPoints; i++)
             {
                 var p = BezierPath.Points[i];
                 var k = BezierPath.PointKinds[i];
@@ -64,6 +88,8 @@ namespace IntelOrca.PeggleEdit.Tools.Levels.Children
                 bw.Write((byte)k);
                 bw.Write((byte)0);
             }
+            if (hasInterval)
+                bw.Write(mInterval);
         }
 
         public override void Draw(Graphics g)
@@ -205,7 +231,8 @@ namespace IntelOrca.PeggleEdit.Tools.Levels.Children
         {
             base.CloneTo(copy);
             copy.BezierPath = BezierPath.Clone();
-            copy.Interval = Interval;
+            copy.mInterval = mInterval;
+            copy.InvalidatePath();
         }
 
         public void RecalculateOrigin()
@@ -246,17 +273,18 @@ namespace IntelOrca.PeggleEdit.Tools.Levels.Children
         [DisplayName("Interval")]
         [Description("The distance between each generated peg.")]
         [Category("Layout")]
-        [DefaultValue(30)]
+        [DefaultValue(DefaultInterval)]
         public int Interval
         {
-            get => _interval;
+            get => mInterval;
             set
             {
-                _interval = value;
+                mInterval = value;
                 InvalidatePath();
             }
         }
-        private int _interval = 30;
+
+        int mInterval = DefaultInterval;
 
         [DisplayName("Path")]
         [Description("SVG syntax for the path.")]
@@ -264,7 +292,11 @@ namespace IntelOrca.PeggleEdit.Tools.Levels.Children
         public string Path
         {
             get => BezierPath.Svg;
-            set => BezierPath.Svg = value;
+            set
+            {
+                BezierPath.Svg = value;
+                InvalidatePath();
+            }
         }
 
         public override RectangleF Bounds

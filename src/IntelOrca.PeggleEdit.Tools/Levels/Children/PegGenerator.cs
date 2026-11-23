@@ -50,9 +50,12 @@ namespace IntelOrca.PeggleEdit.Tools.Levels.Children
         {
             var origin = Generators.GetOrigin(this);
             var pegs = new List<LevelEntry>();
+            if (mMaxNumberOfPegs <= 0)
+                return Generators.Finish(this, origin, pegs);
             int index = 0;
+            int count = Math.Min(mNumberOfPegs, Generators.MaxEntries);
             float da = 360.0f / (float)mMaxNumberOfPegs;
-            for (float a = mAngularOffset; a < 360 + mAngularOffset && index < mNumberOfPegs; a += da)
+            for (float a = mAngularOffset; a < 360 + mAngularOffset && index < count; a += da)
             {
                 float angle = MathExt.ToRadians(a);
 

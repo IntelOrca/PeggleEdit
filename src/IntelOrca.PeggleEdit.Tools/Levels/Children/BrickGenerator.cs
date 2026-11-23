@@ -51,8 +51,11 @@ namespace IntelOrca.PeggleEdit.Tools.Levels.Children
         {
             var origin = Generators.GetOrigin(this);
             var bricks = new List<LevelEntry>();
+            if (mMaxNumberOfBricks <= 0)
+                return Generators.Finish(this, origin, bricks);
             int index = 0;
-            for (float a = mAngularOffset; a < 360 + mAngularOffset && index < mNumberOfBricks; a += SectorAngles)
+            int count = Math.Min(mNumberOfBricks, Generators.MaxEntries);
+            for (float a = mAngularOffset; a < 360 + mAngularOffset && index < count; a += SectorAngles)
             {
                 float angle = MathExt.ToRadians(a);
 

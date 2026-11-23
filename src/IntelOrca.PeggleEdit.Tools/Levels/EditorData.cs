@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Text;
@@ -23,15 +23,18 @@ namespace IntelOrca.PeggleEdit.Tools.Levels
     /// <item>chunks: 4 byte ASCII tag, i32 size, then the data. Unknown chunks are skipped.</item>
     /// </list>
     /// The GENS chunk holds the generators: i32 count, then for each generator the index of the first entry it
-    /// generated, the number of entries it generated (i32 each), and the generator written as a level entry. The
-    /// generated entries are in the level in its place, so that the game sees them; PeggleEdit replaces them by the
-    /// generator when it reads the level.
+    /// generated, the number of entries it generated (i32 each), an FNV-1a hash (u64) of those entries as written, and
+    /// the generator written as a level entry. The generated entries are in the level in its place, so that the game
+    /// sees them; PeggleEdit replaces them by the generator when it reads the level, if they still match the hash.
+    /// The LINK chunk holds links to generators' movers (see <see cref="LinkRecord"/>): i32 count, then five i32s for
+    /// each.
     /// </remarks>
     public static class EditorData
     {
         public const string MagicText = "PEGLEDIT";
         public const int FormatVersion = 1;
         public const string GeneratorsTag = "GENS";
+        public const string LinksTag = "LINK";
 
         static readonly byte[] Magic = Encoding.ASCII.GetBytes(MagicText);
         const int HeaderSize = 8 + 4 + 8 + 4;
@@ -80,7 +83,31 @@ namespace IntelOrca.PeggleEdit.Tools.Levels
         {
             public int First;
             public int Count;
+            /// <summary>FNV-1a hash of the generated entries as written, so that changes to them are noticed.</summary>
+            public ulong Hash;
             public LevelEntry Generator;
+        }
+
+        /// <summary>
+        /// A link to a generator's mover. The game has no generator to link to, so the mover holding the link is
+        /// written with its own copy of the generator's mover instead, which moves the same way; this record turns
+        /// the copy back into the link.
+        /// </summary>
+        public struct LinkRecord
+        {
+            /// <summary>The id (as the game numbers objects) of the copy, when it is held by an entry in the level.</summary>
+            public int HolderMoverId;
+            /// <summary>The index of the generator holding the copy, or -1 when it is held by an entry.</summary>
+            public int HolderGenerator;
+            /// <summary>How many owned movers down the holding generator's links the copy is.</summary>
+            public int HolderDepth;
+            /// <summary>The index of the generator linked to.</summary>
+            public int Generator;
+            /// <summary>How many owned movers down the generator's links the mover linked to is: 0 for its mover.</summary>
+            public int Depth;
+
+            /// <summary>The copy, while writing.</summary>
+            internal Mover Copy;
         }
 
         /// <summary>
@@ -131,8 +158,9 @@ namespace IntelOrca.PeggleEdit.Tools.Levels
         /// <summary>
         /// Writes PeggleEdit's data for a level whose file so far is <paramref name="levelPart"/>.
         /// </summary>
-        public static void Write(BinaryWriter bw, byte[] levelPart, IReadOnlyList<GeneratorRecord> generators, int version)
+        public static void Write(BinaryWriter bw, byte[] levelPart, IReadOnlyList<GeneratorRecord> generators, IReadOnlyList<LinkRecord> links, int version)
         {
+            var chunks = new List<KeyValuePair<string, byte[]>>();
             var payload = new MemoryStream();
             using (var pw = new BinaryWriter(payload, Encoding.UTF8, true))
             {
@@ -141,10 +169,57 @@ namespace IntelOrca.PeggleEdit.Tools.Levels
                 {
                     pw.Write(record.First);
                     pw.Write(record.Count);
+                    pw.Write(record.Hash);
                     record.Generator.Write(pw, version);
                 }
             }
-            bw.Write(Build(levelPart, new[] { new KeyValuePair<string, byte[]>(GeneratorsTag, payload.ToArray()) }));
+            chunks.Add(new KeyValuePair<string, byte[]>(GeneratorsTag, payload.ToArray()));
+            if (links.Count != 0)
+                chunks.Add(new KeyValuePair<string, byte[]>(LinksTag, WriteLinks(links)));
+            bw.Write(Build(levelPart, chunks));
+        }
+
+        public static byte[] WriteLinks(IReadOnlyList<LinkRecord> links)
+        {
+            var payload = new MemoryStream();
+            using (var pw = new BinaryWriter(payload, Encoding.UTF8, true))
+            {
+                pw.Write(links.Count);
+                foreach (var link in links)
+                {
+                    pw.Write(link.HolderMoverId);
+                    pw.Write(link.HolderGenerator);
+                    pw.Write(link.HolderDepth);
+                    pw.Write(link.Generator);
+                    pw.Write(link.Depth);
+                }
+            }
+            return payload.ToArray();
+        }
+
+        /// <summary>
+        /// Reads the links from a LINK chunk.
+        /// </summary>
+        /// <exception cref="InvalidDataException">The chunk is damaged.</exception>
+        public static List<LinkRecord> ReadLinks(byte[] data, Chunk chunk)
+        {
+            var br = new BinaryReader(new MemoryStream(data, chunk.Offset, chunk.Length));
+            int count = br.ReadInt32();
+            if (count < 0 || count != (chunk.Length - 4) / 20 || (chunk.Length - 4) % 20 != 0)
+                throw new InvalidDataException("bad link count");
+            var result = new List<LinkRecord>(count);
+            for (int i = 0; i < count; i++)
+            {
+                result.Add(new LinkRecord
+                {
+                    HolderMoverId = br.ReadInt32(),
+                    HolderGenerator = br.ReadInt32(),
+                    HolderDepth = br.ReadInt32(),
+                    Generator = br.ReadInt32(),
+                    Depth = br.ReadInt32(),
+                });
+            }
+            return result;
         }
 
         /// <summary>
@@ -183,12 +258,12 @@ namespace IntelOrca.PeggleEdit.Tools.Levels
         {
             var br = new BinaryReader(new MemoryStream(data, chunk.Offset, chunk.Length));
             int count = br.ReadInt32();
-            if (count < 0 || count > chunk.Length / 16)
+            if (count < 0 || count > chunk.Length / 24)
                 throw new InvalidDataException("bad generator count");
             var result = new List<GeneratorRecord>(count);
             for (int i = 0; i < count; i++)
             {
-                var record = new GeneratorRecord { First = br.ReadInt32(), Count = br.ReadInt32() };
+                var record = new GeneratorRecord { First = br.ReadInt32(), Count = br.ReadInt32(), Hash = br.ReadUInt64() };
                 record.Generator = LevelEntryFactory.CreateLevelEntry(br, version);
                 if (!(record.Generator is IEntryGenerator))
                     throw new InvalidDataException("not a generator");
