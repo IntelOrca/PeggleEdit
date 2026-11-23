@@ -35,8 +35,10 @@ namespace System.Windows.Forms
         /// </summary>
         public new void Add(RibbonItem item)
         {
-            item.MaxSizeMode = RibbonElementSizeMode.Compact;
+            // Add the item before changing its size mode, as changing it repaints the ribbon which
+            // will otherwise re-enter and try to add the item again.
             base.Add(item);
+            item.MaxSizeMode = RibbonElementSizeMode.Compact;
         }
 
         /// <summary>
@@ -45,11 +47,11 @@ namespace System.Windows.Forms
         /// <param name="items">Items to add</param>
         public new void AddRange(IEnumerable<RibbonItem> items)
         {
+            base.AddRange(items);
             foreach (RibbonItem item in items)
             {
                 item.MaxSizeMode = RibbonElementSizeMode.Compact;
             }
-            base.AddRange(items);
         }
 
         /// <summary>
@@ -59,8 +61,8 @@ namespace System.Windows.Forms
         /// <param name="item">Item to insert</param>
         public new void Insert(int index, RibbonItem item)
         {
-            item.MaxSizeMode = RibbonElementSizeMode.Compact;
             base.Insert(index, item);
+            item.MaxSizeMode = RibbonElementSizeMode.Compact;
         }
     }
 }

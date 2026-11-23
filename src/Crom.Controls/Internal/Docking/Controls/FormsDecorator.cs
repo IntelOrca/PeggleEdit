@@ -65,6 +65,8 @@ namespace Crom.Controls.Docking
       /// </summary>
       public FormsDecorator()
       {
+         InternalControls.AddDefaultControls();
+
          FormsPanel.Bounds      = ClientRectangle;
          FormsPanel.Anchor      = AnchorStyles.Left | AnchorStyles.Right | AnchorStyles.Top | AnchorStyles.Bottom;
 
@@ -574,6 +576,41 @@ namespace Crom.Controls.Docking
          base.OnVisibleChanged(e);
 
          FormsPanel.Visible = Visible;
+      }
+
+      /// <summary>
+      /// Occurs when the parent changed
+      /// </summary>
+      /// <param name="e">event args</param>
+      protected override void OnParentChanged(EventArgs e)
+      {
+         base.OnParentChanged(e);
+
+         ShowFormsPanelIfVisible();
+      }
+
+      /// <summary>
+      /// Occurs when the parent visibility changed
+      /// </summary>
+      /// <param name="e">event args</param>
+      protected override void OnParentVisibleChanged(EventArgs e)
+      {
+         base.OnParentVisibleChanged(e);
+
+         ShowFormsPanelIfVisible();
+      }
+
+      /// <summary>
+      /// Shows the forms panel when the decorator becomes visible because of its parent, for Windows Forms
+      /// implementations that do not raise <see cref="Control.VisibleChanged"/> in that case. This must not
+      /// be done otherwise, as on the .NET implementation it stops the decorator from being shown.
+      /// </summary>
+      private void ShowFormsPanelIfVisible()
+      {
+         if (WinFormsBehaviour.RaisesVisibleChangedForParentChanges == false && Visible && FormsPanel.Visible == false)
+         {
+            FormsPanel.Visible = true;
+         }
       }
 
       /// <summary>

@@ -144,8 +144,7 @@ namespace IntelOrca.PeggleEdit.Tools
             if (!File.Exists(libraryPath))
                 return false;
 
-            var hModule = LoadLibrary(libraryPath);
-            if (hModule == IntPtr.Zero)
+            if (!TryLoadLibrary(libraryPath))
                 return false;
 
             var licenceKey = DecodeKey(g_peggleJ2KLicenceKeyEncoded);
@@ -155,6 +154,19 @@ namespace IntelOrca.PeggleEdit.Tools
             J2KCodec.Unlock(licenceKey);
             _j2kLoaded = true;
             return true;
+        }
+
+        private static bool TryLoadLibrary(string path)
+        {
+            try
+            {
+                return LoadLibrary(path) != IntPtr.Zero;
+            }
+            catch (Exception ex) when (ex is DllNotFoundException || ex is EntryPointNotFoundException)
+            {
+                // Not running on Windows (e.g. Mono on Linux), the Peggle library can not be used
+                return false;
+            }
         }
 
         private static string DecodeKey(string key)

@@ -588,6 +588,10 @@ namespace System.Windows.Forms
         {
             base.OnMouseClick(e);
 
+            // The click may have closed the form that owns the ribbon (e.g. Exit)
+            if (Ribbon.IsDisposed)
+                return;
+
             if (Ribbon.RectangleToScreen(Ribbon.OrbBounds).Contains(PointToScreen(e.Location)))
             {
                 Ribbon.OnOrbClicked(EventArgs.Empty);

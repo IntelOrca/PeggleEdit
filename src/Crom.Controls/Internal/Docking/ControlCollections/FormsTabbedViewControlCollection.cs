@@ -28,7 +28,8 @@ namespace Crom.Controls.Docking
    {
       #region Fields
 
-      private FormsDecorator     _pagesPanel       = new FormsDecorator();
+      private FormsDecorator     _pagesPanel             = new FormsDecorator();
+      private bool               _defaultControlsAdded   = false;
 
       #endregion Fields
 
@@ -40,6 +41,24 @@ namespace Crom.Controls.Docking
       /// <param name="owner">owner control</param>
       public FormsTabbedViewControlCollection(Control owner) : base(owner)
       {
+         // If children can not be added yet, the owner adds them from its own constructor instead
+         if (WinFormsBehaviour.CreatesControlCollectionInBaseConstructor == false)
+         {
+            AddDefaultControls();
+         }
+      }
+
+      /// <summary>
+      /// Adds the tabbed view's child controls, if they have not already been added.
+      /// </summary>
+      internal void AddDefaultControls()
+      {
+         if (_defaultControlsAdded)
+         {
+            return;
+         }
+         _defaultControlsAdded = true;
+
          base.Add(_pagesPanel);
       }
 

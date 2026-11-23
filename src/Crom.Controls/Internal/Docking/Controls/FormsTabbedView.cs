@@ -57,6 +57,8 @@ namespace Crom.Controls.Docking
       /// <param name="pagesPanel">pages panel</param>
       public FormsTabbedView()
       {
+         InternalControls.AddDefaultControls();
+
          PagesPanel.ContextButtonClick   += OnPagesContextMenuClick;
          PagesPanel.AutohideButtonClick  += OnPagesAutohideClick;
          PagesPanel.CloseButtonClick     += OnPagesCloseClick;

@@ -20,7 +20,6 @@ using System;
 using System.Collections.Generic;
 using System.Drawing;
 using System.Drawing.Printing;
-using System.Runtime.InteropServices;
 using System.Windows.Forms;
 
 namespace Crom.Controls.Docking
@@ -462,54 +461,18 @@ namespace Crom.Controls.Docking
       }
 
       /// <summary>
-      /// Form from point
-      /// </summary>
-      /// <param name="screenPoint">screen point</param>
-      /// <returns>form</returns>
-      public static Control FromPoint(Point screenPoint)
-      {
-         IntPtr handle = WindowFromPoint(screenPoint);
-         if (handle == null)
-         {
-            return null;
-         }
-
-         try
-         {
-            Control control = Control.FromHandle(handle);
-            return control;
-         }
-         catch { }
-
-         return null;
-      }
-
-      /// <summary>
       /// Gets the margins of the control
       /// </summary>
       /// <param name="control">control</param>
       /// <returns>margins</returns>
       public static Margins GetMargins(Control control)
       {
-         Margins margins  = new Margins();
-
-         if (control != null)
+         if (control == null)
          {
-            WindowInfo info = new WindowInfo();
-            info.cbSize = Marshal.SizeOf(info);
-
-            if (GetWindowInfo(control.Handle, ref info) == false)
-            {
-               throw new InvalidOperationException();
-            }
-
-            margins.Left   = info.rcClient.left    - info.rcWindow.left;
-            margins.Right  = info.rcWindow.right   - info.rcClient.right;
-            margins.Top    = info.rcClient.top     - info.rcWindow.top;
-            margins.Bottom = info.rcWindow.bottom  - info.rcClient.bottom;
+            return new Margins();
          }
 
-         return margins;
+         return WindowingApi.Current.GetNonClientMargins(control);
       }
 
       /// <summary>
@@ -590,68 +553,6 @@ namespace Crom.Controls.Docking
       #endregion Protected section
 
       #region Private section
-      #region API
-
-      /// <summary>
-      /// Rect
-      /// </summary>
-      [StructLayout(LayoutKind.Sequential)]
-      public struct Rect
-      {
-          public int left;
-          public int top;
-          public int right;
-          public int bottom;
-      };
-
-      /// <summary>
-      /// Titlebar info
-      /// </summary>
-      [StructLayout(LayoutKind.Sequential)]
-      private struct TitlebarInfo
-      {
-         public int  cbSize;
-         public Rect rcTitleBar;
-         public int childBar0;
-         public int childBar1;
-         public int childBar2;
-         public int childBar3;
-         public int childBar4;
-         public int childBar5;
-      };
-
-      /// <summary>
-      /// Window info
-      /// </summary>
-      [StructLayout(LayoutKind.Sequential)]
-      private struct WindowInfo
-      {
-         public int cbSize;
-         public Rect rcWindow;
-         public Rect rcClient;
-         public int dwStyle;
-         public int dwExStyle;
-         public int dwWindowStatus;
-         public int cxWindowBorders;
-         public int cyWindowBorders;
-         public short atomWindowType;
-         public short wCreatorVersion;
-      }
-
-      [DllImport("user32")]
-      private static extern bool GetTitleBarInfo(IntPtr hWnd, ref TitlebarInfo info);
-
-      [DllImport("user32")]
-      private static extern bool GetWindowInfo(IntPtr hWnd, ref WindowInfo info);
-
-      [DllImport("user32")]
-      private static extern bool IsWindowVisible(IntPtr hWnd);
-
-      [DllImport("user32")]
-      private static extern IntPtr WindowFromPoint(Point screenPoint);
-
-      #endregion API
-
       /// <summary>
       /// On host moved
       /// </summary>

@@ -230,25 +230,37 @@ namespace Crom.Controls.Docking
          XmlDocument xmlDocument = new XmlDocument();
          xmlDocument.Load(SavePath);
 
-         _container.SuspendLayout();
-
-         DockableFormInfo selected = null;
-         List<DockableFormInfo> autoHide = new List<DockableFormInfo>();
-         List<ControlSizeInfo> formsSize = LoadForms(xmlDocument, formsFactory, autoHide, out selected);
-
-         RestoreSizes(formsSize);
-
-         foreach (DockableFormInfo toAuto in autoHide)
+         bool suspendLayout = WinFormsBehaviour.DrawsControlsAddedWhileLayoutSuspended;
+         if (suspendLayout)
          {
-            _container.SetAutoHide(toAuto, true);
+            _container.SuspendLayout();
          }
 
-         if (selected != null)
+         try
          {
-            selected.IsSelected = true;
-         }
+            DockableFormInfo selected = null;
+            List<DockableFormInfo> autoHide = new List<DockableFormInfo>();
+            List<ControlSizeInfo> formsSize = LoadForms(xmlDocument, formsFactory, autoHide, out selected);
 
-         _container.ResumeLayout(true);
+            RestoreSizes(formsSize);
+
+            foreach (DockableFormInfo toAuto in autoHide)
+            {
+               _container.SetAutoHide(toAuto, true);
+            }
+
+            if (selected != null)
+            {
+               selected.IsSelected = true;
+            }
+         }
+         finally
+         {
+            if (suspendLayout)
+            {
+               _container.ResumeLayout(true);
+            }
+         }
       }
 
       #endregion Public section

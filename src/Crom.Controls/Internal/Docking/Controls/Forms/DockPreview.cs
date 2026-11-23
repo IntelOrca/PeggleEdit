@@ -19,7 +19,6 @@
 using System;
 using System.Drawing;
 using System.Windows.Forms;
-using System.Runtime.InteropServices;
 
 namespace Crom.Controls.Docking
 {
@@ -52,7 +51,7 @@ namespace Crom.Controls.Docking
          {
             ValidateNotDisposed();
 
-            return IsWindowVisible(Handle);
+            return WindowingApi.Current.IsWindowVisible(this);
          }
       }
 
@@ -70,7 +69,7 @@ namespace Crom.Controls.Docking
 
          if (IsVisible == false)
          {
-            SetWindowPos(Handle, new IntPtr(-1), Left, Top, Width, Height, Swp.NoActivate | Swp.ShowWindow);
+            WindowingApi.Current.ShowTopMostWithoutActivating(this);
          }
       }
 
@@ -143,59 +142,5 @@ namespace Crom.Controls.Docking
       }
 
       #endregion Protected section
-
-      #region Private section
-      #region API
-
-      enum Sw : int
-      {
-         Hide             = 0,
-         ShowNormal       = 1,
-         ShowMinimized    = 2,
-         ShowMaximized    = 3,
-         ShowNoActivate   = 4,
-         Show             = 5,
-         Minimize         = 6,
-         ShowMinNoActive  = 7,
-         ShowNA           = 8,
-         Restore          = 9,
-         Showdefault      = 10,
-         ForceMinimize    = 11,
-      };
-
-      enum Swp : int
-      {
-         NoSize          = 0x0001,
-         NoMove          = 0x0002,
-         NoZorder        = 0x0004,
-         NoRedraw        = 0x0008,
-         NoActivate      = 0x0010,
-         FrameChanged    = 0x0020,  /* the frame changed: send wm_nccalcsize */
-         ShowWindow      = 0x0040,
-         HideWindow      = 0x0080,
-         NoCopyBits      = 0x0100,
-         NoOwnerZorder   = 0x0200,  /* don't do owner z ordering */
-         NoSendChanging  = 0x0400,  /* don't send wm_windowposchanging */
-      };
-
-      [DllImport("user32")]
-      private static extern bool ShowWindow(IntPtr hWnd, Sw style);
-
-      [DllImport("user32")]
-      private static extern bool SetWindowPos(IntPtr hWnd,
-          IntPtr hWndInsertAfter,
-          int x,
-          int y,
-          int width,
-          int height,
-          Swp uFlags
-      );
-
-      [DllImport("user32")]
-      private static extern bool IsWindowVisible(IntPtr hWnd);
-
-      #endregion API
-
-      #endregion Private section
    }
 }

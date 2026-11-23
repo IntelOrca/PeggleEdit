@@ -16,6 +16,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Drawing;
 using System.IO;
 using System.Reflection;
@@ -170,6 +171,8 @@ namespace IntelOrca.PeggleEdit.Designer
         private void InitStatusBar()
         {
             mStatusStrip = new StatusStrip();
+            // Mono sizes an empty status strip to only a few pixels high
+            mStatusStrip.MinimumSize = new Size(0, 22);
 
             mStatusLabel = new ToolStripStatusLabel();
             mStatusLabel.TextAlign = ContentAlignment.MiddleLeft;
@@ -300,7 +303,15 @@ namespace IntelOrca.PeggleEdit.Designer
 
         private void SaveLayout()
         {
-            mSerializer.Save();
+            try
+            {
+                mSerializer.Save();
+            }
+            catch (Exception ex) when (ex is IOException || ex is UnauthorizedAccessException)
+            {
+                // Failing to write the layout file should not prevent the application from closing
+                Debug.WriteLine(ex);
+            }
         }
 
         private DockableFormInfo GetWindowInfo(Type formType) => mDockContainer.GetFormInfo(GetIdentifier(formType));
@@ -764,7 +775,7 @@ namespace IntelOrca.PeggleEdit.Designer
 
         private void UpdateRecentList(string path)
         {
-            WinAPI.AddRecentDocument(path);
+            PlatformServices.Current.AddRecentDocument(path);
 
             var recentPackFiles = Settings.Default.RecentPackFiles;
             var index = recentPackFiles.IndexOf(path);
@@ -816,9 +827,6 @@ namespace IntelOrca.PeggleEdit.Designer
         private bool mRecheckForUpdates;
         private UpdateInfo mPendingUpdate;
         private UpdateRing mPendingUpdateRing;
-
-        [DllImport("user32.dll")]
-        private static extern bool IsWindowEnabled(IntPtr hWnd);
 
         /// <summary>
         /// Checks the selected update ring for a newer build and offers to install it. Failures (offline,
@@ -880,7 +888,7 @@ namespace IntelOrca.PeggleEdit.Designer
         /// </summary>
         private void OfferPendingUpdate()
         {
-            if (mPendingUpdate == null || IsDisposed || !IsWindowEnabled(Handle))
+            if (mPendingUpdate == null || IsDisposed || !PlatformServices.Current.AcceptsInput(this))
                 return;
 
             var update = mPendingUpdate;

@@ -56,6 +56,7 @@ namespace System.Windows.Forms
         private Padding _tabTextMargin;
         private float _tabSum;
         private bool _updatingSuspended;
+        private bool _initialized;
         private bool _orbSelected;
         private bool _orbPressed;
         private bool _orbVisible;
@@ -149,6 +150,8 @@ namespace System.Windows.Forms
 
             BorderMode = RibbonWindowMode.NonClientAreaGlass;
             Disposed += new EventHandler(Ribbon_Disposed);
+
+            _initialized = true;
 
         }
 
@@ -700,6 +703,16 @@ namespace System.Windows.Forms
         }
 
         /// <summary>
+        /// Overriden. Constrains the height to <see cref="MinimumSize"/> and <see cref="MaximumSize"/>.
+        /// .NET Framework does this already, but Mono ignores the overridden size properties.
+        /// </summary>
+        protected override void SetBoundsCore(int x, int y, int width, int height, BoundsSpecified specified)
+        {
+            height = Math.Max(MinimumSize.Height, Math.Min(MaximumSize.Height, height));
+            base.SetBoundsCore(x, y, width, height, specified);
+        }
+
+        /// <summary>
         /// Overriden. The default dock of the ribbon is top
         /// </summary>
         [Browsable(false), DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
@@ -1011,7 +1024,8 @@ namespace System.Windows.Forms
         {
             bool graphicsCreated = false;
 
-            if (IsDisposed || _updatingSuspended) return;
+            // Some runtimes resize the ribbon from within the constructor (when setting Dock)
+            if (IsDisposed || _updatingSuspended || !_initialized) return;
 
             ///Graphics for measurement
             if (g == null)
@@ -1058,7 +1072,10 @@ namespace System.Windows.Forms
 
             #region Reduce bounds of tabs if needed
 
-            while (curLeft > ClientRectangle.Right && maxWidth > 0)
+            // Never shrink tabs below their padding, otherwise they end up with a zero width which
+            // crashes the renderer. This happens on Mono where the ribbon is painted before it is sized.
+            int minTabWidth = Math.Max(1, TabsPadding.Left + TabsPadding.Right);
+            while (curLeft > ClientRectangle.Right && maxWidth > minTabWidth)
             {
 
                 curLeft = TabsMargin.Left + OrbBounds.Width;

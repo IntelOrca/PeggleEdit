@@ -226,9 +226,12 @@ namespace System.Windows.Forms
 
             using (GraphicsPath p = RibbonProfessionalRenderer.RoundRectangle(new Rectangle(Point.Empty, Size), BorderRoundness))
             {
-                using (Region r = new Region(p))
+                // The region must not be disposed while it is assigned, Mono continues to use it
+                Region oldRegion = WrappedDropDown.Region;
+                WrappedDropDown.Region = new Region(p);
+                if (oldRegion != null)
                 {
-                    WrappedDropDown.Region = r;
+                    oldRegion.Dispose();
                 }
             }
         }

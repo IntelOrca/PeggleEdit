@@ -79,15 +79,21 @@ namespace IntelOrca.PeggleEdit.Designer
         private void SetScrollPosition(int value)
         {
             var vScroll = GetScrollBar();
-            vScroll.Value = Math.Min(value, vScroll.Maximum);
+            if (vScroll != null)
+                vScroll.Value = Math.Min(value, vScroll.Maximum);
         }
 
         private VScrollBar GetScrollBar()
         {
+            // This relies on the internal structure of the .NET Framework property grid,
+            // which is different on Mono.
             var propGrid = _propertyGrid.Controls
                 .OfType<Control>()
                 .Where(ctl => ctl.AccessibilityObject.Role == AccessibleRole.Table)
-                .First();
+                .FirstOrDefault();
+            if (propGrid == null)
+                return null;
+
             var vScroll = propGrid.Controls
                 .OfType<VScrollBar>()
                 .FirstOrDefault();

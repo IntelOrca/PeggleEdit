@@ -255,15 +255,21 @@ namespace IntelOrca.PeggleEdit.Tools.Levels.Children
 
             PointF anchor = GetAnchorPoint();
 
+            // Build on the current transform rather than replacing it, otherwise everything drawn
+            // afterwards is offset on GDI+ implementations that do not isolate the transform within
+            // the level's graphics container (e.g. Wine).
+            Matrix backupTransform = g.Transform;
+            Pen pen = null;
             try
             {
-                Matrix mx = new Matrix();
-                mx.Translate(-SubMovementOffsetX, -SubMovementOffsetY);
-                mx.RotateAt(-MovementAngle, new PointF(anchor.X, anchor.Y));
+                using (Matrix mx = g.Transform)
+                {
+                    mx.Translate(-SubMovementOffsetX, -SubMovementOffsetY);
+                    mx.RotateAt(-MovementAngle, new PointF(anchor.X, anchor.Y));
+                    g.Transform = mx;
+                }
 
-                g.Transform = mx;
-
-                Pen pen = new Pen(Color.White);
+                pen = new Pen(Color.White);
                 pen.DashPattern = new float[] { 6.0f, 8.0f };
                 pen.DashStyle = DashStyle.Custom;
 
@@ -351,7 +357,9 @@ namespace IntelOrca.PeggleEdit.Tools.Levels.Children
             }
             finally
             {
-                g.Transform = new Matrix();
+                pen?.Dispose();
+                g.Transform = backupTransform;
+                backupTransform.Dispose();
             }
         }
 

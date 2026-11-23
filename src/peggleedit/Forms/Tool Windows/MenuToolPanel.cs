@@ -22,7 +22,6 @@ using System.IO;
 using System.Linq;
 using System.Reflection;
 using System.Runtime.InteropServices;
-using System.Text;
 using System.Windows.Forms;
 using IntelOrca.PeggleEdit.Designer.Forms;
 using IntelOrca.PeggleEdit.Designer.Level_Editor;
@@ -36,9 +35,6 @@ namespace IntelOrca.PeggleEdit.Designer
     [GuidAttribute("1A01E050-F11A-47C5-B62B-000000000003")]
     class MenuToolPanel : Control, IShortcutContainer
     {
-        [DllImport("shlwapi.dll", CharSet = CharSet.Auto)]
-        static extern bool PathCompactPathEx([Out] StringBuilder pszOut, string szPath, int cchMax, int dwFlags);
-
         MainMDIForm mParent;
         Ribbon mRibbon;
 
@@ -634,7 +630,9 @@ namespace IntelOrca.PeggleEdit.Designer
 
         private void exitRibbonButton_Click(object sender, EventArgs e)
         {
-            Application.Exit();
+            // Close the main window rather than calling Application.Exit, so that the layout is saved
+            // before any of the docked windows are closed.
+            mParent.Close();
         }
 
         private void optionsRibbonButton_Click(object sender, EventArgs e)
@@ -1393,9 +1391,7 @@ namespace IntelOrca.PeggleEdit.Designer
 
         private static string PathShortener(string path, int length)
         {
-            StringBuilder sb = new StringBuilder(capacity: length);
-            PathCompactPathEx(sb, path, length, 0);
-            return sb.ToString();
+            return PlatformServices.Current.CompactPath(path, length);
         }
 
         #endregion

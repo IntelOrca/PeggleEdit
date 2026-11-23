@@ -66,14 +66,27 @@ namespace IntelOrca.PeggleEdit.Designer
 
         protected override void OnShown(EventArgs e)
         {
-            //Centre the scroll position
+            CentreScrollPosition();
+
+            // Some Windows Forms implementations (Mono) raise Shown before the dock container has sized
+            // the window, so centre again once it has been laid out if the size has changed.
+            var shownSize = Size;
+            BeginInvoke(new Action(() =>
+            {
+                if (!IsDisposed && !Disposing && Size != shownSize)
+                    CentreScrollPosition();
+            }));
+
+            base.OnShown(e);
+        }
+
+        private void CentreScrollPosition()
+        {
             int x = (mLevelEditor.Width / 2) - (Width / 2);
             int y = (mLevelEditor.Height / 2) - (Height / 2);
 
             this.AutoScrollPosition = new Point(x, y);
             mLevelEditor.AutoScrollOffset = new Point(-x, -y);
-
-            base.OnShown(e);
         }
 
         void mTimer_Tick(object sender, EventArgs e)

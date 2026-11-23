@@ -34,6 +34,7 @@ namespace Crom.Controls.Docking
       private Control               _leftMargin                         = new Control();
       private Control               _rightMargin                        = new Control();
       private Control               _bottomMargin                       = new Control();
+      private bool                  _defaultControlsAdded               = false;
 
       #endregion Fields
 
@@ -45,6 +46,24 @@ namespace Crom.Controls.Docking
       /// <param name="owner">owner control</param>
       public FormsDecoratorControlCollection(Control owner) : base(owner)
       {
+         // If children can not be added yet, the owner adds them from its own constructor instead
+         if (WinFormsBehaviour.CreatesControlCollectionInBaseConstructor == false)
+         {
+            AddDefaultControls();
+         }
+      }
+
+      /// <summary>
+      /// Adds the decorator's child controls, if they have not already been added.
+      /// </summary>
+      internal void AddDefaultControls()
+      {
+         if (_defaultControlsAdded)
+         {
+            return;
+         }
+         _defaultControlsAdded = true;
+
          base.Add(_leftMargin);
          base.Add(_rightMargin);
          base.Add(_titleBar);

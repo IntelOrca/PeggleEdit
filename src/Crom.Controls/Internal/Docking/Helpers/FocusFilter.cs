@@ -17,7 +17,6 @@
  ***************************************************************************/
 
 using System;
-using System.Runtime.InteropServices;
 using System.Windows.Forms;
 
 namespace Crom.Controls.Docking
@@ -133,9 +132,6 @@ namespace Crom.Controls.Docking
 
       #region Private section
 
-      [DllImport("User32")]
-      private static extern IntPtr GetForegroundWindow();
-
       /// <summary>
       /// Occurs when a control got focus
       /// </summary>
@@ -151,14 +147,6 @@ namespace Crom.Controls.Docking
          }
       }
 
-
-      /// <summary>
-      /// Update the focused control
-      /// </summary>
-      private void UpdateFocusedControl()
-      {
-         LastFocusedControl = GetForegroundWindow();
-      }
 
       /// <summary>
       /// Accessor of the last focused control
