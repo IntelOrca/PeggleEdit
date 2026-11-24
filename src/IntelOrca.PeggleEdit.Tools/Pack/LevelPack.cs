@@ -16,8 +16,11 @@
 
 using System;
 using System.Collections.Generic;
+using System.Drawing;
+using System.Drawing.Imaging;
 using System.IO;
 using System.Linq;
+using System.Runtime.InteropServices;
 using System.Text;
 using System.Windows.Forms;
 using IntelOrca.PeggleEdit.Tools.Extensions;
@@ -48,62 +51,197 @@ namespace IntelOrca.PeggleEdit.Tools.Pack
 
         public static void RegisterPegglePath(string pegglePath)
         {
-            _pegglePath = pegglePath;
+            if (_pegglePath != pegglePath)
+            {
+                _pegglePath = pegglePath;
+                _mainPakLoad = 0;
+                _mainPak = null;
+                _mainImageCache.Clear();
+            }
         }
 
-        private PakImage GetMainPakImage(string key)
-        {
-            if (_mainPakLoad == 0)
-            {
-                if (string.IsNullOrEmpty(_pegglePath))
-                    return null;
+        private static readonly string[] ImageExtensions = { ".jp2", ".jpg", ".png", ".gif" };
+        private static readonly Dictionary<string, PakImage> _mainImageCache = new Dictionary<string, PakImage>(StringComparer.OrdinalIgnoreCase);
 
-                _mainPakLoad = 2;
-                var mainPak = Path.Combine(_pegglePath, "main.pak");
+        /// <summary>
+        /// The paths the game looks for an image at: images given by a level object are just a name, which the game
+        /// finds in images\levels.
+        /// </summary>
+        private static IEnumerable<string> GetImageCandidates(string key)
+        {
+            yield return key;
+            if (!key.Contains("\\"))
+                yield return Path.Combine("images", "levels", key);
+        }
+
+        private static void LoadMainPak()
+        {
+            if (_mainPakLoad != 0)
+                return;
+
+            _mainPakLoad = 2;
+            if (string.IsNullOrEmpty(_pegglePath))
+                return;
+
+            var mainPak = Path.Combine(_pegglePath, "main.pak");
+            try
+            {
+                if (File.Exists(mainPak))
+                {
+                    _mainPak = new PakCollection(mainPak);
+                    _mainPakLoad = 1;
+                }
+            }
+            catch
+            {
+            }
+        }
+
+        /// <summary>
+        /// Gets a file of the game, from main.pak or from the game directory when it has been extracted.
+        /// </summary>
+        private static byte[] GetMainFile(string path)
+        {
+            LoadMainPak();
+            if (_mainPakLoad == 1)
+            {
+                var record = _mainPak.GetRecord(path);
+                if (record != null)
+                    return record.Buffer;
+            }
+            if (!string.IsNullOrEmpty(_pegglePath))
+            {
                 try
                 {
-                    if (File.Exists(mainPak))
-                    {
-                        _mainPak = new PakCollection(mainPak);
-                        _mainPakLoad = 1;
-                    }
+                    var realFileName = Path.Combine(_pegglePath, path);
+                    if (File.Exists(realFileName))
+                        return File.ReadAllBytes(realFileName);
                 }
                 catch
                 {
                 }
             }
+            return null;
+        }
 
-            if (_mainPakLoad != 0)
+        private PakImage GetMainPakImage(string key)
+        {
+            if (_mainImageCache.TryGetValue(key, out var cached))
+                return cached;
+
+            PakImage result = null;
+            foreach (var candidate in GetImageCandidates(key))
             {
-                key = key.Replace("/", "\\");
-                foreach (var extension in new[] { ".jp2", ".jpg", ".png" })
+                result = FindImage(candidate, GetMainFile);
+                if (result != null)
+                    break;
+            }
+            _mainImageCache[key] = result;
+            return result;
+        }
+
+        private PakImage GetPackImage(string key)
+        {
+            foreach (var candidate in GetImageCandidates(key))
+            {
+                foreach (var extension in ImageExtensions)
                 {
-                    var key2 = key + extension;
-                    if (_mainPakLoad == 1)
+                    if (Images.TryGetValue(candidate + extension, out var image))
                     {
-                        var record = _mainPak.GetRecord(key2);
-                        if (record != null)
-                        {
-                            return new PakImage(record.FileName, record.Buffer);
-                        }
-                    }
-                    else
-                    {
-                        var realFileName = Path.Combine(_pegglePath, key2);
-                        try
-                        {
-                            if (File.Exists(realFileName))
-                            {
-                                return new PakImage(realFileName);
-                            }
-                        }
-                        catch
-                        {
-                        }
+                        // Not cached, as pack images can be replaced
+                        var alpha = FindAlphaImage(candidate, x => Images.TryGetValue(x, out var a) ? a.Data : null);
+                        return alpha == null ? image : CombineAlpha(image, alpha) ?? image;
                     }
                 }
             }
             return null;
+        }
+
+        /// <summary>
+        /// Finds an image as the game does: a colour image (.jp2, .jpg, .png or .gif) which takes its alpha from an image
+        /// of the same name ending with an underscore if there is one, or only an alpha image (drawn black).
+        /// </summary>
+        private static PakImage FindImage(string key, Func<string, byte[]> getFile)
+        {
+            var alpha = FindAlphaImage(key, getFile);
+            foreach (var extension in ImageExtensions)
+            {
+                var data = getFile(key + extension);
+                if (data != null)
+                {
+                    var image = new PakImage(key + extension, data);
+                    return alpha == null ? image : CombineAlpha(image, alpha) ?? image;
+                }
+            }
+            if (alpha != null)
+                return CombineAlpha(null, alpha);
+            return null;
+        }
+
+        private static PakImage FindAlphaImage(string key, Func<string, byte[]> getFile)
+        {
+            foreach (var extension in ImageExtensions)
+            {
+                var path = key + "_" + extension;
+                var data = getFile(path);
+                if (data != null)
+                    return new PakImage(path, data);
+            }
+            return null;
+        }
+
+        /// <summary>
+        /// Makes a 32-bit image from a colour image (or black if there is none) and the brightness of an alpha image.
+        /// </summary>
+        private static PakImage CombineAlpha(PakImage colour, PakImage alpha)
+        {
+            var alphaImage = alpha.Image;
+            if (alphaImage == null)
+                return null;
+
+            var colourImage = colour?.Image;
+            var size = colourImage?.Size ?? alphaImage.Size;
+            var rect = new Rectangle(Point.Empty, size);
+            var result = new Bitmap(size.Width, size.Height, PixelFormat.Format32bppArgb);
+            using (var g = Graphics.FromImage(result))
+            {
+                if (colourImage != null)
+                    g.DrawImage(colourImage, rect, rect, GraphicsUnit.Pixel);
+                else
+                    g.Clear(Color.Black);
+            }
+
+            using (var alphaCopy = new Bitmap(size.Width, size.Height, PixelFormat.Format32bppArgb))
+            {
+                using (var g = Graphics.FromImage(alphaCopy))
+                {
+                    g.DrawImage(alphaImage, rect, new Rectangle(Point.Empty, alphaImage.Size), GraphicsUnit.Pixel);
+                }
+                var dstData = result.LockBits(rect, ImageLockMode.ReadWrite, PixelFormat.Format32bppArgb);
+                var srcData = alphaCopy.LockBits(rect, ImageLockMode.ReadOnly, PixelFormat.Format32bppArgb);
+                try
+                {
+                    var dst = new int[dstData.Stride / 4 * size.Height];
+                    var src = new int[srcData.Stride / 4 * size.Height];
+                    Marshal.Copy(dstData.Scan0, dst, 0, dst.Length);
+                    Marshal.Copy(srcData.Scan0, src, 0, src.Length);
+                    for (var i = 0; i < dst.Length; i++)
+                    {
+                        // The alpha is the red channel of the (grey) alpha image
+                        var a = (src[i] >> 16) & 0xFF;
+                        dst[i] = (dst[i] & 0x00FFFFFF) | (a << 24);
+                    }
+                    Marshal.Copy(dst, 0, dstData.Scan0, dst.Length);
+                }
+                finally
+                {
+                    result.UnlockBits(dstData);
+                    alphaCopy.UnlockBits(srcData);
+                }
+            }
+
+            var name = Path.ChangeExtension(colour?.FileName ?? alpha.FileName.Replace("_.", "."), ".png");
+            return new PakImage(name, result);
         }
 
         public PakImage GetImage(string key)
@@ -112,15 +250,7 @@ namespace IntelOrca.PeggleEdit.Tools.Pack
                 return null;
 
             key = key.Replace("/", "\\");
-            foreach (var extension in new[] { ".jp2", ".jpg", ".png" })
-            {
-                var key2 = key + extension;
-                if (Images.TryGetValue(key2, out var image))
-                {
-                    return image;
-                }
-            }
-            return GetMainPakImage(key);
+            return GetPackImage(key) ?? GetMainPakImage(key);
         }
 
         public bool Open(string path)
