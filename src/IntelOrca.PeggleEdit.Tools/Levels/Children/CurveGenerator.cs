@@ -104,8 +104,9 @@ namespace IntelOrca.PeggleEdit.Tools.Levels.Children
             if (Level.ShowPreview && !Selected)
                 return;
 
+            // Drawn where the generated entries are, which a mover moves away from the generator's own location
             var backupTransform = g.Transform;
-            g.TranslateTransform(Location.X, Location.Y);
+            g.TranslateTransform(DrawLocation.X, DrawLocation.Y);
 
             DrawPath(g);
             if (Selected)
@@ -318,16 +319,16 @@ namespace IntelOrca.PeggleEdit.Tools.Levels.Children
 
                 var result = RectangleF.FromLTRB(minX, minY, maxX, maxY);
                 result.Inflate(8, 8);
-                result.Offset(Location);
+                result.Offset(DrawLocation);
                 return result;
             }
         }
 
         public int InteractionPointCount => BezierPath.NumPoints;
-        public PointF GetInteractionPoint(int index) => BezierPath.GetPosition(index).Add(Location);
+        public PointF GetInteractionPoint(int index) => BezierPath.GetPosition(index).Add(DrawLocation);
         public void SetInteractionPoint(int index, PointF value)
         {
-            BezierPath.SetPosition(index, value.Subtract(Location));
+            BezierPath.SetPosition(index, value.Subtract(DrawLocation));
             InvalidatePath();
         }
     }

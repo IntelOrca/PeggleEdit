@@ -134,9 +134,11 @@ namespace IntelOrca.PeggleEdit.Tools.Levels.Children
             g.DrawEllipse(circlePen, Bounds);
             g.DrawEllipse(circlePen, InnerBounds);
 
-            int index = 0;
-            for (float a = mAngularOffset; a < 360 + mAngularOffset; a += SectorAngles)
+            // As many divisions as there are bricks, and none for a maximum of 0 or less (which would never end)
+            int count = mMaxNumberOfBricks > 0 ? Math.Min(Math.Min(mNumberOfBricks, mMaxNumberOfBricks), Generators.MaxEntries) : 0;
+            for (int index = 0; index < count; index++)
             {
+                float a = mAngularOffset + (index * SectorAngles);
                 for (float hs = -0.5f; hs <= 0.5f; hs += 1.0f)
                 {
                     float angle = MathExt.ToRadians(a + (hs * SectorAngles));
@@ -146,10 +148,6 @@ namespace IntelOrca.PeggleEdit.Tools.Levels.Children
                     float oy = location.Y + ((float)Math.Sin(angle) * OuterRadius);
                     g.DrawLine(circlePen, ix, iy, ox, oy);
                 }
-
-                index++;
-                if (index == mNumberOfBricks)
-                    break;
             }
             circlePen.Dispose();
         }
@@ -313,7 +311,7 @@ namespace IntelOrca.PeggleEdit.Tools.Levels.Children
         {
             get
             {
-                return new RectangleF(X - InnerRadius, Y - InnerRadius, InnerRadius * 2, InnerRadius * 2);
+                return new RectangleF(DrawX - InnerRadius, DrawY - InnerRadius, InnerRadius * 2, InnerRadius * 2);
             }
         }
 

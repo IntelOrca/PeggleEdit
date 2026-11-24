@@ -369,15 +369,27 @@ namespace IntelOrca.PeggleEdit.Tools.Levels.Children
         [Browsable(false)]
         public bool IsGenerated { get; set; }
 
+        /// <summary>
+        /// Whether an entry is moved by this mover: it is the entry's mover, or a parent mover owned by the entry's
+        /// mover (as an applied generator on an ellipse has, which is not marked as generated once the level is read
+        /// again).
+        /// </summary>
         public bool HasEntryParent()
         {
             if (IsGenerated)
                 return true;
             foreach (LevelEntry entry in mLevel.Entries)
             {
-                if (entry.MoverLink?.Mover == this)
+                for (var e = entry; e != null; e = (e as Hole)?.DestinationEntry)
                 {
-                    return true;
+                    int depth = 0;
+                    for (var link = e.MoverLink; link != null && depth <= NestingLimit.MaxDepth; link = link.Mover?.MoverLink, depth++)
+                    {
+                        if (link.Mover == this)
+                            return true;
+                        if (!link.OwnsMover)
+                            break;
+                    }
                 }
             }
             return false;
