@@ -440,6 +440,7 @@ namespace IntelOrca.PeggleEdit.Designer
 
             mLevelToolWindowInfos.Add(dfi);
             mLastFocusedLevel = ltw;
+            mMenuToolPanel.UpdateViewPanel();
         }
 
         private DockableFormInfo AddToolWindow(Form form)
@@ -461,6 +462,7 @@ namespace IntelOrca.PeggleEdit.Designer
         public void LevelWindowHasFocus(LevelToolWindow window)
         {
             mLastFocusedLevel = window;
+            mMenuToolPanel.UpdateViewPanel();
         }
 
         public bool IsEditorAvailable()

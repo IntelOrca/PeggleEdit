@@ -1246,6 +1246,43 @@ namespace IntelOrca.PeggleEdit.Designer
 
         #region View
 
+        /// <summary>
+        /// Shows the view state of the focused level on the view tab, as each level has its own.
+        /// </summary>
+        /// <remarks>
+        /// Setting <see cref="RibbonCheckBox.Checked"/> does not raise CheckedChanged (only clicking does), so this does
+        /// not write the state back to the level or restart its preview. 3D Mode and the power-ups are settings, which
+        /// are the same for every level, so they are left alone.
+        /// </remarks>
+        public void UpdateViewPanel()
+        {
+            var level = LevelEditor?.Level;
+            if (level == null)
+                return;
+
+            bool changed = false;
+            changed |= SetChecked(chkBackground, level.ShowingBackground);
+            changed |= SetChecked(chkInterface, level.ShowingInterface);
+            changed |= SetChecked(chkCannon, level.ShowCannon);
+            changed |= SetChecked(chkObjects, level.ShowingPegs);
+            changed |= SetChecked(chkCollision, level.ShowCollision);
+            changed |= SetChecked(chkTransparent, level.TransparentObjects);
+            changed |= SetChecked(chkPreview, level.ShowPreview);
+            changed |= SetChecked(chkFastForward, level.PreviewSpeed != 1.0);
+            changed |= SetChecked(chkParticles, level.ShowParticles);
+            if (changed)
+                mRibbon.Refresh();
+        }
+
+        private static bool SetChecked(RibbonCheckBox checkBox, bool value)
+        {
+            if (checkBox.Checked == value)
+                return false;
+
+            checkBox.Checked = value;
+            return true;
+        }
+
         private void showBackgroundRibbonButton_Click(object sender, EventArgs e)
         {
             LevelEditor.Level.ShowingBackground = chkBackground.Checked;
