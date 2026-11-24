@@ -224,7 +224,15 @@ namespace IntelOrca.PeggleEdit.Tools.Levels.Children
             }
             else
             {
-                DrawObjectImage(g, image, DrawLocation);
+                // Unlike other objects, a hole's image hangs from the top of the hole: it is centred across, with its top
+                // half a pixel above the top of the hole, both moved by the image's centre offset (measured in game: the
+                // free ball bucket's rim is 2 lower than centred)
+                var location = DrawLocation;
+                g.DrawImage(image,
+                    location.X + ImageDX - (image.Width / 2.0f),
+                    location.Y - ((mHeight + 1) / 2.0f) + ImageDY,
+                    image.Width,
+                    image.Height);
             }
 
             // Collision
