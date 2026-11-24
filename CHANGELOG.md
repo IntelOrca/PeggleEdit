@@ -6,8 +6,11 @@ PeggleEdit 5.2.0 (Flamingo) (TBC)
 * [Feature] Nightly builds, published as a rolling "nightly" pre-release on every change
 * [Feature] Choose a Release or Nightly update ring in Options
 * [Feature] PeggleEdit can now update itself when a new version is available
+* [Feature] PeggleEdit is DPI aware: it is sharp on high DPI displays, with the ribbon, windows, dialogs and level scaled to match
 * [Enhancement] Fall back to main.pak or Peggle Nights directory for images
 * [Change] Remove the unimplemented script button
+* [Fix] Ribbon drop-downs close when clicking elsewhere, pressing Escape or switching to another application
+* [Fix] Ribbon panel labels no longer cut off the tails of letters, and check box labels line up with their check boxes
 * [Fix] Fix #25: Warning about peg generators when saving pops up multiple times
 * [Fix] Fix #32: right-click context menu not appearing on image nodes in Pack Explorer
 * [Fix] Fix #33: copy+paste of PegCurveGenerator always producing BrickCurveGenerator
