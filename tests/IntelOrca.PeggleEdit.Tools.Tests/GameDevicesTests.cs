@@ -239,8 +239,24 @@ namespace IntelOrca.PeggleEdit.Tools.Tests
             Assert.Equal(Cannon.RestAngle, Cannon.GetAngle(new PointF(pivot.X, pivot.Y + 100)), 5);
             Assert.Equal(0, Cannon.GetAngle(new PointF(pivot.X + 100, pivot.Y)), 5);
             Assert.Equal(-Math.PI / 4, Cannon.GetAngle(new PointF(pivot.X + 50, pivot.Y + 50)), 5);
-            // The game does not limit the aim, even upwards
-            Assert.Equal(Math.PI / 2, Cannon.GetAngle(new PointF(pivot.X, pivot.Y - 10)), 5);
+            Assert.Equal(-Math.PI * 3 / 4, Cannon.GetAngle(new PointF(pivot.X - 50, pivot.Y + 50)), 5);
+            // Just above level, it can still point
+            Assert.Equal(5 * Math.PI / 180, Cannon.GetAngle(new PointF(pivot.X + 100, pivot.Y - (float)(100 * Math.Tan(5 * Math.PI / 180)))), 4);
+        }
+
+        [Fact]
+        public void Cannon_DoesNotPointUpwards()
+        {
+            // The game moves an angle between 7 and 173 degrees to the nearer of them (0x468D00)
+            var pivot = Cannon.Pivot;
+            double Degrees(PointF target) => Cannon.GetAngle(target) * 180 / Math.PI;
+            Assert.Equal(7, Degrees(new PointF(pivot.X + 100, pivot.Y - 50)), 3);
+            Assert.Equal(173, Degrees(new PointF(pivot.X - 100, pivot.Y - 50)), 3);
+            // Straight up, it points right
+            Assert.Equal(7, Degrees(new PointF(pivot.X, pivot.Y - 10)), 3);
+            Assert.Equal(173, Degrees(new PointF(pivot.X - 1, pivot.Y - 100)), 3);
+            Assert.Equal(7, Cannon.LimitAngle((float)((80 + 360) * Math.PI / 180)) * 180 / Math.PI, 3);
+            Assert.Equal(-90, Cannon.LimitAngle((float)(Math.PI * 3 / 2)) * 180 / Math.PI, 3);
         }
 
         [Fact]

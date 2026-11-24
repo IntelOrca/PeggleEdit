@@ -65,9 +65,12 @@ namespace IntelOrca.PeggleEdit.Tools.Levels
             }
         }
 
+        // The cannon can not point within this of straight up (0x428210)
+        const double UpwardsLimit = 83 * Math.PI / 180;
+
         /// <summary>
         /// Gets the angle the cannon points to aim at a point, as the game turns it towards the mouse (0x4689D0), or
-        /// straight down with no point. The game does not limit it.
+        /// straight down with no point. Like the game, it does not point upwards: see <see cref="LimitAngle"/>.
         /// </summary>
         public static float GetAngle(PointF? target)
         {
@@ -77,7 +80,27 @@ namespace IntelOrca.PeggleEdit.Tools.Levels
             float dy = Pivot.Y - t.Y;
             if (dx == 0 && dy == 0)
                 return RestAngle;
-            return (float)Math.Atan2(dy, dx);
+            return LimitAngle((float)Math.Atan2(dy, dx));
+        }
+
+        /// <summary>
+        /// Limits an angle to where the cannon can point, as the game does whenever it sets the cannon's angle
+        /// (0x468D00): an angle within 83 degrees of straight up, i.e. between 7 and 173 degrees, is moved to the
+        /// nearer of them, or to 7 degrees (pointing right) when it is straight up. So the cannon points at most 97
+        /// degrees either side of straight down. The angle returned is between -pi and pi.
+        /// </summary>
+        public static float LimitAngle(float angle)
+        {
+            double a = angle % (2 * Math.PI);
+            if (a < 0)
+                a += 2 * Math.PI;
+            const double up = Math.PI / 2;
+            if (a > up - UpwardsLimit && a < up + UpwardsLimit)
+            {
+                // Compared with the middle as a float, as the game does, so that straight up points right
+                a = (float)a <= (float)up ? up - UpwardsLimit : up + UpwardsLimit;
+            }
+            return (float)(a > Math.PI ? a - (2 * Math.PI) : a);
         }
 
         /// <summary>
