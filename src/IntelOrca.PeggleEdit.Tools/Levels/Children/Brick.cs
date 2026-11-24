@@ -322,6 +322,18 @@ namespace IntelOrca.PeggleEdit.Tools.Levels.Children
 
             //Get location and angle
             PointF location = DrawLocation;
+
+            if (!HasPegInfo && !Level.ShowCollision)
+            {
+                var image = Pack.LevelPack.Current?.GetImage(ImageFilename)?.Image;
+                if (image != null)
+                {
+                    if (!shadow && (!Level.ShowPreview || Visible))
+                        DrawObjectImage(g, image, location);
+                    if (Level.ShowPreview || shadow)
+                        return;
+                }
+            }
             float angle = mRotation;
             if (MoverLink?.Mover is Mover movement)
             {

@@ -170,7 +170,7 @@ namespace IntelOrca.PeggleEdit.Tools.Levels.Children
                 }
                 else
                 {
-                    g.DrawImage(circleImage, location.X - (circleImage.Width / 2), location.Y - (circleImage.Height / 2), circleImage.Width, circleImage.Height);
+                    DrawObjectImage(g, circleImage, location);
                 }
             }
 

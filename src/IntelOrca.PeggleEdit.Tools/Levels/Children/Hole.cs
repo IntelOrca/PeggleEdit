@@ -220,7 +220,7 @@ namespace IntelOrca.PeggleEdit.Tools.Levels.Children
             }
             else
             {
-                g.DrawImage(image, DrawLocation.X - (image.Width / 2), DrawLocation.Y - (image.Height / 2), image.Width, image.Height);
+                DrawObjectImage(g, image, DrawLocation);
             }
 
             // Collision

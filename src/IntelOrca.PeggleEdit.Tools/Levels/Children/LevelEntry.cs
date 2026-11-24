@@ -312,6 +312,19 @@ namespace IntelOrca.PeggleEdit.Tools.Levels.Children
 
         }
 
+        /// <summary>
+        /// Draws the object's image as the game does: centred on <paramref name="location"/>, moved by the image's
+        /// centre offset (ImageDX, ImageDY).
+        /// </summary>
+        protected void DrawObjectImage(Graphics g, Image image, PointF location)
+        {
+            g.DrawImage(image,
+                location.X + mImageDX - (image.Width / 2.0f),
+                location.Y + mImageDY - (image.Height / 2.0f),
+                image.Width,
+                image.Height);
+        }
+
         public virtual void Draw(Graphics g)
         {
             if (Level.ShowPreview && !mVisible)

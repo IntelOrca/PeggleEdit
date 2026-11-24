@@ -193,7 +193,7 @@ namespace IntelOrca.PeggleEdit.Tools.Levels.Children
             var polygonImage = GetPolygonImage();
             if (polygonImage != null)
             {
-                g.DrawImage(polygonImage, -(polygonImage.Width / 2), -(polygonImage.Height / 2), polygonImage.Width, polygonImage.Height);
+                DrawObjectImage(g, polygonImage, PointF.Empty);
             }
 
             if (polygonImage == null || !Level.ShowPreview || Level.ShowCollision)
