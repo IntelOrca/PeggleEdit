@@ -95,20 +95,38 @@ namespace IntelOrca.PeggleEdit.Tools.Levels
 
         /// <summary>
         /// A hash of everything about an emitter that changes how it runs, so that it is started again when it is
-        /// edited.
+        /// edited. Where it is is left out for a settled emitter, which runs relative to itself.
         /// </summary>
-        private ulong GetKey(Emitter emitter)
+        private ulong GetKey(Emitter emitter, bool position = true)
         {
             var ms = new MemoryStream();
             var bw = new BinaryWriter(ms);
-            emitter.WriteData(bw, LevelWriter.DefaultFileVersion);
+            if (position)
+                emitter.WriteData(bw, LevelWriter.DefaultFileVersion);
+            else
+                emitter.WriteSettings(bw);
             bw.Write(Software);
             return ms.ToArray().CalculateFnv1a();
         }
 
+        /// <summary>
+        /// Forgets the settled emitters that are no longer in the level (e.g. after an undo, which puts copies in it).
+        /// </summary>
+        public void Prune()
+        {
+            if (_settled.Count == 0 && _layers.Count == 0)
+                return;
+            var emitters = new HashSet<Emitter>(GetEmitters());
+            foreach (var gone in _settled.Keys.Concat(_layers.Keys).Where(x => !emitters.Contains(x)).Distinct().ToArray())
+            {
+                _settled.Remove(gone);
+                _layers.Remove(gone);
+            }
+        }
+
         private EmitterSimulation GetSettled(Emitter emitter)
         {
-            var key = GetKey(emitter);
+            var key = GetKey(emitter, position: false);
             if (_settled.TryGetValue(emitter, out var state) && state.Key == key)
                 return state.Simulation;
 
@@ -125,15 +143,6 @@ namespace IntelOrca.PeggleEdit.Tools.Levels
             }
 
             _settled[emitter] = new State { Key = key, Simulation = simulation };
-            if (_settled.Count > 256)
-            {
-                var emitters = new HashSet<Emitter>(GetEmitters());
-                foreach (var gone in _settled.Keys.Where(x => !emitters.Contains(x)).ToArray())
-                {
-                    _settled.Remove(gone);
-                    _layers.Remove(gone);
-                }
-            }
             return simulation;
         }
 
@@ -196,7 +205,13 @@ namespace IntelOrca.PeggleEdit.Tools.Levels
         private Layer GetSettledLayer(Emitter emitter)
         {
             var simulation = GetSettled(emitter);
-            var key = _settled[emitter].Key;
+            // The layer is drawn where the emitter is, with its image as it is now
+            var position = emitter.DrawLocation;
+            var image = LevelPack.Current?.GetImage(emitter.Image)?.Image;
+            ulong key = _settled[emitter].Key;
+            key = (key * 1099511628211UL) ^ (ulong)position.X.GetHashCode();
+            key = (key * 1099511628211UL) ^ (ulong)position.Y.GetHashCode();
+            key = (key * 1099511628211UL) ^ (ulong)(image == null ? 0 : (image.Width << 16) ^ image.Height ^ 1);
             if (_layers.TryGetValue(emitter, out var layer) && layer.Key == key)
                 return layer.Pixels == null ? null : layer;
 
@@ -205,8 +220,7 @@ namespace IntelOrca.PeggleEdit.Tools.Levels
             if (simulation.Particles.Count == 0)
                 return null;
 
-            var position = emitter.DrawLocation;
-            var sprite = GetSprite(emitter);
+            var sprite = Sprite.FromImage(image) ?? Sprite.Dot;
             var particles = simulation.Particles.Select(p => simulation.GetAppearance(p, position, position)).ToArray();
             var bounds = GetBounds(sprite, particles);
             // Not larger than the screen (the game only shows that) with a margin

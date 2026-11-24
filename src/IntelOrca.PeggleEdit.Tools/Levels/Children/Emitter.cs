@@ -230,6 +230,24 @@ namespace IntelOrca.PeggleEdit.Tools.Levels.Children
 
         }
 
+        bool mOmitPosition;
+
+        /// <summary>
+        /// Writes the emitter's data without where it is, e.g. to tell whether its settings have changed.
+        /// </summary>
+        internal void WriteSettings(BinaryWriter bw)
+        {
+            mOmitPosition = true;
+            try
+            {
+                WriteData(bw, LevelWriter.DefaultFileVersion);
+            }
+            finally
+            {
+                mOmitPosition = false;
+            }
+        }
+
         public override void WriteData(BinaryWriter bw, int version)
         {
             FlagGroup fA = new FlagGroup(mUnknownFlags);
@@ -271,7 +289,7 @@ namespace IntelOrca.PeggleEdit.Tools.Levels.Children
                 }
             }
 
-            if (fA[5])
+            if (fA[5] && !mOmitPosition)
             {
                 bw.Write(X);
                 bw.Write(Y);

@@ -381,6 +381,8 @@ namespace IntelOrca.PeggleEdit.Tools.Levels
             GraphicsContainer containerState = g.BeginContainer();
             g.SmoothingMode = SmoothingMode.HighQuality;
 
+            _particlePreview.Prune();
+
             // The objects the flippers take away are not drawn in the preview, and marked while editing
             var takenAway = new HashSet<LevelEntry>();
             if ((mDevices & GameDevices.Flippers) != 0)
@@ -630,6 +632,7 @@ namespace IntelOrca.PeggleEdit.Tools.Levels
             var oUsePegTextures = UsePegTextures;
             var oPreviewRunning = mPreviewRunning;
             var oPreviewTime = mPreviewTime;
+            var oFirstPreviewUpdate = mFirstPreviewUpdate;
             try
             {
                 mShowingInterface = drawInterface;
@@ -665,6 +668,10 @@ namespace IntelOrca.PeggleEdit.Tools.Levels
                 UsePegTextures = oUsePegTextures;
                 mPreviewRunning = oPreviewRunning;
                 mPreviewTime = oPreviewTime;
+                mFirstPreviewUpdate = oFirstPreviewUpdate;
+                // A running preview starts its emitters again, as they were replaced
+                if (ticks != null)
+                    _particlePreview.Clear();
             }
         }
 

@@ -610,6 +610,7 @@ namespace IntelOrca.PeggleEdit.Designer
         };
 
         private readonly Dictionary<Master, Image> mPortraits = new Dictionary<Master, Image>();
+        private readonly Dictionary<(Master, int), Image> mScaledPortraits = new Dictionary<(Master, int), Image>();
 
         /// <summary>
         /// Gets a master's portrait from the game, at a size, or null if it can not be found.
@@ -641,11 +642,15 @@ namespace IntelOrca.PeggleEdit.Designer
             if (portrait == null)
                 return null;
 
-            var result = new Bitmap(size, size);
-            using (var g = Graphics.FromImage(result))
+            if (!mScaledPortraits.TryGetValue((master, size), out var result))
             {
-                g.InterpolationMode = System.Drawing.Drawing2D.InterpolationMode.HighQualityBicubic;
-                g.DrawImage(portrait, 0, 0, size, size);
+                result = new Bitmap(size, size);
+                using (var g = Graphics.FromImage(result))
+                {
+                    g.InterpolationMode = System.Drawing.Drawing2D.InterpolationMode.HighQualityBicubic;
+                    g.DrawImage(portrait, 0, 0, size, size);
+                }
+                mScaledPortraits[(master, size)] = result;
             }
             return result;
         }

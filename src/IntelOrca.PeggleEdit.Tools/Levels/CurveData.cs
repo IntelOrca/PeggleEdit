@@ -27,6 +27,7 @@ namespace IntelOrca.PeggleEdit.Tools.Levels
     public sealed class CurveData
     {
         const int TableSize = 8192;
+        const int MaxTablePoints = 64;
 
         private readonly List<(float X, float Y, float Slope)> _points = new List<(float, float, float)>();
         private (float C0, float C1, float C2, float C3)[] _hermite;
@@ -120,7 +121,8 @@ namespace IntelOrca.PeggleEdit.Tools.Levels
                         t += 0.1f;
                         continue;
                     }
-                    t = Math.Min(1.0f, t + (CharToFloat(ch) * 0.1f));
+                    // The game does not stop a step before 0 (a character below '#'), which would break the curve
+                    t = Math.Max(0, Math.Min(1.0f, t + (CharToFloat(ch) * 0.1f)));
                     break;
                 }
             }
@@ -365,6 +367,10 @@ namespace IntelOrca.PeggleEdit.Tools.Levels
         private static float[] GenerateTable(List<(float X, float Y, float Angle)> pts, bool noClip)
         {
             var table = new float[TableSize];
+            // The spline is solved as one system, which takes too long for very many points (no stock curve uses
+            // this path at all)
+            if (pts.Count > MaxTablePoints)
+                pts = pts.GetRange(0, MaxTablePoints);
             if (pts.Count < 2)
             {
                 foreach (var (x, y, _) in pts)

@@ -68,6 +68,16 @@ namespace IntelOrca.PeggleEdit.Tools.Tests
         }
 
         [Fact]
+        public void OddCurvesDoNotBreak()
+        {
+            // A step below '#' goes backwards, and very many points would take long to solve
+            Assert.InRange(new CurvedVal("a0,1,0,#!#").Evaluate(0.5f), 0, 1);
+            var sw = System.Diagnostics.Stopwatch.StartNew();
+            new CurvedVal("a0,1,0," + string.Concat(Enumerable.Repeat("~#", 300))).Evaluate(0.5f);
+            Assert.True(sw.ElapsedMilliseconds < 2000);
+        }
+
+        [Fact]
         public void CurveFollowsEditedString()
         {
             var value = new CurvedVal("b+0,1,0.01,1,~###         ~~P##");

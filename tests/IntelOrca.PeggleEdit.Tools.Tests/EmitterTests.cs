@@ -230,6 +230,22 @@ namespace IntelOrca.PeggleEdit.Tools.Tests
         }
 
         [Fact]
+        public void SettledParticles_FollowTheEmitterWhenItMoves()
+        {
+            var level = ReadXml(EmitterXml(@"max=""1"""));
+            level.ShowingBackground = false;
+            using (level.RenderGameView(drawInterface: false))
+            {
+            }
+            level.Entries.OfType<Emitter>().Single().X = 300;
+            using (var image = level.RenderGameView(drawInterface: false))
+            {
+                Assert.Equal(Color.White.ToArgb(), image.GetPixel(75 + 300, 40 + 100).ToArgb());
+                Assert.Equal(Color.Black.ToArgb(), image.GetPixel(75 + 100, 40 + 100).ToArgb());
+            }
+        }
+
+        [Fact]
         public void InvisibleEmitters_DrawNoParticles()
         {
             var level = ReadXml(EmitterXml(@"max=""1"""));
