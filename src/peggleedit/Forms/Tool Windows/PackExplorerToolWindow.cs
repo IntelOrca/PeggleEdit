@@ -389,6 +389,10 @@ namespace IntelOrca.PeggleEdit.Designer
                 return null;
             if (folderNode.Name == "level_folder")
                 return mPack.Levels;
+            if (folderNode.Name == "challenge_folder")
+                return mPack.ChallengePages;
+            if (folderNode.Tag is ChallengePage)
+                return ((ChallengePage)folderNode.Tag).Challenges;
             return null;
         }
 
@@ -406,6 +410,28 @@ namespace IntelOrca.PeggleEdit.Designer
 
             //Insertion index is counted with the node still in place
             MoveNode(node, node.Parent, delta > 0 ? index + 1 : index);
+        }
+
+        /// <summary>
+        /// Adds Move Up and Move Down items for the selected node to the context menu.
+        /// </summary>
+        private void AddMoveMenuItems()
+        {
+            TreeNode node = SelectedNode;
+            if (!CanMoveNode(node))
+                return;
+
+            var mnuMoveUp = new ToolStripMenuItem("Move Up", Resources.up_16, (sender, e) => MoveNodeBy(node, -1));
+            mnuMoveUp.ShortcutKeyDisplayString = "Ctrl+Up";
+            mnuMoveUp.Enabled = node.Index > 0;
+
+            var mnuMoveDown = new ToolStripMenuItem("Move Down", Resources.down_16, (sender, e) => MoveNodeBy(node, 1));
+            mnuMoveDown.ShortcutKeyDisplayString = "Ctrl+Down";
+            mnuMoveDown.Enabled = node.Index < node.Parent.Nodes.Count - 1;
+
+            mContextMenu.Items.Add(new ToolStripSeparator());
+            mContextMenu.Items.Add(mnuMoveUp);
+            mContextMenu.Items.Add(mnuMoveDown);
         }
 
         /// <summary>
@@ -537,6 +563,43 @@ namespace IntelOrca.PeggleEdit.Designer
                     index = hit.Index + (lowerHalf ? 1 : 0);
                 }
                 else if (hit.Name == "level_folder")
+                {
+                    parent = hit;
+                    index = 0;
+                }
+            }
+            else if (mDragNode.Tag is Challenge)
+            {
+                if (hit.Tag is Challenge)
+                {
+                    //Challenges can also be moved to another page
+                    parent = hit.Parent;
+                    index = hit.Index + (lowerHalf ? 1 : 0);
+                }
+                else if (hit.Tag is ChallengePage)
+                {
+                    //Dropping on a page adds the challenge at the end of it
+                    parent = hit;
+                    index = hit.Nodes.Count;
+                }
+            }
+            else if (mDragNode.Tag is ChallengePage)
+            {
+                if (hit.Tag is ChallengePage)
+                {
+                    //The lower half of an expanded page row is above its challenges, so treat it as after the page
+                    parent = hit.Parent;
+                    index = hit.Index + (lowerHalf ? 1 : 0);
+                }
+                else if (hit.Tag is Challenge)
+                {
+                    TreeNode page = hit.Parent;
+                    if (page == mDragNode)
+                        return false;
+                    parent = page.Parent;
+                    index = page.Index + 1;
+                }
+                else if (hit.Name == "challenge_folder")
                 {
                     parent = hit;
                     index = 0;
@@ -772,6 +835,7 @@ namespace IntelOrca.PeggleEdit.Designer
             mContextMenu.Items.Add(new ToolStripMenuItem("Open", Resources.open_16, mnuLevelOpen_Click));
             mContextMenu.Items.Add(new ToolStripSeparator());
             mContextMenu.Items.Add(new ToolStripMenuItem("Delete", Resources.remove_16, mnuLevelDelete_Click));
+            AddMoveMenuItems();
             mContextMenu.Items.Add(new ToolStripSeparator());
             var mnuExport = new ToolStripMenuItem("Export", Resources.export_16);
             mnuExport.DropDownItems.Add(new ToolStripMenuItem("Pego...", null, mnuLevelExportPego_Click));
@@ -1032,6 +1096,7 @@ namespace IntelOrca.PeggleEdit.Designer
             mContextMenu.Items.Add(mnuAdd);
             mContextMenu.Items.Add(new ToolStripSeparator());
             mContextMenu.Items.Add(mnuDelete);
+            AddMoveMenuItems();
             mContextMenu.Items.Add(new ToolStripSeparator());
             mContextMenu.Items.Add(mnuProperties);
         }
@@ -1084,6 +1149,7 @@ namespace IntelOrca.PeggleEdit.Designer
             ToolStripItem mnuProperties = new ToolStripMenuItem("Properties", Resources.properties_16, new EventHandler(mnuChallengeProperties_Click));
 
             mContextMenu.Items.Add(mnuDelete);
+            AddMoveMenuItems();
             mContextMenu.Items.Add(new ToolStripSeparator());
             mContextMenu.Items.Add(mnuProperties);
         }
