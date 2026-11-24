@@ -299,6 +299,10 @@ namespace IntelOrca.PeggleEdit.Tools.Levels.Children
             bw.Write(mOutlineIndices);
         }
 
+        // The game's brick shadows, measured against Peggle Nights screenshots
+        private static readonly Point ShadowOffset = new Point(-4, 2);
+        private static readonly Color ShadowColour = Color.FromArgb(144, Color.Black);
+
         public override void Draw(Graphics g) => Draw(g, false);
         public override void RenderShadow(Graphics g) => Draw(g, true);
 
@@ -337,7 +341,7 @@ namespace IntelOrca.PeggleEdit.Tools.Levels.Children
             var backupTransform = g.Transform;
             var mx = g.Transform;
             if (shadow)
-                mx.Translate(Level.ShadowOffset.X, Level.ShadowOffset.Y);
+                mx.Translate(ShadowOffset.X, ShadowOffset.Y);
             if (Curved)
             {
                 mx.RotateAt(-angle, location);
@@ -364,7 +368,7 @@ namespace IntelOrca.PeggleEdit.Tools.Levels.Children
             var dest = new RectangleF(location.X - (Radius / 2), location.Y - (Thickness / 2), Radius, Thickness);
             if (shadow)
             {
-                g.FillRectangle(new SolidBrush(Level.ShadowColour), dest);
+                g.FillRectangle(new SolidBrush(ShadowColour), dest);
             }
             else if (Level.ShowCollision)
             {
@@ -390,7 +394,7 @@ namespace IntelOrca.PeggleEdit.Tools.Levels.Children
         {
             if (shadow)
             {
-                DrawCurvedBrick(g, Level.ShadowColour, location, true);
+                DrawCurvedBrick(g, ShadowColour, location, true);
             }
             else if (Level.ShowCollision)
             {
