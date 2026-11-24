@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Drawing;
 using System.Text;
 
 namespace System.Windows.Forms
@@ -48,6 +49,16 @@ namespace System.Windows.Forms
 
         private static List<RibbonPopup> pops;
 
+        /// <summary>
+        /// Watches the application's mouse and keyboard messages for clicks outside of the popups
+        /// </summary>
+        private static PopupMessageFilter messageFilter;
+
+        /// <summary>
+        /// Form that was active when the popups were opened, popups are dismissed when it is deactivated
+        /// </summary>
+        private static Form ownerForm;
+
         #endregion
 
         #region Ctor
@@ -91,6 +102,44 @@ namespace System.Windows.Forms
             {
                 pops.Add(p); 
             }
+
+            WatchForDismissal();
+        }
+
+        /// <summary>
+        /// Makes sure popups get dismissed by clicks outside of them and by the application losing focus.
+        /// </summary>
+        /// <remarks>
+        /// The ribbon's global mouse hook can not be relied upon for this: Windows silently removes
+        /// low level hooks whose thread does not respond in time, such as while the application is busy
+        /// starting up, after which popups stayed open until an item in them was clicked.
+        /// </remarks>
+        private static void WatchForDismissal()
+        {
+            if (messageFilter == null)
+            {
+                messageFilter = new PopupMessageFilter();
+                Application.AddMessageFilter(messageFilter);
+            }
+
+            Form form = Form.ActiveForm;
+            if (form != null && form != ownerForm)
+            {
+                if (ownerForm != null)
+                {
+                    ownerForm.Deactivate -= new EventHandler(ownerForm_Deactivate);
+                }
+                ownerForm = form;
+                ownerForm.Deactivate += new EventHandler(ownerForm_Deactivate);
+            }
+        }
+
+        private static void ownerForm_Deactivate(object sender, EventArgs e)
+        {
+            if (pops.Count > 0)
+            {
+                Dismiss(DismissReason.AppFocusChanged);
+            }
         }
 
         /// <summary>
@@ -119,8 +168,93 @@ namespace System.Windows.Forms
                 }
             }
 
+            //Clicking the item that opened the popups toggles them itself
+            if (IsOnPopupOwner(e.Location))
+            {
+                return;
+            }
+
             //If click was in no dropdown, let's go everyone
             Dismiss(DismissReason.AppClicked);
+        }
+
+        /// <summary>
+        /// Gets if the screen location is on the button or orb that opened the first popup
+        /// </summary>
+        private static bool IsOnPopupOwner(Point location)
+        {
+            if (pops.Count == 0)
+            {
+                return false;
+            }
+
+            RibbonDropDown dropDown = pops[0] as RibbonDropDown;
+            if (dropDown != null)
+            {
+                RibbonButton button = dropDown.ParentItem as RibbonButton;
+                if (button != null && button.Canvas != null && !button.Canvas.IsDisposed)
+                {
+                    Rectangle bounds = button.Style == RibbonButtonStyle.DropDown ? button.Bounds : button.DropDownBounds;
+                    return button.Canvas.RectangleToScreen(bounds).Contains(location);
+                }
+                return false;
+            }
+
+            RibbonOrbDropDown orbDropDown = pops[0] as RibbonOrbDropDown;
+            if (orbDropDown != null && orbDropDown.Ribbon != null && !orbDropDown.Ribbon.IsDisposed)
+            {
+                return orbDropDown.Ribbon.RectangleToScreen(orbDropDown.Ribbon.OrbBounds).Contains(location);
+            }
+
+            return false;
+        }
+
+        /// <summary>
+        /// Dismisses the popups when the application is clicked outside of them, or escape is pressed.
+        /// </summary>
+        private class PopupMessageFilter : IMessageFilter
+        {
+            private const int WM_KEYDOWN = 0x0100;
+            private const int WM_NCLBUTTONDOWN = 0x00A1;
+            private const int WM_NCRBUTTONDOWN = 0x00A4;
+            private const int WM_NCMBUTTONDOWN = 0x00A7;
+            private const int WM_NCXBUTTONDOWN = 0x00AB;
+            private const int WM_LBUTTONDOWN = 0x0201;
+            private const int WM_RBUTTONDOWN = 0x0204;
+            private const int WM_MBUTTONDOWN = 0x0207;
+            private const int WM_XBUTTONDOWN = 0x020B;
+
+            public bool PreFilterMessage(ref Message m)
+            {
+                if (pops.Count == 0)
+                {
+                    return false;
+                }
+
+                switch (m.Msg)
+                {
+                    case WM_LBUTTONDOWN:
+                    case WM_RBUTTONDOWN:
+                    case WM_MBUTTONDOWN:
+                    case WM_XBUTTONDOWN:
+                    case WM_NCLBUTTONDOWN:
+                    case WM_NCRBUTTONDOWN:
+                    case WM_NCMBUTTONDOWN:
+                    case WM_NCXBUTTONDOWN:
+                        Point location = Control.MousePosition;
+                        FeedHookClick(new MouseEventArgs(MouseButtons.None, 0, location.X, location.Y, 0));
+                        break;
+                    case WM_KEYDOWN:
+                        if ((Keys)(m.WParam.ToInt64() & 0xFFFF) == Keys.Escape)
+                        {
+                            Dismiss(DismissReason.EscapePressed);
+                            return true;
+                        }
+                        break;
+                }
+
+                return false;
+            }
         }
 
         /// <summary>

@@ -951,8 +951,16 @@ namespace System.Windows.Forms
 
             if ((DropDownSelected || Style == RibbonButtonStyle.DropDown) && DropDownItems.Count > 0)
             {
-                _dropDownPressed = true;
-                ShowDropDown();
+                if (DropDownVisible)
+                {
+                    //Clicking the button again closes its drop down, like a menu
+                    CloseDropDown();
+                }
+                else
+                {
+                    _dropDownPressed = true;
+                    ShowDropDown();
+                }
             }
 
             base.OnMouseDown(e);
