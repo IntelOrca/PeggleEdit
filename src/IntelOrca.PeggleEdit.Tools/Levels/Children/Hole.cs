@@ -201,8 +201,12 @@ namespace IntelOrca.PeggleEdit.Tools.Levels.Children
         {
             base.Draw(g);
 
+            // The game draws neither an invisible hole nor where a hole sends the ball
+            if (Level.ShowPreview && !Level.ShowCollision && !Visible)
+                return;
+
             // Draw the destination entry
-            if (mDestinationEntry != null)
+            if (mDestinationEntry != null && (!Level.ShowPreview || Level.ShowCollision))
                 mDestinationEntry.Draw(g);
 
             // Draw teleport

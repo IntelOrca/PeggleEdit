@@ -191,12 +191,14 @@ namespace IntelOrca.PeggleEdit.Tools.Levels.Children
             g.RotateTransform(angle);
 
             var polygonImage = GetPolygonImage();
-            if (polygonImage != null)
+            if (polygonImage != null && (!Level.ShowPreview || Visible))
             {
                 DrawObjectImage(g, polygonImage, PointF.Empty);
             }
 
-            if (polygonImage == null || !Level.ShowPreview || Level.ShowCollision)
+            // In the game a poly with no image is drawn in its outline colour, so not at all when that is black
+            bool hidden = Level.ShowPreview && !Level.ShowCollision && (!Visible || OutlineColor.ToArgb() == Color.Black.ToArgb());
+            if ((polygonImage == null || !Level.ShowPreview || Level.ShowCollision) && !hidden)
             {
                 if (Level.ShowCollision && MathExt.IsPolygonClosed(mPoints))
                 {
