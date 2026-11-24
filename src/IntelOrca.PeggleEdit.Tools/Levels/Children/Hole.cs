@@ -228,7 +228,7 @@ namespace IntelOrca.PeggleEdit.Tools.Levels.Children
                 // half a pixel above the top of the hole, both moved by the image's centre offset (measured in game: the
                 // free ball bucket's rim is 2 lower than centred)
                 var location = DrawLocation;
-                g.DrawImage(image,
+                g.DrawImage(PremultipliedImage.Get(image),
                     location.X + ImageDX - (image.Width / 2.0f),
                     location.Y - ((mHeight + 1) / 2.0f) + ImageDY,
                     image.Width,

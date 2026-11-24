@@ -318,7 +318,7 @@ namespace IntelOrca.PeggleEdit.Tools.Levels.Children
         /// </summary>
         protected void DrawObjectImage(Graphics g, Image image, PointF location)
         {
-            g.DrawImage(image,
+            g.DrawImage(PremultipliedImage.Get(image),
                 location.X + mImageDX - (image.Width / 2.0f),
                 location.Y + mImageDY - (image.Height / 2.0f),
                 image.Width,

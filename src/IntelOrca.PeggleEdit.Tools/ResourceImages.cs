@@ -21,14 +21,16 @@ namespace IntelOrca.PeggleEdit.Tools
 {
     /// <summary>
     /// The images in the resources that are drawn for every object. Each read of a resource property decodes a new
-    /// image, which took most of the time to draw a level, so they are read once.
+    /// image, which took most of the time to draw a level, so they are read once (and converted to premultiplied ARGB
+    /// to draw faster, see <see cref="PremultipliedImage"/>).
     /// </summary>
     internal static class ResourceImages
     {
-        public static readonly Bitmap Peg = Resources.peg;
-        public static readonly Bitmap PegShadow = Resources.peg_shadow;
+        public static readonly Bitmap Peg = PremultipliedImage.Convert(Resources.peg);
+        public static readonly Bitmap PegShadow = PremultipliedImage.Convert(Resources.peg_shadow);
+        // Drawn with a colour matrix, which works on the colours before they are premultiplied
         public static readonly Bitmap CircleOuter = Resources.circle_outer;
-        public static readonly Bitmap CircleInner = Resources.circle_inner;
-        public static readonly Bitmap AnchorPoint = Resources.anchor_point;
+        public static readonly Bitmap CircleInner = PremultipliedImage.Convert(Resources.circle_inner);
+        public static readonly Bitmap AnchorPoint = PremultipliedImage.Convert(Resources.anchor_point);
     }
 }

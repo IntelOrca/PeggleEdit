@@ -377,7 +377,7 @@ namespace IntelOrca.PeggleEdit.Tools.Levels
 
         private void DrawBackground(Graphics g)
         {
-            var bg = Background?.Image;
+            var bg = PremultipliedImage.Get(Background?.Image);
             if (bg == null)
                 return;
 
@@ -516,7 +516,7 @@ namespace IntelOrca.PeggleEdit.Tools.Levels
             if (image == null)
                 return;
             var position = BaseObjects.GetLightningRodPosition(ticks, BaseObjects.GetBucketRadius(mDevices));
-            g.DrawImage(image, position.X - (image.Width / 2.0f), position.Y - (image.Height / 2.0f), image.Width, image.Height);
+            g.DrawImage(PremultipliedImage.Get(image), position.X - (image.Width / 2.0f), position.Y - (image.Height / 2.0f), image.Width, image.Height);
         }
 
         private static readonly Brush TakenAwayBrush = new SolidBrush(Color.FromArgb(96, 255, 0, 0));
@@ -644,18 +644,18 @@ namespace IntelOrca.PeggleEdit.Tools.Levels
             if (mShowCollision)
                 return;
             SplitInterface();
-            g.DrawImage(mInterfaceShadow, 0, 0, 800, 600);
+            g.DrawImage(PremultipliedImage.Get(mInterfaceShadow), 0, 0, 800, 600);
         }
 
         private void DrawInterfaceFrame(Graphics g)
         {
             if (mShowCollision)
             {
-                g.DrawImage(mInterfaceCollision, 0, 0, 800, 600);
+                g.DrawImage(PremultipliedImage.Get(mInterfaceCollision), 0, 0, 800, 600);
                 return;
             }
             SplitInterface();
-            g.DrawImage(mInterfaceFrame, 0, 0, 800, 600);
+            g.DrawImage(PremultipliedImage.Get(mInterfaceFrame), 0, 0, 800, 600);
         }
 
         public void DrawAnchorPoint(Graphics g, float x, float y)
