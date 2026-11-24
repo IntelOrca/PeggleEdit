@@ -158,7 +158,7 @@ namespace IntelOrca.PeggleEdit.Tools.Levels
         private sealed class Layer
         {
             public ulong Key;
-            /// <summary>Where the layer is, in level coordinates.</summary>
+            /// <summary>Where the layer is, in target pixels from level (0, 0) (level coordinates, when not zoomed).</summary>
             public Rectangle Bounds;
             /// <summary>Premultiplied ARGB pixels.</summary>
             public uint[] Pixels;
@@ -184,7 +184,7 @@ namespace IntelOrca.PeggleEdit.Tools.Levels
             }
             else
             {
-                var layer = GetSettledLayer(emitter);
+                var layer = GetSettledLayer(emitter, GetScale(g));
                 if (layer != null)
                     DrawLayer(target, g, layer);
             }
@@ -206,7 +206,7 @@ namespace IntelOrca.PeggleEdit.Tools.Levels
         private static Sprite GetSprite(Emitter emitter) =>
             Sprite.FromImage(LevelPack.Current?.GetImage(emitter.Image)?.Image) ?? Sprite.Dot;
 
-        private Layer GetSettledLayer(Emitter emitter)
+        private Layer GetSettledLayer(Emitter emitter, float scale)
         {
             var simulation = GetSettled(emitter);
             // The layer is drawn where the emitter is, with its image as it is now
@@ -216,6 +216,7 @@ namespace IntelOrca.PeggleEdit.Tools.Levels
             key = (key * 1099511628211UL) ^ (ulong)position.X.GetHashCode();
             key = (key * 1099511628211UL) ^ (ulong)position.Y.GetHashCode();
             key = (key * 1099511628211UL) ^ (ulong)(image == null ? 0 : (image.Width << 16) ^ image.Height ^ 1);
+            key = (key * 1099511628211UL) ^ (ulong)scale.GetHashCode();
             if (_layers.TryGetValue(emitter, out var layer) && layer.Key == key)
                 return layer.Pixels == null ? null : layer;
 
@@ -231,13 +232,19 @@ namespace IntelOrca.PeggleEdit.Tools.Levels
             bounds.Intersect(new Rectangle(-Level.DrawAdjustX - 200, -Level.DrawAdjustY - 200, 1200, 1000));
             if (bounds.Width <= 0 || bounds.Height <= 0)
                 return null;
+            if (scale != 1)
+            {
+                bounds = Rectangle.FromLTRB(
+                    (int)Math.Floor(bounds.Left * scale), (int)Math.Floor(bounds.Top * scale),
+                    (int)Math.Ceiling(bounds.Right * scale), (int)Math.Ceiling(bounds.Bottom * scale));
+            }
 
             var pixels = new uint[bounds.Width * bounds.Height];
             var handle = GCHandle.Alloc(pixels, GCHandleType.Pinned);
             try
             {
                 Rasterize(handle.AddrOfPinnedObject(), bounds.Width * 4, new Rectangle(0, 0, bounds.Width, bounds.Height),
-                    -bounds.X, -bounds.Y, sprite, particles, emitter.Additive);
+                    -bounds.X, -bounds.Y, sprite, particles, emitter.Additive, scale);
             }
             finally
             {
@@ -271,6 +278,17 @@ namespace IntelOrca.PeggleEdit.Tools.Levels
             if (left > right)
                 return Rectangle.Empty;
             return Rectangle.FromLTRB((int)Math.Floor(left), (int)Math.Floor(top), (int)Math.Ceiling(right), (int)Math.Ceiling(bottom));
+        }
+
+        /// <summary>
+        /// Gets how many target pixels a level unit is: more than one when the level is zoomed, e.g. on a high DPI display.
+        /// </summary>
+        private static float GetScale(Graphics g)
+        {
+            var points = new[] { PointF.Empty, new PointF(1, 0) };
+            g.TransformPoints(System.Drawing.Drawing2D.CoordinateSpace.Device, System.Drawing.Drawing2D.CoordinateSpace.World, points);
+            float scale = points[1].X - points[0].X;
+            return scale > 0 ? scale : 1;
         }
 
         /// <summary>
@@ -379,7 +397,7 @@ namespace IntelOrca.PeggleEdit.Tools.Levels
             var data = bitmap.LockBits(new Rectangle(0, 0, bitmap.Width, bitmap.Height), ImageLockMode.ReadWrite, PixelFormat.Format32bppPArgb);
             try
             {
-                Rasterize(data.Scan0, data.Stride, clip, ox, oy, sprite, particles, additive);
+                Rasterize(data.Scan0, data.Stride, clip, ox, oy, sprite, particles, additive, GetScale(g));
             }
             finally
             {
@@ -388,10 +406,11 @@ namespace IntelOrca.PeggleEdit.Tools.Levels
         }
 
         /// <summary>
-        /// Draws particles (in level coordinates, moved by (ox, oy)) onto premultiplied ARGB pixels as the game does.
+        /// Draws particles (in level coordinates, scaled by <paramref name="scale"/> and moved by (ox, oy)) onto
+        /// premultiplied ARGB pixels as the game does.
         /// </summary>
         private static void Rasterize(IntPtr scan0, int stride, Rectangle clip, float ox, float oy, Sprite sprite,
-            IReadOnlyList<ParticleAppearance> particles, bool additive)
+            IReadOnlyList<ParticleAppearance> particles, bool additive, float scale)
         {
             int iw = sprite.Width;
             int ih = sprite.Height;
@@ -409,7 +428,7 @@ namespace IntelOrca.PeggleEdit.Tools.Levels
                     int x = (int)(p.X - (w / 2.0f));
                     int y = (int)(p.Y - (h / 2.0f));
                     SpriteRasterizer.Draw(scan0, stride, clip, sprite,
-                        (float)w / iw, 0, 0, (float)h / ih, x + ox, y + oy,
+                        (float)w / iw * scale, 0, 0, (float)h / ih * scale, (x * scale) + ox, (y * scale) + oy,
                         p.R, p.G, p.B, p.A, additive);
                 }
                 else
@@ -422,11 +441,11 @@ namespace IntelOrca.PeggleEdit.Tools.Levels
                     float cos = (float)Math.Cos(p.Rotation);
                     float sin = (float)Math.Sin(p.Rotation);
                     float m11 = s * cos, m21 = s * sin, m12 = -s * sin, m22 = s * cos;
-                    float cx = p.X - (iw / 2.0f) + ox;
-                    float cy = p.Y - (ih / 2.0f) + oy;
-                    float dx = cx - ((m11 * iw / 2) + (m21 * ih / 2));
-                    float dy = cy - ((m12 * iw / 2) + (m22 * ih / 2));
-                    SpriteRasterizer.Draw(scan0, stride, clip, sprite, m11, m12, m21, m22, dx, dy,
+                    float cx = ((p.X - (iw / 2.0f)) * scale) + ox;
+                    float cy = ((p.Y - (ih / 2.0f)) * scale) + oy;
+                    float dx = cx - (((m11 * iw / 2) + (m21 * ih / 2)) * scale);
+                    float dy = cy - (((m12 * iw / 2) + (m22 * ih / 2)) * scale);
+                    SpriteRasterizer.Draw(scan0, stride, clip, sprite, m11 * scale, m12 * scale, m21 * scale, m22 * scale, dx, dy,
                         p.R, p.G, p.B, p.A, additive);
                 }
             }

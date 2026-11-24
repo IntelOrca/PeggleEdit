@@ -239,7 +239,9 @@ namespace IntelOrca.PeggleEdit.Tools.Levels
         /// <summary>
         /// Draws the level, with the margin around it, onto <paramref name="g"/> (whose origin is the top left of
         /// <see cref="Bounds"/>). Only the part of the level that is visible is drawn. It is drawn on a bitmap first, so
-        /// that particles can be blended with what is under them as the game does.
+        /// that particles can be blended with what is under them as the game does. If <paramref name="g"/> is scaled
+        /// (to zoom the level, e.g. for a high DPI display), the bitmap is drawn at the scaled size, so the level stays
+        /// sharp rather than being stretched.
         /// </summary>
         public void Draw(Graphics g)
         {
@@ -250,23 +252,36 @@ namespace IntelOrca.PeggleEdit.Tools.Levels
             if (region.Width <= 0 || region.Height <= 0)
                 return;
 
-            if (mBuffer == null || mBuffer.Width < region.Width || mBuffer.Height < region.Height)
+            // Where the region is in device pixels
+            Matrix transform = g.Transform;
+            float[] m = transform.Elements;
+            transform.Dispose();
+            float scale = m[0];
+            float offsetX = m[4], offsetY = m[5];
+            var device = Rectangle.FromLTRB(
+                (int)Math.Floor((region.Left * scale) + offsetX), (int)Math.Floor((region.Top * scale) + offsetY),
+                (int)Math.Ceiling((region.Right * scale) + offsetX), (int)Math.Ceiling((region.Bottom * scale) + offsetY));
+
+            if (mBuffer == null || mBuffer.Width < device.Width || mBuffer.Height < device.Height)
             {
                 mBuffer?.Dispose();
-                mBuffer = new Bitmap(region.Width, region.Height, System.Drawing.Imaging.PixelFormat.Format32bppPArgb);
+                mBuffer = new Bitmap(device.Width, device.Height, System.Drawing.Imaging.PixelFormat.Format32bppPArgb);
             }
 
             using (var bg = Graphics.FromImage(mBuffer))
             {
-                bg.TranslateTransform(-region.X, -region.Y);
+                bg.TranslateTransform(offsetX - device.X, offsetY - device.Y);
+                bg.ScaleTransform(scale, scale);
                 bg.SetClip(region);
                 DrawWithMargin(bg, new RenderTarget(mBuffer, bg));
             }
 
-            var oldMode = g.CompositingMode;
+            // Copy the bitmap pixel for pixel
+            var state = g.Save();
+            g.ResetTransform();
             g.CompositingMode = CompositingMode.SourceCopy;
-            g.DrawImage(mBuffer, region, new Rectangle(0, 0, region.Width, region.Height), GraphicsUnit.Pixel);
-            g.CompositingMode = oldMode;
+            g.DrawImage(mBuffer, device, new Rectangle(0, 0, device.Width, device.Height), GraphicsUnit.Pixel);
+            g.Restore(state);
         }
 
         private void DrawWithMargin(Graphics g, RenderTarget target)
@@ -1450,9 +1465,10 @@ namespace IntelOrca.PeggleEdit.Tools.Levels
         const int MaxPreviewTicksPerUpdate = 50;
 
         /// <summary>
-        /// How many times faster than normal the game plays while fast forwarding.
+        /// How many times faster than normal the game plays while fast forwarding (holding the right mouse button): the
+        /// board runs 8 ticks a frame.
         /// </summary>
-        public const double FastForwardSpeed = 4.0;
+        public const double FastForwardSpeed = 8.0;
 
         // How many times faster than real time the preview plays, and the part of a tick it has played but not run yet
         private double mPreviewSpeed = 1;
