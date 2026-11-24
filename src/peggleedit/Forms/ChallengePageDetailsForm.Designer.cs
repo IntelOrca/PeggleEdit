@@ -144,6 +144,7 @@
             this.Controls.Add(this.grpGeneral);
             this.FormBorderStyle = System.Windows.Forms.FormBorderStyle.FixedDialog;
             this.Name = "ChallengePageForm";
+            this.StartPosition = System.Windows.Forms.FormStartPosition.CenterParent;
             this.Text = "Challenge Page Details";
             this.grpGeneral.ResumeLayout(false);
             this.grpGeneral.PerformLayout();
