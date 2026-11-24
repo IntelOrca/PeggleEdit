@@ -382,19 +382,10 @@ namespace IntelOrca.PeggleEdit.Tools.Levels.Children
             var entryMovers = mLevel.EntryMovers;
             if (entryMovers != null)
                 return entryMovers.Contains(this);
-            foreach (LevelEntry entry in mLevel.Entries)
+            foreach (var mover in Level.GetEntryMovers(mLevel.Entries))
             {
-                for (var e = entry; e != null; e = (e as Hole)?.DestinationEntry)
-                {
-                    int depth = 0;
-                    for (var link = e.MoverLink; link != null && depth <= NestingLimit.MaxDepth; link = link.Mover?.MoverLink, depth++)
-                    {
-                        if (link.Mover == this)
-                            return true;
-                        if (!link.OwnsMover)
-                            break;
-                    }
-                }
+                if (mover == this)
+                    return true;
             }
             return false;
         }

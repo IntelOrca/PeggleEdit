@@ -65,6 +65,16 @@ namespace IntelOrca.PeggleEdit.Tools.Levels
             _liveSeed = seed ?? _liveSeed + 1;
         }
 
+        /// <summary>
+        /// Forgets every emitter's particles, settled and live, which are made again when they are next drawn.
+        /// </summary>
+        public void ReleaseCaches()
+        {
+            _live.Clear();
+            _settled.Clear();
+            _layers.Clear();
+        }
+
         private IEnumerable<Emitter> GetEmitters() => Level.Entries.OfType<Emitter>();
 
         /// <summary>

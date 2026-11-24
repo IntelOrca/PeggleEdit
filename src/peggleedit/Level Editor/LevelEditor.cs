@@ -1075,6 +1075,7 @@ namespace IntelOrca.PeggleEdit.Designer
             if (disposing)
             {
                 _bufferContext.Dispose();
+                mLevel?.ReleaseDrawingResources();
                 _frameTimer?.Dispose();
                 _frameTimer = null;
                 SetWaitingForIdle(false);

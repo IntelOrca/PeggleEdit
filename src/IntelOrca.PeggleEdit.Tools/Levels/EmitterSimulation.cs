@@ -75,6 +75,9 @@ namespace IntelOrca.PeggleEdit.Tools.Levels
         private CurvedValStepper _rate;
         private float _accumulator;
         private bool _fastForwarded;
+
+        // The most fast forward ticks run (a minute of the game)
+        private const int MaxFastForwardTicks = 6000;
         private readonly bool _sleeping;
 
         public EmitterSimulation(Emitter emitter, int seed, bool software = false)
@@ -121,7 +124,8 @@ namespace IntelOrca.PeggleEdit.Tools.Levels
             if (!_sleeping && !_fastForwarded)
             {
                 _fastForwarded = true;
-                int ff = (int)(RateMultiplier * _emitter.FastForward);
+                // Limited, so that a very large value does not stall the editor
+                int ff = (int)Math.Min(RateMultiplier * (double)_emitter.FastForward, MaxFastForwardTicks);
                 for (int i = 0; i < ff; i++)
                     Tick(position);
             }

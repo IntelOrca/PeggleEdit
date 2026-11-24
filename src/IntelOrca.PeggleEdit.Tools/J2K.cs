@@ -114,20 +114,29 @@ namespace IntelOrca.PeggleEdit.Tools
             {
                 ThrowOnError(J2KCodec.GetInfoEx(img, out var info));
                 var result = new Bitmap(info.Width, info.Height);
-                var bitmapData = result.LockBits(new Rectangle(0, 0, info.Width, info.Height), ImageLockMode.WriteOnly, PixelFormat.Format32bppArgb);
                 try
                 {
-                    var ptr = bitmapData.Scan0;
-                    var pixelsLength = bitmapData.Stride * bitmapData.Height;
-                    var options = "bpp=4,rl=0";
-                    var pitch = bitmapData.Stride;
-                    ThrowOnError(J2KCodec.Decode(img, ref ptr, ref pixelsLength, options, ref pitch));
+                    var bitmapData = result.LockBits(new Rectangle(0, 0, info.Width, info.Height), ImageLockMode.WriteOnly, PixelFormat.Format32bppArgb);
+                    try
+                    {
+                        var ptr = bitmapData.Scan0;
+                        var pixelsLength = bitmapData.Stride * bitmapData.Height;
+                        var options = "bpp=4,rl=0";
+                        var pitch = bitmapData.Stride;
+                        ThrowOnError(J2KCodec.Decode(img, ref ptr, ref pixelsLength, options, ref pitch));
+                    }
+                    finally
+                    {
+                        result.UnlockBits(bitmapData);
+                    }
+                    return result;
                 }
-                finally
+                catch
                 {
-                    result.UnlockBits(bitmapData);
+                    // Not decoded: the other decoder is tried
+                    result.Dispose();
+                    throw;
                 }
-                return result;
             }
             finally
             {

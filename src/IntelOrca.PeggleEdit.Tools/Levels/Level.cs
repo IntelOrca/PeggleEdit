@@ -237,6 +237,21 @@ namespace IntelOrca.PeggleEdit.Tools.Levels
         private Bitmap mBuffer;
 
         /// <summary>
+        /// Frees the bitmaps and particles kept for drawing the level (e.g. once its window is closed, as the level
+        /// stays in the pack). They are made again if the level is drawn again.
+        /// </summary>
+        public void ReleaseDrawingResources()
+        {
+            mBuffer?.Dispose();
+            mBuffer = null;
+            mTransparentBuffer?.Dispose();
+            mTransparentBuffer = null;
+            mTransparentBackground?.Dispose();
+            mTransparentBackground = null;
+            _particlePreview.ReleaseCaches();
+        }
+
+        /// <summary>
         /// Draws the level, with the margin around it, onto <paramref name="g"/> (whose origin is the top left of
         /// <see cref="Bounds"/>). Only the part of the level that is visible is drawn. It is drawn on a bitmap first, so
         /// that particles can be blended with what is under them as the game does. If <paramref name="g"/> is scaled
@@ -662,7 +677,7 @@ namespace IntelOrca.PeggleEdit.Tools.Levels
         /// </summary>
         private void DrawGameCollision(Graphics g, double ticks)
         {
-            var backupClip = g.Clip;
+            var backupState = g.Save();
             g.SetClip(new RectangleF(-Level.DrawAdjustX, -Level.DrawAdjustY, 800, 600), CombineMode.Intersect);
 
             var entries = BaseObjects.GetCollisionEntries(this, mDevices, ticks);
@@ -688,7 +703,7 @@ namespace IntelOrca.PeggleEdit.Tools.Levels
             if (ShowCannon)
                 g.FillPolygon(Brushes.White, Cannon.GetCollisionShape(Cannon.GetAngle(CannonTarget)));
 
-            g.Clip = backupClip;
+            g.Restore(backupState);
         }
 
         private static Bitmap mInterfaceShadow;
@@ -1432,6 +1447,28 @@ namespace IntelOrca.PeggleEdit.Tools.Levels
         /// </summary>
         internal HashSet<Mover> EntryMovers { get; private set; }
 
+        /// <summary>
+        /// Gets the movers that move entries: each entry's mover (its own or another's), and the parent movers its own
+        /// mover has, including those of the destination entries of holes.
+        /// </summary>
+        internal static IEnumerable<Mover> GetEntryMovers(System.Collections.IEnumerable entries)
+        {
+            foreach (LevelEntry entry in entries)
+            {
+                for (var e = entry; e != null; e = (e as Hole)?.DestinationEntry)
+                {
+                    int depth = 0;
+                    for (var link = e.MoverLink; link != null && depth <= NestingLimit.MaxDepth; link = link.Mover?.MoverLink, depth++)
+                    {
+                        if (link.Mover != null)
+                            yield return link.Mover;
+                        if (!link.OwnsMover)
+                            break;
+                    }
+                }
+            }
+        }
+
         internal void WithEntryMovers(Action action)
         {
             if (EntryMovers != null)
@@ -1439,13 +1476,7 @@ namespace IntelOrca.PeggleEdit.Tools.Levels
                 action();
                 return;
             }
-            var movers = new HashSet<Mover>();
-            foreach (LevelEntry entry in mEntries)
-            {
-                if (entry.MoverLink?.Mover is Mover mover)
-                    movers.Add(mover);
-            }
-            EntryMovers = movers;
+            EntryMovers = new HashSet<Mover>(GetEntryMovers(mEntries));
             try
             {
                 action();

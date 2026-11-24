@@ -108,6 +108,17 @@ namespace IntelOrca.PeggleEdit.Tools.Tests
             Assert.DoesNotContain("Destination", LevelXml.Export(level.GetData(level.FileVersion)));
         }
 
+        [Fact]
+        public void ParentMovers_MoveTheirEntry_WhileTheLevelIsDrawn()
+        {
+            var level = Read(LevelXml.Import(@"<PeggleLevel schema=""1"" fileVersion=""0x52""><Ball radius=""1""><Mover type=""circle"" anchorX=""0"" anchorY=""0"" time=""100"" radius=""10""><ParentMover lastX=""0"" lastY=""0""><Mover type=""circle"" anchorX=""50"" anchorY=""50"" time=""100"" radius=""20"" /></ParentMover></Mover></Ball></PeggleLevel>"));
+            var parent = level.Entries[0].MoverLink.Mover.MoverLink.Mover;
+            Assert.True(parent.HasEntryParent());
+            bool drawing = false;
+            level.WithEntryMovers(() => drawing = parent.HasEntryParent());
+            Assert.True(drawing);
+        }
+
         static Level ReadHoleLinkLevel() => Read(LevelXml.Import(@"<PeggleLevel schema=""1"" fileVersion=""0x52"">
   <Ball x=""1"" y=""2"" radius=""10"" />
   <Ball x=""3"" y=""4"" radius=""10"" />

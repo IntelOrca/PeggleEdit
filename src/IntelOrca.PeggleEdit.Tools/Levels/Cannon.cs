@@ -112,13 +112,13 @@ namespace IntelOrca.PeggleEdit.Tools.Levels
             if (image == null)
                 return;
 
-            var backup = g.Transform;
+            var backup = g.Save();
             g.TranslateTransform(Pivot.X, Pivot.Y);
             // The image hangs down from the pivot when the angle is straight down; GDI+ turns clockwise
             g.RotateTransform(-(float)((angle - RestAngle) * 180 / Math.PI));
             g.TranslateTransform(0, ImageDistance);
             g.DrawImage(image, -ImageWidth / 2.0f, -ImageHeight / 2.0f, ImageWidth, ImageHeight);
-            g.Transform = backup;
+            g.Restore(backup);
         }
 
         /// <summary>
