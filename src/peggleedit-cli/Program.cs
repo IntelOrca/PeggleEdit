@@ -16,9 +16,14 @@
 
 using System;
 using System.Collections.Generic;
+using System.Drawing.Imaging;
 using System.IO;
+using System.Linq;
 using System.Text;
+using IntelOrca.PeggleEdit.Tools;
+using IntelOrca.PeggleEdit.Tools.Levels;
 using IntelOrca.PeggleEdit.Tools.Levels.Xml;
+using IntelOrca.PeggleEdit.Tools.Pack;
 
 namespace IntelOrca.PeggleEdit.Cli
 {
@@ -31,15 +36,25 @@ namespace IntelOrca.PeggleEdit.Cli
         const string Usage = @"Usage:
   peggleedit-cli to-xml <level.dat>... [-o <output>] [--force]
   peggleedit-cli to-dat <level.xml>... [-o <output>] [--force]
+  peggleedit-cli render <level.dat|level.xml>... [-o <output>] [--force]
+                        [--peggle <dir>] [--no-interface]
 
-Converts Pego, Peggle and Peggle Nights level files to and from XML. Converting
-a .dat to XML and back gives a byte-for-byte identical file. Files that are not
-levels, or are damaged, are reported as errors.
+to-xml and to-dat convert Pego, Peggle and Peggle Nights level files to and from
+XML. Converting a .dat to XML and back gives a byte-for-byte identical file.
+Files that are not levels, or are damaged, are reported as errors.
+
+render draws levels to 800x600 .png images as the game shows them at the start
+of play (all pegs blue). The background is the image next to the level with the
+same name (.jp2, .jpg or .png). Images used by the level are found in the game
+directory, which is the parent of the level's directory if that is called
+'levels', or given with --peggle.
 
 Options:
   -o, --output <path>  Output file, or output directory when converting several
                        files. Defaults to the input path with the new extension.
   -f, --force          Overwrite output files that already exist.
+  --peggle <dir>       The Peggle Nights (or Peggle) game directory (render).
+  --no-interface       Leave out the game's interface around the level (render).
   -h, --help           Show this help.";
 
         static int Main(string[] args)
@@ -65,17 +80,21 @@ Options:
                 return args.Length == 0 ? ExitUsage : ExitSuccess;
             }
 
-            bool toXml;
+            bool toXml = false;
+            bool render = false;
             switch (args[0])
             {
                 case "to-xml": toXml = true; break;
                 case "to-dat": toXml = false; break;
+                case "render": render = true; break;
                 default: throw new UsageException($"unknown command '{args[0]}'");
             }
 
             var inputs = new List<string>();
             string output = null;
+            string pegglePath = null;
             bool force = false;
+            bool drawInterface = true;
             for (int i = 1; i < args.Length; i++)
             {
                 switch (args[i])
@@ -89,6 +108,14 @@ Options:
                     case "-f":
                     case "--force":
                         force = true;
+                        break;
+                    case "--peggle" when render:
+                        if (++i >= args.Length)
+                            throw new UsageException($"{args[i - 1]} needs a path");
+                        pegglePath = args[i];
+                        break;
+                    case "--no-interface" when render:
+                        drawInterface = false;
                         break;
                     case "-h":
                     case "--help":
@@ -119,7 +146,7 @@ Options:
                 }
             }
 
-            string extension = toXml ? ".xml" : ".dat";
+            string extension = render ? ".png" : toXml ? ".xml" : ".dat";
             int failures = 0;
             var targets = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
             foreach (var input in inputs)
@@ -132,7 +159,10 @@ Options:
                     // Two inputs with the same name would be written to the same file
                     if (!targets.Add(Path.GetFullPath(target)))
                         throw new IOException($"{target} is also the output of an earlier input");
-                    Convert(input, target, toXml, force);
+                    if (render)
+                        Render(input, target, pegglePath, drawInterface, force);
+                    else
+                        Convert(input, target, toXml, force);
                     Console.WriteLine($"{input} -> {target}");
                 }
                 catch (Exception ex) when (ex is IOException || ex is UnauthorizedAccessException || ex is LevelXmlException ||
@@ -163,6 +193,48 @@ Options:
                 var xml = File.ReadAllText(input);
                 var data = LevelXml.Import(xml);
                 File.WriteAllBytes(target, data);
+            }
+        }
+
+        static void Render(string input, string target, string pegglePath, bool drawInterface, bool force)
+        {
+            if (Path.GetFullPath(input).Equals(Path.GetFullPath(target), StringComparison.OrdinalIgnoreCase))
+                throw new IOException("the output would overwrite the input");
+            if (!force && File.Exists(target))
+                throw new IOException($"{target} already exists (use --force to overwrite it)");
+
+            var data = File.ReadAllBytes(input);
+            if (Path.GetExtension(input).Equals(".xml", StringComparison.OrdinalIgnoreCase))
+                data = LevelXml.Import(Encoding.UTF8.GetString(data));
+
+            Level level;
+            using (var reader = new LevelReader(data))
+            {
+                level = reader.Read();
+                if (level == null)
+                    throw new InvalidDataException(reader.Error ?? "not a level");
+            }
+
+            var directory = Path.GetDirectoryName(Path.GetFullPath(input));
+            if (pegglePath == null && Path.GetFileName(directory).Equals("levels", StringComparison.OrdinalIgnoreCase))
+                pegglePath = Path.GetDirectoryName(directory);
+            if (pegglePath != null)
+            {
+                LevelPack.RegisterPegglePath(pegglePath);
+                J2K.RegisterPegglePath(pegglePath);
+            }
+            LevelPack.Current = new LevelPack();
+
+            var name = Path.GetFileNameWithoutExtension(input);
+            var background = new[] { ".jp2", ".jpg", ".png" }
+                .Select(x => Path.Combine(directory, name + x))
+                .FirstOrDefault(File.Exists);
+            if (background != null)
+                level.Background = new PakImage(background);
+
+            using (var image = level.RenderGameView(drawInterface))
+            {
+                image.Save(target, ImageFormat.Png);
             }
         }
 

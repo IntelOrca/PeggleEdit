@@ -370,6 +370,45 @@ namespace IntelOrca.PeggleEdit.Tools.Levels
             g.DrawImage(Resources.anchor_point, dst, src, GraphicsUnit.Pixel);
         }
 
+        /// <summary>
+        /// Renders the level as the game shows it at the start of play: the 800x600 screen with the background, the
+        /// level's objects in their starting positions (all pegs blue) and, optionally, the interface around it.
+        /// </summary>
+        public Bitmap RenderGameView(bool drawInterface = true)
+        {
+            var oInterface = mShowingInterface;
+            var oShowBackground = mShowingBackground;
+            var oShowEntries = mShowingEntries;
+            var oShowCollision = mShowCollision;
+            var oPreview = mShowPreview;
+            var oUsePegTextures = UsePegTextures;
+            try
+            {
+                mShowingInterface = drawInterface;
+                mShowingBackground = true;
+                mShowingEntries = true;
+                mShowCollision = false;
+                mShowPreview = true;
+                UsePegTextures = true;
+
+                var result = new Bitmap(800, 600);
+                using (var g = Graphics.FromImage(result))
+                {
+                    DrawCanvas(g);
+                }
+                return result;
+            }
+            finally
+            {
+                mShowingInterface = oInterface;
+                mShowingBackground = oShowBackground;
+                mShowingEntries = oShowEntries;
+                mShowCollision = oShowCollision;
+                mShowPreview = oPreview;
+                UsePegTextures = oUsePegTextures;
+            }
+        }
+
         public Image GetThumbnail()
         {
             var oInterface = mShowingInterface;
