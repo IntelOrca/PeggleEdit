@@ -58,6 +58,7 @@ namespace IntelOrca.PeggleEdit.Designer
             Settings.Default.ShowAnchorsAlways = chkAlwaysShowAnchors.Checked;
 
             Settings.Default.PeggleNightsExePath = txtPeggleNightsExePath.Text;
+            MainMDIForm.RegisterGamePaths();
 
             var updateRing = (UpdateRing)cmbUpdateRing.SelectedIndex;
             var updateRingChanged = updateRing != Settings.Default.EffectiveUpdateRing;

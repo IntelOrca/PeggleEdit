@@ -651,9 +651,20 @@ namespace IntelOrca.PeggleEdit.Designer
             UpdatePackExplorerView();
         }
 
+        /// <summary>
+        /// Points the image decoders and the game file lookups at the game directory in the settings. The JPEG 2000
+        /// codec must be registered before any .jp2 image (e.g. the bucket from _base.dat) is decoded, or the image
+        /// is drawn as only its alpha, in black.
+        /// </summary>
+        public static void RegisterGamePaths()
+        {
+            J2K.RegisterPegglePath(Settings.Default.PeggleNightsExePath);
+            LevelPack.RegisterPegglePath(Settings.Default.PeggleNightsPath);
+        }
+
         public void NewPack()
         {
-            LevelPack.RegisterPegglePath(Settings.Default.PeggleNightsPath);
+            RegisterGamePaths();
 
             mPackFilename = String.Empty;
 
@@ -668,8 +679,7 @@ namespace IntelOrca.PeggleEdit.Designer
             SetStatus("Opening '{0}'...", Path.GetFileName(filename));
 
             LevelPack pack = new LevelPack();
-            J2K.RegisterPegglePath(Settings.Default.PeggleNightsExePath);
-            LevelPack.RegisterPegglePath(Settings.Default.PeggleNightsPath);
+            RegisterGamePaths();
             if (pack.Open(filename))
             {
                 mPackFilename = filename;
