@@ -90,6 +90,55 @@ namespace System.Windows.Forms
         }
 
         /// <summary>
+        /// Where the ink of a line of text falls, in pixels down from the top of the line.
+        /// </summary>
+        private struct TextInk
+        {
+            /// <summary>The top of the capital letters.</summary>
+            public float CapTop;
+
+            /// <summary>The baseline, which the letters sit on.</summary>
+            public float Baseline;
+
+            /// <summary>The bottom of the descenders, e.g. the tail of a "g".</summary>
+            public float DescenderBottom;
+        }
+
+        private static Font _textInkFont;
+        private static float _textInkDpi;
+        private static TextInk _textInk;
+
+        /// <summary>
+        /// Measures where the ink of the given font falls within a line of text.
+        /// </summary>
+        /// <remarks>
+        /// A line of text leaves room above the capitals for accents, so centring the line itself puts the letters
+        /// visibly low, and where the space is barely a line high (as at high DPI) the descenders get cut off.
+        /// Centring on the ink instead avoids both.
+        /// </remarks>
+        private static TextInk GetTextInk(Graphics g, Font font)
+        {
+            if (font != _textInkFont || g.DpiY != _textInkDpi)
+            {
+                float emSize = font.SizeInPoints * g.DpiY / 72f;
+                FontFamily family = font.FontFamily;
+                TextInk ink;
+                ink.Baseline = emSize * family.GetCellAscent(font.Style) / family.GetEmHeight(font.Style);
+                using (GraphicsPath path = new GraphicsPath())
+                {
+                    path.AddString("Hg", family, (int)font.Style, emSize, PointF.Empty, StringFormat.GenericTypographic);
+                    RectangleF bounds = path.GetBounds();
+                    ink.CapTop = bounds.Top;
+                    ink.DescenderBottom = bounds.Bottom;
+                }
+                _textInk = ink;
+                _textInkFont = font;
+                _textInkDpi = g.DpiY;
+            }
+            return _textInk;
+        }
+
+        /// <summary>
         /// Creates a rectangle with rounded corners
         /// </summary>
         /// <param name="r"></param>
@@ -2985,13 +3034,20 @@ namespace System.Windows.Forms
                 e.Panel.Bounds.Right - 1,
                 e.Panel.Bounds.Bottom - 1);
 
+            // The strip is barely a line of text high, so centring the line cuts off the descenders at high DPI.
+            // Centre the letters, from the top of the capitals to the bottom of the descenders, instead.
+            TextInk ink = GetTextInk(e.Graphics, e.Ribbon.Font);
+            float top = (float)Math.Round(textArea.Top + (textArea.Height - (ink.DescenderBottom - ink.CapTop)) / 2f - ink.CapTop);
+            RectangleF layout = new RectangleF(textArea.Left, top, textArea.Width, e.Ribbon.Font.GetHeight(e.Graphics));
+
             StringFormat sf = new StringFormat();
             sf.Alignment = StringAlignment.Center;
-            sf.LineAlignment = StringAlignment.Center;
+            sf.LineAlignment = StringAlignment.Near;
+            sf.FormatFlags |= StringFormatFlags.NoWrap | StringFormatFlags.NoClip;
 
             using (Brush b = new SolidBrush(GetTextColor(e.Panel.Enabled, ColorTable.PanelText)))
             {
-                e.Graphics.DrawString(e.Panel.Text, e.Ribbon.Font, b, textArea, sf);
+                e.Graphics.DrawString(e.Panel.Text, e.Ribbon.Font, b, layout, sf);
             }
 
         }
