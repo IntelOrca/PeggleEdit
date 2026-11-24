@@ -37,7 +37,34 @@ namespace IntelOrca.PeggleEdit.Tools.Extensions
         /// <inheritdoc cref="DrawImageSnapped(Graphics, Image, RectangleF)"/>
         public static void DrawImageSnapped(this Graphics g, Image image, RectangleF dst, Rectangle src)
         {
+            // Zoomed (e.g. for a high DPI display), the image is scaled once to the size it is shown at and then copied
+            // pixel for pixel, as scaling it every time it is drawn is slow
+            float[] m;
+            using (var transform = g.Transform)
+                m = transform.Elements;
+            if (m[1] == 0 && m[2] == 0 && m[0] > 0 && m[3] > 0 && (m[0] != 1 || m[3] != 1))
+            {
+                var left = (int)Math.Round((dst.Left * m[0]) + m[4]);
+                var top = (int)Math.Round((dst.Top * m[3]) + m[5]);
+                var width = (int)Math.Round(dst.Width * m[0]);
+                var height = (int)Math.Round(dst.Height * m[3]);
+                if (width <= 0 || height <= 0)
+                    return;
+                var scaled = GetScaledImage(image, src, new Size(width, height));
+                var state = g.Save();
+                g.ResetTransform();
+                g.DrawImageUnscaled(scaled, left, top);
+                g.Restore(state);
+                return;
+            }
+
             dst = SnapToDevicePixels(g, dst);
+            if (dst.Width == src.Width && dst.Height == src.Height && m[0] == 1 && m[3] == 1 && m[1] == 0 && m[2] == 0)
+            {
+                // Not scaled: copied pixel for pixel, without the slower drawing with image attributes
+                g.DrawImage(image, new Rectangle((int)Math.Round(dst.X), (int)Math.Round(dst.Y), src.Width, src.Height), src, GraphicsUnit.Pixel);
+                return;
+            }
             var points = new[]
             {
                 new PointF(dst.Left, dst.Top),
@@ -45,6 +72,37 @@ namespace IntelOrca.PeggleEdit.Tools.Extensions
                 new PointF(dst.Left, dst.Bottom),
             };
             g.DrawImage(image, points, src, GraphicsUnit.Pixel, ClampedEdges);
+        }
+
+        // The images scaled for drawing zoomed, by image, then by the part of it and the size it is scaled to
+        private static readonly System.Runtime.CompilerServices.ConditionalWeakTable<Image, Dictionary<(Rectangle, Size), Bitmap>> _scaled =
+            new System.Runtime.CompilerServices.ConditionalWeakTable<Image, Dictionary<(Rectangle, Size), Bitmap>>();
+
+        // The most sizes kept of one image (e.g. a peg drawn at many sizes), after which they are made again
+        private const int MaxScaledSizes = 64;
+
+        private static Bitmap GetScaledImage(Image image, Rectangle src, Size size)
+        {
+            var sizes = _scaled.GetOrCreateValue(image);
+            if (sizes.TryGetValue((src, size), out var result))
+                return result;
+            if (sizes.Count >= MaxScaledSizes)
+            {
+                foreach (var bitmap in sizes.Values)
+                    bitmap.Dispose();
+                sizes.Clear();
+            }
+
+            result = new Bitmap(size.Width, size.Height, PixelFormat.Format32bppPArgb);
+            using (var g = Graphics.FromImage(result))
+            {
+                g.CompositingMode = System.Drawing.Drawing2D.CompositingMode.SourceCopy;
+                g.InterpolationMode = System.Drawing.Drawing2D.InterpolationMode.HighQualityBicubic;
+                g.PixelOffsetMode = System.Drawing.Drawing2D.PixelOffsetMode.HighQuality;
+                g.DrawImage(image, new Rectangle(Point.Empty, size), src.X, src.Y, src.Width, src.Height, GraphicsUnit.Pixel, ClampedEdges);
+            }
+            sizes[(src, size)] = result;
+            return result;
         }
 
         /// <summary>

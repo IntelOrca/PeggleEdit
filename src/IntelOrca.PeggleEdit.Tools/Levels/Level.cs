@@ -276,13 +276,13 @@ namespace IntelOrca.PeggleEdit.Tools.Levels
             g.DrawRectangle(Pens.Black, mCanvasMarginWidth - 1, mCanvasMarginHeight - 1, 800 + 1, 600 + 1);
 
             g.TranslateTransform(mCanvasMarginWidth, mCanvasMarginHeight);
-            GraphicsContainer containerState = g.BeginContainer();
+            GraphicsState containerState = g.Save();
             g.SmoothingMode = SmoothingMode.HighQuality;
 
             DrawCanvas(g, target);
 
             g.SmoothingMode = SmoothingMode.Default;
-            g.EndContainer(containerState);
+            g.Restore(containerState);
             g.TranslateTransform(-mCanvasMarginWidth, -mCanvasMarginHeight);
 
 
@@ -398,12 +398,12 @@ namespace IntelOrca.PeggleEdit.Tools.Levels
 
             if (bg.Size == new Size(646, 543))
             {
-                g.DrawImage(bg, 73, 53, bg.Width, bg.Height);
+                g.DrawImageSnapped(bg, 73, 53, bg.Width, bg.Height);
             }
             else
             {
                 Rectangle rect = new Rectangle(400 - (bg.Width / 2), 300 - (bg.Height / 2), bg.Width, bg.Height);
-                g.DrawImage(bg, rect);
+                g.DrawImageSnapped(bg, rect);
             }
         }
 
@@ -445,7 +445,7 @@ namespace IntelOrca.PeggleEdit.Tools.Levels
         private void DrawEntries(Graphics g, RenderTarget target)
         {
             g.TranslateTransform(Level.DrawAdjustX, Level.DrawAdjustY);
-            GraphicsContainer containerState = g.BeginContainer();
+            GraphicsState containerState = g.Save();
             g.SmoothingMode = SmoothingMode.HighQuality;
 
             _particlePreview.Prune();
@@ -508,11 +508,11 @@ namespace IntelOrca.PeggleEdit.Tools.Levels
             {
                 if (!mShowingInterface)
                     return;
-                g.EndContainer(containerState);
+                g.Restore(containerState);
                 g.TranslateTransform(-Level.DrawAdjustX, -Level.DrawAdjustY);
                 draw(g);
                 g.TranslateTransform(Level.DrawAdjustX, Level.DrawAdjustY);
-                containerState = g.BeginContainer();
+                containerState = g.Save();
                 g.SmoothingMode = SmoothingMode.HighQuality;
             }
 
@@ -531,7 +531,7 @@ namespace IntelOrca.PeggleEdit.Tools.Levels
             if (!mShowPreview && takenAway.Count != 0)
                 DrawTakenAway(g, takenAway);
 
-            g.EndContainer(containerState);
+            g.Restore(containerState);
             g.TranslateTransform(-Level.DrawAdjustX, -Level.DrawAdjustY);
         }
 
@@ -743,7 +743,7 @@ namespace IntelOrca.PeggleEdit.Tools.Levels
             if (mShowCollision)
                 return;
             SplitInterface();
-            g.DrawImage(PremultipliedImage.Get(mInterfaceShadow), 0, 0, 800, 600);
+            g.DrawImageSnapped(PremultipliedImage.Get(mInterfaceShadow), 0, 0, 800, 600);
         }
 
         // With the collision shown, the interface is faint, as the ball does not collide with it
@@ -773,7 +773,7 @@ namespace IntelOrca.PeggleEdit.Tools.Levels
             if (mShowCollision)
                 g.DrawImage(PremultipliedImage.Get(image), rect, 0, 0, image.Width, image.Height, GraphicsUnit.Pixel, CollisionInterfaceAttributes);
             else
-                g.DrawImage(PremultipliedImage.Get(image), rect);
+                g.DrawImageSnapped(PremultipliedImage.Get(image), rect);
         }
 
         public void DrawAnchorPoint(Graphics g, float x, float y)
