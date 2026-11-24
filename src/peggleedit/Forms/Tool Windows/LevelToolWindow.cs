@@ -53,6 +53,7 @@ namespace IntelOrca.PeggleEdit.Designer
             mLevelEditor.SelectionChanged += new EventHandler(mLevelEditor_SelectionChanged);
             mLevelEditor.MouseMove += new MouseEventHandler(mLevelEditor_MouseMove);
             mLevelEditor.FrameStarting += mLevelEditor_FrameStarting;
+            mParent.Activated += mParent_Activated;
 
             this.Controls.Add(mLevelEditor);
 
@@ -85,14 +86,25 @@ namespace IntelOrca.PeggleEdit.Designer
         }
 
         /// <summary>
-        /// Moves the preview on for each frame.
+        /// Moves the preview on for each frame. Only the level being worked on plays its preview: it pauses while
+        /// another level, or another application, is active, and plays on from where it was when it is active again.
         /// </summary>
         void mLevelEditor_FrameStarting(object sender, EventArgs e)
         {
             var level = mLevelEditor.Level;
-            if (level.ShowPreview)
+            bool playing = level.ShowPreview && IsActiveLevel;
+            level.PreviewPaused = !playing;
+            if (playing)
                 level.UpdatePreview();
-            mLevelEditor.Animating = level.ShowPreview;
+            mLevelEditor.Animating = playing;
+        }
+
+        private bool IsActiveLevel => mParent.GetFocusedLevelEditor() == mLevelEditor && Form.ActiveForm != null;
+
+        void mParent_Activated(object sender, EventArgs e)
+        {
+            // Resumes the preview
+            mLevelEditor.RequestRedraw(null);
         }
 
         void mLevelEditor_MouseMove(object sender, MouseEventArgs e)
@@ -137,8 +149,17 @@ namespace IntelOrca.PeggleEdit.Designer
             mLevelEditor.AutoScrollOffset = new Point(this.AutoScrollPosition.X, this.AutoScrollPosition.Y);
 
             mParent.LevelWindowHasFocus(this);
+            // Resumes the preview
+            mLevelEditor.RequestRedraw(null);
 
             base.OnGotFocus(e);
+        }
+
+        protected override void Dispose(bool disposing)
+        {
+            if (disposing)
+                mParent.Activated -= mParent_Activated;
+            base.Dispose(disposing);
         }
 
         public LevelEditor LevelEditor

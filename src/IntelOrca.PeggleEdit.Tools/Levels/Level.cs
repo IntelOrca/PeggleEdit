@@ -1429,6 +1429,7 @@ namespace IntelOrca.PeggleEdit.Tools.Levels
         private ulong mPreviewTime;
         private int mFirstPreviewUpdate;
         private bool mPreviewRunning;
+        private bool mPreviewPaused;
 
         // The most ticks the emitters are run in one update, so that a long pause does not stall the editor
         const int MaxPreviewTicksPerUpdate = 50;
@@ -1461,18 +1462,49 @@ namespace IntelOrca.PeggleEdit.Tools.Levels
             _particlePreview.Tick();
         }
 
+        /// <summary>
+        /// Whether the preview's clock is stopped, e.g. while its level is not the one being worked on. The time it is
+        /// paused for is not played: when it is resumed, it plays on from where it was.
+        /// </summary>
+        public bool PreviewPaused
+        {
+            get => mPreviewPaused;
+            set
+            {
+                if (mPreviewPaused == value)
+                    return;
+                if (mFirstPreviewUpdate != 0)
+                {
+                    // Pausing keeps the time played since the last update; resuming starts the clock from now
+                    if (value)
+                        AdvancePreviewClock();
+                    else
+                        mFirstPreviewUpdate = Environment.TickCount == 0 ? 1 : Environment.TickCount;
+                }
+                mPreviewPaused = value;
+            }
+        }
+
+        // Adds the time since the last update to the ticks to play, or returns false if no time has passed
+        private bool AdvancePreviewClock()
+        {
+            // mFirstPreviewUpdate is the time of the last update, so that the speed can change while it plays
+            var tickCount = Environment.TickCount;
+            var elapsed = (uint)(tickCount - mFirstPreviewUpdate);
+            if (elapsed == 0)
+                return false;
+            mFirstPreviewUpdate = tickCount == 0 ? 1 : tickCount;
+            mPreviewTickFraction += elapsed * mPreviewSpeed / 10.0;
+            return true;
+        }
+
         public void UpdatePreview()
         {
-            if (mFirstPreviewUpdate != 0)
+            if (mFirstPreviewUpdate != 0 && !mPreviewPaused)
             {
-                // mFirstPreviewUpdate is the time of the last update, so that the speed can change while it plays
-                var tickCount = Environment.TickCount;
-                var elapsed = (uint)(tickCount - mFirstPreviewUpdate);
-                if (elapsed == 0)
+                if (!AdvancePreviewClock())
                     return;
-                mFirstPreviewUpdate = tickCount == 0 ? 1 : tickCount;
 
-                mPreviewTickFraction += elapsed * mPreviewSpeed / 10.0;
                 var ticks = (int)Math.Min(mPreviewTickFraction, int.MaxValue);
                 mPreviewTickFraction -= ticks;
                 // A long pause (or a high speed) does not stall the editor: the time skips ahead without running

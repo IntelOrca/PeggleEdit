@@ -268,5 +268,24 @@ namespace IntelOrca.PeggleEdit.Tools.Tests
             w.Write(1.0f);
             return ms.ToArray();
         }
+
+        [Fact]
+        public void PausedPreview_DoesNotPlayTheTimeItWasPausedFor()
+        {
+            var level = new Level();
+            level.ResetPreview();
+            level.PreviewPaused = true;
+            System.Threading.Thread.Sleep(200);
+            level.UpdatePreview();
+            Assert.Equal(0UL, level.PreviewTime);
+
+            // Resumed, it plays on from where it was: not the 20 ticks it was paused for
+            level.PreviewPaused = false;
+            level.UpdatePreview();
+            Assert.InRange(level.PreviewTime, 0UL, 5UL);
+            System.Threading.Thread.Sleep(200);
+            level.UpdatePreview();
+            Assert.InRange(level.PreviewTime, 15UL, 40UL);
+        }
     }
 }
