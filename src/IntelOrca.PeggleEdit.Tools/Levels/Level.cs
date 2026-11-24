@@ -32,8 +32,10 @@ namespace IntelOrca.PeggleEdit.Tools.Levels
     /// </summary>
     public class Level
     {
-        public const int DrawAdjustX = 73;
-        public const int DrawAdjustY = 43;
+        // Where the game draws level position (0, 0) on its 800x600 screen. Measured against Peggle Nights screenshots
+        // (software and hardware rendering): pegs line up exactly with these values.
+        public const int DrawAdjustX = 75;
+        public const int DrawAdjustY = 40;
 
         public static Color ShadowColour = Color.FromArgb(128, Color.Black);
         public static Point ShadowOffset = new Point(-4, 3);
