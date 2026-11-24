@@ -63,7 +63,7 @@ namespace System.Windows.Forms
 			Size textSize = TextRenderer.MeasureText(Text, Owner.Font);
 
 			Size size = new Size(CheckBoxSize.Width + RibbonDpi.Scale(6) + textSize.Width,
-				Math.Max(CheckBoxSize.Height + RibbonDpi.Scale(4), Owner.Font.Height + RibbonDpi.Scale(4)));
+				Math.Max(CheckBoxSize.Height, textSize.Height) + RibbonDpi.Scale(4));
 
             SetLastMeasuredSize(size);
             return size;

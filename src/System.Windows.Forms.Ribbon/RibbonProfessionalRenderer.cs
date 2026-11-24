@@ -2886,7 +2886,10 @@ namespace System.Windows.Forms
         {
 
             int gap = RibbonDpi.Scale(2);
-            Rectangle checkboxBorder = new Rectangle(new Point(checkbox.Bounds.X + gap, checkbox.Bounds.Y + gap), checkbox.CheckBoxSize);
+            Size checkBoxSize = checkbox.CheckBoxSize;
+            Rectangle checkboxBorder = new Rectangle(
+                new Point(checkbox.Bounds.X + gap, checkbox.Bounds.Y + (checkbox.Bounds.Height - checkBoxSize.Height) / 2),
+                checkBoxSize);
 
 			if (RibbonDpi.Factor > 1 && Application.RenderWithVisualStyles) {
 				// The checkbox bitmaps are 13x13; enlarging them blurs them, so draw a themed checkbox at the right size instead.
@@ -2907,12 +2910,17 @@ namespace System.Windows.Forms
 				}
 			}
 
-			Rectangle textArea = Rectangle.FromLTRB(checkboxBorder.Right + gap, checkbox.Bounds.Top + gap,
-				checkbox.Bounds.Right, checkbox.Bounds.Bottom - gap);
+            // Line the middle of the capitals up with the middle of the glyph. Centring the line of text instead puts
+            // the letters low, because a line leaves room above the capitals for accents.
+            TextInk ink = GetTextInk(e.Graphics, e.Ribbon.Font);
+            float glyphMiddle = checkboxBorder.Top + checkboxBorder.Height / 2f;
+            int lineTop = (int)Math.Round(glyphMiddle - (ink.CapTop + ink.Baseline) / 2f);
+            Rectangle textArea = Rectangle.FromLTRB(checkboxBorder.Right + gap, lineTop,
+                checkbox.Bounds.Right, Math.Max(lineTop, checkbox.Bounds.Bottom));
 
             // Drawn as it is measured (with TextRenderer), so the text is not cut off: GDI+ text is wider, more so at high DPI
             TextRenderer.DrawText(e.Graphics, checkbox.Text, e.Ribbon.Font, textArea, GetTextColor(true, ColorTable.PanelText),
-                TextFormatFlags.Left | TextFormatFlags.VerticalCenter | TextFormatFlags.SingleLine | TextFormatFlags.NoPrefix);
+                TextFormatFlags.Left | TextFormatFlags.Top | TextFormatFlags.SingleLine | TextFormatFlags.NoPrefix | TextFormatFlags.NoClipping);
 
             //g.FillRectangle(Brushes.Black, checkbox.Bounds);
         }
