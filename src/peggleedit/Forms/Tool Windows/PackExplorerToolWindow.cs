@@ -773,10 +773,13 @@ namespace IntelOrca.PeggleEdit.Designer
             mContextMenu.Items.Add(new ToolStripSeparator());
             mContextMenu.Items.Add(new ToolStripMenuItem("Delete", Resources.remove_16, mnuLevelDelete_Click));
             mContextMenu.Items.Add(new ToolStripSeparator());
-            mContextMenu.Items.Add(new ToolStripMenuItem("Export (Pego)", Resources.export_16, mnuLevelExportPego_Click));
-            mContextMenu.Items.Add(new ToolStripMenuItem("Export (Deluxe)", Resources.export_16, mnuLevelExportDeluxe_Click));
-            mContextMenu.Items.Add(new ToolStripMenuItem("Export (Nights)", Resources.export_16, mnuLevelExportNights_Click));
-            mContextMenu.Items.Add(new ToolStripMenuItem("Export (XML)...", Resources.export_16, mnuLevelExportXml_Click));
+            var mnuExport = new ToolStripMenuItem("Export", Resources.export_16);
+            mnuExport.DropDownItems.Add(new ToolStripMenuItem("Pego...", null, mnuLevelExportPego_Click));
+            mnuExport.DropDownItems.Add(new ToolStripMenuItem("Peggle Deluxe...", null, mnuLevelExportDeluxe_Click));
+            mnuExport.DropDownItems.Add(new ToolStripMenuItem("Peggle Nights...", null, mnuLevelExportNights_Click));
+            mnuExport.DropDownItems.Add(new ToolStripSeparator());
+            mnuExport.DropDownItems.Add(new ToolStripMenuItem("XML...", null, mnuLevelExportXml_Click));
+            mContextMenu.Items.Add(mnuExport);
             mContextMenu.Items.Add(new ToolStripSeparator());
             mContextMenu.Items.Add(new ToolStripMenuItem("Properties", Resources.properties_16, mnuLevelProperties_Click));
             mContextMenu.Items.Add(new ToolStripMenuItem("Set Background", Resources.image_16, mnuSetBackground_Click));
