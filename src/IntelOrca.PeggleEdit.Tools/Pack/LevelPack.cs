@@ -98,6 +98,17 @@ namespace IntelOrca.PeggleEdit.Tools.Pack
         }
 
         /// <summary>
+        /// The game directory registered with <see cref="RegisterPegglePath"/>, if any.
+        /// </summary>
+        public static string PegglePath => _pegglePath;
+
+        /// <summary>
+        /// Gets a file of the game (e.g. levels\_base.dat), from main.pak or from the game directory when it has been
+        /// extracted, or null if it can not be found.
+        /// </summary>
+        public static byte[] GetGameFile(string path) => GetMainFile(path);
+
+        /// <summary>
         /// Gets a file of the game, from main.pak or from the game directory when it has been extracted.
         /// </summary>
         private static byte[] GetMainFile(string path)

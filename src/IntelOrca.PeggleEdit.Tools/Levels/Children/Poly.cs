@@ -181,7 +181,11 @@ namespace IntelOrca.PeggleEdit.Tools.Levels.Children
 
             var location = DrawLocation;
             var angle = 0.0f;
-            if (MoverLink?.Mover is Mover movement)
+            if (AngleOverride is float overrideAngle)
+            {
+                angle = overrideAngle;
+            }
+            else if (MoverLink?.Mover is Mover movement)
             {
                 angle = movement.GetEstimatedMoveAngle(angle);
             }
@@ -227,6 +231,11 @@ namespace IntelOrca.PeggleEdit.Tools.Levels.Children
                 }
             }
         }
+
+        /// <summary>
+        /// The angle the poly is drawn at, in degrees clockwise, instead of its mover's, e.g. a raised flipper.
+        /// </summary>
+        internal float? AngleOverride { get; set; }
 
         public Image GetPolygonImage()
         {

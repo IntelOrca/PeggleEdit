@@ -50,6 +50,7 @@ namespace IntelOrca.PeggleEdit.Tools.Levels
         private bool mShowingInterface = true;
         private bool mShowingEntries = true;
         private bool mShowPreview = false;
+        private GameDevices mDevices = GameDevices.None;
         private bool mShowCollision = false;
         private bool mShowAnchorsAlways = false;
 
@@ -315,10 +316,10 @@ namespace IntelOrca.PeggleEdit.Tools.Levels
             if (mShowingBackground)
                 DrawBackground(g);
 
+            // The interface is drawn among the objects, under foreground objects
             if (mShowingEntries)
                 DrawEntries(g, target);
-
-            if (mShowingInterface)
+            else if (mShowingInterface)
                 DrawInterface(g);
         }
 
@@ -380,12 +381,30 @@ namespace IntelOrca.PeggleEdit.Tools.Levels
             GraphicsContainer containerState = g.BeginContainer();
             g.SmoothingMode = SmoothingMode.HighQuality;
 
-            // Put the entries in the game's layers, keeping file order within each
+            // The objects the flippers take away are not drawn in the preview, and marked while editing
+            var takenAway = new HashSet<LevelEntry>();
+            if ((mDevices & GameDevices.Flippers) != 0)
+            {
+                foreach (LevelEntry le in mEntries)
+                {
+                    if (BaseObjects.IsTakenAwayByFlippers(le))
+                        takenAway.Add(le);
+                }
+            }
+
+            // Put the entries in the game's layers, keeping file order within each: the level's objects, then the
+            // objects the game adds to every level
             var layers = new List<LevelEntry>[5];
             for (int i = 0; i < layers.Length; i++)
                 layers[i] = new List<LevelEntry>();
             foreach (LevelEntry le in mEntries)
-                layers[(int)GetDrawLayer(le)].Add(le);
+            {
+                if (!mShowPreview || !takenAway.Contains(le))
+                    layers[(int)GetDrawLayer(le)].Add(le);
+            }
+            var deviceTime = mShowPreview ? mPreviewTime : 0;
+            foreach (var (le, layer) in BaseObjects.GetEntries(this, mDevices, deviceTime))
+                layers[(int)layer].Add(le);
             // A stable sort, so objects at the same y stay in file order
             layers[(int)DrawLayer.DrawSort] = layers[(int)DrawLayer.DrawSort].OrderBy(x => x.DrawY).ToList();
 
@@ -401,11 +420,73 @@ namespace IntelOrca.PeggleEdit.Tools.Levels
                 }
             }
 
-            for (int i = (int)DrawLayer.Normal; i < layers.Length; i++)
-                DrawLayerEntries(g, target, layers[i]);
+            DrawLayerEntries(g, target, layers[(int)DrawLayer.Normal]);
+            // The balls would be drawn here, then the lightning rod
+            if ((mDevices & GameDevices.LightningRod) != 0)
+                DrawLightningRod(g, deviceTime);
+
+            // The interface is drawn among the foreground objects, as in the game the bucket's front rim covers the
+            // frame's shadow, its front plate covers the frame, and the frame covers the rest of its front rim
+            void DrawInterfacePart(Action<Graphics> draw)
+            {
+                if (!mShowingInterface)
+                    return;
+                g.EndContainer(containerState);
+                g.TranslateTransform(-Level.DrawAdjustX, -Level.DrawAdjustY);
+                draw(g);
+                g.TranslateTransform(Level.DrawAdjustX, Level.DrawAdjustY);
+                containerState = g.BeginContainer();
+                g.SmoothingMode = SmoothingMode.HighQuality;
+            }
+
+            DrawInterfacePart(DrawInterfaceShadow);
+            DrawLayerEntries(g, target, layers[(int)DrawLayer.Foreground]);
+            DrawLayerEntries(g, target, layers[(int)DrawLayer.DrawSort]);
+            DrawInterfacePart(DrawInterfaceFrame);
+            DrawLayerEntries(g, target, layers[(int)DrawLayer.Foreground2]);
+
+            if (!mShowPreview && takenAway.Count != 0)
+                DrawTakenAway(g, takenAway);
 
             g.EndContainer(containerState);
             g.TranslateTransform(-Level.DrawAdjustX, -Level.DrawAdjustY);
+        }
+
+        private void DrawLightningRod(Graphics g, double ticks)
+        {
+            var image = LevelPack.Current?.GetImage(@"images\game\lightningRodOn")?.Image;
+            if (image == null)
+                return;
+            var position = BaseObjects.GetLightningRodPosition(ticks, BaseObjects.GetBucketRadius(mDevices));
+            g.DrawImage(image, position.X - (image.Width / 2.0f), position.Y - (image.Height / 2.0f), image.Width, image.Height);
+        }
+
+        private static readonly Brush TakenAwayBrush = new SolidBrush(Color.FromArgb(96, 255, 0, 0));
+        private static readonly Pen TakenAwayPen = new Pen(Color.FromArgb(220, 255, 40, 40), 2);
+
+        /// <summary>
+        /// Marks the objects the flippers take away, so that they can be seen while editing.
+        /// </summary>
+        private static void DrawTakenAway(Graphics g, IEnumerable<LevelEntry> entries)
+        {
+            foreach (var le in entries)
+            {
+                var bounds = le.Bounds;
+                if (bounds.IsEmpty)
+                    bounds = new RectangleF(le.DrawX - 5, le.DrawY - 5, 10, 10);
+                if (le is Ball)
+                {
+                    g.FillEllipse(TakenAwayBrush, bounds);
+                    g.DrawEllipse(TakenAwayPen, bounds);
+                }
+                else
+                {
+                    g.FillRectangle(TakenAwayBrush, bounds.X, bounds.Y, bounds.Width, bounds.Height);
+                    g.DrawRectangle(TakenAwayPen, bounds.X, bounds.Y, bounds.Width, bounds.Height);
+                }
+                g.DrawLine(TakenAwayPen, bounds.Left, bounds.Top, bounds.Right, bounds.Bottom);
+                g.DrawLine(TakenAwayPen, bounds.Right, bounds.Top, bounds.Left, bounds.Bottom);
+            }
         }
 
         private void DrawLayerEntries(Graphics g, RenderTarget target, List<LevelEntry> entries)
@@ -421,10 +502,73 @@ namespace IntelOrca.PeggleEdit.Tools.Levels
 
         private void DrawInterface(Graphics g)
         {
+            DrawInterfaceShadow(g);
+            DrawInterfaceFrame(g);
+        }
+
+        private static Bitmap mInterfaceShadow;
+        private static Bitmap mInterfaceFrame;
+
+        /// <summary>
+        /// Splits the interface into its shadow over the board (its black, partly transparent pixels) and the rest, as
+        /// the game draws foreground objects between them: the bucket's front rim is over the shadow at the bottom of
+        /// the frame but under the frame itself.
+        /// </summary>
+        private static void SplitInterface()
+        {
+            if (mInterfaceShadow != null)
+                return;
+            var shadow = new Bitmap(800, 600, System.Drawing.Imaging.PixelFormat.Format32bppArgb);
+            var frame = new Bitmap(800, 600, System.Drawing.Imaging.PixelFormat.Format32bppArgb);
+            using (var source = new Bitmap(800, 600, System.Drawing.Imaging.PixelFormat.Format32bppArgb))
+            {
+                using (var g = Graphics.FromImage(source))
+                    g.DrawImage(mInterface, 0, 0, 800, 600);
+                var rect = new Rectangle(0, 0, 800, 600);
+                var src = source.LockBits(rect, System.Drawing.Imaging.ImageLockMode.ReadOnly, System.Drawing.Imaging.PixelFormat.Format32bppArgb);
+                var pixels = new int[800 * 600];
+                System.Runtime.InteropServices.Marshal.Copy(src.Scan0, pixels, 0, pixels.Length);
+                source.UnlockBits(src);
+                var shadowPixels = new int[pixels.Length];
+                var framePixels = new int[pixels.Length];
+                for (int i = 0; i < pixels.Length; i++)
+                {
+                    uint p = (uint)pixels[i];
+                    if ((p & 0xFFFFFF) == 0 && (p >> 24) != 255)
+                        shadowPixels[i] = pixels[i];
+                    else
+                        framePixels[i] = pixels[i];
+                }
+                void Fill(Bitmap bitmap, int[] data)
+                {
+                    var bits = bitmap.LockBits(rect, System.Drawing.Imaging.ImageLockMode.WriteOnly, System.Drawing.Imaging.PixelFormat.Format32bppArgb);
+                    System.Runtime.InteropServices.Marshal.Copy(data, 0, bits.Scan0, data.Length);
+                    bitmap.UnlockBits(bits);
+                }
+                Fill(shadow, shadowPixels);
+                Fill(frame, framePixels);
+            }
+            mInterfaceShadow = shadow;
+            mInterfaceFrame = frame;
+        }
+
+        private void DrawInterfaceShadow(Graphics g)
+        {
             if (mShowCollision)
+                return;
+            SplitInterface();
+            g.DrawImage(mInterfaceShadow, 0, 0, 800, 600);
+        }
+
+        private void DrawInterfaceFrame(Graphics g)
+        {
+            if (mShowCollision)
+            {
                 g.DrawImage(mInterfaceCollision, 0, 0, 800, 600);
-            else
-                g.DrawImage(mInterface, 0, 0, 800, 600);
+                return;
+            }
+            SplitInterface();
+            g.DrawImage(mInterfaceFrame, 0, 0, 800, 600);
         }
 
         public void DrawAnchorPoint(Graphics g, float x, float y)
@@ -499,20 +643,23 @@ namespace IntelOrca.PeggleEdit.Tools.Levels
             var oAllPegsBlue = mShowPreview;
             var oUsePegTextures = UsePegTextures;
             var oShowParticles = ShowParticles;
+            var oDevices = mDevices;
 
             mShowingInterface = false;
             mShowingBackground = true;
             mShowCollision = false;
             mShowPreview = true;
             UsePegTextures = true;
-            // The game's thumbnails show no particles
+            // The game's thumbnails show no particles or devices
             ShowParticles = false;
+            mDevices = GameDevices.None;
 
             Bitmap fs = new Bitmap(800, 600);
             Graphics fsG = Graphics.FromImage(fs);
             DrawCanvas(fsG, null);
             fsG.Dispose();
             ShowParticles = oShowParticles;
+            mDevices = oDevices;
 
             mShowingInterface = oInterface;
             mShowingBackground = oShowBackground;
@@ -1198,6 +1345,16 @@ namespace IntelOrca.PeggleEdit.Tools.Levels
             {
                 return mPreviewTime;
             }
+        }
+
+        /// <summary>
+        /// The objects the game adds to every level that are shown: the free ball bucket and the devices of the
+        /// masters' powers.
+        /// </summary>
+        public GameDevices Devices
+        {
+            get => mDevices;
+            set => mDevices = value;
         }
 
         public bool ShowCollision
