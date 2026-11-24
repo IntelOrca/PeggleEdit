@@ -223,7 +223,16 @@ namespace IntelOrca.PeggleEdit.Tools.Levels.Children
         [Description("The distance between each generated peg.")]
         [Category("Layout")]
         [DefaultValue(30)]
-        public int Interval { get; set; } = 30;
+        public int Interval
+        {
+            get => _interval;
+            set
+            {
+                _interval = value;
+                InvalidatePath();
+            }
+        }
+        private int _interval = 30;
 
         [DisplayName("Path")]
         [Description("SVG syntax for the path.")]
