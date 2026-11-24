@@ -205,7 +205,7 @@ namespace IntelOrca.PeggleEdit.Designer.Level_Editor
             var result = (PointF)Editor.Level.GetVirtualXY(location);
             if (Settings.Default.ShowGrid & Settings.Default.SnapToGrid)
             {
-                result = new PointF(Editor.SnapToGrid(location.X), Editor.SnapToGrid(location.Y));
+                result = new PointF(Editor.SnapToGrid(result.X), Editor.SnapToGrid(result.Y));
             }
 
             if ((modifierKeys & Keys.Control) != 0)
