@@ -414,7 +414,8 @@ namespace IntelOrca.PeggleEdit.Tools.Levels.Children
             }
             else if (!Level.UsePegTextures || !HasPegInfo)
             {
-                var shadingOffset = mTextureFlip ? 2 : 8;
+                // The inner shading is drawn at half the thickness, which moves it by a quarter of the thickness
+                var shadingOffset = (mTextureFlip ? 2 : 8) - (mThickness / 4);
                 DrawCurvedBrick(g, GetOuterColour(), location, false);
                 mThickness /= 2.0f;
                 location.X += shadingOffset;
@@ -433,7 +434,8 @@ namespace IntelOrca.PeggleEdit.Tools.Levels.Children
 
         private void DrawCurvedBrick(Graphics g, Color c, PointF location, bool inner)
         {
-            PointF offset = new PointF(-10, 0);
+            // The brick's position is half way between its inner and outer edge
+            PointF offset = new PointF(-(mThickness / 2), 0);
 
             location.X += offset.X;
             location.Y += offset.Y;

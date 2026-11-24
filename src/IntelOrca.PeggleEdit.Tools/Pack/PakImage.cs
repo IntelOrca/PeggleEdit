@@ -28,6 +28,7 @@ namespace IntelOrca.PeggleEdit.Tools.Pack
             FileName = fileName;
             Data = GetImageData(fileName, image);
             _image = image;
+            _imageLoaded = true;
         }
 
         public PakImage(string fileName, byte[] data)

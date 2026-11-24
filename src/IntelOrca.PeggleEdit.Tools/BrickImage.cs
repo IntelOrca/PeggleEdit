@@ -61,11 +61,21 @@ namespace IntelOrca.PeggleEdit.Tools
             g.Transform = backup;
         }
 
+        private const int MaxCachedBitmaps = 256;
+
         public static Bitmap GetBrickImage(in BrickData brick)
         {
             Initialise();
             if (!_cachedBitmaps.TryGetValue(brick, out var result))
             {
+                // Every size and angle of a brick is kept (e.g. each step while one is drawn out), so start again
+                // when there are many
+                if (_cachedBitmaps.Count >= MaxCachedBitmaps)
+                {
+                    foreach (var bitmap in _cachedBitmaps.Values)
+                        bitmap.Dispose();
+                    _cachedBitmaps.Clear();
+                }
                 result = CreateBrickBitmap(brick);
                 _cachedBitmaps.Add(brick, result);
             }
@@ -132,6 +142,7 @@ namespace IntelOrca.PeggleEdit.Tools
                     g.InterpolationMode = System.Drawing.Drawing2D.InterpolationMode.HighQualityBilinear;
                     g.DrawImage(bitmapLarge, 0, 0, bitmapLarge.Width / 2, bitmapLarge.Height / 2);
                 }
+                bitmapLarge.Dispose();
                 return bitmapSmall;
             }
             else

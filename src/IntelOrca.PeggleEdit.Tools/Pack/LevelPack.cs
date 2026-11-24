@@ -140,6 +140,10 @@ namespace IntelOrca.PeggleEdit.Tools.Pack
             return result;
         }
 
+        // The pack's images combined with their alpha images, by name, with the images they were made from
+        private readonly Dictionary<string, (PakImage Colour, PakImage Alpha, PakImage Combined)> _combinedImageCache =
+            new Dictionary<string, (PakImage, PakImage, PakImage)>(StringComparer.OrdinalIgnoreCase);
+
         private PakImage GetPackImage(string key)
         {
             foreach (var candidate in GetImageCandidates(key))
@@ -148,11 +152,31 @@ namespace IntelOrca.PeggleEdit.Tools.Pack
                 {
                     if (Images.TryGetValue(candidate + extension, out var image))
                     {
-                        // Not cached, as pack images can be replaced
-                        var alpha = FindAlphaImage(candidate, x => Images.TryGetValue(x, out var a) ? a.Data : null);
-                        return alpha == null ? image : CombineAlpha(image, alpha) ?? image;
+                        var alpha = FindPackAlphaImage(candidate);
+                        if (alpha == null)
+                            return image;
+
+                        // Combined once, and again only if either image is replaced
+                        if (_combinedImageCache.TryGetValue(candidate, out var cached) &&
+                            cached.Colour == image && cached.Alpha == alpha)
+                        {
+                            return cached.Combined;
+                        }
+                        var combined = CombineAlpha(image, alpha) ?? image;
+                        _combinedImageCache[candidate] = (image, alpha, combined);
+                        return combined;
                     }
                 }
+            }
+            return null;
+        }
+
+        private PakImage FindPackAlphaImage(string key)
+        {
+            foreach (var extension in ImageExtensions)
+            {
+                if (Images.TryGetValue(key + "_" + extension, out var image))
+                    return image;
             }
             return null;
         }

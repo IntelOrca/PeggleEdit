@@ -113,6 +113,8 @@ Options:
                         if (++i >= args.Length)
                             throw new UsageException($"{args[i - 1]} needs a path");
                         pegglePath = args[i];
+                        if (!Directory.Exists(pegglePath))
+                            throw new UsageException($"{pegglePath} is not a directory");
                         break;
                     case "--no-interface" when render:
                         drawInterface = false;
@@ -203,9 +205,9 @@ Options:
             if (!force && File.Exists(target))
                 throw new IOException($"{target} already exists (use --force to overwrite it)");
 
-            var data = File.ReadAllBytes(input);
-            if (Path.GetExtension(input).Equals(".xml", StringComparison.OrdinalIgnoreCase))
-                data = LevelXml.Import(Encoding.UTF8.GetString(data));
+            var data = Path.GetExtension(input).Equals(".xml", StringComparison.OrdinalIgnoreCase)
+                ? LevelXml.Import(File.ReadAllText(input))
+                : File.ReadAllBytes(input);
 
             Level level;
             using (var reader = new LevelReader(data))
@@ -218,11 +220,9 @@ Options:
             var directory = Path.GetDirectoryName(Path.GetFullPath(input));
             if (pegglePath == null && Path.GetFileName(directory).Equals("levels", StringComparison.OrdinalIgnoreCase))
                 pegglePath = Path.GetDirectoryName(directory);
-            if (pegglePath != null)
-            {
-                LevelPack.RegisterPegglePath(pegglePath);
-                J2K.RegisterPegglePath(pegglePath);
-            }
+            // Registered for every input, so that one input's game is not used for the next
+            LevelPack.RegisterPegglePath(pegglePath);
+            J2K.RegisterPegglePath(pegglePath);
             LevelPack.Current = new LevelPack();
 
             var name = Path.GetFileNameWithoutExtension(input);
@@ -233,8 +233,10 @@ Options:
                 level.Background = new PakImage(background);
 
             using (var image = level.RenderGameView(drawInterface))
+            using (var stream = File.Create(target))
             {
-                image.Save(target, ImageFormat.Png);
+                // Saved to a stream, so that a bad path is an IOException rather than a GDI+ error
+                image.Save(stream, ImageFormat.Png);
             }
         }
 
