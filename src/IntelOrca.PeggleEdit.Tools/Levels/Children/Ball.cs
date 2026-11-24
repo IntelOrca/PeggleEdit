@@ -98,8 +98,26 @@ namespace IntelOrca.PeggleEdit.Tools.Levels.Children
                 location = movement.GetEstimatedMovePosition();
             }
 
-            g.FillEllipse(new SolidBrush(Level.ShadowColour), location.X - mRadius + Level.ShadowOffset.X, location.Y - mRadius + Level.ShadowOffset.Y, mRadius * 2, mRadius * 2);
+            if (HasPegInfo)
+            {
+                // The game draws its peg shadow image (22x22 for a 10 radius peg) down and to the left of the peg
+                var shadow = Resources.peg_shadow;
+                var scale = mRadius / 10.0f;
+                var size = new SizeF(shadow.Width * scale, shadow.Height * scale);
+                var dst = new RectangleF(
+                    location.X + PegShadowOffset.X - (size.Width / 2),
+                    location.Y + PegShadowOffset.Y - (size.Height / 2),
+                    size.Width,
+                    size.Height);
+                g.DrawImage(shadow, dst);
+            }
+            else
+            {
+                g.FillEllipse(new SolidBrush(Level.ShadowColour), location.X - mRadius + Level.ShadowOffset.X, location.Y - mRadius + Level.ShadowOffset.Y, mRadius * 2, mRadius * 2);
+            }
         }
+
+        private static readonly PointF PegShadowOffset = new PointF(-3, 3);
 
         public override void Draw(Graphics g)
         {

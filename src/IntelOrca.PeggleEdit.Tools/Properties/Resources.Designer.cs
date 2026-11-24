@@ -123,6 +123,13 @@ namespace IntelOrca.PeggleEdit.Tools.Properties {
         /// <summary>
         ///   Looks up a localized resource of type System.Drawing.Bitmap.
         /// </summary>
+        internal static System.Drawing.Bitmap peg_shadow {
+            get {
+                object obj = ResourceManager.GetObject("peg_shadow", resourceCulture);
+                return ((System.Drawing.Bitmap)(obj));
+            }
+        }
+        
         internal static System.Drawing.Bitmap peg {
             get {
                 object obj = ResourceManager.GetObject("peg", resourceCulture);
