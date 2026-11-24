@@ -19,6 +19,7 @@ namespace IntelOrca.PeggleEdit.Tools
         public float Width { get; set; }
         public float Rotation { get; set; }
         public float SectorAngle { get; set; }
+        public int CurvePoints { get; set; }
 
         public bool Curved
         {
@@ -56,7 +57,8 @@ namespace IntelOrca.PeggleEdit.Tools
                    Length == other.Length &&
                    Width == other.Width &&
                    Rotation == other.Rotation &&
-                   SectorAngle == other.SectorAngle;
+                   SectorAngle == other.SectorAngle &&
+                   CurvePoints == other.CurvePoints;
         }
 
         public override int GetHashCode()
@@ -68,6 +70,7 @@ namespace IntelOrca.PeggleEdit.Tools
             hashCode = hashCode * -1521134295 + Width.GetHashCode();
             hashCode = hashCode * -1521134295 + Rotation.GetHashCode();
             hashCode = hashCode * -1521134295 + SectorAngle.GetHashCode();
+            hashCode = hashCode * -1521134295 + CurvePoints.GetHashCode();
             return hashCode;
         }
     }

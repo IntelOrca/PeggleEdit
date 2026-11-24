@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Drawing;
+using System.Drawing.Drawing2D;
 using IntelOrca.PeggleEdit.Tools.Properties;
 
 namespace IntelOrca.PeggleEdit.Tools
@@ -40,6 +41,26 @@ namespace IntelOrca.PeggleEdit.Tools
             return result;
         }
 
+        // Where the game draws bricks compared to where PeggleEdit would, measured against screenshots of 725 bricks
+        // in Peggle Nights (hardware rendering). Straight bricks: x along the brick, y across it. Curved bricks: x away
+        // from the centre of the curve, y along it. The screen offset is after rotating.
+        internal static PointF StraightOffset = new PointF(-0.75f, 0.44f);
+        internal static PointF CurvedOffset = new PointF(0.23f, -0.63f);
+        internal static PointF ScreenOffset = new PointF(-0.7f, -0.7f);
+
+        /// <summary>
+        /// Draws a textured brick centred on <paramref name="location"/> with the current transform of
+        /// <paramref name="g"/>, which includes the brick's rotation.
+        /// </summary>
+        public static void Draw(Graphics g, in BrickData brick, PointF location)
+        {
+            var image = GetBrickImage(brick);
+            var backup = g.Transform;
+            g.TranslateTransform(ScreenOffset.X, ScreenOffset.Y, MatrixOrder.Append);
+            g.DrawImage(image, location.X - (image.Width / 2), location.Y - (image.Height / 2));
+            g.Transform = backup;
+        }
+
         public static Bitmap GetBrickImage(in BrickData brick)
         {
             Initialise();
@@ -66,7 +87,14 @@ namespace IntelOrca.PeggleEdit.Tools
         private static Bitmap CreateBrickBitmap(in BrickData brickData)
         {
             var supersample = true;
-            var bitmapSize = new Size(100, 100);
+            CalculateBrickVertices(brickData, out var vertices, out var texCoords);
+
+            // Large enough for the brick (centred, so an even size), at least 100x100
+            var extent = 0.0f;
+            foreach (var v in vertices)
+                extent = Math.Max(extent, Math.Max(Math.Abs(v.X), Math.Abs(v.Y)));
+            var size = Math.Min(2048, Math.Max(100, 2 * (int)Math.Ceiling(extent + 2)));
+            var bitmapSize = new Size(size, size);
             if (supersample)
             {
                 bitmapSize = new Size(bitmapSize.Width * 2, bitmapSize.Height * 2);
@@ -75,8 +103,6 @@ namespace IntelOrca.PeggleEdit.Tools
             var bitmapLarge = new Bitmap(bitmapSize.Width, bitmapSize.Height);
             try
             {
-                CalculateBrickVertices(brickData, out var vertices, out var texCoords);
-
                 var scale = supersample ? 2 : 1;
                 for (int i = 0; i < vertices.Length; i++)
                 {
@@ -124,7 +150,7 @@ namespace IntelOrca.PeggleEdit.Tools
             if (u > 1) u = 1;
             if (v > 1) v = 1;
 
-            // Calculate the texture coordinates
+            // The edge texels are centred on the edges of the brick (not inside it as in Direct3D), as in the game
             var x = u * (width - 1);
             var y = v * (height - 1);
 
@@ -173,9 +199,10 @@ namespace IntelOrca.PeggleEdit.Tools
                 for (int x = minX; x <= maxX; x++)
                 {
                     // Check if the pixel is inside the triangle
-                    if (PointInTriangle(new PointF(x, y), vertices[0], vertices[1], vertices[2]))
+                    // Sample at the centre of the pixel
+                    if (PointInTriangle(new PointF(x + 0.5f, y + 0.5f), vertices[0], vertices[1], vertices[2]))
                     {
-                        var uv = InterpolateUV(x, y, vertices, texCoords);
+                        var uv = InterpolateUV(x + 0.5f, y + 0.5f, vertices, texCoords);
                         var c = getTexture(uv.X, uv.Y);
                         setPixel(x, y, c);
                     }
@@ -183,7 +210,7 @@ namespace IntelOrca.PeggleEdit.Tools
             }
         }
 
-        private static PointF InterpolateUV(int x, int y, ReadOnlySpan<PointF> vertices, ReadOnlySpan<PointF> texCoords)
+        private static PointF InterpolateUV(float x, float y, ReadOnlySpan<PointF> vertices, ReadOnlySpan<PointF> texCoords)
         {
             // Calculate the barycentric coordinates of the point with respect to the triangle
             var alpha = ((vertices[1].Y - vertices[2].Y) * (x - vertices[2].X) + (vertices[2].X - vertices[1].X) * (y - vertices[2].Y)) /
@@ -216,103 +243,56 @@ namespace IntelOrca.PeggleEdit.Tools
         {
             if (b.Curved)
             {
-                var curvePoints = 4;
+                // The brick's position is half way between its inner and outer edge, the texture runs along the curve
+                var curvePoints = Math.Max(2, b.CurvePoints == 0 ? 4 : b.CurvePoints);
+                var segments = curvePoints - 1;
+                var innerRadius = b.Length;
+                var outerRadius = innerRadius + b.Width;
+                var circleCentre = new PointF(b.Location.X - (b.Width / 2) - innerRadius + CurvedOffset.X, b.Location.Y + CurvedOffset.Y);
+                var divAngle = b.SectorAngle / segments;
+                var startAngle = -(b.SectorAngle / 2.0f);
 
-                var offset = new PointF(-10, 0);
-
-                var location = b.Location;
-                location.X += offset.X;
-                location.Y += offset.Y;
-
-                var inner_radius = b.Length;
-                var outer_radius = inner_radius + b.Width;
-                PointF circleCentre = new PointF(location.X - inner_radius, location.Y);
-
-                var div_angle = b.SectorAngle / (curvePoints - 1);
-                var cur_angle = -(b.SectorAngle / 2.0f);
-
-                var o_pnts = new PointF[curvePoints];
-                var i_pnts = new PointF[curvePoints];
-
+                var outer = new PointF[curvePoints];
+                var inner = new PointF[curvePoints];
                 for (int i = 0; i < curvePoints; i++)
                 {
-                    o_pnts[i] = GetBrickAngularPoint(circleCentre, cur_angle, outer_radius);
-                    i_pnts[i] = GetBrickAngularPoint(circleCentre, cur_angle, inner_radius);
-
-                    cur_angle += div_angle;
+                    var angle = startAngle + (divAngle * i);
+                    outer[i] = GetBrickAngularPoint(circleCentre, angle, outerRadius);
+                    inner[i] = GetBrickAngularPoint(circleCentre, angle, innerRadius);
                 }
 
-                var pnts = new PointF[o_pnts.Length + i_pnts.Length];
-                Array.Copy(o_pnts, 0, pnts, 0, o_pnts.Length);
-
-                // Inner points need to be reversed
-                for (var i = 0; i < i_pnts.Length; i++)
+                vertices = new PointF[segments * 6];
+                textureCoords = new PointF[segments * 6];
+                for (var i = 0; i < segments; i++)
                 {
-                    pnts[pnts.Length - i - 1] = i_pnts[i];
+                    var u0 = (float)i / segments;
+                    var u1 = (float)(i + 1) / segments;
+                    var j = i * 6;
+                    vertices[j + 0] = outer[i];
+                    vertices[j + 1] = outer[i + 1];
+                    vertices[j + 2] = inner[i];
+                    vertices[j + 3] = outer[i + 1];
+                    vertices[j + 4] = inner[i + 1];
+                    vertices[j + 5] = inner[i];
+                    textureCoords[j + 0] = new PointF(u0, 0);
+                    textureCoords[j + 1] = new PointF(u1, 0);
+                    textureCoords[j + 2] = new PointF(u0, 1);
+                    textureCoords[j + 3] = new PointF(u1, 0);
+                    textureCoords[j + 4] = new PointF(u1, 1);
+                    textureCoords[j + 5] = new PointF(u0, 1);
                 }
-
-                vertices = new PointF[] {
-                    pnts[0],
-                    pnts[1],
-                    pnts[7],
-
-                    pnts[1],
-                    pnts[6],
-                    pnts[7],
-
-                    pnts[1],
-                    pnts[2],
-                    pnts[6],
-
-                    pnts[2],
-                    pnts[5],
-                    pnts[6],
-
-                    pnts[2],
-                    pnts[3],
-                    pnts[5],
-
-                    pnts[3],
-                    pnts[4],
-                    pnts[5]
-                };
-                textureCoords = new PointF[]
-                {
-                    new PointF(0, 0),
-                    new PointF(1 / 3f, 0),
-                    new PointF(0, 1),
-
-                    new PointF(1 / 3f, 0),
-                    new PointF(1 / 3f, 1),
-                    new PointF(0, 1),
-
-                    new PointF(1 / 3f, 0),
-                    new PointF(2 / 3f, 0),
-                    new PointF(1 / 3f, 1),
-
-                    new PointF(2 / 3f, 0),
-                    new PointF(1 / 3f, 1),
-                    new PointF(1 / 3f, 1),
-
-                    new PointF(2 / 3f, 0),
-                    new PointF(1, 0),
-                    new PointF(2 / 3f, 1),
-
-                    new PointF(1, 0),
-                    new PointF(1, 1),
-                    new PointF(2 / 3f, 1),
-                };
             }
             else
             {
+                var ox = StraightOffset.X;
+                var oy = StraightOffset.Y;
                 vertices = new PointF[] {
-                    new PointF(-b.Length / 2, -b.Width / 2),
-                    new PointF(b.Length / 2, -b.Width / 2),
-                    new PointF(b.Length / 2, b.Width / 2),
-
-                    new PointF(-b.Length / 2, -b.Width / 2),
-                    new PointF(b.Length / 2, b.Width / 2),
-                    new PointF(-b.Length / 2, b.Width / 2),
+                    new PointF(-b.Length / 2 + ox, -b.Width / 2 + oy),
+                    new PointF(b.Length / 2 + ox, -b.Width / 2 + oy),
+                    new PointF(b.Length / 2 + ox, b.Width / 2 + oy),
+                    new PointF(-b.Length / 2 + ox, -b.Width / 2 + oy),
+                    new PointF(b.Length / 2 + ox, b.Width / 2 + oy),
+                    new PointF(-b.Length / 2 + ox, b.Width / 2 + oy),
                 };
                 textureCoords = new PointF[]
                 {

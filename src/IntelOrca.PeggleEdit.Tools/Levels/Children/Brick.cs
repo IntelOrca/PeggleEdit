@@ -379,8 +379,7 @@ namespace IntelOrca.PeggleEdit.Tools.Levels.Children
             }
             else
             {
-                var brick = BrickImage.GetBrickImage(BrickData);
-                g.DrawImage(brick, location.X - (brick.Width / 2), location.Y - (brick.Height / 2));
+                BrickImage.Draw(g, BrickData, location);
             }
 
             if (Provisional)
@@ -409,8 +408,7 @@ namespace IntelOrca.PeggleEdit.Tools.Levels.Children
             }
             else
             {
-                var brick = BrickImage.GetBrickImage(BrickData);
-                g.DrawImage(brick, location.X - (brick.Width / 2), location.Y - (brick.Height / 2));
+                BrickImage.Draw(g, BrickData, location);
             }
 
             if (Provisional)
@@ -627,6 +625,7 @@ namespace IntelOrca.PeggleEdit.Tools.Levels.Children
                 {
                     brickData.Curved = true;
                     brickData.SectorAngle = Angle;
+                    brickData.CurvePoints = CurvePoints;
                 }
                 return brickData;
             }
