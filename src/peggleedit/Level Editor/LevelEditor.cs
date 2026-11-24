@@ -1007,7 +1007,10 @@ namespace IntelOrca.PeggleEdit.Designer
             var bounds = Cannon.Bounds;
             var topLeft = mLevel.GetActualXY(bounds.Left, bounds.Top);
             var bottomRight = mLevel.GetActualXY(bounds.Right, bounds.Bottom);
-            Invalidate(Rectangle.FromLTRB(topLeft.X - 1, topLeft.Y - 1, bottomRight.X + 1, bottomRight.Y + 1));
+            // The bounds are in level coordinates, which are zoomed on screen
+            var zoomedTopLeft = ZoomPoint(new Point(topLeft.X - 1, topLeft.Y - 1));
+            var zoomedBottomRight = ZoomPoint(new Point(bottomRight.X + 1, bottomRight.Y + 1));
+            Invalidate(Rectangle.FromLTRB(zoomedTopLeft.X - 1, zoomedTopLeft.Y - 1, zoomedBottomRight.X + 1, zoomedBottomRight.Y + 1));
         }
 
         protected override void OnMouseUp(MouseEventArgs e)

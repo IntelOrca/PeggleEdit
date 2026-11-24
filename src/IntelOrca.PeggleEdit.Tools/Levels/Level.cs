@@ -356,25 +356,36 @@ namespace IntelOrca.PeggleEdit.Tools.Levels
         /// </summary>
         private void DrawCanvasTransparent(Graphics g)
         {
-            var rect = new Rectangle(0, 0, 800, 600);
-            if (mTransparentBuffer == null)
+            // The bitmaps are as large as the level is on screen (it is zoomed on high DPI displays), so that it stays sharp
+            float scale;
+            using (var transform = g.Transform)
+                scale = Math.Max(1.0f, Math.Abs(transform.Elements[0]));
+            var size = new Size((int)Math.Ceiling(800 * scale), (int)Math.Ceiling(600 * scale));
+            if (mTransparentBuffer == null || mTransparentBuffer.Size != size)
             {
-                mTransparentBuffer = new Bitmap(rect.Width, rect.Height, System.Drawing.Imaging.PixelFormat.Format32bppPArgb);
-                mTransparentBackground = new Bitmap(rect.Width, rect.Height, System.Drawing.Imaging.PixelFormat.Format32bppPArgb);
+                mTransparentBuffer?.Dispose();
+                mTransparentBackground?.Dispose();
+                mTransparentBuffer = new Bitmap(size.Width, size.Height, System.Drawing.Imaging.PixelFormat.Format32bppPArgb);
+                mTransparentBackground = new Bitmap(size.Width, size.Height, System.Drawing.Imaging.PixelFormat.Format32bppPArgb);
             }
 
+            var rect = new Rectangle(0, 0, 800, 600);
             using (var bg = Graphics.FromImage(mTransparentBuffer))
+            {
+                bg.ScaleTransform(scale, scale);
                 DrawCanvas(bg, new RenderTarget(mTransparentBuffer, bg));
+            }
 
             using (var bg = Graphics.FromImage(mTransparentBackground))
             {
+                bg.ScaleTransform(scale, scale);
                 bg.FillRectangle(Brushes.Black, rect);
                 if (mShowingBackground)
                     DrawBackground(bg);
             }
 
-            g.DrawImage(mTransparentBackground, rect, 0, 0, rect.Width, rect.Height, GraphicsUnit.Pixel);
-            g.DrawImage(mTransparentBuffer, rect, 0, 0, rect.Width, rect.Height, GraphicsUnit.Pixel, HalfTransparent);
+            g.DrawImage(mTransparentBackground, rect, 0, 0, size.Width, size.Height, GraphicsUnit.Pixel);
+            g.DrawImage(mTransparentBuffer, rect, 0, 0, size.Width, size.Height, GraphicsUnit.Pixel, HalfTransparent);
             if (mShowingInterface)
                 DrawInterfaceFrame(g);
         }
