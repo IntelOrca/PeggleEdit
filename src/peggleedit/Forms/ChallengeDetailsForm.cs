@@ -120,15 +120,17 @@ namespace IntelOrca.PeggleEdit.Designer
             panel.Location = pnlLevels.Location;
             panel.Size = pnlLevels.Size;
 
+            // The rows are made here rather than in the designer, so they are scaled for the DPI here: the positions
+            // and widths, and the rows are as far apart as the combo boxes are high (which follows their font)
+            int y = 0;
             for (int i = 0; i < numLevels; i++)
             {
-                int y = i * 24;
 
                 //Level name
                 ComboBox cmbLevel = new ComboBox();
                 cmbLevel.Name = "cmbLevel" + i;
                 cmbLevel.Location = new Point(0, y);
-                cmbLevel.Size = new Size(130, 21);
+                cmbLevel.Width = Dpi.Scale(130);
 
                 cmbLevel.Items.Add("pick");
                 cmbLevel.Items.Add("rand2");
@@ -149,8 +151,8 @@ namespace IntelOrca.PeggleEdit.Designer
                     cmbOpponent.Items.Add(c);
                 }
                 cmbOpponent.SelectedIndex = 0;
-                cmbOpponent.Location = new Point(136, y);
-                cmbOpponent.Size = new Size(105, 21);
+                cmbOpponent.Location = new Point(Dpi.Scale(136), y);
+                cmbOpponent.Width = Dpi.Scale(105);
                 panel.Controls.Add(cmbOpponent);
 
                 //Opponent difficulty
@@ -162,9 +164,11 @@ namespace IntelOrca.PeggleEdit.Designer
                     cmbOpponentDifficulty.Items.Add(d);
                 }
                 cmbOpponentDifficulty.SelectedIndex = 0;
-                cmbOpponentDifficulty.Location = new Point(247, y);
-                cmbOpponentDifficulty.Size = new Size(113, 21);
+                cmbOpponentDifficulty.Location = new Point(Dpi.Scale(247), y);
+                cmbOpponentDifficulty.Width = Dpi.Scale(113);
                 panel.Controls.Add(cmbOpponentDifficulty);
+
+                y += cmbLevel.Height + Dpi.Scale(3);
             }
 
             tabLevels.Controls.Add(panel);

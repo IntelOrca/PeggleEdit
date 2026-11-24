@@ -3281,7 +3281,7 @@ namespace System.Windows.Forms
             {
 
                 if (!e.Item.Enabled)
-                    img = CreateDisabledImage(img);
+                    img = RibbonDpi.GetDisabledImage(img, CreateDisabledImage);
 
                 RibbonDpi.DrawImage(e.Graphics, img, e.Bounds);
             }

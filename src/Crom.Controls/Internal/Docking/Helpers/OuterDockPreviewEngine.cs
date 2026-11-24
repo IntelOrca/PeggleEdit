@@ -30,8 +30,8 @@ namespace Crom.Controls.Docking
       #region Fields
       #region Constants
 
-      private const int                MaxDockPanelSize                 = 300;
-      private const int                MinDockPanelSize                 = 100;
+      private static readonly int      MaxDockPanelSize                 = DockDpi.Scale(300);
+      private static readonly int      MinDockPanelSize                 = DockDpi.Scale(100);
 
       #endregion Constants
 

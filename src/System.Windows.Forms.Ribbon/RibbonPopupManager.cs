@@ -10,6 +10,9 @@ namespace System.Windows.Forms
     /// </summary>
     public static class RibbonPopupManager
     {
+        [System.Runtime.InteropServices.DllImport("user32.dll")]
+        private static extern uint GetMessagePos();
+
         #region Subclasses
 
         /// <summary>
@@ -241,7 +244,9 @@ namespace System.Windows.Forms
                     case WM_NCRBUTTONDOWN:
                     case WM_NCMBUTTONDOWN:
                     case WM_NCXBUTTONDOWN:
-                        Point location = Control.MousePosition;
+                        // Where the click was, rather than where the mouse is now
+                        uint position = GetMessagePos();
+                        Point location = new Point((short)(position & 0xFFFF), (short)(position >> 16));
                         FeedHookClick(new MouseEventArgs(MouseButtons.None, 0, location.X, location.Y, 0));
                         break;
                     case WM_KEYDOWN:

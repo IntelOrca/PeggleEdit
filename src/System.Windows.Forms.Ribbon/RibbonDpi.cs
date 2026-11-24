@@ -1,3 +1,4 @@
+using System;
 using System.Drawing;
 using System.Drawing.Drawing2D;
 using System.Drawing.Imaging;
@@ -98,6 +99,19 @@ namespace System.Windows.Forms
         }
 
         private static readonly ConditionalWeakTable<Image, Bitmap> _scaledImages = new ConditionalWeakTable<Image, Bitmap>();
+
+        private static readonly ConditionalWeakTable<Image, Image> _disabledImages = new ConditionalWeakTable<Image, Image>();
+
+        /// <summary>
+        /// Gets the greyed out version of an image, made once with <paramref name="create"/> and kept, so that it is
+        /// not made again (and its enlarged copy resampled again) every time a disabled item is painted.
+        /// </summary>
+        public static Image GetDisabledImage(Image image, Func<Image, Image> create)
+        {
+            if (image == null)
+                return null;
+            return _disabledImages.GetValue(image, x => create(x));
+        }
 
         /// <summary>
         /// Resizes an image with a high quality filter.

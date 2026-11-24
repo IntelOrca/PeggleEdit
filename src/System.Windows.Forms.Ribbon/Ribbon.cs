@@ -677,6 +677,9 @@ namespace System.Windows.Forms
         /// Text does not grow exactly in proportion to the DPI, so at other DPIs the height is worked out from the
         /// same metrics the layout uses, to keep three rows of medium items fitting in a panel.
         /// </remarks>
+        private Font _fixedHeightFont;
+        private int _fixedHeightTextHeight;
+
         private int FixedHeight
         {
             get
@@ -684,7 +687,13 @@ namespace System.Windows.Forms
                 int height = RibbonDpi.Scale(138);
                 if (RibbonDpi.Factor > 1)
                 {
-                    int textHeight = TextRenderer.MeasureText("Ag", Font).Height;
+                    // Measured once for each font, as this is read on every layout
+                    if (_fixedHeightFont != Font)
+                    {
+                        _fixedHeightFont = Font;
+                        _fixedHeightTextHeight = TextRenderer.MeasureText("Ag", Font).Height;
+                    }
+                    int textHeight = _fixedHeightTextHeight;
                     int tabsBottom = TabsMargin.Top + TabsPadding.Vertical + textHeight;
                     int mediumItemHeight = ItemMargin.Vertical + Math.Max(textHeight, RibbonDpi.Scale(16));
                     int panelHeight = PanelMargin.Vertical + ItemPadding.Vertical + 3 * (mediumItemHeight + ItemPadding.Vertical + 1);

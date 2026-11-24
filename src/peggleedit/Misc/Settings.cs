@@ -45,8 +45,8 @@ namespace IntelOrca.PeggleEdit.Designer
 
         /// <summary>
         /// The display scale (DPI / 96) that <see cref="MDIFormSize"/> and the docking layout were saved at, so they
-        /// can be scaled when the DPI changes. Versions before this setting were not DPI aware, so their sizes are
-        /// at 96 DPI.
+        /// can be scaled when the DPI changes. They are now always saved at 96 DPI (1), as versions that are not DPI
+        /// aware read them; a few test builds saved them at the display's scale.
         /// </summary>
         public float SizesScale { get; set; } = 1;
 

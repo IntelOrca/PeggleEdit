@@ -162,6 +162,17 @@ namespace Crom.Controls.Docking
       private float _loadScale = 1;
 
       /// <summary>
+      /// Accessor of the factor the form sizes are divided by when they are saved, e.g. to save them in 96 DPI units
+      /// </summary>
+      public float SaveScale
+      {
+         get { return _saveScale; }
+         set { _saveScale = value; }
+      }
+
+      private float _saveScale = 1;
+
+      /// <summary>
       /// Save the state of the container
       /// </summary>
       public void Save()
@@ -356,8 +367,8 @@ namespace Crom.Controls.Docking
 
          DockableContainer container = HierarchyUtility.GetClosestDockableContainer(info.DockableForm);
 
-         xmlWidth.InnerText         = container.Width.ToString();
-         xmlHeight.InnerText        = container.Height.ToString();
+         xmlWidth.InnerText         = ((int)Math.Round(container.Width / SaveScale)).ToString();
+         xmlHeight.InnerText        = ((int)Math.Round(container.Height / SaveScale)).ToString();
 
          if (parentId == Guid.Empty)
          {

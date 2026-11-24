@@ -29,7 +29,7 @@ namespace Crom.Controls.Docking
    {
       #region Fields
 
-      private readonly Size   _minSize                = new Size(80, 80);
+      private readonly Size   _minSize                = DockDpi.Scale(new Size(80, 80));
       private DockStyle       _savedDock              = DockStyle.None;
       private FormsTabbedView _linkedView             = null;
 

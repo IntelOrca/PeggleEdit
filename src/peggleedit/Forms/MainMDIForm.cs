@@ -76,7 +76,9 @@ namespace IntelOrca.PeggleEdit.Designer
 
             //Set the form size (saved sizes are scaled if they were saved at another DPI)
             float sizesScale = Settings.Default.SizesScale > 0 ? Dpi.Factor / Settings.Default.SizesScale : 1;
-            MinimumSize = Dpi.Scale(new Size(700, 500));
+            var workingArea = Screen.PrimaryScreen.WorkingArea;
+            var minimumSize = Dpi.Scale(new Size(700, 500));
+            MinimumSize = new Size(Math.Min(minimumSize.Width, workingArea.Width - 8), Math.Min(minimumSize.Height, workingArea.Height - 8));
             ClientSize = new Size(
                 (int)Math.Round(Settings.Default.MDIFormSize.Width * sizesScale),
                 (int)Math.Round(Settings.Default.MDIFormSize.Height * sizesScale));
@@ -160,8 +162,9 @@ namespace IntelOrca.PeggleEdit.Designer
             mDockContainer = new DockContainer();
             mSerializer = new DockStateSerializer(mDockContainer);
             mSerializer.SavePath = Settings.GetLayoutPath();
-            if (Settings.Default.SizesScale > 0)
-                mSerializer.LoadScale = Dpi.Factor / Settings.Default.SizesScale;
+            // Sizes are saved in 96 DPI units, so that versions that are not DPI aware read them as they are
+            mSerializer.LoadScale = Dpi.Factor / (Settings.Default.SizesScale > 0 ? Settings.Default.SizesScale : 1);
+            mSerializer.SaveScale = Dpi.Factor;
 
             mDockContainer.TitleBarGradientColor1 = Color.FromArgb(225, 237, 252);
             mDockContainer.TitleBarGradientColor2 = Color.FromArgb(191, 219, 255);
@@ -193,8 +196,11 @@ namespace IntelOrca.PeggleEdit.Designer
 
         protected override void OnClosing(System.ComponentModel.CancelEventArgs e)
         {
-            Settings.Default.MDIFormSize = ClientSize;
-            Settings.Default.SizesScale = Dpi.Factor;
+            // Saved in 96 DPI units (see InitDockContainer)
+            Settings.Default.MDIFormSize = new Size(
+                (int)Math.Round(ClientSize.Width / Dpi.Factor),
+                (int)Math.Round(ClientSize.Height / Dpi.Factor));
+            Settings.Default.SizesScale = 1;
 
             if (WindowState == FormWindowState.Maximized)
                 Settings.Default.MDIMaximized = true;

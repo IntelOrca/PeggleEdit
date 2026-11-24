@@ -46,8 +46,8 @@ namespace Crom.Controls.Docking
       private int                      _animationSpeed         = 25;
       private int                      _firstControlOffset     = 0;
       private PreviewPane              _previewPane            = new PreviewPane();
-      private readonly Size            _leftRightPreviewSize   = new Size(150, 250);
-      private readonly Size            _topBottomPreviewSize   = new Size(250, 150);
+      private readonly Size            _leftRightPreviewSize   = DockDpi.Scale(new Size(150, 250));
+      private readonly Size            _topBottomPreviewSize   = DockDpi.Scale(new Size(250, 150));
 
       #endregion Fields
 

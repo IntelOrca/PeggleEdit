@@ -77,7 +77,8 @@ namespace Crom.Controls
          if (icon == null || bounds.Width <= 0 || bounds.Height <= 0)
             return;
 
-         if (icon.Width >= bounds.Width && icon.Height >= bounds.Height)
+         // Unscaled, the icon is drawn as it always was
+         if (Factor == 1 || (icon.Width >= bounds.Width && icon.Height >= bounds.Height))
          {
             graphics.DrawIcon(icon, bounds);
             return;

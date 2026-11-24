@@ -901,8 +901,9 @@ namespace IntelOrca.PeggleEdit.Designer
             if (!Settings.Default.ShowGrid)
                 return;
 
-            int x_lines = Width / Settings.Default.GridSize;
-            int y_lines = Height / Settings.Default.GridSize;
+            // The grid is drawn in unzoomed coordinates, so it covers the editor's unzoomed size
+            int width = (int)Math.Ceiling(Width / Zoom);
+            int height = (int)Math.Ceiling(Height / Zoom);
 
             Pen p = new Pen(Color.FromArgb(64, 0, 0, 255));
 
@@ -910,20 +911,20 @@ namespace IntelOrca.PeggleEdit.Designer
 
             for (int y = pnt.Y; y >= 0; y -= Settings.Default.GridSize)
             {
-                g.DrawLine(p, 0, y, Width, y);
+                g.DrawLine(p, 0, y, width, y);
             }
-            for (int y = pnt.Y; y < Height; y += Settings.Default.GridSize)
+            for (int y = pnt.Y; y < height; y += Settings.Default.GridSize)
             {
-                g.DrawLine(p, 0, y, Width, y);
+                g.DrawLine(p, 0, y, width, y);
             }
 
             for (int x = pnt.X; x >= 0; x -= Settings.Default.GridSize)
             {
-                g.DrawLine(p, x, 0, x, Height);
+                g.DrawLine(p, x, 0, x, height);
             }
-            for (int x = pnt.X; x < Width; x += Settings.Default.GridSize)
+            for (int x = pnt.X; x < width; x += Settings.Default.GridSize)
             {
-                g.DrawLine(p, x, 0, x, Height);
+                g.DrawLine(p, x, 0, x, height);
             }
         }
 
