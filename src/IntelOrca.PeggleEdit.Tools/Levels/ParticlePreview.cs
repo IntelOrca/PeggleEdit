@@ -74,7 +74,11 @@ namespace IntelOrca.PeggleEdit.Tools.Levels
         {
             if (Level == null)
                 return;
+            Level.WithEntryMovers(TickEmitters);
+        }
 
+        private void TickEmitters()
+        {
             var seen = new HashSet<Emitter>();
             int index = 0;
             foreach (var emitter in GetEmitters())

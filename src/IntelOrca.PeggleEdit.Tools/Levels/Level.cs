@@ -340,7 +340,7 @@ namespace IntelOrca.PeggleEdit.Tools.Levels
 
             // The interface is drawn among the objects, under foreground objects
             if (mShowingEntries)
-                DrawEntries(g, target);
+                WithEntryMovers(() => DrawEntries(g, target));
             else if (mShowingInterface)
                 DrawInterface(g);
         }
@@ -1281,6 +1281,37 @@ namespace IntelOrca.PeggleEdit.Tools.Levels
         #endregion
 
         #region Previewing
+
+        /// <summary>
+        /// The movers of the entries while the level is drawn or run, when they can not change, so that each mover does
+        /// not look through every entry for whether it is the mover of one (which made drawing a level with many moving
+        /// objects take the square of their number).
+        /// </summary>
+        internal HashSet<Mover> EntryMovers { get; private set; }
+
+        internal void WithEntryMovers(Action action)
+        {
+            if (EntryMovers != null)
+            {
+                action();
+                return;
+            }
+            var movers = new HashSet<Mover>();
+            foreach (LevelEntry entry in mEntries)
+            {
+                if (entry.MoverLink?.Mover is Mover mover)
+                    movers.Add(mover);
+            }
+            EntryMovers = movers;
+            try
+            {
+                action();
+            }
+            finally
+            {
+                EntryMovers = null;
+            }
+        }
 
         private ulong mPreviewTime;
         private int mFirstPreviewUpdate;

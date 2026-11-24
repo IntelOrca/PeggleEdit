@@ -378,6 +378,10 @@ namespace IntelOrca.PeggleEdit.Tools.Levels.Children
         {
             if (IsGenerated)
                 return true;
+            // While the level is drawn or run, its entries' movers are known, rather than looked for each time
+            var entryMovers = mLevel.EntryMovers;
+            if (entryMovers != null)
+                return entryMovers.Contains(this);
             foreach (LevelEntry entry in mLevel.Entries)
             {
                 for (var e = entry; e != null; e = (e as Hole)?.DestinationEntry)
