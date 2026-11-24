@@ -49,6 +49,47 @@ namespace IntelOrca.PeggleEdit.Tools.Levels.Children
         bool mHasDestinationLink;
         int mDestinationLink;
 
+        /// <summary>
+        /// Whether the destination is an object elsewhere in the level, given by its number, rather than an entry of
+        /// the hole's own.
+        /// </summary>
+        internal bool HasDestinationLink => mHasDestinationLink;
+
+        /// <summary>
+        /// The number of the object that is the destination, when <see cref="HasDestinationLink"/>.
+        /// </summary>
+        internal int DestinationLink
+        {
+            get => mDestinationLink;
+            set => mDestinationLink = value;
+        }
+
+        /// <summary>
+        /// The object that <see cref="DestinationLink"/> refers to, found when the level is read, so that the number
+        /// can follow it as the level is changed. Null if it was not found.
+        /// </summary>
+        internal object DestinationLinkTarget { get; set; }
+
+        /// <summary>
+        /// Removes the destination link, once the object it refers to has been removed.
+        /// </summary>
+        internal void ClearDestinationLink()
+        {
+            mHasDestinationLink = false;
+            DestinationLinkTarget = null;
+        }
+
+        /// <summary>
+        /// Makes the destination the given object, which is numbered when the level is written.
+        /// </summary>
+        internal void SetDestinationLink(object target)
+        {
+            mDestinationEntry = null;
+            mHasDestinationLink = true;
+            mDestinationLink = 0;
+            DestinationLinkTarget = target;
+        }
+
         public Hole(Level level)
             : base(level)
         {
@@ -97,8 +138,7 @@ namespace IntelOrca.PeggleEdit.Tools.Levels.Children
             }
             if (fA[2])
             {
-                X = br.ReadSingle();
-                Y = br.ReadSingle();
+                ReadPosition(br);
             }
 
             mHasVelocity = fA[6];
@@ -222,6 +262,7 @@ namespace IntelOrca.PeggleEdit.Tools.Levels.Children
             cpyTeleport.mVelocityY = mVelocityY;
             cpyTeleport.mHasDestinationLink = mHasDestinationLink;
             cpyTeleport.mDestinationLink = mDestinationLink;
+            cpyTeleport.DestinationLinkTarget = DestinationLinkTarget;
             cpyTeleport.mDestinationEntry = (LevelEntry)mDestinationEntry?.Clone();
 
             return cpyTeleport;

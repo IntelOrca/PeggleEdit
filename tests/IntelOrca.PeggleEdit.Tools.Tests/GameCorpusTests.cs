@@ -83,6 +83,9 @@ namespace IntelOrca.PeggleEdit.Tools.Tests
         /// </summary>
         static bool Loads(byte[] data)
         {
+            // PeggleEdit opens files with any header byte, but only 1 is a level (other PopCap games' .dat files are not)
+            if (data.Length < 5 || data[4] != 1)
+                return false;
             using (var reader = new LevelReader(data))
                 return reader.Read() != null;
         }

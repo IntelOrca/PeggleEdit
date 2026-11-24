@@ -62,6 +62,129 @@ namespace IntelOrca.PeggleEdit.Tools.Tests
         }
 
         [Fact]
+        public void EntryRefs_FollowTheirObject_WhenTheLevelChanges()
+        {
+            // As in Pego's holes.dat: the entry list refers to the destination of the hole (4)
+            var data = LevelXml.Import(@"<PeggleLevel schema=""1"" fileVersion=""0x52"">
+  <Hole width=""40"" height=""40"" x=""1"" y=""2"">
+    <Destination>
+      <Poly x=""5"" y=""6"" points=""0,0 1,1"" />
+    </Destination>
+  </Hole>
+  <EntryRef link=""4"" />
+  <Ball x=""3"" y=""4"" radius=""10"" />
+</PeggleLevel>");
+            var level = Read(data);
+            Assert.Equal(data, level.GetData(level.FileVersion));
+
+            // A new first object moves the hole to 4 and its destination to 5
+            level.Entries.Insert(0, new Ball(level));
+            var xml = LevelXml.Export(level.GetData(level.FileVersion));
+            Assert.Contains(@"<EntryRef link=""5"" />", xml);
+            Assert.True(xml.IndexOf("</Hole>") < xml.IndexOf("<EntryRef") && xml.IndexOf("<EntryRef") < xml.IndexOf(@"x=""3"""));
+
+            // Its destination removed, the reference is left out
+            level.Entries.RemoveAt(1);
+            Assert.DoesNotContain("EntryRef", LevelXml.Export(level.GetData(level.FileVersion)));
+        }
+
+        [Fact]
+        public void HoleDestinationLinks_FollowTheirObject_WhenTheLevelChanges()
+        {
+            var data = LevelXml.Import(@"<PeggleLevel schema=""1"" fileVersion=""0x52"">
+  <Ball x=""1"" y=""2"" radius=""10"" />
+  <Ball x=""3"" y=""4"" radius=""10"" />
+  <Hole width=""40"" height=""40"" x=""5"" y=""6"">
+    <Destination link=""4"" />
+  </Hole>
+</PeggleLevel>");
+            var level = Read(data);
+            Assert.Equal(data, level.GetData(level.FileVersion));
+
+            level.Entries.RemoveAt(0);
+            Assert.Contains(@"<Destination link=""3"" />", LevelXml.Export(level.GetData(level.FileVersion)));
+
+            level.Entries.RemoveAt(0);
+            Assert.DoesNotContain("Destination", LevelXml.Export(level.GetData(level.FileVersion)));
+        }
+
+        static Level ReadHoleLinkLevel() => Read(LevelXml.Import(@"<PeggleLevel schema=""1"" fileVersion=""0x52"">
+  <Ball x=""1"" y=""2"" radius=""10"" />
+  <Ball x=""3"" y=""4"" radius=""10"" />
+  <Hole width=""40"" height=""40"" x=""5"" y=""6"">
+    <Destination link=""4"" />
+  </Hole>
+</PeggleLevel>"));
+
+        static void Paste(Level level, LevelEntry[] entries)
+        {
+            foreach (var entry in entries)
+            {
+                entry.Level = level;
+                level.Entries.Add(entry);
+            }
+        }
+
+        [Fact]
+        public void HoleDestinationLinks_AreKept_WhenPastedIntoTheSameLevel()
+        {
+            var level = ReadHoleLinkLevel();
+            var pasted = LevelEntryClipboard.Deserialize(LevelEntryClipboard.Serialize(new[] { level.Entries[2] }));
+            Paste(level, pasted);
+
+            var xml = LevelXml.Export(level.GetData(level.FileVersion));
+            Assert.Equal(2, xml.Split(new[] { @"<Destination link=""4"" />" }, StringSplitOptions.None).Length - 1);
+        }
+
+        [Fact]
+        public void HoleDestinationLinks_GoToTheCopy_WhenTheirObjectIsCopiedToo()
+        {
+            var level = ReadHoleLinkLevel();
+            var pasted = LevelEntryClipboard.Deserialize(LevelEntryClipboard.Serialize(new[] { level.Entries[1], level.Entries[2] }));
+            Paste(level, pasted);
+
+            // The pasted ball is 6
+            var xml = LevelXml.Export(level.GetData(level.FileVersion));
+            Assert.Contains(@"<Destination link=""4"" />", xml);
+            Assert.Contains(@"<Destination link=""6"" />", xml);
+        }
+
+        [Fact]
+        public void HoleDestinationLinks_AreLeftOut_WhenPastedIntoAnotherLevel()
+        {
+            var level = ReadHoleLinkLevel();
+            var other = new Level();
+            Paste(other, LevelEntryClipboard.Deserialize(LevelEntryClipboard.Serialize(new[] { level.Entries[2] })));
+            Assert.DoesNotContain("Destination", LevelXml.Export(other.GetData(other.FileVersion)));
+        }
+
+        [Fact]
+        public void ExportData_HasChanges_ThatTheOriginalVersionCanNotHold()
+        {
+            var data = LevelXml.Import(@"<PeggleLevel schema=""1"" fileVersion=""0x34""><Ball x=""1"" y=""2"" radius=""10"" /></PeggleLevel>");
+            var level = Read(data);
+            Assert.Equal(data, level.GetExportData());
+
+            level.Entries[0].DrawShadow = false;
+            Assert.False(level.IsUnchanged);
+            Assert.False(Read(level.GetExportData()).Entries[0].DrawShadow);
+        }
+
+        [Fact]
+        public void EntryWithMoverAndPosition_CanBeRead()
+        {
+            // The position is not used, as the mover places the entry
+            var data = LevelXml.Import(@"<PeggleLevel schema=""1"" fileVersion=""0x52"">
+  <Ball x=""1"" y=""2"" radius=""10"">
+    <Mover type=""circle"" reverse=""true"" anchorX=""100"" anchorY=""100"" time=""300"" radius=""20"" />
+  </Ball>
+</PeggleLevel>");
+            var level = Read(data);
+            Assert.Equal(100.0f, level.Entries[0].X);
+            Assert.True(level.Entries[0].MoverLink.Mover.Reverse);
+        }
+
+        [Fact]
         public void NullEntries_AreDropped_WhenEntriesChange()
         {
             var data = LevelXml.Import(@"<PeggleLevel schema=""1"" fileVersion=""0x52""><Ball x=""1"" y=""2"" radius=""1"" /><EntryRef link=""3"" /><EntryRef link=""3"" /><Ball x=""3"" y=""4"" radius=""1"" /></PeggleLevel>");

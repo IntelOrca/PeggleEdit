@@ -369,6 +369,15 @@ namespace IntelOrca.PeggleEdit.Tools.Levels.Children
             return mb;
         }
 
+        /// <summary>
+        /// Reads the entry's position, as stored in the level file (not that of its mover).
+        /// </summary>
+        protected void ReadPosition(BinaryReader br)
+        {
+            mX = br.ReadSingle();
+            mY = br.ReadSingle();
+        }
+
         public PointF GetSelectedMovePosition()
         {
             var movement = GetHighestSelectedMover();

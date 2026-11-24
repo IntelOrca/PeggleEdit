@@ -60,7 +60,7 @@ namespace IntelOrca.PeggleEdit.Tools.Levels
             bw.Write(mLevel.HeaderByte);
 
             //Num. entries
-            var nullEntries = mLevel.PreservedNullEntries;
+            var nullEntries = mLevel.NullEntries;
             bw.Write(mLevel.Entries.Count + nullEntries.Count);
 
             //Entry loop, with any null entries put back where they were read

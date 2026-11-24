@@ -71,8 +71,7 @@ namespace IntelOrca.PeggleEdit.Tools.Levels.Children
             byte hl = br.ReadByte();
             if (hl > 0)
             {
-                X = br.ReadSingle();
-                Y = br.ReadSingle();
+                ReadPosition(br);
             }
 
             mNumberOfPegs = br.ReadInt32();

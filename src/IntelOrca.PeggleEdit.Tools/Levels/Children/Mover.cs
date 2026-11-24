@@ -103,7 +103,7 @@ namespace IntelOrca.PeggleEdit.Tools.Levels.Children
         public void ReadData(BinaryReader br, int version)
         {
             sbyte movementShape = br.ReadSByte();
-            mType = (MoverType)Math.Abs(movementShape);
+            mType = (MoverType)Math.Abs((int)movementShape);
             if (movementShape < 0)
             {
                 mReverse = true;

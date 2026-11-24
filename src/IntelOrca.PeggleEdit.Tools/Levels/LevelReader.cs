@@ -88,7 +88,6 @@ namespace IntelOrca.PeggleEdit.Tools.Levels
                 }
 
                 mLevel.UpdateMoverLinksRead();
-                mLevel.PreserveNullEntries();
                 mLevel.SetOriginalData(data);
                 return mLevel;
             }

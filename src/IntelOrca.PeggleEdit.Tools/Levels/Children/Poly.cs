@@ -92,8 +92,7 @@ namespace IntelOrca.PeggleEdit.Tools.Levels.Children
                 mNormalDir = br.ReadByte();
             if (fA[4])
             {
-                X = br.ReadSingle();
-                Y = br.ReadSingle();
+                ReadPosition(br);
             }
 
             int numPoints = br.ReadInt32();

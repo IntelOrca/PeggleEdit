@@ -35,7 +35,8 @@ namespace IntelOrca.PeggleEdit.Designer
 
         private EditorTool mSelectedTool;
 
-        private Stack<LevelEntry[]> mHistory = new Stack<LevelEntry[]>();
+        private Stack<(LevelEntry[] Entries, (int Index, int Magic)[] NullEntries)> mHistory =
+            new Stack<(LevelEntry[] Entries, (int Index, int Magic)[] NullEntries)>();
 
         private LevelEntryCollection mOldSelectedEntries = new LevelEntryCollection();
         private LevelEntryCollection mSelectedEntries = new LevelEntryCollection();
@@ -107,16 +108,18 @@ namespace IntelOrca.PeggleEdit.Designer
             //    }
             //}
 
-            mHistory.Push(copies.ToArray());
+            mHistory.Push((copies.ToArray(), mLevel.NullEntries.ToArray()));
         }
 
         public void Undo()
         {
             if (mHistory.Count > 0)
             {
-                var entries = mHistory.Pop();
+                var (entries, nullEntries) = mHistory.Pop();
                 mLevel.Entries.Clear();
                 mLevel.Entries.AddRange(entries);
+                mLevel.NullEntries.Clear();
+                mLevel.NullEntries.AddRange(nullEntries);
 
                 mLevel.UpdateMoverLinksRead();
 

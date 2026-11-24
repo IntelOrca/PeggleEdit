@@ -54,8 +54,7 @@ namespace IntelOrca.PeggleEdit.Tools.Levels.Children
 
             if (fA[1])
             {
-                X = br.ReadSingle();
-                Y = br.ReadSingle();
+                ReadPosition(br);
             }
 
 

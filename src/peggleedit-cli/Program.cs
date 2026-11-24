@@ -106,10 +106,22 @@ Options:
 
             bool outputIsDirectory = output != null && (inputs.Count > 1 || Directory.Exists(output));
             if (outputIsDirectory)
-                Directory.CreateDirectory(output);
+            {
+                try
+                {
+                    Directory.CreateDirectory(output);
+                }
+                catch (Exception ex) when (ex is IOException || ex is UnauthorizedAccessException || ex is ArgumentException ||
+                                           ex is NotSupportedException)
+                {
+                    Console.Error.WriteLine($"{output}: {ex.Message}");
+                    return ExitFailure;
+                }
+            }
 
             string extension = toXml ? ".xml" : ".dat";
             int failures = 0;
+            var targets = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
             foreach (var input in inputs)
             {
                 string target = output == null
@@ -117,6 +129,9 @@ Options:
                     : outputIsDirectory ? Path.Combine(output, Path.GetFileNameWithoutExtension(input) + extension) : output;
                 try
                 {
+                    // Two inputs with the same name would be written to the same file
+                    if (!targets.Add(Path.GetFullPath(target)))
+                        throw new IOException($"{target} is also the output of an earlier input");
                     Convert(input, target, toXml, force);
                     Console.WriteLine($"{input} -> {target}");
                 }

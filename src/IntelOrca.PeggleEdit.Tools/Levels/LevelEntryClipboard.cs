@@ -85,11 +85,52 @@ namespace IntelOrca.PeggleEdit.Tools.Levels
                 }
             }
 
+            var external = MapDestinationLinks(sources, clones, movementMap);
+
+            byte[] data;
             using (var ms = new MemoryStream())
             {
                 new LevelWriter(ms).Write(level, LevelWriter.DefaultFileVersion);
-                return ms.ToArray();
+                data = ms.ToArray();
             }
+            _lastExternalLinks = (data, external);
+            return data;
+        }
+
+        // The objects that holes in the entries last serialized go to that were not copied with them, by the index of
+        // the hole, so that pasting them back into the same level keeps the links
+        private static (byte[] Data, List<(int Index, object Target)> Targets) _lastExternalLinks;
+
+        /// <summary>
+        /// Points the holes whose destination is another object at the copy of that object, if it is copied too.
+        /// Otherwise the hole's link is written as no object (0), and the object is returned with the hole's index.
+        /// </summary>
+        private static List<(int Index, object Target)> MapDestinationLinks(LevelEntry[] sources, LevelEntry[] clones,
+            Dictionary<Mover, Mover> movementMap)
+        {
+            var copies = new Dictionary<object, object>();
+            for (int i = 0; i < sources.Length; i++)
+                copies[sources[i]] = clones[i];
+            foreach (var pair in movementMap)
+                copies[pair.Key] = pair.Value;
+
+            var external = new List<(int Index, object Target)>();
+            for (int i = 0; i < clones.Length; i++)
+            {
+                if (!(clones[i] is Hole hole) || !hole.HasDestinationLink || hole.DestinationLinkTarget == null)
+                    continue;
+                if (copies.TryGetValue(hole.DestinationLinkTarget, out var copy))
+                {
+                    hole.DestinationLinkTarget = copy;
+                }
+                else
+                {
+                    external.Add((i, hole.DestinationLinkTarget));
+                    hole.DestinationLinkTarget = null;
+                    hole.DestinationLink = 0;
+                }
+            }
+            return external;
         }
 
         /// <summary>
@@ -99,7 +140,28 @@ namespace IntelOrca.PeggleEdit.Tools.Levels
         public static LevelEntry[] Deserialize(byte[] data)
         {
             var level = new LevelReader(data).Read();
-            return level?.Entries.ToArray();
+            if (level == null)
+                return null;
+
+            // A hole whose destination was not copied goes to the same object if it is pasted into the level it was
+            // copied from (in this process), and has no destination otherwise
+            var entries = level.Entries.ToArray();
+            var last = _lastExternalLinks;
+            var targets = last.Data != null && last.Data.SequenceEqual(data) ? last.Targets : null;
+            foreach (var entry in entries)
+            {
+                if (entry is Hole hole && hole.HasDestinationLink && hole.DestinationLinkTarget == null && hole.DestinationLink == 0)
+                    hole.ClearDestinationLink();
+            }
+            if (targets != null)
+            {
+                foreach (var (index, target) in targets)
+                {
+                    if (index < entries.Length && entries[index] is Hole hole)
+                        hole.SetDestinationLink(target);
+                }
+            }
+            return entries;
         }
     }
 }

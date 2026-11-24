@@ -19,6 +19,7 @@ using System.Collections.Generic;
 using System.Drawing;
 using System.Drawing.Drawing2D;
 using System.IO;
+using System.Linq;
 using IntelOrca.PeggleEdit.Tools.Extensions;
 using IntelOrca.PeggleEdit.Tools.Levels.Children;
 using IntelOrca.PeggleEdit.Tools.Pack;
@@ -77,34 +78,26 @@ namespace IntelOrca.PeggleEdit.Tools.Levels
         public byte HeaderByte { get; set; } = 1;
 
         /// <summary>
-        /// Entries in the file that had no data: empty slots (magic 0) and references to an earlier object (any other
-        /// magic but 1). Index is the number of real entries that came before it. They are written back only while the
-        /// entry list is unchanged since the level was read, as they would be in the wrong place otherwise.
+        /// Entries in the file that had no data: empty slots (magic 0) and references to an object by its number (any
+        /// other magic but 1). Index is the number of real entries that came before it. Like mover links, they follow
+        /// the entry they come after and the object they refer to as the level is changed (see
+        /// <see cref="UpdateMoverLinksWrite"/>), and are left out once either is removed.
         /// </summary>
         public List<(int Index, int Magic)> NullEntries { get; } = new List<(int Index, int Magic)>();
 
-        private int mNullEntriesVersion;
-
-        /// <summary>
-        /// The null entries to write: none once the entry list has been changed.
-        /// </summary>
-        internal IReadOnlyList<(int Index, int Magic)> PreservedNullEntries =>
-            Entries.Version == mNullEntriesVersion ? NullEntries : (IReadOnlyList<(int Index, int Magic)>)new (int, int)[0];
-
-        /// <summary>
-        /// Keeps the null entries that were read until the entry list is changed.
-        /// </summary>
-        internal void PreserveNullEntries()
-        {
-            mNullEntriesVersion = Entries.Version;
-        }
+        // The entry each null entry comes after (null for the start), and the object it refers to (null if none), found
+        // from NullEntries by UpdateMoverLinksRead
+        private List<(LevelEntry After, object Target)> mNullEntryObjects = new List<(LevelEntry After, object Target)>();
 
         /// <summary>
         /// The level file this level was read from, if any.
         /// </summary>
         public byte[] OriginalData { get; private set; }
 
+        // The level as read, written in its own file version and in the latest one (which can hold values that older
+        // versions can not, so a change to only those is still seen)
         private ulong mOriginalModelHash;
+        private ulong mOriginalDefaultHash;
 
         /// <summary>
         /// Records the file this level was read from, so that an unchanged level can be exported exactly as it was.
@@ -113,6 +106,7 @@ namespace IntelOrca.PeggleEdit.Tools.Levels
         {
             OriginalData = data;
             mOriginalModelHash = GetData(FileVersion).CalculateFnv1a();
+            mOriginalDefaultHash = GetData(LevelWriter.DefaultFileVersion).CalculateFnv1a();
         }
 
         /// <summary>
@@ -128,7 +122,10 @@ namespace IntelOrca.PeggleEdit.Tools.Levels
         /// <summary>
         /// Whether the level is the same as when it was read.
         /// </summary>
-        public bool IsUnchanged => OriginalData != null && GetData(FileVersion).CalculateFnv1a() == mOriginalModelHash;
+        public bool IsUnchanged =>
+            OriginalData != null &&
+            GetData(FileVersion).CalculateFnv1a() == mOriginalModelHash &&
+            GetData(LevelWriter.DefaultFileVersion).CalculateFnv1a() == mOriginalDefaultHash;
 
         /// <summary>
         /// Gets the level file to export: exactly the file it was read from if it is unchanged, otherwise the level in the
@@ -426,8 +423,29 @@ namespace IntelOrca.PeggleEdit.Tools.Levels
             return null;
         }
 
+        /// <summary>
+        /// Finds the objects that links refer to by number: the movers of mover links, the destinations of holes that
+        /// refer to an object, and the objects of null entries. Called once the level is read or restored, after which
+        /// the links follow the objects as the level is changed.
+        /// </summary>
         public void UpdateMoverLinksRead()
         {
+            var linkable = GetLinkableObjects().ToList();
+            object GetLinkable(int id) => id - FirstLinkId >= 0 && id - FirstLinkId < linkable.Count ? linkable[id - FirstLinkId] : null;
+
+            foreach (var entry in GetAllEntries())
+            {
+                if (entry is Hole hole && hole.HasDestinationLink)
+                    hole.DestinationLinkTarget = GetLinkable(hole.DestinationLink);
+            }
+
+            mNullEntryObjects = new List<(LevelEntry After, object Target)>();
+            foreach (var (index, magic) in NullEntries)
+            {
+                var after = index > 0 && index <= Entries.Count ? Entries[index - 1] : null;
+                mNullEntryObjects.Add((after, magic == 0 ? null : GetLinkable(magic)));
+            }
+
             foreach (LevelEntry entry in GetAllEntries())
             {
                 var link = entry.MoverLink;
@@ -446,8 +464,13 @@ namespace IntelOrca.PeggleEdit.Tools.Levels
             }
         }
 
+        /// <summary>
+        /// Numbers the objects that links refer to as the level now is, and leaves out the links to objects that have
+        /// been removed. Called before the level is written or copied.
+        /// </summary>
         public void UpdateMoverLinksWrite()
         {
+            UpdateObjectLinksWrite();
             foreach (LevelEntry entry in GetAllEntries())
             {
                 var link = entry.MoverLink;
@@ -464,6 +487,62 @@ namespace IntelOrca.PeggleEdit.Tools.Levels
                     }
                 }
             }
+        }
+
+        private void UpdateObjectLinksWrite()
+        {
+            bool hasHoleLinks = GetAllEntries().Any(x => x is Hole hole && hole.HasDestinationLink);
+            if (!hasHoleLinks && NullEntries.Count == 0)
+                return;
+
+            var numbers = new Dictionary<object, int>();
+            int id = FirstLinkId;
+            foreach (var obj in GetLinkableObjects())
+            {
+                if (obj != null && !numbers.ContainsKey(obj))
+                    numbers.Add(obj, id);
+                id++;
+            }
+
+            foreach (var entry in GetAllEntries())
+            {
+                if (entry is Hole hole && hole.HasDestinationLink && hole.DestinationLinkTarget != null)
+                {
+                    if (numbers.TryGetValue(hole.DestinationLinkTarget, out var number))
+                        hole.DestinationLink = number;
+                    else
+                        hole.ClearDestinationLink();
+                }
+            }
+
+            if (mNullEntryObjects.Count != NullEntries.Count)
+                return;
+            var entryIndices = new Dictionary<LevelEntry, int>();
+            for (int i = 0; i < Entries.Count; i++)
+                entryIndices[Entries[i]] = i;
+            var kept = new List<(int Index, int Magic, LevelEntry After, object Target)>();
+            for (int i = 0; i < NullEntries.Count; i++)
+            {
+                var (index, magic) = NullEntries[i];
+                var (after, target) = mNullEntryObjects[i];
+                if (after == null)
+                    index = 0;
+                else if (entryIndices.TryGetValue(after, out var afterIndex))
+                    index = afterIndex + 1;
+                else
+                    continue;
+                if (target != null)
+                {
+                    if (!numbers.TryGetValue(target, out magic))
+                        continue;
+                }
+                kept.Add((index, magic, after, target));
+            }
+            kept = kept.OrderBy(x => x.Index).ToList();
+
+            NullEntries.Clear();
+            NullEntries.AddRange(kept.Select(x => (x.Index, x.Magic)));
+            mNullEntryObjects = kept.Select(x => (x.After, x.Target)).ToList();
         }
 
         public Mover GetMoverFromId(int id)
