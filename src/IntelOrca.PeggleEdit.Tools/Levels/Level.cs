@@ -506,8 +506,9 @@ namespace IntelOrca.PeggleEdit.Tools.Levels
                 {
                     if (ShowParticles && target != null)
                         _particlePreview.Draw(target, g, emitter, IsPreviewRunning);
-                    // The game draws a debug box around emitters whose outline colour is not black
-                    if (mShowPreview && emitter.ShowsDebugBox)
+                    // The game draws a debug box around emitters whose outline colour is not black (not in thumbnails,
+                    // which are drawn without a target)
+                    if (mShowPreview && emitter.ShowsDebugBox && target != null)
                     {
                         var (count, peak) = _particlePreview.GetCount(emitter, IsPreviewRunning);
                         emitter.DrawDebugBox(g, count, peak);
