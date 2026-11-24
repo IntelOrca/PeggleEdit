@@ -701,11 +701,26 @@ namespace IntelOrca.PeggleEdit.Tools.Levels
                 source.UnlockBits(src);
                 var shadowPixels = new int[pixels.Length];
                 var framePixels = new int[pixels.Length];
+                // The shadow is black, give or take the rounding of its recovery from screenshots
+                bool IsBlack(int i) => ((uint)pixels[i] & 0xFCFCFC) == 0;
+                bool IsArt(int x, int y) => x >= 0 && x < 800 && y >= 0 && y < 600 && !IsBlack((y * 800) + x) && pixels[(y * 800) + x] != 0;
                 for (int i = 0; i < pixels.Length; i++)
                 {
-                    // The shadow is black, give or take the rounding of its recovery from screenshots
                     uint p = (uint)pixels[i];
-                    if ((p & 0xFCFCFC) == 0 && (p >> 24) != 255)
+                    bool isShadow = IsBlack(i);
+                    if (isShadow && (p >> 24) == 255)
+                    {
+                        // An opaque black pixel is the frame's outline next to its art, otherwise the shadow at its
+                        // darkest: e.g. a dotted line along the edge left of the master's ring, which would be drawn
+                        // over the cannon
+                        int x = i % 800, y = i / 800;
+                        for (int dy = -1; dy <= 1 && isShadow; dy++)
+                        {
+                            for (int dx = -1; dx <= 1 && isShadow; dx++)
+                                isShadow = !IsArt(x + dx, y + dy);
+                        }
+                    }
+                    if (isShadow)
                         shadowPixels[i] = pixels[i];
                     else
                         framePixels[i] = pixels[i];
