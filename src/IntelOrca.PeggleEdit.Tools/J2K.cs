@@ -22,6 +22,7 @@ using System.Drawing.Imaging;
 using System.IO;
 using System.Runtime.InteropServices;
 using System.Text;
+using CSJ2K.j2k.util;
 using CSJ2K.Util;
 using IntelOrca.PeggleEdit.Tools.Pack;
 
@@ -52,8 +53,18 @@ namespace IntelOrca.PeggleEdit.Tools
             if (!_registered)
             {
                 BitmapImageCreator.Register();
+                // CSJ2K writes its messages to the console, such as a warning for each JPX box it does not know
+                // ("Unknown box-type: 0x6a706368") in most of the game's images, which would fill the CLI's output.
+                FacilityManager.DefaultMsgLogger = new NullMsgLogger();
                 _registered = true;
             }
+        }
+
+        private sealed class NullMsgLogger : IMsgLogger
+        {
+            public void printmsg(int sev, string msg) { }
+            public void println(string str, int flind, int ind) { }
+            public void flush() { }
         }
 
         public static Image ConvertJPEG2(string src)
@@ -132,6 +143,10 @@ namespace IntelOrca.PeggleEdit.Tools
         {
             if (_j2kLoaded)
                 return true;
+
+            // The game's codec is a 32-bit DLL, which a 64-bit process can not load
+            if (Environment.Is64BitProcess)
+                return false;
 
             if (string.IsNullOrEmpty(_pegglePath))
                 return false;
