@@ -48,9 +48,15 @@ namespace IntelOrca.PeggleEdit.Designer
         public event EventHandler UpdatedRedrawed;
         public event EventHandler SelectionChanged;
 
+        // The buffer the editor is drawn on before it is shown. The control is the size of the level with its margin,
+        // larger than the buffer WinForms keeps for double buffering, which would make a new one for every paint.
+        private readonly BufferedGraphicsContext _bufferContext = new BufferedGraphicsContext();
+
         public LevelEditor()
         {
-            DoubleBuffered = true;
+            // Everything is drawn in OnPaint, on the editor's own buffer
+            SetStyle(ControlStyles.OptimizedDoubleBuffer, false);
+            SetStyle(ControlStyles.AllPaintingInWmPaint | ControlStyles.UserPaint | ControlStyles.Opaque, true);
 
             mSelectedTool = new SelectEditorTool();
             mSelectedTool.Editor = this;
@@ -1034,11 +1040,30 @@ namespace IntelOrca.PeggleEdit.Designer
 
         protected override void OnPaint(PaintEventArgs e)
         {
-            base.OnPaint(e);
+            var clip = e.ClipRectangle;
+            if (clip.Width <= 0 || clip.Height <= 0)
+                return;
 
-            if (Zoom != 1)
-                e.Graphics.ScaleTransform(Zoom, Zoom);
-            Draw(e.Graphics);
+            var maximum = _bufferContext.MaximumBuffer;
+            if (clip.Width > maximum.Width || clip.Height > maximum.Height)
+                _bufferContext.MaximumBuffer = new Size(Math.Max(clip.Width, maximum.Width), Math.Max(clip.Height, maximum.Height));
+            using (var buffer = _bufferContext.Allocate(e.Graphics, clip))
+            {
+                var g = buffer.Graphics;
+                g.SetClip(clip);
+                base.OnPaint(new PaintEventArgs(g, clip));
+                if (Zoom != 1)
+                    g.ScaleTransform(Zoom, Zoom);
+                Draw(g);
+                buffer.Render(e.Graphics);
+            }
+        }
+
+        protected override void Dispose(bool disposing)
+        {
+            if (disposing)
+                _bufferContext.Dispose();
+            base.Dispose(disposing);
         }
 
         #endregion
