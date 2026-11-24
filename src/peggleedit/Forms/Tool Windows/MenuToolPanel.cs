@@ -90,6 +90,7 @@ namespace IntelOrca.PeggleEdit.Designer
         RibbonButton btnRod;
         RibbonButton btnTeleport;
         RibbonButton btnEmitter;
+        RibbonButton btnGenerator;
         RibbonButton btnPegGenerator;
         RibbonButton btnBrickGenerator;
 
@@ -360,7 +361,7 @@ namespace IntelOrca.PeggleEdit.Designer
             btnEmitter.Image = Resources.emitter_32;
             btnEmitter.Click += new EventHandler(emitterRibbonButton_Click);
 
-            RibbonButton btnGenerator = new RibbonButton("Generator");
+            btnGenerator = new RibbonButton("Generator");
             btnGenerator.Style = RibbonButtonStyle.DropDown;
             btnGenerator.Image = Resources.peg_circle_32;
 
@@ -1273,6 +1274,7 @@ namespace IntelOrca.PeggleEdit.Designer
             btnRod.Checked = false;
             btnTeleport.Checked = false;
             btnEmitter.Checked = false;
+            btnGenerator.Checked = false;
             btnPegGenerator.Checked = false;
             btnBrickGenerator.Checked = false;
         }
@@ -1322,9 +1324,11 @@ namespace IntelOrca.PeggleEdit.Designer
                             btnEmitter.Checked = true;
                             break;
                         case PegGenerator _:
+                            btnGenerator.Checked = true;
                             btnPegGenerator.Checked = true;
                             break;
                         case BrickGenerator _:
+                            btnGenerator.Checked = true;
                             btnBrickGenerator.Checked = true;
                             break;
                     }
