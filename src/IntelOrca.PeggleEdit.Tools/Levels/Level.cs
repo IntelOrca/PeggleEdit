@@ -502,8 +502,17 @@ namespace IntelOrca.PeggleEdit.Tools.Levels
             foreach (var le in entries)
             {
                 // Particles are drawn where the emitter is in the drawing order, and not at all when it is invisible
-                if (le is Emitter emitter && ShowParticles && target != null && emitter.Visible)
-                    _particlePreview.Draw(target, g, emitter, IsPreviewRunning);
+                if (le is Emitter emitter && emitter.Visible)
+                {
+                    if (ShowParticles && target != null)
+                        _particlePreview.Draw(target, g, emitter, IsPreviewRunning);
+                    // The game draws a debug box around emitters whose outline colour is not black
+                    if (mShowPreview && emitter.ShowsDebugBox)
+                    {
+                        var (count, peak) = _particlePreview.GetCount(emitter, IsPreviewRunning);
+                        emitter.DrawDebugBox(g, count, peak);
+                    }
+                }
                 if (mDeviceEntries.Contains(le) && !mShowPreview)
                 {
                     mShowPreview = true;

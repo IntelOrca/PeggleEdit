@@ -248,6 +248,30 @@ namespace IntelOrca.PeggleEdit.Tools.Tests
             var c = PixelAt(ReadXml(xml), 75 + 100, 40 + 100);
             Assert.NotEqual(Color.White.ToArgb(), c.ToArgb());
         }
+
+        [Fact]
+        public void EmittersWithoutABlackOutline_ShowTheGamesDebugBox()
+        {
+            // The game's default outline colour is white, so an emitter that does not set it gets a debug box: a band
+            // 3 wide just inside its area (100x100 at (100, 100)) with a black line around it
+            var xml = EmitterXml(@"width=""100"" height=""100""").Replace(@"<Properties outlineColor=""#00000000"" />", "");
+            var level = ReadXml(xml);
+            level.ShowingBackground = false;
+            using (var image = level.RenderGameView(drawInterface: false))
+            {
+                Assert.Equal(Color.White.ToArgb(), image.GetPixel(75 + 50, 40 + 100).ToArgb());
+                Assert.Equal(Color.White.ToArgb(), image.GetPixel(75 + 52, 40 + 100).ToArgb());
+                Assert.Equal(Color.Black.ToArgb(), image.GetPixel(75 + 49, 40 + 100).ToArgb());
+                Assert.NotEqual(Color.White.ToArgb(), image.GetPixel(75 + 53, 40 + 100).ToArgb());
+                Assert.Equal(Color.White.ToArgb(), image.GetPixel(75 + 150, 40 + 148).ToArgb());
+            }
+
+            var black = ReadXml(EmitterXml(@"width=""100"" height=""100"""));
+            Assert.False(black.Entries.OfType<Emitter>().Single().ShowsDebugBox);
+            black.ShowingBackground = false;
+            using (var image = black.RenderGameView(drawInterface: false))
+                Assert.NotEqual(Color.White.ToArgb(), image.GetPixel(75 + 50, 40 + 100).ToArgb());
+        }
     }
 
     internal static class EmitterTestExtensions

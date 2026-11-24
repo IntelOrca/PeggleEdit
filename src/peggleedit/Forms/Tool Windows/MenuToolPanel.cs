@@ -1081,6 +1081,8 @@ namespace IntelOrca.PeggleEdit.Designer
             emitter.DefaultValues();
             emitter.Width = 100;
             emitter.Height = 100;
+            // Without an outline colour the game draws a debug box around the emitter (its default is white)
+            emitter.OutlineColor = Color.Black;
             mParent.SetEditorTool(new DrawEditorTool(emitter, false));
         }
 

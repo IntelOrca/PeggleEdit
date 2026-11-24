@@ -347,23 +347,62 @@ namespace IntelOrca.PeggleEdit.Tools.Levels.Children
         {
             base.Draw(g);
 
-            var hasOutline = HasOutlineColor && OutlineColor.ToArgb() != Color.Black.ToArgb();
-            if (!Level.ShowPreview && !hasOutline)
+            // In the preview, the level draws the game's debug box, with the number of particles
+            if (Level.ShowPreview)
+                return;
+
+            if (!ShowsDebugBox)
             {
                 var bounds = Bounds;
                 g.DrawRectangle(Pens.Blue, bounds);
                 bounds.Inflate(-1, -1);
                 g.DrawRectangle(Pens.LightBlue, bounds);
             }
-            else if (!Level.ShowPreview || hasOutline)
+            else
             {
-                g.SmoothingMode = SmoothingMode.None;
-                var bounds = Bounds;
-                g.DrawRectangle(Pens.Black, bounds);
-                bounds.Inflate(-2, -2);
-                g.DrawRectangle(new Pen(OutlineColor, 3), bounds);
-                g.SmoothingMode = SmoothingMode.HighQuality;
+                DrawDebugBox(g);
             }
+        }
+
+        /// <summary>
+        /// Whether the game draws a debug box around the emitter: whenever its outline colour is not black, including
+        /// when it is not set, as the game's default outline colour is white.
+        /// </summary>
+        [Browsable(false)]
+        public bool ShowsDebugBox => OutlineColor.ToArgb() != Color.Black.ToArgb();
+
+        /// <summary>
+        /// Draws the game's debug box: a band 3 pixels wide in the outline colour just inside the emitter's area, with
+        /// a black line around it (measured in game), and the number of particles next to it.
+        /// </summary>
+        internal void DrawDebugBox(Graphics g, int? particles = null, int? peak = null)
+        {
+            var mode = g.SmoothingMode;
+            g.SmoothingMode = SmoothingMode.None;
+            var location = DrawLocation;
+            int left = (int)(location.X - (mWidth / 2));
+            int top = (int)(location.Y - (mHeight / 2));
+            int right = left + mWidth;
+            int bottom = top + mHeight;
+            g.DrawRectangle(Pens.Black, left - 1, top - 1, right - left + 2, bottom - top + 2);
+            using (var band = new SolidBrush(OutlineColor))
+            {
+                g.FillRectangle(band, left, top, right - left + 1, 3);
+                g.FillRectangle(band, left, bottom - 2, right - left + 1, 3);
+                g.FillRectangle(band, left, top, 3, bottom - top + 1);
+                g.FillRectangle(band, right - 2, top, 3, bottom - top + 1);
+            }
+            if (particles is int count)
+            {
+                using (var font = new Font("Arial", 15, FontStyle.Bold, GraphicsUnit.Pixel))
+                {
+                    float x = right + 16;
+                    float y = location.Y - 14;
+                    g.DrawString($"{count} particles", font, Brushes.White, x, y);
+                    g.DrawString($"({peak ?? count} peak)", font, Brushes.White, x, y + 15);
+                }
+            }
+            g.SmoothingMode = mode;
         }
 
         public override object Clone()
@@ -454,6 +493,16 @@ namespace IntelOrca.PeggleEdit.Tools.Levels.Children
             {
                 return new RectangleF(DrawX - (mWidth / 2), DrawY - (mHeight / 2), mWidth, mHeight);
             }
+        }
+
+        [DisplayName("Outline Color")]
+        [Description("Unless this is black, the game draws a box of this colour around the emitter with the number of particles next to it, for debugging. The game's default (when it is not set) is white, so emitters normally set it to black.")]
+        [Category("Appearance")]
+        [DefaultValue(typeof(Color), "Black")]
+        public new Color OutlineColor
+        {
+            get => base.OutlineColor;
+            set => base.OutlineColor = value;
         }
 
         public float SpiralCount

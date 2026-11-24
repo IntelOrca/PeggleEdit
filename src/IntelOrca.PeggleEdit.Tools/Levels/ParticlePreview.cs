@@ -170,6 +170,19 @@ namespace IntelOrca.PeggleEdit.Tools.Levels
             }
         }
 
+        /// <summary>
+        /// Gets how many particles an emitter has, and the most it has had.
+        /// </summary>
+        public (int Count, int Peak) GetCount(Emitter emitter, bool live)
+        {
+            EmitterSimulation simulation;
+            if (live)
+                simulation = _live.TryGetValue(emitter, out var state) ? state.Simulation : null;
+            else
+                simulation = GetSettled(emitter);
+            return simulation == null ? (0, 0) : (simulation.Particles.Count, simulation.PeakCount);
+        }
+
         private static Sprite GetSprite(Emitter emitter) =>
             Sprite.FromImage(LevelPack.Current?.GetImage(emitter.Image)?.Image) ?? Sprite.Dot;
 

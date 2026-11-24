@@ -92,6 +92,11 @@ namespace IntelOrca.PeggleEdit.Tools.Levels
         public bool Software { get; }
 
         /// <summary>
+        /// The most particles there have been at once.
+        /// </summary>
+        public int PeakCount { get; private set; }
+
+        /// <summary>
         /// How many ticks have been run.
         /// </summary>
         public int Ticks { get; private set; }
@@ -139,6 +144,7 @@ namespace IntelOrca.PeggleEdit.Tools.Levels
                     if (!Spawn(position))
                         break;
                 }
+                PeakCount = Math.Max(PeakCount, _particles.Count);
             }
             UpdateParticles();
             Ticks++;
