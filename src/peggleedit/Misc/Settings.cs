@@ -42,11 +42,6 @@ namespace IntelOrca.PeggleEdit.Designer
         public bool UsePegTextures { get; set; } = true;
 
         /// <summary>
-        /// The master levels are previewed as.
-        /// </summary>
-        public Master PlayAs { get; set; } = Master.Bjorn;
-
-        /// <summary>
         /// What the game adds to levels that is shown: the free ball bucket and the devices of the masters' powers.
         /// </summary>
         public GameDevices Devices { get; set; } = GameDevices.Bucket;
