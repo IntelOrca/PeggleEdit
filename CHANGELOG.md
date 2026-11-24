@@ -14,6 +14,17 @@ PeggleEdit 5.2.0 (Flamingo) (TBC)
 * [Feature] Generators no longer need to be applied: levels are saved with the pegs and bricks they make, so they are playable, and PeggleEdit keeps the generators in its own data after the level
 * [Feature] Preview shows generators as the pegs and bricks they make, moving as they will in the game
 * [Feature] A generator's movement is passed on to its pegs and bricks, so that they move together as one shape: a rotating ring of bricks stays a ring
+* [Feature] Emitters are run and drawn as the game does: curves, colours, additive blending, rates, spirals, and drawn in the level's drawing order. They are shown settled while editing and run live in the preview
+* [Feature] Show the free ball bucket, swinging in the preview, and the masters' devices: Kat Tut's pyramid, Claude's flippers, the lid and Marina's lightning rod (View > Game)
+* [Feature] Play As: choose the master to preview a level with
+* [Feature] Mark the objects Claude's flippers take away, and leave them out of the preview
+* [Feature] 3D Mode view option to show emitters as the game does without 3D acceleration
+* [Feature] peggleedit-cli render can run a level for a time, and show the bucket and the masters' devices
+* [Fix] New emitters no longer show a debug box with a particle count in the game, and the preview shows the box where the game does
+* [Fix] Level objects are drawn in the game's layers: background objects behind the pegs, foreground objects in front
+* [Fix] The preview no longer draws invisible holes, or where holes send the ball
+* [Fix] Hole images are drawn where the game draws them
+* [Fix] peggleedit-cli render draws .jp2 images
 * [Change] Rename Circle, Polygon, Rod and Teleport to Ball, Poly, Line and Hole, the names Peggle itself uses
 * [Change] Use the names from PopCap's own level editor in the property grid, with clearer descriptions
 * [Enhancement] Fall back to main.pak or Peggle Nights directory for images
