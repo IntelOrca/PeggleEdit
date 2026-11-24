@@ -4,6 +4,8 @@
     <RootNamespace>IntelOrca.PeggleEdit.Cli</RootNamespace>
     <AssemblyName>peggleedit-cli</AssemblyName>
     <Description>Command line tools for PeggleEdit, such as converting levels to and from XML.</Description>
+    <!-- 32-bit, so that the game's JPEG 2000 codec can be loaded to read its .jp2 images -->
+    <Prefer32Bit>true</Prefer32Bit>
   </PropertyGroup>
   <ItemGroup>
     <ProjectReference Include="..\IntelOrca.PeggleEdit.Tools\IntelOrca.PeggleEdit.Tools.csproj" />
