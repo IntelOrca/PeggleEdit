@@ -181,6 +181,7 @@ namespace IntelOrca.PeggleEdit.Tools.Levels.Children
         {
             base.CloneTo(copy);
             copy.BezierPath = BezierPath.Clone();
+            copy.Interval = Interval;
         }
 
         public void RecalculateOrigin()
