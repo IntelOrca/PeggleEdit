@@ -59,6 +59,7 @@ namespace IntelOrca.PeggleEdit.Tools
             g.TranslateTransform(ScreenOffset.X, ScreenOffset.Y, MatrixOrder.Append);
             g.DrawImage(image, location.X - (image.Width / 2), location.Y - (image.Height / 2));
             g.Transform = backup;
+            backup.Dispose();
         }
 
         private const int MaxCachedBitmaps = 256;

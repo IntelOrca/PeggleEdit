@@ -666,10 +666,14 @@ namespace IntelOrca.PeggleEdit.Tools.Levels.Children
             return mTime + mPause1 + mPause2;
         }
 
+        /// <summary>
+        /// Transforms a point by a matrix that is not used again, and disposes it (as many are made each frame).
+        /// </summary>
         private PointF TransformPoint(Matrix matrix, PointF pnt)
         {
             PointF[] pnts = new PointF[] { pnt };
             matrix.TransformPoints(pnts);
+            matrix.Dispose();
             return pnts[0];
         }
 

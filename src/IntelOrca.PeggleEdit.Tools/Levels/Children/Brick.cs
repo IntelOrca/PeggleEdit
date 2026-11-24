@@ -367,6 +367,8 @@ namespace IntelOrca.PeggleEdit.Tools.Levels.Children
                 DrawStrightBrick(g, location, shadow);
             }
             g.Transform = backupTransform;
+            mx.Dispose();
+            backupTransform.Dispose();
 
             if (!shadow && Curved)
                 DrawCircleGuide(g, angle);
@@ -380,7 +382,8 @@ namespace IntelOrca.PeggleEdit.Tools.Levels.Children
             var dest = new RectangleF(location.X - (Radius / 2), location.Y - (Thickness / 2), Radius, Thickness);
             if (shadow)
             {
-                g.FillRectangle(new SolidBrush(ShadowColour), dest);
+                using (var brush = new SolidBrush(ShadowColour))
+                    g.FillRectangle(brush, dest);
             }
             else if (Level.ShowCollision)
             {
@@ -523,7 +526,8 @@ namespace IntelOrca.PeggleEdit.Tools.Levels.Children
 			*/
             //////////////////////////////////////////////////////////////
 
-            g.FillPolygon(new SolidBrush(c), pnts);
+            using (var brush = new SolidBrush(c))
+                g.FillPolygon(brush, pnts);
 
 
 

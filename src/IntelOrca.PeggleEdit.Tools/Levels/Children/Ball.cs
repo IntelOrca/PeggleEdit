@@ -113,7 +113,8 @@ namespace IntelOrca.PeggleEdit.Tools.Levels.Children
             }
             else
             {
-                g.FillEllipse(new SolidBrush(Level.ShadowColour), location.X - mRadius + Level.ShadowOffset.X, location.Y - mRadius + Level.ShadowOffset.Y, mRadius * 2, mRadius * 2);
+                using (var brush = new SolidBrush(Level.ShadowColour))
+                    g.FillEllipse(brush, location.X - mRadius + Level.ShadowOffset.X, location.Y - mRadius + Level.ShadowOffset.Y, mRadius * 2, mRadius * 2);
             }
         }
 
