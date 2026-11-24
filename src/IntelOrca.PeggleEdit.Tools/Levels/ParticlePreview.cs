@@ -35,6 +35,8 @@ namespace IntelOrca.PeggleEdit.Tools.Levels
         // How long an emitter is run to show it settled, in ticks
         const int MinSettleTicks = 300;
         const int MaxSettleTicks = 3000;
+        // The most particle updates to settle an emitter with (a few tens of milliseconds)
+        const long MaxSettleWork = 2000000;
 
         private sealed class State
         {
@@ -114,8 +116,13 @@ namespace IntelOrca.PeggleEdit.Tools.Levels
             var simulation = new EmitterSimulation(emitter, 12345, Software);
             int life = (int)(emitter.Duration * 100);
             int ticks = Math.Min(MaxSettleTicks, Math.Max(MinSettleTicks, life + 100));
-            for (int i = 0; i < ticks; i++)
+            // Stop early for an emitter with very many particles, so that editing it stays quick
+            long work = 0;
+            for (int i = 0; i < ticks && work < MaxSettleWork; i++)
+            {
                 simulation.Update(PointF.Empty);
+                work += simulation.Particles.Count + 1;
+            }
 
             _settled[emitter] = new State { Key = key, Simulation = simulation };
             if (_settled.Count > 256)
