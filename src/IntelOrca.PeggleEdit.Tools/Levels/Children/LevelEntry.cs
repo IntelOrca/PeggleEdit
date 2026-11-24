@@ -1040,7 +1040,7 @@ namespace IntelOrca.PeggleEdit.Tools.Levels.Children
 
         [EntryProperty(EntryPropertyType.Attribute, FlipperSetting.Default)]
         [DisplayName("Flipper Flags")]
-        [Description("PopCap's FlipperFlags setting: Default, Off or On. The exact effect is not known; PopCap's levels only use On.")]
+        [Description("Whether the object is taken away while Claude's flippers are out (PopCap: FlipperFlags). Default takes it away if it is in the way of a flipper, Off always takes it away and On never does.")]
         [Category("Behaviour")]
         [DefaultValue(FlipperSetting.Default)]
         public FlipperSetting FlipperFlags

@@ -504,6 +504,15 @@ namespace IntelOrca.PeggleEdit.Tools.Levels.Children
             }
         }
 
+        /// <summary>
+        /// Whether the offset curves (PosX and PosY) are stored.
+        /// </summary>
+        [Browsable(false)]
+        public bool HasPosCurves => mHasPosCurves;
+
+        [DisplayName("Software Rate")]
+        [Description("The emit rate multiplier used without 3D acceleration. With 0 the emitter is not shown at all without 3D acceleration.")]
+        [Category("Timing")]
         public float SoftwareRate
         {
             get
@@ -564,8 +573,58 @@ namespace IntelOrca.PeggleEdit.Tools.Levels.Children
             }
         }
 
+        private bool GetFlag(int bit) => (mUnknownFlags & (1 << bit)) != 0;
+
+        private void SetFlag(int bit, bool value)
+        {
+            if (value)
+                mUnknownFlags |= 1 << bit;
+            else
+                mUnknownFlags &= ~(1 << bit);
+        }
+
+        [DisplayName("Circular")]
+        [Description("Emit from an ellipse instead of a rectangle, and emit a third more often (PopCap: emitter_circular). Only used when Random Start is on.")]
+        [Category("Layout")]
+        [DefaultValue(false)]
+        public bool Circular
+        {
+            get => GetFlag(0);
+            set => SetFlag(0, value);
+        }
+
+        [DisplayName("Attached")]
+        [Description("Emitted objects move with the emitter when it moves, instead of being left behind (PopCap: emitter_attached).")]
+        [Category("Behaviour")]
+        [DefaultValue(false)]
+        public bool Attached
+        {
+            get => GetFlag(1);
+            set => SetFlag(1, value);
+        }
+
+        [DisplayName("Orient To Velocity")]
+        [Description("Turn each emitted object to face the way it is moving (PopCap: emitter_orientrottovel).")]
+        [Category("Rotation")]
+        [DefaultValue(false)]
+        public bool OrientRotToVel
+        {
+            get => GetFlag(3);
+            set => SetFlag(3, value);
+        }
+
+        [DisplayName("Starts Emitting")]
+        [Description("Whether the emitter emits from the start. When off, it waits until the ball hits the object whose id is the Trigger Object, and each hit turns it on or off (PopCap: emitter_triggersleep).")]
+        [Category("Behaviour")]
+        [DefaultValue(true)]
+        public bool TriggerSleep
+        {
+            get => GetFlag(14);
+            set => SetFlag(14, value);
+        }
+
         [DisplayName("Change Opacity")]
-        [Description("If this is set to false, the opacity attributes will be ignored.")]
+        [Description("Whether the opacity is set. When off, the objects are opaque apart from fading in and out.")]
         [Category("Opacity")]
         [DefaultValue(false)]
         public bool ChangeAlpha
@@ -580,7 +639,7 @@ namespace IntelOrca.PeggleEdit.Tools.Levels.Children
             }
         }
 
-        [Description("How opaque the emitted objects are. 0.0 is transparent, 1.0 is opaque (PopCap: Alpha).")]
+        [Description("How opaque the emitted objects are over their life. 0.0 is transparent, 1.0 is opaque (PopCap: Alpha).")]
         [Category("Opacity")]
         [DefaultValue(1.0f)]
         public CurvedVal Alpha
@@ -612,7 +671,7 @@ namespace IntelOrca.PeggleEdit.Tools.Levels.Children
         }
 
         [DisplayName("Max")]
-        [Description("The maximum number of emitted objects at one time.")]
+        [Description("The maximum number of emitted objects at one time. While there are this many, no more are emitted.")]
         [Category("Behaviour")]
         [DefaultValue(100)]
         public int Max
@@ -629,7 +688,7 @@ namespace IntelOrca.PeggleEdit.Tools.Levels.Children
 
 
         [DisplayName("Distrib")]
-        [Description("How the emitted objects are distributed over the area given by the width and height, e.g. 0.5 for half of the area.")]
+        [Description("How far out over the area the objects are emitted, e.g. 0.5 for the middle half. A curve gives how often each distance is used.")]
         [Category("Layout")]
         [DefaultValue(1.0f)]
         public CurvedVal Distrib
@@ -675,7 +734,7 @@ namespace IntelOrca.PeggleEdit.Tools.Levels.Children
         }
 
         [DisplayName("Duration")]
-        [Description("How long each emitted object lasts before disappearing.")]
+        [Description("How long each emitted object lasts before disappearing, in seconds.")]
         [Category("Timing")]
         [DefaultValue(0.0f)]
         public float Duration
@@ -691,7 +750,7 @@ namespace IntelOrca.PeggleEdit.Tools.Levels.Children
         }
 
         [DisplayName("Rate")]
-        [Description("The time interval between each object being emitted in hundredths of a second. 1.0 = 100 times per second.")]
+        [Description("How many objects are emitted every hundredth of a second: 0.01 is one a second, 1 is a hundred a second. A curve is stepped through by its rate every hundredth of a second.")]
         [Category("Timing")]
         [DefaultValue(0.0f)]
         public CurvedVal Rate
@@ -707,7 +766,7 @@ namespace IntelOrca.PeggleEdit.Tools.Levels.Children
         }
 
         [DisplayName("Rand Rate")]
-        [Description("Random variation of the emit rate.")]
+        [Description("A random amount from 0 to this added to the rate every hundredth of a second.")]
         [Category("Timing")]
         [DefaultValue(0.0f)]
         public float RandRate
@@ -723,7 +782,7 @@ namespace IntelOrca.PeggleEdit.Tools.Levels.Children
         }
 
         [DisplayName("Alpha Into")]
-        [Description("How long an emitted object takes to fade in.")]
+        [Description("How long an emitted object takes to fade in, in seconds.")]
         [Category("Timing")]
         [DefaultValue(0.1f)]
         public float AlphaInto
@@ -899,7 +958,7 @@ namespace IntelOrca.PeggleEdit.Tools.Levels.Children
         }
 
         [DisplayName("Scale")]
-        [Description("The initial scale of the emitted objects.")]
+        [Description("The scale of the emitted objects over their life.")]
         [Category("Scale")]
         [DefaultValue(0.0f)]
         public CurvedVal Scale
@@ -915,7 +974,7 @@ namespace IntelOrca.PeggleEdit.Tools.Levels.Children
         }
 
         [DisplayName("Scale Vel")]
-        [Description("How fast the scale of the emitted objects changes. Negative makes them smaller, positive makes them larger.")]
+        [Description("How much the scale of the emitted objects changes every hundredth of a second. Negative makes them smaller, positive makes them larger. An object disappears when this shrinks it to nothing.")]
         [Category("Scale")]
         [DefaultValue(0.0f)]
         public CurvedVal ScaleVel
@@ -963,7 +1022,7 @@ namespace IntelOrca.PeggleEdit.Tools.Levels.Children
         }
 
         [DisplayName("Rotation")]
-        [Description("The initial rotation of the emitted objects in degrees.")]
+        [Description("The rotation of the emitted objects in degrees over their life. Positive turns anticlockwise.")]
         [Category("Rotation")]
         [DefaultValue(0.0f)]
         public CurvedVal Rotation
@@ -979,7 +1038,7 @@ namespace IntelOrca.PeggleEdit.Tools.Levels.Children
         }
 
         [DisplayName("Rotation Vel")]
-        [Description("The angular velocity of the emitted objects. 0.01 = 1 degree per second.")]
+        [Description("How fast the emitted objects turn, in degrees every hundredth of a second (1 is 100 degrees a second). Positive turns anticlockwise.")]
         [Category("Rotation")]
         [DefaultValue(0.0f)]
         public CurvedVal RotationVel
@@ -995,7 +1054,7 @@ namespace IntelOrca.PeggleEdit.Tools.Levels.Children
         }
 
         [DisplayName("Rotation Rand")]
-        [Description("A random amount added to the initial rotation of each emitted object.")]
+        [Description("A random amount from 0 to this, in degrees, added to the rotation of each emitted object.")]
         [Category("Rotation")]
         [DefaultValue(0.0f)]
         public float RotationRand
@@ -1234,7 +1293,7 @@ namespace IntelOrca.PeggleEdit.Tools.Levels.Children
         }
 
         [DisplayName("Hardware Rate")]
-        [Description("The emit rate multiplier used with hardware acceleration.")]
+        [Description("The emit rate multiplier used with 3D acceleration, which is how nearly everyone plays.")]
         [Category("Timing")]
         public float HardwareRate
         {
