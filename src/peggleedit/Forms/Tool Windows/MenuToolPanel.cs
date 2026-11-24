@@ -108,6 +108,7 @@ namespace IntelOrca.PeggleEdit.Designer
         RibbonCheckBox chkCollision;
         RibbonCheckBox chkPreview;
         RibbonCheckBox chkParticles;
+        RibbonCheckBox chk3DAcceleration;
 
         RibbonButton btnPlayAs;
         RibbonCheckBox chkBucket;
@@ -502,6 +503,12 @@ namespace IntelOrca.PeggleEdit.Designer
             chkParticles.Checked = true;
             chkParticles.CheckedChanged += new EventHandler(showParticlesRibbonButton_Click);
 
+            chk3DAcceleration = new RibbonCheckBox("3D Mode");
+            chk3DAcceleration.Checked = Settings.Default.Acceleration3D;
+            chk3DAcceleration.ToolTipTitle = "3D Mode";
+            chk3DAcceleration.ToolTip = "Show emitters as the game does with 3D acceleration, as nearly everyone plays. Without it, the game leaves out emitters with no Software Rate, which is most of them, and emits less from the rest.";
+            chk3DAcceleration.CheckedChanged += new EventHandler(acceleration3DRibbonCheckBox_CheckedChanged);
+
             RibbonPanel panelShowHide = new RibbonPanel("Show / Hide");
             panelShowHide.Items.Add(chkBackground);
             panelShowHide.Items.Add(chkInterface);
@@ -509,6 +516,7 @@ namespace IntelOrca.PeggleEdit.Designer
             panelShowHide.Items.Add(chkCollision);
             panelShowHide.Items.Add(chkPreview);
             panelShowHide.Items.Add(chkParticles);
+            panelShowHide.Items.Add(chk3DAcceleration);
 
             RibbonPanel panelGame = InitGamePanel();
 
@@ -1372,6 +1380,12 @@ namespace IntelOrca.PeggleEdit.Designer
         {
             LevelEditor.Level.ShowParticles = chkParticles.Checked;
             LevelEditor.UpdateRedraw();
+        }
+
+        private void acceleration3DRibbonCheckBox_CheckedChanged(object sender, EventArgs e)
+        {
+            Settings.Default.Acceleration3D = chk3DAcceleration.Checked;
+            DoSettingUpdate();
         }
 
         private void showGridRibbonButton_Click(object sender, EventArgs e)

@@ -51,6 +51,11 @@ namespace IntelOrca.PeggleEdit.Designer
         /// </summary>
         public GameDevices Devices { get; set; } = GameDevices.Bucket;
 
+        /// <summary>
+        /// Whether emitters are shown as the game shows them with 3D acceleration (otherwise as without it).
+        /// </summary>
+        public bool Acceleration3D { get; set; } = true;
+
         public Size MDIFormSize { get; set; } = new Size(800, 600);
         public bool MDIMaximized { get; set; }
 
