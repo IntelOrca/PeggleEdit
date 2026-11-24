@@ -1055,6 +1055,14 @@ namespace IntelOrca.PeggleEdit.Tools.Levels.Children
             }
         }
 
+        /// <summary>
+        /// Whether the game takes the object away while Claude's flippers are out.
+        /// </summary>
+        [DisplayName("Taken Away By Flippers")]
+        [Description("Whether the game takes this object away while Claude's flippers are out, by its Flipper Flags and whether it is in the way of a flipper. Turn on Flippers in View > Game to see which objects are taken away.")]
+        [Category("Behaviour")]
+        public bool TakenAwayByFlippers => BaseObjects.IsTakenAwayByFlippers(this);
+
         [Browsable(false)]
         public virtual Level Level
         {

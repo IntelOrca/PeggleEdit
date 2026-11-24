@@ -858,6 +858,7 @@ namespace IntelOrca.PeggleEdit.Designer
             else
             {
                 mLevel.UsePegTextures = Settings.Default.UsePegTextures;
+                mLevel.Devices = Settings.Default.Devices;
                 mLevel.Draw(g);
             }
 

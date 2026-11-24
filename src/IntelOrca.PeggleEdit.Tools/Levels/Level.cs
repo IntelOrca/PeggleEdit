@@ -403,8 +403,12 @@ namespace IntelOrca.PeggleEdit.Tools.Levels
                     layers[(int)GetDrawLayer(le)].Add(le);
             }
             var deviceTime = mShowPreview ? mPreviewTime : 0;
+            mDeviceEntries.Clear();
             foreach (var (le, layer) in BaseObjects.GetEntries(this, mDevices, deviceTime))
+            {
                 layers[(int)layer].Add(le);
+                mDeviceEntries.Add(le);
+            }
             // A stable sort, so objects at the same y stay in file order
             layers[(int)DrawLayer.DrawSort] = layers[(int)DrawLayer.DrawSort].OrderBy(x => x.DrawY).ToList();
 
@@ -489,6 +493,10 @@ namespace IntelOrca.PeggleEdit.Tools.Levels
             }
         }
 
+        // The objects of the game's devices being drawn, which are always drawn as in the preview, as they can not be
+        // edited
+        private readonly HashSet<LevelEntry> mDeviceEntries = new HashSet<LevelEntry>();
+
         private void DrawLayerEntries(Graphics g, RenderTarget target, List<LevelEntry> entries)
         {
             foreach (var le in entries)
@@ -496,7 +504,22 @@ namespace IntelOrca.PeggleEdit.Tools.Levels
                 // Particles are drawn where the emitter is in the drawing order, and not at all when it is invisible
                 if (le is Emitter emitter && ShowParticles && target != null && emitter.Visible)
                     _particlePreview.Draw(target, g, emitter, IsPreviewRunning);
-                le.Draw(g);
+                if (mDeviceEntries.Contains(le) && !mShowPreview)
+                {
+                    mShowPreview = true;
+                    try
+                    {
+                        le.Draw(g);
+                    }
+                    finally
+                    {
+                        mShowPreview = false;
+                    }
+                }
+                else
+                {
+                    le.Draw(g);
+                }
             }
         }
 

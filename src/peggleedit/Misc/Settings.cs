@@ -21,6 +21,7 @@ using System.IO;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 using System.Windows.Forms;
+using IntelOrca.PeggleEdit.Tools.Levels;
 using Microsoft.Win32;
 
 namespace IntelOrca.PeggleEdit.Designer
@@ -39,6 +40,16 @@ namespace IntelOrca.PeggleEdit.Designer
         public bool ShowAnchorsAlways { get; set; }
 
         public bool UsePegTextures { get; set; } = true;
+
+        /// <summary>
+        /// The master levels are previewed as.
+        /// </summary>
+        public Master PlayAs { get; set; } = Master.Bjorn;
+
+        /// <summary>
+        /// What the game adds to levels that is shown: the free ball bucket and the devices of the masters' powers.
+        /// </summary>
+        public GameDevices Devices { get; set; } = GameDevices.Bucket;
 
         public Size MDIFormSize { get; set; } = new Size(800, 600);
         public bool MDIMaximized { get; set; }

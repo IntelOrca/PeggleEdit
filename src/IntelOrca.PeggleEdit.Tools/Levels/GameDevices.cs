@@ -281,7 +281,21 @@ namespace IntelOrca.PeggleEdit.Tools.Levels
         /// </summary>
         public static (PointF[] Left, PointF[] Right) GetFlipperShapes()
         {
-            var flippers = BaseLevel?.Entries.OfType<Poly>().Where(x => x.Id == "flipper").ToArray();
+            var baseLevel = BaseLevel;
+            if (_flipperShapesLevel != baseLevel || _flipperShapes.Left == null)
+            {
+                _flipperShapes = ReadFlipperShapes(baseLevel);
+                _flipperShapesLevel = baseLevel;
+            }
+            return _flipperShapes;
+        }
+
+        private static Level _flipperShapesLevel;
+        private static (PointF[] Left, PointF[] Right) _flipperShapes;
+
+        private static (PointF[] Left, PointF[] Right) ReadFlipperShapes(Level baseLevel)
+        {
+            var flippers = baseLevel?.Entries.OfType<Poly>().Where(x => x.Id == "flipper").ToArray();
             if (flippers == null || flippers.Length != 2)
                 return (DefaultLeftFlipper, DefaultRightFlipper);
 
@@ -306,6 +320,9 @@ namespace IntelOrca.PeggleEdit.Tools.Levels
         /// </summary>
         public static bool IsTakenAwayByFlippers(LevelEntry entry)
         {
+            // Only visible objects are taken away
+            if (!entry.Visible)
+                return false;
             switch (entry.FlipperFlags)
             {
                 case FlipperSetting.Off:
@@ -314,6 +331,9 @@ namespace IntelOrca.PeggleEdit.Tools.Levels
                     return false;
             }
 
+            // Emitters have no shape to be in the way with (a guess: not checked in game)
+            if (entry is Emitter)
+                return false;
             var centre = entry.DrawLocation;
             if (centre.Y < 400)
                 return false;

@@ -109,6 +109,14 @@ namespace IntelOrca.PeggleEdit.Designer
         RibbonCheckBox chkPreview;
         RibbonCheckBox chkParticles;
 
+        RibbonButton btnPlayAs;
+        RibbonCheckBox chkBucket;
+        RibbonCheckBox chkPyramid;
+        RibbonCheckBox chkFlippers;
+        RibbonCheckBox chkFlippersUp;
+        RibbonCheckBox chkCover;
+        RibbonCheckBox chkLightningRod;
+
         private void InitOrb()
         {
             mRibbon.OrbImage = Resources.orca_orb;
@@ -502,6 +510,8 @@ namespace IntelOrca.PeggleEdit.Designer
             panelShowHide.Items.Add(chkPreview);
             panelShowHide.Items.Add(chkParticles);
 
+            RibbonPanel panelGame = InitGamePanel();
+
             RibbonButton btnPackExplorer = new RibbonButton("Pack Explorer");
             btnPackExplorer.Image = Resources.pack_explorer_32;
             btnPackExplorer.Click += new EventHandler(packExplorerRibbonButton_Click);
@@ -521,8 +531,173 @@ namespace IntelOrca.PeggleEdit.Designer
 
             RibbonTab tabView = new RibbonTab(mRibbon, "View");
             tabView.Panels.Add(panelShowHide);
+            tabView.Panels.Add(panelGame);
             tabView.Panels.Add(panelWindow);
             mRibbon.Tabs.Add(tabView);
+        }
+
+        /// <summary>
+        /// The panel that shows what the game adds to the level: the master it is played as, the free ball bucket, and
+        /// the devices of the masters' powers.
+        /// </summary>
+        private RibbonPanel InitGamePanel()
+        {
+            btnPlayAs = new RibbonButton("Play As");
+            btnPlayAs.Style = RibbonButtonStyle.DropDown;
+            btnPlayAs.Image = Resources.orca_32;
+            btnPlayAs.ToolTipTitle = "Play As";
+            btnPlayAs.ToolTip = "Choose the master to preview the level with. Masters whose power changes the level show it: Kat Tut's pyramid, Claude's flippers, the lid of Renfield and Lord Cinderbottom, and Marina's lightning rod.";
+            foreach (var info in MasterInfo.All)
+            {
+                var item = new RibbonButton(info.Name);
+                item.Tag = info.Master;
+                item.ToolTipTitle = info.Name + ": " + info.Power;
+                item.ToolTip = info.Description;
+                item.Click += playAsRibbonButton_Click;
+                btnPlayAs.DropDownItems.Add(item);
+            }
+
+            chkBucket = CreateDeviceCheckBox("Bucket", GameDevices.Bucket, "The free ball bucket. It swings from side to side while the preview plays.");
+            chkPyramid = CreateDeviceCheckBox("Pyramid", GameDevices.Pyramid, "Kat Tut's Pyramid Power. The bucket swings less far.");
+            chkFlippers = CreateDeviceCheckBox("Flippers", GameDevices.Flippers, "Claude's Flippers. The objects the game takes away while they are out are marked in red, and left out of the preview. The bucket swings much less far.");
+            chkFlippersUp = CreateDeviceCheckBox("Flippers Up", GameDevices.FlippersRaised, "Show the flippers flipped up.");
+            chkCover = CreateDeviceCheckBox("Lid", GameDevices.Cover, "The lid over the bucket: Renfield's Spooky Ball, Lord Cinderbottom's Fireball, or a challenge with the free ball bucket covered.");
+            chkLightningRod = CreateDeviceCheckBox("Lightning Rod", GameDevices.LightningRod, "Marina's Electrobolt: the lightning rod raised over the bucket.");
+
+            var panel = new RibbonPanel("Game");
+            panel.Items.Add(btnPlayAs);
+            panel.Items.Add(chkBucket);
+            panel.Items.Add(chkPyramid);
+            panel.Items.Add(chkFlippers);
+            panel.Items.Add(chkFlippersUp);
+            panel.Items.Add(chkCover);
+            panel.Items.Add(chkLightningRod);
+
+            UpdateGamePanel();
+            return panel;
+        }
+
+        private RibbonCheckBox CreateDeviceCheckBox(string text, GameDevices device, string toolTip)
+        {
+            var checkBox = new RibbonCheckBox(text);
+            checkBox.Tag = device;
+            checkBox.ToolTipTitle = text;
+            checkBox.ToolTip = toolTip;
+            checkBox.CheckedChanged += deviceRibbonCheckBox_CheckedChanged;
+            return checkBox;
+        }
+
+        private static readonly Dictionary<Master, string> MasterPortraits = new Dictionary<Master, string>
+        {
+            [Master.Bjorn] = "BjornAltportrait.jpg",
+            [Master.Jimmy] = "JimmyAltportrait.jpg",
+            [Master.KatTut] = "KatAltportrait.jpg",
+            [Master.Splork] = "SplorkAltportrait.jpg",
+            [Master.Claude] = "ClaudeAltportrait.jpg",
+            [Master.Renfield] = "RenfieldAltportrait.jpg",
+            [Master.Tula] = "TulaAltportrait.jpg",
+            [Master.Warren] = "WarrenAltportrait.jpg",
+            [Master.Cinderbottom] = "CinderAltportrait.jpg",
+            [Master.MasterHu] = "MasterHuAltportrait.jpg",
+        };
+
+        private readonly Dictionary<Master, Image> mPortraits = new Dictionary<Master, Image>();
+
+        /// <summary>
+        /// Gets a master's portrait from the game, at a size, or null if it can not be found.
+        /// </summary>
+        private Image GetPortrait(Master master, int size)
+        {
+            if (!mPortraits.TryGetValue(master, out var portrait))
+            {
+                portrait = null;
+                try
+                {
+                    var directory = Settings.Default.PeggleNightsPath;
+                    if (directory != null && MasterPortraits.TryGetValue(master, out var fileName))
+                    {
+                        var path = Path.Combine(directory, "characters", fileName);
+                        if (File.Exists(path))
+                        {
+                            using (var stream = new MemoryStream(File.ReadAllBytes(path)))
+                            using (var image = Image.FromStream(stream))
+                                portrait = new Bitmap(image);
+                        }
+                    }
+                }
+                catch
+                {
+                }
+                mPortraits[master] = portrait;
+            }
+            if (portrait == null)
+                return null;
+
+            var result = new Bitmap(size, size);
+            using (var g = Graphics.FromImage(result))
+            {
+                g.InterpolationMode = System.Drawing.Drawing2D.InterpolationMode.HighQualityBicubic;
+                g.DrawImage(portrait, 0, 0, size, size);
+            }
+            return result;
+        }
+
+        /// <summary>
+        /// Shows the master and devices in the settings on the game panel.
+        /// </summary>
+        private void UpdateGamePanel()
+        {
+            var master = Settings.Default.PlayAs;
+            var info = MasterInfo.Get(master);
+            btnPlayAs.Text = info.Name;
+            btnPlayAs.Image = GetPortrait(master, 32) ?? Resources.orca_32;
+            foreach (RibbonItem item in btnPlayAs.DropDownItems)
+            {
+                if (item is RibbonButton button && button.Tag is Master m)
+                {
+                    button.Checked = m == master;
+                    if (button.SmallImage == null)
+                        button.SmallImage = GetPortrait(m, 16);
+                }
+            }
+
+            var devices = Settings.Default.Devices;
+            foreach (var checkBox in new[] { chkBucket, chkPyramid, chkFlippers, chkFlippersUp, chkCover, chkLightningRod })
+                checkBox.Checked = (devices & (GameDevices)checkBox.Tag) != 0;
+            mRibbon.Refresh();
+        }
+
+        private void playAsRibbonButton_Click(object sender, EventArgs e)
+        {
+            if (!(sender is RibbonButton button) || !(button.Tag is Master master))
+                return;
+
+            // The master's power shows its devices, in place of the last master's
+            var oldPower = MasterInfo.Get(Settings.Default.PlayAs).PowerDevices;
+            var newPower = MasterInfo.Get(master).PowerDevices;
+            Settings.Default.PlayAs = master;
+            Settings.Default.Devices = (Settings.Default.Devices & ~oldPower) | newPower;
+            if ((Settings.Default.Devices & GameDevices.Flippers) == 0)
+                Settings.Default.Devices &= ~GameDevices.FlippersRaised;
+            UpdateGamePanel();
+            DoSettingUpdate();
+        }
+
+        private void deviceRibbonCheckBox_CheckedChanged(object sender, EventArgs e)
+        {
+            if (!(sender is RibbonCheckBox checkBox) || !(checkBox.Tag is GameDevices device))
+                return;
+
+            var devices = Settings.Default.Devices;
+            devices = checkBox.Checked ? devices | device : devices & ~device;
+            // Flipping up shows the flippers; taking them away puts them down
+            if (device == GameDevices.FlippersRaised && checkBox.Checked)
+                devices |= GameDevices.Flippers;
+            if ((devices & GameDevices.Flippers) == 0)
+                devices &= ~GameDevices.FlippersRaised;
+            Settings.Default.Devices = devices;
+            UpdateGamePanel();
+            DoSettingUpdate();
         }
 
         private void InitHelpTab()
