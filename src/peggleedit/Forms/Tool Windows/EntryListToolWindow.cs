@@ -60,43 +60,89 @@ namespace IntelOrca.PeggleEdit.Designer
             mEditor = editor;
 
             //Check if there are any changes
-            bool changes = false;
+            bool entriesChanged = false;
             if (mEditor.Level.Entries.Count == mEntries.Count)
             {
                 for (int i = 0; i < mEntries.Count; i++)
                 {
                     if (mEditor.Level.Entries[i] != mEntries[i])
                     {
-                        changes = true;
+                        entriesChanged = true;
                         break;
                     }
                 }
             }
             else
             {
-                changes = true;
+                entriesChanged = true;
             }
 
+            bool selectionChanged = false;
             if (mEditor.SelectedEntries.Count == mSelectedEntries.Count)
             {
                 for (int i = 0; i < mSelectedEntries.Count; i++)
                 {
                     if (mEditor.SelectedEntries[i] != mSelectedEntries[i])
                     {
-                        changes = true;
+                        selectionChanged = true;
                         break;
                     }
                 }
             }
             else
             {
-                changes = true;
+                selectionChanged = true;
             }
 
-            if (!changes)
-                return;
+            //Only rebuild the list when the entries change, rebuilding it for
+            //a selection change makes the whole list flash
+            if (entriesChanged)
+                UpdateList();
+            else if (selectionChanged)
+                UpdateSelection();
+        }
 
-            UpdateList();
+        private void UpdateSelection()
+        {
+            mSuspendChangeEvent = true;
+
+            bool[] selected = new bool[mList.Items.Count];
+            foreach (LevelEntry le in mEditor.SelectedEntries)
+            {
+                int index = mEditor.Level.Entries.IndexOf(le);
+                if (index >= 0 && index < selected.Length)
+                    selected[index] = true;
+            }
+
+            //Only touch the items whose state differs, so just those are repainted
+            int lastSelected = -1;
+            for (int i = 0; i < selected.Length; i++)
+            {
+                if (mList.GetSelected(i) != selected[i])
+                {
+                    mList.SetSelected(i, selected[i]);
+                    if (selected[i])
+                        lastSelected = i;
+                }
+            }
+
+            if (lastSelected != -1)
+                ScrollIntoView(lastSelected);
+
+            mSelectedEntries.Clear();
+            mSelectedEntries.AddRange(mEditor.SelectedEntries);
+
+            mSuspendChangeEvent = false;
+        }
+
+        private void ScrollIntoView(int index)
+        {
+            int itemHeight = Math.Max(1, mList.ItemHeight);
+            int visibleCount = Math.Max(1, mList.ClientSize.Height / itemHeight);
+            if (index < mList.TopIndex)
+                mList.TopIndex = index;
+            else if (index >= mList.TopIndex + visibleCount)
+                mList.TopIndex = index - visibleCount + 1;
         }
 
         private void UpdateList()
@@ -131,7 +177,6 @@ namespace IntelOrca.PeggleEdit.Designer
             mSelectedEntries.AddRange(mEditor.SelectedEntries);
 
             mList.TopIndex = Math.Min(topIndex, mEntries.Count);
-            mList.Refresh();
 
             mSuspendChangeEvent = false;
         }
