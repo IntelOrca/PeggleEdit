@@ -29,7 +29,6 @@ namespace IntelOrca.PeggleEdit.Designer
     {
         MainMDIForm mParent;
         LevelEditor mLevelEditor;
-        Timer mTimer;
 
         public LevelToolWindow(MainMDIForm parent, Level level)
         {
@@ -53,11 +52,7 @@ namespace IntelOrca.PeggleEdit.Designer
             mLevelEditor.UpdatedRedrawed += new EventHandler(mLevelEditor_UpdatedRedrawed);
             mLevelEditor.SelectionChanged += new EventHandler(mLevelEditor_SelectionChanged);
             mLevelEditor.MouseMove += new MouseEventHandler(mLevelEditor_MouseMove);
-
-            mTimer = new Timer();
-            mTimer.Interval = 10;
-            mTimer.Enabled = true;
-            mTimer.Tick += new EventHandler(mTimer_Tick);
+            mLevelEditor.FrameStarting += mLevelEditor_FrameStarting;
 
             this.Controls.Add(mLevelEditor);
 
@@ -89,13 +84,15 @@ namespace IntelOrca.PeggleEdit.Designer
             mLevelEditor.AutoScrollOffset = new Point(-x, -y);
         }
 
-        void mTimer_Tick(object sender, EventArgs e)
+        /// <summary>
+        /// Moves the preview on for each frame.
+        /// </summary>
+        void mLevelEditor_FrameStarting(object sender, EventArgs e)
         {
-            if (mLevelEditor.Level.ShowPreview)
-            {
-                mLevelEditor.Level.UpdatePreview();
-                mLevelEditor.Invalidate();
-            }
+            var level = mLevelEditor.Level;
+            if (level.ShowPreview)
+                level.UpdatePreview();
+            mLevelEditor.Animating = level.ShowPreview;
         }
 
         void mLevelEditor_MouseMove(object sender, MouseEventArgs e)

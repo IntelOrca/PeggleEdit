@@ -22,6 +22,7 @@ using System.Drawing.Drawing2D;
 using System.IO;
 using System.Linq;
 using System.Runtime.InteropServices;
+using System.Threading;
 using System.Windows.Forms;
 using IntelOrca.PeggleEdit.Tools;
 using IntelOrca.PeggleEdit.Tools.Levels;
@@ -139,7 +140,7 @@ namespace IntelOrca.PeggleEdit.Designer
         {
             UnselectNonExistantPegs();
 
-            Invalidate();
+            RequestRedraw(null);
 
             if (UpdatedRedrawed != null)
                 UpdatedRedrawed(this, EventArgs.Empty);
@@ -984,8 +985,9 @@ namespace IntelOrca.PeggleEdit.Designer
                 lastOverObject = entry;
             }
 
+            // Only how the objects are drawn has changed, not the objects
             if (lastOverObject != prevObject)
-                UpdateRedraw();
+                RequestRedraw(null);
 
             AimCannon(virtualLocation);
 
@@ -1012,7 +1014,7 @@ namespace IntelOrca.PeggleEdit.Designer
             // The bounds are in level coordinates, which are zoomed on screen
             var zoomedTopLeft = ZoomPoint(new Point(topLeft.X - 1, topLeft.Y - 1));
             var zoomedBottomRight = ZoomPoint(new Point(bottomRight.X + 1, bottomRight.Y + 1));
-            Invalidate(Rectangle.FromLTRB(zoomedTopLeft.X - 1, zoomedTopLeft.Y - 1, zoomedBottomRight.X + 1, zoomedBottomRight.Y + 1));
+            RequestRedraw(Rectangle.FromLTRB(zoomedTopLeft.X - 1, zoomedTopLeft.Y - 1, zoomedBottomRight.X + 1, zoomedBottomRight.Y + 1));
         }
 
         protected override void OnMouseUp(MouseEventArgs e)
@@ -1062,13 +1064,168 @@ namespace IntelOrca.PeggleEdit.Designer
                 Draw(g);
                 buffer.Render(e.Graphics);
             }
+
+            // A paint not in a frame (e.g. the editor being uncovered) can be the first since the preview was turned on
+            if (!_inFrame)
+                ScheduleFrame();
         }
 
         protected override void Dispose(bool disposing)
         {
             if (disposing)
+            {
                 _bufferContext.Dispose();
+                _frameTimer?.Dispose();
+                _frameTimer = null;
+                SetWaitingForIdle(false);
+            }
             base.Dispose(disposing);
+        }
+
+        #endregion
+
+        #region Frames
+
+        // The least time between frames, as the preview's timer had
+        private static readonly TimeSpan FrameInterval = TimeSpan.FromMilliseconds(10);
+
+        // How long an overdue frame waits for the messages before it (e.g. input) to be handled, at most
+        private const int OverdueFrameWait = 15;
+
+        private readonly System.Diagnostics.Stopwatch _clock = System.Diagnostics.Stopwatch.StartNew();
+        private TimeSpan _lastFrame = -FrameInterval;
+        private System.Threading.Timer _frameTimer;
+        private bool _frameScheduled;
+        private bool _waitingForIdle;
+        private bool _inFrame;
+
+        // What is drawn in the next frame: everything, or this area (nothing when it is empty)
+        private bool _redrawAll;
+        private Rectangle _redrawArea;
+
+        /// <summary>
+        /// Raised at the start of each frame, before it is drawn, e.g. to move the preview on. It can set
+        /// <see cref="Animating"/>.
+        /// </summary>
+        public event EventHandler FrameStarting;
+
+        /// <summary>
+        /// Gets or sets whether all of the editor is drawn every frame, e.g. while the preview plays.
+        /// </summary>
+        public bool Animating { get; set; }
+
+        /// <summary>
+        /// Draws an area of the editor (in control coordinates), or with null all of it, again in the next frame.
+        /// <para>
+        /// The editor is drawn in frames, so that a stream of changes (e.g. the cannon following the mouse) is drawn
+        /// once a frame rather than once for each change, and so that the mouse can not hold the drawing back: paints
+        /// and timer messages are only handled when no input is waiting, which a fast mouse can keep from happening. A
+        /// frame that is due is drawn as soon as the messages waiting have been handled, and is otherwise posted by a
+        /// timer, as posted messages are handled before input.
+        /// </para>
+        /// </summary>
+        public void RequestRedraw(Rectangle? area)
+        {
+            if (area is Rectangle rect)
+                _redrawArea = _redrawArea.IsEmpty ? rect : Rectangle.Union(_redrawArea, rect);
+            else
+                _redrawAll = true;
+            ScheduleFrame();
+        }
+
+        private void ScheduleFrame()
+        {
+            if (_frameScheduled || IsDisposed)
+                return;
+            if (!IsHandleCreated)
+            {
+                // Drawn when it is shown (OnHandleCreated starts the frames)
+                Invalidate();
+                return;
+            }
+
+            _frameScheduled = true;
+            var wait = (int)Math.Ceiling((_lastFrame + FrameInterval - _clock.Elapsed).TotalMilliseconds);
+            if (wait <= 0)
+            {
+                SetWaitingForIdle(true);
+                // Without idle time (e.g. a mouse moving fast enough to always have input waiting, or in a modal loop
+                // such as a window being moved, which has no idle event), it is posted
+                wait = OverdueFrameWait;
+            }
+            if (_frameTimer == null)
+                _frameTimer = new System.Threading.Timer(_ => PostFrame());
+            _frameTimer.Change(wait, Timeout.Infinite);
+        }
+
+        private void SetWaitingForIdle(bool value)
+        {
+            if (_waitingForIdle == value)
+                return;
+            _waitingForIdle = value;
+            if (value)
+                Application.Idle += Application_Idle;
+            else
+                Application.Idle -= Application_Idle;
+        }
+
+        private void Application_Idle(object sender, EventArgs e)
+        {
+            // Posted, as the message loop waits for a message after the idle event
+            SetWaitingForIdle(false);
+            PostFrame();
+        }
+
+        // Called on a thread pool thread, by the timer
+        private void PostFrame()
+        {
+            try
+            {
+                BeginInvoke(new Action(RunFrame));
+            }
+            catch (InvalidOperationException)
+            {
+                // The handle has been destroyed: OnHandleCreated starts the frames again
+            }
+        }
+
+        private void RunFrame()
+        {
+            // The timer and the idle event can both post the frame
+            if (!_frameScheduled || IsDisposed)
+                return;
+            _frameScheduled = false;
+            SetWaitingForIdle(false);
+
+            _lastFrame = _clock.Elapsed;
+            FrameStarting?.Invoke(this, EventArgs.Empty);
+            if (Animating || _redrawAll)
+                Invalidate();
+            else if (!_redrawArea.IsEmpty)
+                Invalidate(_redrawArea);
+            _redrawAll = false;
+            _redrawArea = Rectangle.Empty;
+
+            // Drawn now, rather than when there are no other messages
+            _inFrame = true;
+            try
+            {
+                Update();
+            }
+            finally
+            {
+                _inFrame = false;
+            }
+
+            if (Animating)
+                ScheduleFrame();
+        }
+
+        protected override void OnHandleCreated(EventArgs e)
+        {
+            base.OnHandleCreated(e);
+            _frameScheduled = false;
+            RequestRedraw(null);
         }
 
         #endregion
