@@ -30,10 +30,10 @@ namespace Crom.Controls.TabbedDocument
    {
       #region Fields.
 
-      private const int                ButtonRightMargin                   = 2;
-      private const int                PanelMargin                         = 0;
-      private const int                ButtonVerticalMargins               = 16;
-      private const int                ButtonWidth                         = 16;
+      private static readonly int      ButtonRightMargin                   = DockDpi.Scale(2);
+      private static readonly int      PanelMargin                         = 0;
+      private static readonly int      ButtonVerticalMargins               = DockDpi.Scale(16);
+      private static readonly int      ButtonWidth                         = DockDpi.Scale(16);
 
       #endregion Fields.
 
@@ -67,16 +67,16 @@ namespace Crom.Controls.TabbedDocument
             int x1 = bounds.X;
             int y1 = bounds.Bottom + (int)(bounds.Width * 0.75);
 
-            int x2 = bounds.Right - 2;
-            int y2 = bounds.Bottom - (int)(bounds.Width * 0.25) + 2;
+            int x2 = bounds.Right - DockDpi.Scale(2);
+            int y2 = bounds.Bottom - (int)(bounds.Width * 0.25) + DockDpi.Scale(2);
 
             int x3 = bounds.Right;
             int y3 = bounds.Bottom - (int)(bounds.Width * 0.25) - 1;
 
             int x4 = bounds.Right;
-            int y4 = bounds.Y + 2;
+            int y4 = bounds.Y + DockDpi.Scale(2);
 
-            int x5 = bounds.Right - 2;
+            int x5 = bounds.Right - DockDpi.Scale(2);
             int y5 = bounds.Y;
 
             int x6 = bounds.X;
@@ -120,11 +120,11 @@ namespace Crom.Controls.TabbedDocument
          }
 
          Rectangle textBounds = bounds;
-         textBounds.Y += 10;
+         textBounds.Y += DockDpi.Scale(10);
 
          if (icon != null)
          {
-            graphics.DrawIcon(icon, new Rectangle(bounds.X + 4, textBounds.Y + 2, ButtonWidth - 4, ButtonWidth - 4));
+            DockDpi.DrawIcon(graphics, icon, new Rectangle(bounds.X + DockDpi.Scale(4), textBounds.Y + DockDpi.Scale(2), ButtonWidth - DockDpi.Scale(4), ButtonWidth - DockDpi.Scale(4)));
             textBounds.Y += ButtonWidth;
          }
 
@@ -157,13 +157,13 @@ namespace Crom.Controls.TabbedDocument
       public override void DrawScrollBackButton(Rectangle bounds, zButtonState state, Graphics graphics)
       {
          int x1 = bounds.Left + bounds.Width / 2 + 1;
-         int y1 = bounds.Top + 5;
+         int y1 = bounds.Top + DockDpi.Scale(5);
 
-         int y2 = y1 + 5;
-         int x2 = x1 - 4;
+         int y2 = y1 + DockDpi.Scale(5);
+         int x2 = x1 - DockDpi.Scale(4);
 
          int y3 = y2;
-         int x3 = x1 + 4;
+         int x3 = x1 + DockDpi.Scale(4);
 
          using (GraphicsPath arrowHeadPath = new GraphicsPath())
          {
@@ -230,13 +230,13 @@ namespace Crom.Controls.TabbedDocument
       public override void DrawScrollNextButton(Rectangle bounds, zButtonState state, Graphics graphics)
       {
          int x1 = bounds.Left + bounds.Width / 2 + 1;
-         int y1 = bounds.Bottom - 5;
+         int y1 = bounds.Bottom - DockDpi.Scale(5);
 
-         int y2 = y1 - 4;
-         int x2 = x1 - 4;
+         int y2 = y1 - DockDpi.Scale(4);
+         int x2 = x1 - DockDpi.Scale(4);
 
          int y3 = y2;
-         int x3 = x1 + 4;
+         int x3 = x1 + DockDpi.Scale(4);
 
          using (GraphicsPath arrowHeadPath = new GraphicsPath())
          {
@@ -338,7 +338,7 @@ namespace Crom.Controls.TabbedDocument
       /// <returns>bounds of the first button</returns>
       public override Rectangle GetFirstButtonBounds(Rectangle panelBounds, bool hasScroll, int scrolPos, string text, Font font, Icon icon, Graphics graphics)
       {
-         int dY = 4 + PanelMargin;
+         int dY = DockDpi.Scale(4) + PanelMargin;
 
          if (hasScroll)
          {
@@ -388,7 +388,7 @@ namespace Crom.Controls.TabbedDocument
       /// <returns>clip rectangle for the buttons</returns>
       public override Rectangle GetButtonsClipRectangle(Rectangle panelBounds, bool hasScroll, int captionButtonsCount)
       {
-         int dY = 4 + PanelMargin;
+         int dY = DockDpi.Scale(4) + PanelMargin;
 
          if (hasScroll)
          {

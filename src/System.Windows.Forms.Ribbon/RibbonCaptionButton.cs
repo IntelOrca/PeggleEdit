@@ -135,7 +135,7 @@ namespace System.Windows.Forms
         {
 
             Rectangle r = bounds;
-            r.X = bounds.Left + 3;
+            r.X = bounds.Left + RibbonDpi.Scale(3);
             return r;
         }
 

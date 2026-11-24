@@ -56,7 +56,7 @@ namespace System.Windows.Forms
                 {
                     if (string.IsNullOrEmpty(Text))
                     {
-                        SetLastMeasuredSize(new Size(1, 3));
+                        SetLastMeasuredSize(new Size(1, RibbonDpi.Scale(3)));
                     }
                     else
                     {

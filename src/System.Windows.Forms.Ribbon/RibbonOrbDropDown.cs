@@ -14,7 +14,7 @@ namespace System.Windows.Forms
         #region Fields
         internal RibbonOrbMenuItem LastPoppedMenuItem;
         private Rectangle designerSelectedBounds;
-        private int glyphGap = 3;
+        private int glyphGap = RibbonDpi.Scale(3);
         private Padding _contentMargin;
         private Ribbon _ribbon;
         private RibbonItemCollection _menuItems;
@@ -39,8 +39,8 @@ namespace System.Windows.Forms
             _recentItems.SetOwner(Ribbon);
             _optionItems.SetOwner(Ribbon);
 
-            _optionsPadding = 6;
-            Size = new System.Drawing.Size(527, 447);
+            _optionsPadding = RibbonDpi.Scale(6);
+            Size = RibbonDpi.Scale(new System.Drawing.Size(527, 447));
             BorderRoundness = 8;
         }
 
@@ -79,7 +79,7 @@ namespace System.Windows.Forms
             {
                 if (_contentMargin.Size.IsEmpty)
                 {
-                    _contentMargin = new Padding(6, 17, 6, 29);
+                    _contentMargin = RibbonDpi.Scale(new Padding(6, 17, 6, 29));
                 }
 
                 return _contentMargin;
@@ -109,7 +109,7 @@ namespace System.Windows.Forms
             get
             {
                 Rectangle r = ContentBounds;
-                r.Width = 150;
+                r.Width = RibbonDpi.Scale(150);
                 return r;
             }
         }
@@ -123,8 +123,8 @@ namespace System.Windows.Forms
             get
             {
                 Rectangle r = ContentBounds;
-                r.Width -= 150;
-                r.X += 150;
+                r.Width -= RibbonDpi.Scale(150);
+                r.X += RibbonDpi.Scale(150);
                 return r;
             }
         }
@@ -298,11 +298,11 @@ namespace System.Windows.Forms
         {
             if (!string.IsNullOrEmpty(s.Text))
             {
-                return 20;
+                return RibbonDpi.Scale(20);
             }
             else
             {
-                return 3;
+                return RibbonDpi.Scale(3);
             }
         }
 
@@ -313,8 +313,8 @@ namespace System.Windows.Forms
         {
             int curtop = 0;
             int curright = 0;
-            int menuItemHeight = 44;
-            int recentHeight = 22;
+            int menuItemHeight = RibbonDpi.Scale(44);
+            int recentHeight = RibbonDpi.Scale(22);
             Rectangle rcontent = ContentBounds;
             Rectangle rbuttons = ContentButtonsBounds;
             Rectangle rrecent = ContentRecentItemsBounds;

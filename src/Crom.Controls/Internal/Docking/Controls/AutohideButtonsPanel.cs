@@ -32,7 +32,7 @@ namespace Crom.Controls.Docking
    {
       #region Fields
 
-      public  const int       SizeLimit         = 18;
+      public  static readonly int SizeLimit         = DockDpi.Scale(18);
       private DockStyle       _logicalDock      = DockStyle.None;
       private Color           _borderColor      = Color.FromArgb(150, 150, 150);
 

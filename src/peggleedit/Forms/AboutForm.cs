@@ -24,6 +24,10 @@ namespace IntelOrca.PeggleEdit.Designer
     {
         public AboutForm()
         {
+            // The designer sets the client size while the form has no caption (no control box and no text yet).
+            // Setting the text afterwards adds the caption at the expense of the client area, which cuts off the
+            // bottom of the form at high DPI, so give the form its caption first.
+            Text = " ";
             InitializeComponent();
 
             Text = String.Format("{0} {1}", Program.AppTitle, Program.AppVersionLabel);

@@ -114,7 +114,7 @@ namespace System.Windows.Forms
         {
             _items = items;
             _ownerRibbon = ownerRibbon;
-            _sizingGripHeight = 12;
+            _sizingGripHeight = RibbonDpi.Scale(12);
             _parentItem = parentItem;
             _sensor = new RibbonMouseSensor(this, OwnerRibbon, items);
             _MeasuringSize = measuringSize;

@@ -597,7 +597,7 @@ namespace IntelOrca.PeggleEdit.Designer
                 menu.Items.Add(new ToolStripMenuItem("Delete", Resources.delete_16, new EventHandler(mnuDelete)));
             }
 
-            menu.Show(Editor, location);
+            menu.Show(Editor, Editor.ZoomPoint(location));
         }
 
         private void mnuBringToFront(object sender, EventArgs e)

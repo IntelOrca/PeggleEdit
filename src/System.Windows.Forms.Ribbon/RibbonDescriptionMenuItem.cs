@@ -22,7 +22,7 @@ namespace System.Windows.Forms
         public RibbonDescriptionMenuItem()
         {
             DropDownArrowDirection = RibbonArrowDirection.Left;
-            SetDropDownMargin(new Padding(10));
+            SetDropDownMargin(RibbonDpi.Scale(new Padding(10)));
         }
 
         /// <summary>
@@ -142,7 +142,7 @@ namespace System.Windows.Forms
         {
             Size s = base.MeasureSize(sender, e);
 
-            s.Height = 52;
+            s.Height = RibbonDpi.Scale(52);
 
             SetLastMeasuredSize(s);
 
@@ -154,7 +154,7 @@ namespace System.Windows.Forms
             Rectangle r = base.OnGetTextBounds(sMode, bounds);
             DescriptionBounds = r;
 
-            r.Height = 20;
+            r.Height = RibbonDpi.Scale(20);
 
             DescriptionBounds = Rectangle.FromLTRB(DescriptionBounds.Left, r.Bottom, DescriptionBounds.Right, DescriptionBounds.Bottom);
 

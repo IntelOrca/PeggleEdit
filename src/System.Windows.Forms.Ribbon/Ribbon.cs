@@ -28,7 +28,7 @@ namespace System.Windows.Forms
     {
         #region Static
 
-        public static int CaptionBarHeight = 24;
+        public static int CaptionBarHeight = RibbonDpi.Scale(24);
 
         #endregion
 
@@ -122,17 +122,17 @@ namespace System.Windows.Forms
             _tabs = new RibbonTabCollection(this);
             _contexts = new RibbonContextCollection(this);
 
-            _tabsMargin = new Padding(12, 24 + 2, 20, 0);
-            _tabTextMargin = new Padding(4, 2, 4, 2);
-            _tabsPadding = new Padding(8, 5, 8, 3);
-            _tabContentMargin = new Padding(1, 0, 1, 2);
-            _panelPadding = new Padding(3);
-            _panelMargin = new Padding(3, 2, 3, 15);
-            _panelSpacing = 3;
-            _itemPadding = new Padding(1, 0, 1, 0);
-            _itemMargin = new Padding(4, 2, 4, 2);
-            _tabSpacing = 6;
-            _dropDownMargin = new Padding(2);
+            _tabsMargin = RibbonDpi.Scale(new Padding(12, 24 + 2, 20, 0));
+            _tabTextMargin = RibbonDpi.Scale(new Padding(4, 2, 4, 2));
+            _tabsPadding = RibbonDpi.Scale(new Padding(8, 5, 8, 3));
+            _tabContentMargin = RibbonDpi.Scale(new Padding(1, 0, 1, 2));
+            _panelPadding = RibbonDpi.Scale(new Padding(3));
+            _panelMargin = RibbonDpi.Scale(new Padding(3, 2, 3, 15));
+            _panelSpacing = RibbonDpi.Scale(3);
+            _itemPadding = RibbonDpi.Scale(new Padding(1, 0, 1, 0));
+            _itemMargin = RibbonDpi.Scale(new Padding(4, 2, 4, 2));
+            _tabSpacing = RibbonDpi.Scale(6);
+            _dropDownMargin = RibbonDpi.Scale(new Padding(2));
             _renderer = new RibbonProfessionalRenderer();
             _orbVisible = true;
             _orbDropDown = new RibbonOrbDropDown(this);
@@ -175,9 +175,9 @@ namespace System.Windows.Forms
             {
                 int left = 0;
                 if (OrbVisible) left = OrbBounds.Right;
-                if (QuickAccessVisible) left = QuickAcessToolbar.Bounds.Right + 20;
+                if (QuickAccessVisible) left = QuickAcessToolbar.Bounds.Right + RibbonDpi.Scale(20);
                 if (QuickAccessVisible && QuickAcessToolbar.DropDownButtonVisible) left = QuickAcessToolbar.DropDownButton.Bounds.Right;
-                Rectangle r = Rectangle.FromLTRB(left, 0, Width - 100, CaptionBarSize);
+                Rectangle r = Rectangle.FromLTRB(left, 0, Width - RibbonDpi.Scale(100), CaptionBarSize);
                 return r;
             }
         }
@@ -373,11 +373,11 @@ namespace System.Windows.Forms
             {
                 if (OrbVisible)
                 {
-                    return new Rectangle(4, 4, 36, 36);
+                    return new Rectangle(RibbonDpi.Scale(4), RibbonDpi.Scale(4), RibbonDpi.Scale(36), RibbonDpi.Scale(36));
                 }
                 else
                 {
-                    return new Rectangle(4, 4, 0, 0);
+                    return new Rectangle(RibbonDpi.Scale(4), RibbonDpi.Scale(4), 0, 0);
                 }
                 
             }
@@ -671,6 +671,30 @@ namespace System.Windows.Forms
         }
 
         /// <summary>
+        /// Gets the height of the ribbon: 138 pixels at 96 DPI, which fits the tabs and three rows of medium items.
+        /// </summary>
+        /// <remarks>
+        /// Text does not grow exactly in proportion to the DPI, so at other DPIs the height is worked out from the
+        /// same metrics the layout uses, to keep three rows of medium items fitting in a panel.
+        /// </remarks>
+        private int FixedHeight
+        {
+            get
+            {
+                int height = RibbonDpi.Scale(138);
+                if (RibbonDpi.Factor > 1)
+                {
+                    int textHeight = TextRenderer.MeasureText("Ag", Font).Height;
+                    int tabsBottom = TabsMargin.Top + TabsPadding.Vertical + textHeight;
+                    int mediumItemHeight = ItemMargin.Vertical + Math.Max(textHeight, RibbonDpi.Scale(16));
+                    int panelHeight = PanelMargin.Vertical + ItemPadding.Vertical + 3 * (mediumItemHeight + ItemPadding.Vertical + 1);
+                    height = Math.Max(height, tabsBottom + TabContentMargin.Vertical + PanelPadding.Vertical + panelHeight + 1);
+                }
+                return height;
+            }
+        }
+
+        /// <summary>
         /// Overriden. The maximum size is fixed
         /// </summary>
         [Browsable(false), DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
@@ -678,7 +702,7 @@ namespace System.Windows.Forms
         {
             get
             {
-                return new System.Drawing.Size(0, 138); //115 was the old one
+                return new System.Drawing.Size(0, FixedHeight); //115 was the old one
             }
             set
             {
@@ -694,7 +718,7 @@ namespace System.Windows.Forms
         {
             get
             {
-                return new System.Drawing.Size(0, 138); //115);
+                return new System.Drawing.Size(0, FixedHeight); //115);
             }
             set
             {
@@ -877,7 +901,7 @@ namespace System.Windows.Forms
         public void ShowOrbDropDown()
         {
             OrbPressed = true;
-            OrbDropDown.Show(PointToScreen(new Point(OrbBounds.X - 4, OrbBounds.Bottom - OrbDropDown.ContentMargin.Top + 2)));
+            OrbDropDown.Show(PointToScreen(new Point(OrbBounds.X - RibbonDpi.Scale(4), OrbBounds.Bottom - OrbDropDown.ContentMargin.Top + RibbonDpi.Scale(2))));
         }
 
         /// <summary>
@@ -1104,7 +1128,7 @@ namespace System.Windows.Forms
             #region Update QuickAccess bounds
 
             QuickAcessToolbar.MeasureSize(this, new RibbonElementMeasureSizeEventArgs(g, RibbonElementSizeMode.Compact));
-            QuickAcessToolbar.SetBounds(new Rectangle(new Point(OrbBounds.Right + QuickAcessToolbar.Margin.Left, OrbBounds.Top - 2), QuickAcessToolbar.LastMeasuredSize));
+            QuickAcessToolbar.SetBounds(new Rectangle(new Point(OrbBounds.Right + QuickAcessToolbar.Margin.Left, OrbBounds.Top - RibbonDpi.Scale(2)), QuickAcessToolbar.LastMeasuredSize));
 
             #endregion
 
@@ -1112,8 +1136,8 @@ namespace System.Windows.Forms
 
             if (CaptionButtonsVisible)
             {
-                Size cbs = new Size(20,20);
-                int cbg = 2;
+                Size cbs = RibbonDpi.Scale(new Size(20,20));
+                int cbg = RibbonDpi.Scale(2);
                 CloseButton.SetBounds(new Rectangle(new Point(ClientRectangle.Right - cbs.Width - cbg, cbg), cbs));
                 MaximizeRestoreButton.SetBounds(new Rectangle(new Point(CloseButton.Bounds.Left - cbs.Width, cbg), cbs));
                 MinimizeButton.SetBounds(new Rectangle(new Point(MaximizeRestoreButton.Bounds.Left - cbs.Width, cbg), cbs));

@@ -159,9 +159,9 @@ namespace System.Windows.Forms
             ///For RibbonItemGroup, size is always compact, and it's designed to be on an horizontal flow
             ///tab panel.
             ///
-            int minWidth = 16;
+            int minWidth = RibbonDpi.Scale(16);
             int widthSum = 0;
-            int maxHeight = 16;
+            int maxHeight = RibbonDpi.Scale(16);
 
             foreach (RibbonItem item in Items)
             {

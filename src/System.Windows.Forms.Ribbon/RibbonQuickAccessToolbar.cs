@@ -34,8 +34,8 @@ namespace System.Windows.Forms
             _dropDownButton.SetOwner(ownerRibbon);
             _dropDownButton.SmallImage = CreateDropDownButtonImage();
 
-            _margin = new Padding(9);
-            _padding = new Padding(3, 0, 0, 0);
+            _margin = RibbonDpi.Scale(new Padding(9));
+            _padding = RibbonDpi.Scale(new Padding(3, 0, 0, 0));
             _items = new RibbonQuickAccessToolbarItemCollection(this);
             _sensor = new RibbonMouseSensor(ownerRibbon, ownerRibbon, Items);
             _DropDownButtonVisible = true;
@@ -44,7 +44,8 @@ namespace System.Windows.Forms
 
         private Image CreateDropDownButtonImage()
         {
-            Bitmap bmp = new Bitmap(7, 7);
+            Bitmap bmp = new Bitmap(RibbonDpi.Scale(7), RibbonDpi.Scale(7));
+            RibbonDpi.MarkScaled(bmp);
             RibbonProfessionalRenderer renderer = Owner.Renderer as RibbonProfessionalRenderer;
 
             Color dk = Color.Navy;
@@ -58,6 +59,7 @@ namespace System.Windows.Forms
 
             using (Graphics g = Graphics.FromImage(bmp))
             {
+                g.ScaleTransform(RibbonDpi.Factor, RibbonDpi.Factor);
                 DrawDropDownButtonArrow(g, lt, 0, 1);
                 DrawDropDownButtonArrow(g, dk, 0, 0);
             }
@@ -198,7 +200,7 @@ namespace System.Windows.Forms
             ///tab panel.
             ///
             int widthSum = Padding.Horizontal;
-            int maxHeight = 16;
+            int maxHeight = RibbonDpi.Scale(16);
 
             foreach (RibbonItem item in Items)
             {
@@ -210,7 +212,7 @@ namespace System.Windows.Forms
 
             widthSum -= 1;
 
-            if (Site != null && Site.DesignMode) widthSum += 16;
+            if (Site != null && Site.DesignMode) widthSum += RibbonDpi.Scale(16);
 
             Size result = new Size(widthSum, maxHeight);
             SetLastMeasuredSize(result);
@@ -230,7 +232,7 @@ namespace System.Windows.Forms
                 curLeft = item.Bounds.Right + 1;
             }
 
-            DropDownButton.SetBounds(new Rectangle(bounds.Right + bounds.Height / 2 + 2, bounds.Top, 12, bounds.Height));
+            DropDownButton.SetBounds(new Rectangle(bounds.Right + bounds.Height / 2 + RibbonDpi.Scale(2), bounds.Top, RibbonDpi.Scale(12), bounds.Height));
         }
 
         #endregion

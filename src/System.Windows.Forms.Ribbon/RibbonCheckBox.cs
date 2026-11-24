@@ -10,7 +10,7 @@ namespace System.Windows.Forms
     public class RibbonCheckBox : RibbonItem
     {
 		public event EventHandler CheckedChanged;
-		public Size CheckBoxSize = new Size(13, 13);
+		public Size CheckBoxSize = RibbonDpi.Scale(new Size(13, 13));
 
 		bool _dontUncheck;
         CheckState _checkState;
@@ -62,8 +62,8 @@ namespace System.Windows.Forms
         {
 			Size textSize = TextRenderer.MeasureText(Text, Owner.Font);
 
-			Size size = new Size(CheckBoxSize.Width + 6 + textSize.Width,
-				Math.Max(CheckBoxSize.Height + 4, Owner.Font.Height + 4));
+			Size size = new Size(CheckBoxSize.Width + RibbonDpi.Scale(6) + textSize.Width,
+				Math.Max(CheckBoxSize.Height + RibbonDpi.Scale(4), Owner.Font.Height + RibbonDpi.Scale(4)));
 
             SetLastMeasuredSize(size);
             return size;

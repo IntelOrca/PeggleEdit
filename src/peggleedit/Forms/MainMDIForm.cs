@@ -74,9 +74,12 @@ namespace IntelOrca.PeggleEdit.Designer
             //Set the form title
             this.Text = String.Format("{0} {1}", Program.AppTitle, Program.AppVersionLabel);
 
-            //Set the form size
-            MinimumSize = new Size(700, 500);
-            ClientSize = Settings.Default.MDIFormSize;
+            //Set the form size (saved sizes are scaled if they were saved at another DPI)
+            float sizesScale = Settings.Default.SizesScale > 0 ? Dpi.Factor / Settings.Default.SizesScale : 1;
+            MinimumSize = Dpi.Scale(new Size(700, 500));
+            ClientSize = new Size(
+                (int)Math.Round(Settings.Default.MDIFormSize.Width * sizesScale),
+                (int)Math.Round(Settings.Default.MDIFormSize.Height * sizesScale));
             StartPosition = FormStartPosition.CenterScreen;
 
             Width = Math.Min(Width, Screen.PrimaryScreen.WorkingArea.Width - 8);
@@ -157,6 +160,8 @@ namespace IntelOrca.PeggleEdit.Designer
             mDockContainer = new DockContainer();
             mSerializer = new DockStateSerializer(mDockContainer);
             mSerializer.SavePath = Settings.GetLayoutPath();
+            if (Settings.Default.SizesScale > 0)
+                mSerializer.LoadScale = Dpi.Factor / Settings.Default.SizesScale;
 
             mDockContainer.TitleBarGradientColor1 = Color.FromArgb(225, 237, 252);
             mDockContainer.TitleBarGradientColor2 = Color.FromArgb(191, 219, 255);
@@ -172,7 +177,7 @@ namespace IntelOrca.PeggleEdit.Designer
         {
             mStatusStrip = new StatusStrip();
             // Mono sizes an empty status strip to only a few pixels high
-            mStatusStrip.MinimumSize = new Size(0, 22);
+            mStatusStrip.MinimumSize = new Size(0, Dpi.Scale(22));
 
             mStatusLabel = new ToolStripStatusLabel();
             mStatusLabel.TextAlign = ContentAlignment.MiddleLeft;
@@ -189,6 +194,7 @@ namespace IntelOrca.PeggleEdit.Designer
         protected override void OnClosing(System.ComponentModel.CancelEventArgs e)
         {
             Settings.Default.MDIFormSize = ClientSize;
+            Settings.Default.SizesScale = Dpi.Factor;
 
             if (WindowState == FormWindowState.Maximized)
                 Settings.Default.MDIMaximized = true;

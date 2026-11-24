@@ -204,7 +204,7 @@ namespace Crom.Controls.Docking
          }
          else 
          {
-            int index = (mouseLocation.X - bounds.Left) / 16;
+            int index = (mouseLocation.X - bounds.Left) / DockDpi.Scale(16);
             if (index < 0 || index >= ButtonsCount)
             {
                index = -1;
@@ -234,18 +234,18 @@ namespace Crom.Controls.Docking
          Rectangle clipBounds = new Rectangle(titleBounds.Left, titleBounds.Top, captionButtonsBounds.Left - titleBounds.Left, titleBounds.Height);
          graphics.SetClip(clipBounds);
 
-         int iconSize = Math.Max(0, Math.Min(18, titleBounds.Height - 3));
+         int iconSize = Math.Max(0, Math.Min(DockDpi.Scale(18), titleBounds.Height - DockDpi.Scale(3)));
          int iconTop  = _contentTopOffset + (titleBounds.Height - iconSize) / 2 - 1;
-         Rectangle iconBounds = new Rectangle(titleBounds.Left + 4, iconTop, iconSize, iconSize);
+         Rectangle iconBounds = new Rectangle(titleBounds.Left + DockDpi.Scale(4), iconTop, iconSize, iconSize);
 
          if (Icon != null)
          {
-            graphics.DrawIcon (Icon, iconBounds);
+            DockDpi.DrawIcon (graphics, Icon, iconBounds);
          }
 
          using (Brush textBrush = new SolidBrush(TextColor))
          {
-            graphics.DrawString(Text, font, textBrush, iconBounds.Right, iconTop + 2);
+            graphics.DrawString(Text, font, textBrush, iconBounds.Right, iconTop + DockDpi.Scale(2));
          }
 
          graphics.Restore(state);
@@ -324,6 +324,16 @@ namespace Crom.Controls.Docking
       /// <param name="captionButtonsBounds">caption buttons bounds</param>
       /// <param name="graphics">graphics object</param>
       private void DrawCaptionButtons(Rectangle captionButtonsBounds, Graphics graphics)
+      {
+         // The buttons are drawn in 96 DPI pixel coordinates, scaled up to the display's DPI.
+         using (DockDpi.ScaleGlyphs(graphics, captionButtonsBounds.Location))
+         {
+            Rectangle unscaledBounds = new Rectangle(0, 0, 16 * ButtonsCount, (int)(captionButtonsBounds.Height / DockDpi.Factor));
+            DrawUnscaledCaptionButtons(unscaledBounds, graphics);
+         }
+      }
+
+      private void DrawUnscaledCaptionButtons(Rectangle captionButtonsBounds, Graphics graphics)
       {
          int edge    = 16;
 
@@ -439,8 +449,8 @@ namespace Crom.Controls.Docking
       {
          Rectangle titleBounds = TitleBarBounds;
 
-         int buttonsWidth = 16 * ButtonsCount;
-         return new Rectangle(titleBounds.Right - buttonsWidth - 4, 2, buttonsWidth, titleBounds.Height - 8);
+         int buttonsWidth = DockDpi.Scale(16) * ButtonsCount;
+         return new Rectangle(titleBounds.Right - buttonsWidth - DockDpi.Scale(4), DockDpi.Scale(2), buttonsWidth, titleBounds.Height - DockDpi.Scale(8));
       }
 
       /// <summary>

@@ -933,6 +933,7 @@ namespace IntelOrca.PeggleEdit.Designer
 
         protected override void OnMouseDown(MouseEventArgs e)
         {
+            e = Unzoom(e);
             base.OnMouseDown(e);
 
             Focus();
@@ -948,6 +949,7 @@ namespace IntelOrca.PeggleEdit.Designer
 
         protected override void OnMouseMove(MouseEventArgs e)
         {
+            e = Unzoom(e);
             base.OnMouseMove(e);
 
             if (mLevel == null)
@@ -979,6 +981,7 @@ namespace IntelOrca.PeggleEdit.Designer
 
         protected override void OnMouseUp(MouseEventArgs e)
         {
+            e = Unzoom(e);
             base.OnMouseUp(e);
 
             if (mSelectedTool != null)
@@ -1008,7 +1011,39 @@ namespace IntelOrca.PeggleEdit.Designer
         {
             base.OnPaint(e);
 
+            if (Zoom != 1)
+                e.Graphics.ScaleTransform(Zoom, Zoom);
             Draw(e.Graphics);
+        }
+
+        #endregion
+
+        #region Zoom
+
+        /// <summary>
+        /// Gets how much the level is enlarged on screen. It is the display's DPI scale, so the level is the same
+        /// physical size as at 96 DPI, but drawn sharply at the display's resolution rather than stretched by Windows.
+        /// The editor works in unzoomed coordinates: what is drawn is scaled up, and mouse positions (given to the
+        /// tools and in the mouse events) are scaled down.
+        /// </summary>
+        public float Zoom { get; } = Dpi.Factor;
+
+        /// <summary>
+        /// Gets the size of the editor on screen for the given unzoomed size.
+        /// </summary>
+        public Size ZoomSize(Size size) => new Size((int)Math.Ceiling(size.Width * Zoom), (int)Math.Ceiling(size.Height * Zoom));
+
+        /// <summary>
+        /// Converts an unzoomed point (as given to the tools) to a point on the control.
+        /// </summary>
+        public Point ZoomPoint(Point p) => new Point((int)Math.Round(p.X * Zoom), (int)Math.Round(p.Y * Zoom));
+
+        private MouseEventArgs Unzoom(MouseEventArgs e)
+        {
+            if (Zoom == 1)
+                return e;
+            var location = new Point((int)Math.Floor(e.X / Zoom), (int)Math.Floor(e.Y / Zoom));
+            return new MouseEventArgs(e.Button, e.Clicks, location.X, location.Y, e.Delta);
         }
 
         #endregion

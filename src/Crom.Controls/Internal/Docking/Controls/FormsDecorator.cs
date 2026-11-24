@@ -32,12 +32,12 @@ namespace Crom.Controls.Docking
    {
       #region Fields
 
-      private const int             DefaultTopTitleOffset               = 2;
-      private const int             DefaultTopMargin                    = 4;
-      private const int             DefaultLeftMargin                   = 4;
-      private const int             DefaultRightMargin                  = 4;
-      private const int             DefaultBottomMargin                 = 4;
-      private const int             DefaultTitleHeight                  = 20;
+      private static readonly int   DefaultTopTitleOffset               = DockDpi.Scale(2);
+      private static readonly int   DefaultTopMargin                    = DockDpi.Scale(4);
+      private static readonly int   DefaultLeftMargin                   = DockDpi.Scale(4);
+      private static readonly int   DefaultRightMargin                  = DockDpi.Scale(4);
+      private static readonly int   DefaultBottomMargin                 = DockDpi.Scale(4);
+      private static readonly int   DefaultTitleHeight                  = DockDpi.Scale(20);
 
       private FormsDecoratorControlCollection _controls                 = null;
 
@@ -70,32 +70,32 @@ namespace Crom.Controls.Docking
          FormsPanel.Bounds      = ClientRectangle;
          FormsPanel.Anchor      = AnchorStyles.Left | AnchorStyles.Right | AnchorStyles.Top | AnchorStyles.Bottom;
 
-         TitleBar.Height        = 24;
+         TitleBar.Height        = DockDpi.Scale(24);
          TitleBar.Cursor        = Cursors.SizeAll;
          TitleBar.Paint        += OnPaintTitleBar;
          TitleBar.MouseDown    += OnMouseDownInTitleBar;
          TitleBar.MouseMove    += OnMouseMoveInTitleBar;
          TitleBar.MouseUp      += OnMouseUpFromTitleBar;
 
-         TopMargin.Height       = 4;
+         TopMargin.Height       = DefaultTopMargin;
          TopMargin.Cursor       = Cursors.SizeNS;
          TopMargin.MouseDown   += OnMouseDownInTopMargin;
          TopMargin.MouseMove   += OnMouseMoveInTopMargin;
          TopMargin.MouseUp     += OnMouseUpFromTopMargin;
 
-         LeftMargin.Width       = 4;
+         LeftMargin.Width       = DefaultLeftMargin;
          LeftMargin.Cursor      = Cursors.SizeWE;
          LeftMargin.MouseDown  += OnMouseDownInLeftMargin;
          LeftMargin.MouseMove  += OnMouseMoveInLeftMargin;
          LeftMargin.MouseUp    += OnMouseUpFromLeftMargin;
 
-         RightMargin.Width      = 4;
+         RightMargin.Width      = DefaultRightMargin;
          RightMargin.Cursor     = Cursors.SizeWE;
          RightMargin.MouseDown += OnMouseDownInRightMargin;
          RightMargin.MouseMove += OnMouseMoveInRightMargin;
          RightMargin.MouseUp   += OnMouseUpFromRightMargin;
 
-         BottomMargin.Height    = 4;
+         BottomMargin.Height    = DefaultBottomMargin;
          BottomMargin.Cursor    = Cursors.SizeNS;
          BottomMargin.MouseDown += OnMouseDownInBottomMargin;
          BottomMargin.MouseMove += OnMouseMoveInBottomMargin;

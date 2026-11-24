@@ -22,7 +22,7 @@ namespace System.Windows.Forms
     {
         #region Fields
 
-        private const int arrowWidth = 5;
+        private static readonly int arrowWidth = RibbonDpi.Scale(5);
         private RibbonButtonStyle _style;
         private Rectangle _dropDownBounds;
         private Rectangle _buttonFaceBounds;
@@ -64,8 +64,8 @@ namespace System.Windows.Forms
         public RibbonButton()
         {
             _dropDownItems = new RibbonItemCollection();
-            _dropDownArrowSize = new Size(5, 3);
-            _dropDownMargin = new Padding(6);
+            _dropDownArrowSize = RibbonDpi.Scale(new Size(5, 3));
+            _dropDownMargin = RibbonDpi.Scale(new Padding(6));
             _DropDownArrowDirection = RibbonArrowDirection.Down;
             Image = CreateImage(32);
             SmallImage = CreateImage(16);
@@ -450,26 +450,28 @@ namespace System.Windows.Forms
             {
                 if (Image != null)
                 {
+                    Size imageSize = RibbonDpi.ScaleImage(Image);
                     return new Rectangle(
-                    Bounds.Left + ((Bounds.Width - Image.Width) / 2),
+                    Bounds.Left + ((Bounds.Width - imageSize.Width) / 2),
                     Bounds.Top + Owner.ItemMargin.Top,
-                    Image.Width,
-                    Image.Height);
+                    imageSize.Width,
+                    imageSize.Height);
                 }
                 else
                 {
-                    return new Rectangle(ContentBounds.Location, new Size(32, 32));
+                    return new Rectangle(ContentBounds.Location, RibbonDpi.Scale(new Size(32, 32)));
                 }
             }
             else
             {
                 if (SmallImage != null)
                 {
+                    Size smallImageSize = RibbonDpi.ScaleImage(SmallImage);
                     return new Rectangle(
                         Bounds.Left + Owner.ItemMargin.Left,
-                        Bounds.Top + ((Bounds.Height - SmallImage.Height) / 2),
-                        SmallImage.Width,
-                        SmallImage.Height);
+                        Bounds.Top + ((Bounds.Height - smallImageSize.Height) / 2),
+                        smallImageSize.Width,
+                        smallImageSize.Height);
                 }
                 else
                 {
@@ -544,7 +546,7 @@ namespace System.Windows.Forms
                 case RibbonElementSizeMode.Large:
                 case RibbonElementSizeMode.Overflow:
                     return Rectangle.FromLTRB(bounds.Left,
-                        bounds.Top + Image.Height + Owner.ItemMargin.Vertical,
+                        bounds.Top + RibbonDpi.ScaleImage(Image).Height + Owner.ItemMargin.Vertical,
                         bounds.Right, bounds.Bottom);
 
                 case RibbonElementSizeMode.DropDown:
@@ -664,8 +666,8 @@ namespace System.Windows.Forms
             int heightSum = Owner.ItemMargin.Vertical;
             int largeHeight = OwnerPanel == null ? 0 : OwnerPanel.ContentBounds.Height - Owner.ItemPadding.Vertical;// -Owner.ItemMargin.Vertical; //58;
 
-            Size simg = SmallImage != null ? SmallImage.Size : Size.Empty;
-            Size img = Image != null ? Image.Size : Size.Empty;
+            Size simg = RibbonDpi.ScaleImage(SmallImage);
+            Size img = RibbonDpi.ScaleImage(Image);
             Size sz = Size.Empty;
 
             switch (theSize)
@@ -702,7 +704,7 @@ namespace System.Windows.Forms
 
             if (theSize == RibbonElementSizeMode.DropDown)
             {
-                heightSum += 2;
+                heightSum += RibbonDpi.Scale(2);
             }
 
             if (Style == RibbonButtonStyle.DropDown)

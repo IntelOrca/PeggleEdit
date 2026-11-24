@@ -662,7 +662,7 @@ namespace Crom.Controls.Docking
       /// </summary>
       protected override int PagesPanelMargins
       {
-         get { return 4; }
+         get { return DockDpi.Scale(4); }
       }
 
       /// <summary>
@@ -670,7 +670,7 @@ namespace Crom.Controls.Docking
       /// </summary>
       protected override int RoundRadius
       {
-         get { return 2; }
+         get { return DockDpi.Scale(2); }
       }
 
       /// <summary>

@@ -783,7 +783,7 @@ namespace System.Windows.Forms
         /// </summary>
         private void UpdateScrollBounds()
         {
-            int w = 13;
+            int w = RibbonDpi.Scale(13);
             bool scrBuffer = _scrollRightVisible;
             bool sclBuffer = _scrollLeftVisible;
             Rectangle rrBuffer = _scrollRightBounds;
@@ -948,7 +948,7 @@ namespace System.Windows.Forms
         /// </summary>
         public void ScrollLeft()
         {
-            ScrollOffset(50);
+            ScrollOffset(RibbonDpi.Scale(50));
         }
 
         /// <summary>
@@ -956,7 +956,7 @@ namespace System.Windows.Forms
         /// </summary>
         public void ScrollRight()
         {
-            ScrollOffset(-50);
+            ScrollOffset(-RibbonDpi.Scale(50));
         }
 
         public void ScrollOffset(int amount)

@@ -19,7 +19,7 @@ namespace System.Windows.Forms
         public RibbonOrbMenuItem()
         {
             DropDownArrowDirection = RibbonArrowDirection.Left;
-            SetDropDownMargin(new Padding(10));
+            SetDropDownMargin(RibbonDpi.Scale(new Padding(10)));
             DropDownShowing += new EventHandler(RibbonOrbMenuItem_DropDownShowing);
         }
 

@@ -26,6 +26,7 @@ namespace IntelOrca.PeggleEdit.Designer
 
         private InputForm(string title, string caption, string defaultText)
         {
+            SuspendLayout();
             Text = title;
             ShowIcon = false;
             ClientSize = new Size(280, 141);
@@ -62,6 +63,11 @@ namespace IntelOrca.PeggleEdit.Designer
             Controls.Add(lblCaption);
             Controls.Add(txtInput);
             Controls.Add(btnOK);
+
+            // The sizes above are for 96 DPI; scale them to the DPI
+            AutoScaleDimensions = new SizeF(6F, 13F);
+            AutoScaleMode = AutoScaleMode.Font;
+            ResumeLayout(false);
         }
 
         void btnOK_Click(object sender, EventArgs e)

@@ -498,7 +498,7 @@ namespace System.Windows.Forms
             {
                 SetMoreBounds(
                     Rectangle.FromLTRB(
-                        bounds.Right - 15,
+                        bounds.Right - RibbonDpi.Scale(15),
                         _contentBounds.Bottom + 1,
                         bounds.Right,
                         bounds.Bottom)
@@ -529,7 +529,7 @@ namespace System.Windows.Forms
 
             if (ButtonMoreVisible)
             {
-                minSize.Width += ButtonMoreBounds.Width + 3;
+                minSize.Width += ButtonMoreBounds.Width + RibbonDpi.Scale(3);
             }
 
             #endregion
@@ -792,7 +792,7 @@ namespace System.Windows.Forms
         {
             int curLeft = ContentBounds.Left;
             int curTop = ContentBounds.Top;
-            int padding = mode == RibbonElementSizeMode.Medium ? 7 : 0;
+            int padding = mode == RibbonElementSizeMode.Medium ? RibbonDpi.Scale(7) : 0;
             int maxBottom = 0;
 
             #region Sorts from larger to smaller

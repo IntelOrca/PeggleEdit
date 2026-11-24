@@ -150,6 +150,18 @@ namespace Crom.Controls.Docking
       }
 
       /// <summary>
+      /// Accessor of the factor the saved form sizes are multiplied by when they are loaded, e.g. to scale a layout
+      /// saved at another DPI
+      /// </summary>
+      public float LoadScale
+      {
+         get { return _loadScale; }
+         set { _loadScale = value; }
+      }
+
+      private float _loadScale = 1;
+
+      /// <summary>
       /// Save the state of the container
       /// </summary>
       public void Save()
@@ -388,8 +400,8 @@ namespace Crom.Controls.Docking
          Guid identifier            = new Guid(xmlGuid.InnerText);
          zAllowedDock allowedDock   = (zAllowedDock)Enum.Parse(typeof(zAllowedDock), xmlAllowedDock.InnerText);
          Form form                  = formsFactory(identifier);
-         int width                  = Convert.ToInt32(xmlWidth.InnerText);
-         int height                 = Convert.ToInt32(xmlHeight.InnerText);
+         int width                  = (int)Math.Round(Convert.ToInt32(xmlWidth.InnerText) * LoadScale);
+         int height                 = (int)Math.Round(Convert.ToInt32(xmlHeight.InnerText) * LoadScale);
          form.Width  = width;
          form.Height = height;
 

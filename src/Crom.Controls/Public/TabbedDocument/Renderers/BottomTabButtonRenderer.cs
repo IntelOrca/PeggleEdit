@@ -30,10 +30,10 @@ namespace Crom.Controls.TabbedDocument
    {
       #region Fields
 
-      private const int                ButtonBottomMargin                  = 2;
-      private const int                PanelMargin                         = 0;
-      private const int                ButtonHorizontalMargins             = 16;
-      private const int                ButtonHeight                        = 16;
+      private static readonly int      ButtonBottomMargin                  = DockDpi.Scale(2);
+      private static readonly int      PanelMargin                         = 0;
+      private static readonly int      ButtonHorizontalMargins             = DockDpi.Scale(16);
+      private static readonly int      ButtonHeight                        = DockDpi.Scale(16);
 
       #endregion Fields
 
@@ -68,17 +68,17 @@ namespace Crom.Controls.TabbedDocument
             int x1 = bounds.X - (int)(bounds.Height * 0.75);
             int y1 = bounds.Top;
 
-            int x2 = bounds.X + (int)(bounds.Height * 0.25) - 2;
-            int y2 = bounds.Bottom - 2;
+            int x2 = bounds.X + (int)(bounds.Height * 0.25) - DockDpi.Scale(2);
+            int y2 = bounds.Bottom - DockDpi.Scale(2);
 
             int x3 = bounds.X + (int)(bounds.Height * 0.25) + 1;
             int y3 = bounds.Bottom;
 
-            int x4 = bounds.Right - 2;
+            int x4 = bounds.Right - DockDpi.Scale(2);
             int y4 = bounds.Bottom;
 
             int x5 = bounds.Right;
-            int y5 = bounds.Bottom - 2;
+            int y5 = bounds.Bottom - DockDpi.Scale(2);
 
             int x6 = bounds.Right;
             int y6 = bounds.Top;
@@ -116,12 +116,12 @@ namespace Crom.Controls.TabbedDocument
          }
 
          Rectangle textBounds = bounds;
-         textBounds.X += 10;
-         textBounds.Y += 4;
+         textBounds.X += DockDpi.Scale(10);
+         textBounds.Y += DockDpi.Scale(4);
 
          if (icon != null)
          {
-            graphics.DrawIcon(icon, new Rectangle(textBounds.X + 2, bounds.Y + 4, ButtonHeight - 4, ButtonHeight - 4));
+            DockDpi.DrawIcon(graphics, icon, new Rectangle(textBounds.X + DockDpi.Scale(2), bounds.Y + DockDpi.Scale(4), ButtonHeight - DockDpi.Scale(4), ButtonHeight - DockDpi.Scale(4)));
             textBounds.X += ButtonHeight;
          }
 
@@ -153,14 +153,14 @@ namespace Crom.Controls.TabbedDocument
       /// <param name="graphics">graphics</param>
       public override void DrawScrollBackButton(Rectangle bounds, zButtonState state, Graphics graphics)
       {
-         int x1 = bounds.Left + 5;
+         int x1 = bounds.Left + DockDpi.Scale(5);
          int y1 = bounds.Top + bounds.Height / 2 + 1;
 
-         int x2 = x1 + 4;
-         int y2 = y1 - 4;
+         int x2 = x1 + DockDpi.Scale(4);
+         int y2 = y1 - DockDpi.Scale(4);
 
          int x3 = x2;
-         int y3 = y1 + 4;
+         int y3 = y1 + DockDpi.Scale(4);
 
          using (GraphicsPath arrowHeadPath = new GraphicsPath())
          {
@@ -226,14 +226,14 @@ namespace Crom.Controls.TabbedDocument
       /// <param name="graphics">graphics</param>
       public override void DrawScrollNextButton(Rectangle bounds, zButtonState state, Graphics graphics)
       {
-         int x1 = bounds.Left + 5;
-         int y1 = bounds.Top + bounds.Height / 2 + 2;
+         int x1 = bounds.Left + DockDpi.Scale(5);
+         int y1 = bounds.Top + bounds.Height / 2 + DockDpi.Scale(2);
 
-         int x2 = x1 - 5;
-         int y2 = y1 - 5;
+         int x2 = x1 - DockDpi.Scale(5);
+         int y2 = y1 - DockDpi.Scale(5);
 
          int x3 = x2;
-         int y3 = y1 + 4;
+         int y3 = y1 + DockDpi.Scale(4);
 
          using (GraphicsPath arrowHeadPath = new GraphicsPath())
          {
@@ -335,7 +335,7 @@ namespace Crom.Controls.TabbedDocument
       /// <returns>bounds of the first button</returns>
       public override Rectangle GetFirstButtonBounds(Rectangle panelBounds, bool hasScroll, int scrolPos, string text, Font font, Icon icon, Graphics graphics)
       {
-         int dX = 5 + PanelMargin + (int)(ButtonHeight * 0.75);
+         int dX = DockDpi.Scale(5) + PanelMargin + (int)(ButtonHeight * 0.75);
 
          if (hasScroll)
          {
@@ -368,7 +368,7 @@ namespace Crom.Controls.TabbedDocument
       /// <returns>clip rectangle for the buttons</returns>
       public override Rectangle GetButtonsClipRectangle(Rectangle panelBounds, bool hasScroll, int captionButtonsCount)
       {
-         int dX = 5 + PanelMargin;
+         int dX = DockDpi.Scale(5) + PanelMargin;
 
          if (hasScroll)
          {

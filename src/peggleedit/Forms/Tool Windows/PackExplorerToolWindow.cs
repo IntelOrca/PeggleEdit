@@ -67,7 +67,7 @@ namespace IntelOrca.PeggleEdit.Designer
             mTreeView.BorderStyle = BorderStyle.None;
             mTreeView.Dock = DockStyle.Fill;
 
-            mTreeView.ImageList = mImageList;
+            mTreeView.ImageList = mImageList = Dpi.ScaleImageList(mImageList);
             mTreeView.ShowLines = false;
             mTreeView.LabelEdit = true;
 

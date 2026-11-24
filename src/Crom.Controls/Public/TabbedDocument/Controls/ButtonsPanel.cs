@@ -32,8 +32,8 @@ namespace Crom.Controls.TabbedDocument
    {
       #region Fields
 
-      private const int                ButtonMargin                     = 16;
-      private const int                ButtonHeight                     = 16;
+      private static readonly int      ButtonMargin                     = DockDpi.Scale(16);
+      private static readonly int      ButtonHeight                     = DockDpi.Scale(16);
 
       private Timer                    _scrollMoveTimer                 = new Timer();
 
@@ -654,7 +654,7 @@ namespace Crom.Controls.TabbedDocument
       /// </summary>
       protected virtual int PagesPanelMargins
       {
-         get { return 4; }
+         get { return DockDpi.Scale(4); }
       }
 
       /// <summary>
@@ -662,7 +662,7 @@ namespace Crom.Controls.TabbedDocument
       /// </summary>
       protected virtual int RoundRadius
       {
-         get { return 3; }
+         get { return DockDpi.Scale(3); }
       }
 
       /// <summary>

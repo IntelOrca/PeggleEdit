@@ -43,8 +43,8 @@ namespace System.Windows.Forms
 
         #region Fields
 
-        private Size arrowSize = new Size(5, 3);
-        private Size moreSize = new Size(7, 7);
+        private Size arrowSize = RibbonDpi.Scale(new Size(5, 3));
+        private Size moreSize = RibbonDpi.Scale(new Size(7, 7));
 
         #endregion
 
@@ -110,7 +110,7 @@ namespace System.Windows.Forms
         public static GraphicsPath RoundRectangle(Rectangle r, int radius, Corners corners)
         {
             GraphicsPath path = new GraphicsPath();
-            int d = radius * 2;
+            int d = RibbonDpi.Scale(radius) * 2;
 
             int nw = (corners & Corners.NorthWest) == Corners.NorthWest ? d : 0;
             int ne = (corners & Corners.NorthEast) == Corners.NorthEast ? d : 0;
@@ -177,7 +177,7 @@ namespace System.Windows.Forms
         /// <param name="r"></param>
         public void DrawPressedShadow(Graphics g, Rectangle r)
         {
-            Rectangle shadow = Rectangle.FromLTRB(r.Left, r.Top, r.Right, r.Top + 4);
+            Rectangle shadow = Rectangle.FromLTRB(r.Left, r.Top, r.Right, r.Top + RibbonDpi.Scale(4));
 
             using (GraphicsPath path = RoundRectangle(shadow, 3, Corners.NorthEast | Corners.NorthWest))
             {
@@ -424,8 +424,8 @@ namespace System.Windows.Forms
                 }
 
                 using (LinearGradientBrush b = new LinearGradientBrush(
-                    new Point(0, e.Tab.TabContentBounds.Top + 30), 
-                    new Point(0, e.Tab.TabContentBounds.Bottom - 10), north, south))
+                    new Point(0, e.Tab.TabContentBounds.Top + RibbonDpi.Scale(30)), 
+                    new Point(0, e.Tab.TabContentBounds.Bottom - RibbonDpi.Scale(10)), north, south))
                 {
                     b.WrapMode = WrapMode.TileFlipXY;
                     e.Graphics.FillPath(b, path);
@@ -433,7 +433,7 @@ namespace System.Windows.Forms
             }
 
             //Glossy effect
-            Rectangle glossy = Rectangle.FromLTRB(e.Tab.TabContentBounds.Left, e.Tab.TabContentBounds.Top + 0, e.Tab.TabContentBounds.Right, e.Tab.TabContentBounds.Top + 18);
+            Rectangle glossy = Rectangle.FromLTRB(e.Tab.TabContentBounds.Left, e.Tab.TabContentBounds.Top + 0, e.Tab.TabContentBounds.Right, e.Tab.TabContentBounds.Top + RibbonDpi.Scale(18));
             using (GraphicsPath path = RoundRectangle(glossy, 6, Corners.NorthWest | Corners.NorthEast))
             {
                 using (Brush b = new SolidBrush(Color.FromArgb(30, Color.White)))
@@ -587,7 +587,7 @@ namespace System.Windows.Forms
         {
             DrawTabNormal(e);
 
-            Rectangle glossy = new Rectangle(e.Tab.TabBounds.Left, e.Tab.TabBounds.Top, e.Tab.TabBounds.Width, 4);
+            Rectangle glossy = new Rectangle(e.Tab.TabBounds.Left, e.Tab.TabBounds.Top, e.Tab.TabBounds.Width, RibbonDpi.Scale(4));
             Rectangle shadow = e.Tab.TabBounds; shadow.Offset(2, 1);
             Rectangle tab = e.Tab.TabBounds; //tab.Inflate(0, 1);
 
@@ -794,9 +794,10 @@ namespace System.Windows.Forms
             Point b = new Point(p.X + moreSize.Width - 1, p.Y);
             Point c = new Point(p.X, p.Y + moreSize.Height - 1);
             Point f = new Point(p.X + moreSize.Width, p.Y + moreSize.Height);
-            Point d = new Point(f.X, f.Y - 3);
-            Point e = new Point(f.X - 3, f.Y);
-            Point g = new Point(f.X - 3, f.Y - 3);
+            int corner = RibbonDpi.Scale(3);
+            Point d = new Point(f.X, f.Y - corner);
+            Point e = new Point(f.X - corner, f.Y);
+            Point g = new Point(f.X - corner, f.Y - corner);
 
             SmoothingMode lastMode = gr.SmoothingMode;
 
@@ -920,7 +921,7 @@ namespace System.Windows.Forms
                 e.Panel.Bounds.Left,
                 e.Panel.Bounds.Top,
                 e.Panel.Bounds.Right,
-                e.Panel.Bounds.Top + 17);
+                e.Panel.Bounds.Top + RibbonDpi.Scale(17));
 
 
             GraphicsPath dark = RoundRectangle(darkBorder, 3);
@@ -973,14 +974,14 @@ namespace System.Windows.Forms
         /// <param name="e"></param>
         public void DrawPanelOverflowImage(RibbonPanelRenderEventArgs e)
         {
-            int margin =3;
-            Size imgSquareSize = new Size(32, 32);
+            int margin = RibbonDpi.Scale(3);
+            Size imgSquareSize = RibbonDpi.Scale(new Size(32, 32));
             Rectangle imgSquareR = new Rectangle(new Point(
                 e.Panel.Bounds.Left + (e.Panel.Bounds.Width - imgSquareSize.Width) / 2,
-                e.Panel.Bounds.Top+ 5), imgSquareSize);
+                e.Panel.Bounds.Top+ RibbonDpi.Scale(5)), imgSquareSize);
 
             Rectangle imgSquareBottomR = Rectangle.FromLTRB(
-                imgSquareR.Left, imgSquareR.Bottom - 10, imgSquareR.Right, imgSquareR.Bottom);
+                imgSquareR.Left, imgSquareR.Bottom - RibbonDpi.Scale(10), imgSquareR.Right, imgSquareR.Bottom);
 
             Rectangle textR = Rectangle.FromLTRB(
                 e.Panel.Bounds.Left + margin,
@@ -1010,10 +1011,10 @@ namespace System.Windows.Forms
 
             if (e.Panel.Image != null)
             {
-                e.Graphics.DrawImage(e.Panel.Image,
-                   
-                        imgSquareR.Left + (imgSquareR.Width - e.Panel.Image.Width) / 2,
-                        imgSquareR.Top + ((imgSquareR.Height - imgSquareBottomR.Height) - e.Panel.Image.Height) / 2, e.Panel.Image.Width, e.Panel.Image.Height);
+                Size panelImageSize = RibbonDpi.ScaleImage(e.Panel.Image);
+                RibbonDpi.DrawImage(e.Graphics, e.Panel.Image, new Rectangle(
+                        imgSquareR.Left + (imgSquareR.Width - panelImageSize.Width) / 2,
+                        imgSquareR.Top + ((imgSquareR.Height - imgSquareBottomR.Height) - panelImageSize.Height) / 2, panelImageSize.Width, panelImageSize.Height));
 
             }
 
@@ -1278,7 +1279,7 @@ namespace System.Windows.Forms
 
             if (moreWords)
             {
-                return new Rectangle(lastCharBounds.Right + 3,
+                return new Rectangle(lastCharBounds.Right + RibbonDpi.Scale(3),
                     lastCharBounds.Top + (lastCharBounds.Height - arrowSize.Height) / 2, arrowSize.Width, arrowSize.Height);
             }
             else
@@ -2288,9 +2289,9 @@ namespace System.Windows.Forms
         {
             
             SmoothingMode smbuff = g.SmoothingMode;
-            Rectangle r1 = new Rectangle(r.Left, r.Top, r.Width, 4);
-            Rectangle r2 = new Rectangle(r.Left, r1.Bottom, r.Width, 4);
-            Rectangle r3 = new Rectangle(r.Left, r2.Bottom, r.Width, r.Height - 8);
+            Rectangle r1 = new Rectangle(r.Left, r.Top, r.Width, RibbonDpi.Scale(4));
+            Rectangle r2 = new Rectangle(r.Left, r1.Bottom, r.Width, RibbonDpi.Scale(4));
+            Rectangle r3 = new Rectangle(r.Left, r2.Bottom, r.Width, r.Height - r1.Height - r2.Height);
             Rectangle r4 = new Rectangle(r.Left, r3.Bottom, r.Width, 1);
 
             Rectangle[] rects = new Rectangle[] { r1, r2, r3, r4 };
@@ -2391,7 +2392,7 @@ namespace System.Windows.Forms
 
             if (!aero)
             {
-                using (Pen p = new Pen(ColorTable.QuickAccessBorderLight, 3))
+                using (Pen p = new Pen(ColorTable.QuickAccessBorderLight, RibbonDpi.Scale(3)))
                 {
                     using (GraphicsPath path = CreateQuickAccessPath(a, b, c, d, z, bounds, 0, 0, e.Ribbon))
                     {
@@ -2691,10 +2692,10 @@ namespace System.Windows.Forms
 
             if (image != null)
             {
-                Rectangle irect = new Rectangle(Point.Empty, image.Size);
+                Rectangle irect = new Rectangle(Point.Empty, RibbonDpi.ScaleImage(image));
                 irect.X = r.X + (r.Width - irect.Width) / 2;
                 irect.Y = r.Y + (r.Height - irect.Height) / 2;
-                g.DrawImage(image, irect);
+                RibbonDpi.DrawImage(g, image, irect);
             }
 
             #endregion
@@ -2741,7 +2742,7 @@ namespace System.Windows.Forms
 
             using (Brush b = new SolidBrush(Color.FromArgb(0x8e, 0x8e, 0x8e)))
             {
-                e.Graphics.FillRectangle(b, new Rectangle(Width - 10, Height - 10, 10, 10));
+                e.Graphics.FillRectangle(b, new Rectangle(Width - RibbonDpi.Scale(10), Height - RibbonDpi.Scale(10), RibbonDpi.Scale(10), RibbonDpi.Scale(10)));
             }
 
             using (Brush b = new SolidBrush(OrbDropDownBack))
@@ -2814,38 +2815,55 @@ namespace System.Windows.Forms
 
         #region CheckBox
 
+        private static void DrawScaledCheckBox(Graphics g, RibbonCheckBox checkbox, Rectangle bounds)
+        {
+            System.Windows.Forms.VisualStyles.CheckBoxState state;
+            bool isChecked = checkbox.CheckedState == CheckState.Checked;
+            if (checkbox.Pressed)
+                state = isChecked ? System.Windows.Forms.VisualStyles.CheckBoxState.CheckedPressed : System.Windows.Forms.VisualStyles.CheckBoxState.UncheckedPressed;
+            else if (checkbox.Selected)
+                state = isChecked ? System.Windows.Forms.VisualStyles.CheckBoxState.CheckedHot : System.Windows.Forms.VisualStyles.CheckBoxState.UncheckedHot;
+            else
+                state = isChecked ? System.Windows.Forms.VisualStyles.CheckBoxState.CheckedNormal : System.Windows.Forms.VisualStyles.CheckBoxState.UncheckedNormal;
+
+            Size glyph = CheckBoxRenderer.GetGlyphSize(g, state);
+            Point location = new Point(
+                bounds.X + (bounds.Width - glyph.Width) / 2,
+                bounds.Y + (bounds.Height - glyph.Height) / 2);
+            CheckBoxRenderer.DrawCheckBox(g, location, state);
+        }
+
         public void DrawCheckBox(RibbonRenderEventArgs e, RibbonCheckBox checkbox)
         {
 
-            Rectangle checkboxBorder = new Rectangle(checkbox.Bounds.X + 2, checkbox.Bounds.Y + 2, 13, 13);
+            int gap = RibbonDpi.Scale(2);
+            Rectangle checkboxBorder = new Rectangle(new Point(checkbox.Bounds.X + gap, checkbox.Bounds.Y + gap), checkbox.CheckBoxSize);
 
-			if (checkbox.CheckedState == CheckState.Unchecked) {
+			if (RibbonDpi.Factor > 1 && Application.RenderWithVisualStyles) {
+				// The checkbox bitmaps are 13x13; enlarging them blurs them, so draw a themed checkbox at the right size instead.
+				DrawScaledCheckBox(e.Graphics, checkbox, checkboxBorder);
+			} else if (checkbox.CheckedState == CheckState.Unchecked) {
 				if (checkbox.Selected) {
-					e.Graphics.DrawImage(Properties.Resources.checkbox_uh, checkboxBorder.Location);
+					RibbonDpi.DrawImage(e.Graphics, Properties.Resources.checkbox_uh, checkboxBorder);
 				} else {
-					e.Graphics.DrawImage(Properties.Resources.checkbox_un, checkboxBorder.Location);
+					RibbonDpi.DrawImage(e.Graphics, Properties.Resources.checkbox_un, checkboxBorder);
 				}
 			} else if (checkbox.CheckedState == CheckState.Checked) {
 				if (checkbox.Pressed) {
-					e.Graphics.DrawImage(Properties.Resources.checkbox_cd, checkboxBorder.Location);
+					RibbonDpi.DrawImage(e.Graphics, Properties.Resources.checkbox_cd, checkboxBorder);
 				} else if (checkbox.Selected) {
-					e.Graphics.DrawImage(Properties.Resources.checkbox_ch, checkboxBorder.Location);
+					RibbonDpi.DrawImage(e.Graphics, Properties.Resources.checkbox_ch, checkboxBorder);
 				} else {
-					e.Graphics.DrawImage(Properties.Resources.checkbox_cn, checkboxBorder.Location);
+					RibbonDpi.DrawImage(e.Graphics, Properties.Resources.checkbox_cn, checkboxBorder);
 				}
 			}
 
-			Rectangle textArea = Rectangle.FromLTRB(checkbox.Bounds.Left + 2 + 15, checkbox.Bounds.Top + 2,
-				checkbox.Bounds.Right - 2, checkbox.Bounds.Bottom - 2);
+			Rectangle textArea = Rectangle.FromLTRB(checkboxBorder.Right + gap, checkbox.Bounds.Top + gap,
+				checkbox.Bounds.Right, checkbox.Bounds.Bottom - gap);
 
-            StringFormat sf = new StringFormat();
-            sf.Alignment = StringAlignment.Center;
-            sf.LineAlignment = StringAlignment.Center;
-
-            using (Brush b = new SolidBrush(GetTextColor(true, ColorTable.PanelText)))
-            {
-                e.Graphics.DrawString(checkbox.Text, e.Ribbon.Font, b, textArea, sf);
-            }
+            // Drawn as it is measured (with TextRenderer), so the text is not cut off: GDI+ text is wider, more so at high DPI
+            TextRenderer.DrawText(e.Graphics, checkbox.Text, e.Ribbon.Font, textArea, GetTextColor(true, ColorTable.PanelText),
+                TextFormatFlags.Left | TextFormatFlags.VerticalCenter | TextFormatFlags.SingleLine | TextFormatFlags.NoPrefix);
 
             //g.FillRectangle(Brushes.Black, checkbox.Bounds);
         }
@@ -3201,7 +3219,7 @@ namespace System.Windows.Forms
                 if (!e.Item.Enabled)
                     img = CreateDisabledImage(img);
 
-                e.Graphics.DrawImage(img, e.Bounds);
+                RibbonDpi.DrawImage(e.Graphics, img, e.Bounds);
             }
             
         }
@@ -3263,7 +3281,7 @@ namespace System.Windows.Forms
         public override void OnRenderDropDownBackground(RibbonCanvasEventArgs e)
         {
             Rectangle outerR = new Rectangle(0, 0, e.Bounds.Width - 1, e.Bounds.Height - 1);
-            Rectangle imgsR = new Rectangle(0, 0, 26, e.Bounds.Height);
+            Rectangle imgsR = new Rectangle(0, 0, RibbonDpi.Scale(10) + RibbonDpi.Scale(16), e.Bounds.Height);
             RibbonDropDown dd = e.Canvas as RibbonDropDown;
 
             using (SolidBrush b = new SolidBrush(ColorTable.DropDownBg))
@@ -3329,9 +3347,9 @@ namespace System.Windows.Forms
                         new Point(gripArea.Right - 1, gripArea.Top));
                 }
 
-                DrawGripDot(e.Graphics, new Point(gripArea.Right - 7, gripArea.Bottom - 3));
-                DrawGripDot(e.Graphics, new Point(gripArea.Right - 3, gripArea.Bottom - 7));
-                DrawGripDot(e.Graphics, new Point(gripArea.Right - 3, gripArea.Bottom - 3));
+                DrawGripDot(e.Graphics, new Point(gripArea.Right - RibbonDpi.Scale(7), gripArea.Bottom - RibbonDpi.Scale(3)));
+                DrawGripDot(e.Graphics, new Point(gripArea.Right - RibbonDpi.Scale(3), gripArea.Bottom - RibbonDpi.Scale(7)));
+                DrawGripDot(e.Graphics, new Point(gripArea.Right - RibbonDpi.Scale(3), gripArea.Bottom - RibbonDpi.Scale(3)));
             }
         }
 
