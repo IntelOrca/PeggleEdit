@@ -82,6 +82,12 @@ namespace IntelOrca.PeggleEdit.Designer
             mTreeView.BeforeLabelEdit += new NodeLabelEditEventHandler(mTreeView_BeforeLabelEdit);
             mTreeView.AfterLabelEdit += new NodeLabelEditEventHandler(mTreeView_AfterLabelEdit);
 
+            mTreeView.AllowDrop = true;
+            mTreeView.ItemDrag += new ItemDragEventHandler(mTreeView_ItemDrag);
+            mTreeView.DragOver += new DragEventHandler(mTreeView_DragOver);
+            mTreeView.DragDrop += new DragEventHandler(mTreeView_DragDrop);
+            mTreeView.DragLeave += new EventHandler(mTreeView_DragLeave);
+
             mContextMenu = new ContextMenuStrip();
 
             this.Controls.Add(mTreeView);
@@ -92,43 +98,16 @@ namespace IntelOrca.PeggleEdit.Designer
             if (e.Modifiers == Keys.Control)
             {
                 //Move level up or down
-                Level level = SelectedNode.Tag as Level;
-                if (level == null)
+                if (!CanMoveNode(SelectedNode))
                     return;
 
                 if (e.KeyCode == Keys.Up)
                 {
-                    int index = mParent.LevelPack.Levels.IndexOf(level);
-                    if (index > 0)
-                    {
-                        //Move level in pack
-                        mParent.LevelPack.Levels.Remove(level);
-                        mParent.LevelPack.Levels.Insert(index - 1, level);
-
-                        //Move node in tree
-                        TreeNode lnode = GetLevelNode(level);
-
-                        mTreeView.Nodes.Remove(SelectedNode);
-                        LevelFolderNode.Nodes.Insert(index - 1, lnode);
-                        mTreeView.SelectedNode = lnode;
-                    }
+                    MoveNodeBy(SelectedNode, -1);
                 }
                 else if (e.KeyCode == Keys.Down)
                 {
-                    int index = mParent.LevelPack.Levels.IndexOf(level);
-                    if (index < mParent.LevelPack.Levels.Count - 1)
-                    {
-                        //Move level in pack
-                        mParent.LevelPack.Levels.Remove(level);
-                        mParent.LevelPack.Levels.Insert(index + 1, level);
-
-                        //Move node in tree
-                        TreeNode lnode = GetLevelNode(level);
-
-                        mTreeView.Nodes.Remove(SelectedNode);
-                        LevelFolderNode.Nodes.Insert(index + 1, lnode);
-                        mTreeView.SelectedNode = lnode;
-                    }
+                    MoveNodeBy(SelectedNode, 1);
                 }
 
                 e.SuppressKeyPress = true;
@@ -372,6 +351,274 @@ namespace IntelOrca.PeggleEdit.Designer
             cnode.Tag = challenge;
             return cnode;
         }
+
+        #region Reordering
+
+        const int TVM_SELECTITEM = 0x1100 + 11;
+        const int TVM_SETINSERTMARK = 0x1100 + 26;
+        const int TVGN_DROPHILITE = 0x0008;
+        const int WM_VSCROLL = 0x0115;
+        const int SB_LINEUP = 0;
+        const int SB_LINEDOWN = 1;
+
+        [DllImport("user32.dll", CharSet = CharSet.Auto)]
+        static extern IntPtr SendMessage(IntPtr hWnd, int msg, IntPtr wParam, IntPtr lParam);
+
+        TreeNode mDragNode;
+        TreeNode mInsertMarkNode;
+        bool mInsertMarkAfter;
+        TreeNode mDropHighlightNode;
+        int mLastDragScrollTick;
+
+        /// <summary>
+        /// Gets whether the given node is an item that can be reordered.
+        /// </summary>
+        private bool CanMoveNode(TreeNode node)
+        {
+            if (node == null || node.Parent == null)
+                return false;
+            return GetChildList(node.Parent) != null;
+        }
+
+        /// <summary>
+        /// Gets the pack list that holds the items of the given folder node, in the same order as its child nodes.
+        /// </summary>
+        private System.Collections.IList GetChildList(TreeNode folderNode)
+        {
+            if (folderNode == null || mPack == null)
+                return null;
+            if (folderNode.Name == "level_folder")
+                return mPack.Levels;
+            return null;
+        }
+
+        /// <summary>
+        /// Moves a node, and the pack item it represents, by the given number of places within its folder.
+        /// </summary>
+        private void MoveNodeBy(TreeNode node, int delta)
+        {
+            if (!CanMoveNode(node))
+                return;
+
+            int index = node.Index + delta;
+            if (index < 0 || index >= node.Parent.Nodes.Count)
+                return;
+
+            //Insertion index is counted with the node still in place
+            MoveNode(node, node.Parent, delta > 0 ? index + 1 : index);
+        }
+
+        /// <summary>
+        /// Moves a node, and the pack item it represents, so that it is inserted before the child at the given index
+        /// of the given folder. The index is counted while the node is still in its old place.
+        /// </summary>
+        private void MoveNode(TreeNode node, TreeNode newParent, int index)
+        {
+            TreeNode oldParent = node.Parent;
+            System.Collections.IList oldList = GetChildList(oldParent);
+            System.Collections.IList newList = GetChildList(newParent);
+            if (oldList == null || newList == null)
+                return;
+
+            int oldIndex = node.Index;
+            if (oldParent == newParent)
+            {
+                if (index == oldIndex || index == oldIndex + 1)
+                    return;
+                if (index > oldIndex)
+                    index--;
+            }
+
+            //Move the item in the pack
+            object item = node.Tag;
+            oldList.Remove(item);
+            newList.Insert(Math.Min(index, newList.Count), item);
+
+            //Move the node in the tree
+            bool expanded = node.IsExpanded;
+            mTreeView.BeginUpdate();
+            node.Remove();
+            newParent.Nodes.Insert(Math.Min(index, newParent.Nodes.Count), node);
+            newParent.Expand();
+            if (expanded)
+                node.Expand();
+            mTreeView.EndUpdate();
+
+            mTreeView.SelectedNode = node;
+            node.EnsureVisible();
+        }
+
+        void mTreeView_ItemDrag(object sender, ItemDragEventArgs e)
+        {
+            TreeNode node = e.Item as TreeNode;
+            if (e.Button != MouseButtons.Left || !CanMoveNode(node))
+                return;
+
+            //Keep the dragged node selected, otherwise the tree reverts to the previous selection
+            mTreeView.SelectedNode = node;
+
+            mDragNode = node;
+            try
+            {
+                mTreeView.DoDragDrop(node, DragDropEffects.Move);
+            }
+            finally
+            {
+                mDragNode = null;
+                SetDropIndicator(null, false, null);
+            }
+        }
+
+        void mTreeView_DragOver(object sender, DragEventArgs e)
+        {
+            if (mDragNode == null || !e.Data.GetDataPresent(typeof(TreeNode)))
+            {
+                e.Effect = DragDropEffects.None;
+                return;
+            }
+
+            Point pt = mTreeView.PointToClient(new Point(e.X, e.Y));
+            DragScroll(pt);
+
+            TreeNode parent;
+            int index;
+            if (GetDropTarget(pt, out parent, out index))
+            {
+                e.Effect = DragDropEffects.Move;
+                ShowDropIndicator(parent, index);
+            }
+            else
+            {
+                e.Effect = DragDropEffects.None;
+                SetDropIndicator(null, false, null);
+            }
+        }
+
+        void mTreeView_DragDrop(object sender, DragEventArgs e)
+        {
+            TreeNode node = mDragNode;
+            SetDropIndicator(null, false, null);
+            if (node == null)
+                return;
+
+            Point pt = mTreeView.PointToClient(new Point(e.X, e.Y));
+            TreeNode parent;
+            int index;
+            if (GetDropTarget(pt, out parent, out index))
+                MoveNode(node, parent, index);
+            else
+                mTreeView.SelectedNode = node;
+        }
+
+        void mTreeView_DragLeave(object sender, EventArgs e)
+        {
+            SetDropIndicator(null, false, null);
+        }
+
+        /// <summary>
+        /// Works out where the dragged node would be inserted if it was dropped at the given point.
+        /// </summary>
+        private bool GetDropTarget(Point pt, out TreeNode parent, out int index)
+        {
+            parent = null;
+            index = -1;
+
+            TreeNode hit = mTreeView.GetNodeAt(pt);
+            if (hit == null || hit == mDragNode)
+                return false;
+
+            bool lowerHalf = pt.Y >= hit.Bounds.Top + (hit.Bounds.Height / 2);
+
+            if (mDragNode.Tag is Level)
+            {
+                if (hit.Tag is Level)
+                {
+                    parent = hit.Parent;
+                    index = hit.Index + (lowerHalf ? 1 : 0);
+                }
+                else if (hit.Name == "level_folder")
+                {
+                    parent = hit;
+                    index = 0;
+                }
+            }
+
+            if (parent == null)
+                return false;
+
+            //Dropping a node next to itself would not move it
+            if (parent == mDragNode.Parent && (index == mDragNode.Index || index == mDragNode.Index + 1))
+                return false;
+
+            return true;
+        }
+
+        /// <summary>
+        /// Shows where a node would be inserted, before the child at the given index of the folder node.
+        /// </summary>
+        private void ShowDropIndicator(TreeNode parent, int index)
+        {
+            if (index < parent.Nodes.Count)
+            {
+                SetDropIndicator(parent.Nodes[index], false, null);
+            }
+            else if (parent.Nodes.Count > 0)
+            {
+                //Mark after the last visible row inside the folder
+                TreeNode last = parent.Nodes[parent.Nodes.Count - 1];
+                while (last.IsExpanded && last.Nodes.Count > 0)
+                    last = last.Nodes[last.Nodes.Count - 1];
+                SetDropIndicator(last, true, null);
+            }
+            else
+            {
+                //Empty folder, highlight it instead
+                SetDropIndicator(null, false, parent);
+            }
+        }
+
+        private void SetDropIndicator(TreeNode markNode, bool after, TreeNode highlightNode)
+        {
+            if (!mTreeView.IsHandleCreated)
+                return;
+
+            if (markNode != mInsertMarkNode || after != mInsertMarkAfter)
+            {
+                mInsertMarkNode = markNode;
+                mInsertMarkAfter = after;
+                SendMessage(mTreeView.Handle, TVM_SETINSERTMARK, (IntPtr)(after ? 1 : 0), markNode == null ? IntPtr.Zero : markNode.Handle);
+            }
+
+            if (highlightNode != mDropHighlightNode)
+            {
+                mDropHighlightNode = highlightNode;
+                SendMessage(mTreeView.Handle, TVM_SELECTITEM, (IntPtr)TVGN_DROPHILITE, highlightNode == null ? IntPtr.Zero : highlightNode.Handle);
+            }
+        }
+
+        /// <summary>
+        /// Scrolls the tree when dragging near its top or bottom edge.
+        /// </summary>
+        private void DragScroll(Point pt)
+        {
+            int margin = mTreeView.ItemHeight;
+            int direction;
+            if (pt.Y < margin)
+                direction = SB_LINEUP;
+            else if (pt.Y > mTreeView.ClientSize.Height - margin)
+                direction = SB_LINEDOWN;
+            else
+                return;
+
+            int tick = Environment.TickCount;
+            if (unchecked(tick - mLastDragScrollTick) < 100)
+                return;
+            mLastDragScrollTick = tick;
+
+            SendMessage(mTreeView.Handle, WM_VSCROLL, (IntPtr)direction, IntPtr.Zero);
+        }
+
+        #endregion
 
         private void OpenImage(TreeNode node)
         {
