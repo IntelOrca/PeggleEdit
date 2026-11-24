@@ -201,5 +201,86 @@ namespace IntelOrca.PeggleEdit.Tools.Levels
                 mVariableValue = value;
             }
         }
+
+        CurveData mCurve;
+        string mCurveSource;
+
+        /// <summary>
+        /// The curve of a variable value, or null for a static value.
+        /// </summary>
+        [Browsable(false)]
+        public CurveData Curve
+        {
+            get
+            {
+                if (!mIsVariable)
+                    return null;
+                if (mCurve == null || !ReferenceEquals(mCurveSource, mVariableValue))
+                {
+                    mCurve = CurveData.Parse(mVariableValue);
+                    mCurveSource = mVariableValue;
+                }
+                return mCurve;
+            }
+        }
+
+        /// <summary>
+        /// Gets the value at an input (normally from 0 to 1, e.g. how far through its life a particle is), as the game
+        /// does: a static value is the same everywhere.
+        /// </summary>
+        public float Evaluate(float input) => mIsVariable ? Curve.Evaluate(input) : mStaticValue;
+
+        /// <summary>
+        /// Whether the value is the same static number.
+        /// </summary>
+        public bool IsStatic(float value) => !mIsVariable && mStaticValue == value;
+    }
+
+    /// <summary>
+    /// Steps a curved value over time as the game does for an emitter's rate: the input moves on by the curve's
+    /// IncRate every step, and either wraps round (looping) or stops at the end.
+    /// </summary>
+    public struct CurvedValStepper
+    {
+        private readonly CurvedVal _value;
+        private readonly bool _looping;
+        private float _input;
+
+        public CurvedValStepper(CurvedVal value, bool looping)
+        {
+            _value = value;
+            _looping = looping;
+            _input = 0;
+        }
+
+        public float Input => _input;
+
+        /// <summary>
+        /// Gets the current value, then moves the input on (GetOutVal then IncInVal).
+        /// </summary>
+        public float Next()
+        {
+            if (_value == null)
+                return 0;
+            float result = _value.Evaluate(_input);
+            var curve = _value.Curve;
+            if (curve != null && curve.IncRate != 0)
+            {
+                _input += curve.IncRate;
+                float max = curve.InMax;
+                if (!_looping)
+                {
+                    if (_input > max)
+                        _input = max;
+                    else if (_input < 0)
+                        _input = 0;
+                }
+                else if (max > 0 && (_input > max || _input < 0))
+                {
+                    _input = ((_input % max) + max) % max;
+                }
+            }
+            return result;
+        }
     }
 }
