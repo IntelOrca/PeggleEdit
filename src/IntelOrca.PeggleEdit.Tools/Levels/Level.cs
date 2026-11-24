@@ -663,9 +663,9 @@ namespace IntelOrca.PeggleEdit.Tools.Levels
             if (mShowPreview)
                 return;
 
-            Rectangle src = new Rectangle(0, 0, Resources.anchor_point.Width, Resources.anchor_point.Height);
-            Rectangle dst = new Rectangle((int)(x - (Resources.anchor_point.Width / 2)), (int)(y - (Resources.anchor_point.Height / 2)), Resources.anchor_point.Width, Resources.anchor_point.Height);
-            g.DrawImage(Resources.anchor_point, dst, src, GraphicsUnit.Pixel);
+            Rectangle src = new Rectangle(0, 0, ResourceImages.AnchorPoint.Width, ResourceImages.AnchorPoint.Height);
+            Rectangle dst = new Rectangle((int)(x - (ResourceImages.AnchorPoint.Width / 2)), (int)(y - (ResourceImages.AnchorPoint.Height / 2)), ResourceImages.AnchorPoint.Width, ResourceImages.AnchorPoint.Height);
+            g.DrawImage(ResourceImages.AnchorPoint, dst, src, GraphicsUnit.Pixel);
         }
 
         /// <summary>

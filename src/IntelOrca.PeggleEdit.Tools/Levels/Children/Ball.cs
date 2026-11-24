@@ -101,7 +101,7 @@ namespace IntelOrca.PeggleEdit.Tools.Levels.Children
             if (HasPegInfo)
             {
                 // The game draws its peg shadow image (22x22 for a 10 radius peg) down and to the left of the peg
-                var shadow = Resources.peg_shadow;
+                var shadow = ResourceImages.PegShadow;
                 var scale = mRadius / 10.0f;
                 var size = new SizeF(shadow.Width * scale, shadow.Height * scale);
                 var dst = new RectangleF(
@@ -147,7 +147,7 @@ namespace IntelOrca.PeggleEdit.Tools.Levels.Children
                     }
 
                     var dstRect = drawbounds;
-                    g.DrawImage(Resources.peg, dstRect, srcRect, GraphicsUnit.Pixel);
+                    g.DrawImage(ResourceImages.Peg, dstRect, srcRect, GraphicsUnit.Pixel);
                 }
                 else
                 {
@@ -165,8 +165,8 @@ namespace IntelOrca.PeggleEdit.Tools.Levels.Children
                     var colour = OutlineColor;
 
                     var dst = new RectangleF(location.X - Radius, location.Y - Radius, Radius * 2, Radius * 2);
-                    g.DrawImageWithColour(Resources.circle_outer, dst, colour);
-                    g.DrawImage(Resources.circle_inner, dst);
+                    g.DrawImageWithColour(ResourceImages.CircleOuter, dst, colour);
+                    g.DrawImage(ResourceImages.CircleInner, dst);
                 }
                 else
                 {
