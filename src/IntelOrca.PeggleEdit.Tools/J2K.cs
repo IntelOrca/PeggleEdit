@@ -78,22 +78,27 @@ namespace IntelOrca.PeggleEdit.Tools
             return ConvertJPEG2(record.Buffer);
         }
 
+        /// <summary>
+        /// Decodes a .jp2 image with the game's own codec when it can be loaded, as its pixels differ a little from
+        /// a standard decoder's and are what the game shows, otherwise with CSJ2K, which can not decode images with
+        /// an alpha channel.
+        /// </summary>
         public static Image ConvertJPEG2(byte[] buffer)
         {
-#if DEBUG
-            return ConvertJPEG2WithPeggle(buffer);
-#else
             try
             {
-                Register();
-                var outputImage = CSJ2K.J2kImage.FromBytes(buffer);
-                return outputImage.As<Bitmap>();
+                var image = ConvertJPEG2WithPeggle(buffer);
+                if (image != null)
+                    return image;
             }
-            catch
+            catch (Exception)
             {
-                return ConvertJPEG2WithPeggle(buffer);
+                // Try CSJ2K instead
             }
-#endif
+
+            Register();
+            var outputImage = CSJ2K.J2kImage.FromBytes(buffer);
+            return outputImage.As<Bitmap>();
         }
 
         private static unsafe Image ConvertJPEG2WithPeggle(byte[] buffer)
