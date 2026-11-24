@@ -1,4 +1,6 @@
-﻿using System.Drawing;
+﻿using System;
+using System.Collections.Generic;
+using System.Drawing;
 using System.Drawing.Imaging;
 
 namespace IntelOrca.PeggleEdit.Tools.Extensions
@@ -36,7 +38,23 @@ namespace IntelOrca.PeggleEdit.Tools.Extensions
             g.DrawImage(image, dst, 0, 0, image.Width, image.Height, GraphicsUnit.Pixel, attrs);
         }
 
+        // The attributes made for each colour, kept as making them for every image drawn was slow (and they were not
+        // disposed). One set for each thread, as GDI+ objects can not be used by two threads at once.
+        [ThreadStatic]
+        private static Dictionary<int, ImageAttributes> _imageAttributes;
+
         private static ImageAttributes GetImageAttributes(Color color)
+        {
+            var cache = _imageAttributes ?? (_imageAttributes = new Dictionary<int, ImageAttributes>());
+            if (!cache.TryGetValue(color.ToArgb(), out var result))
+            {
+                result = CreateImageAttributes(color);
+                cache.Add(color.ToArgb(), result);
+            }
+            return result;
+        }
+
+        private static ImageAttributes CreateImageAttributes(Color color)
         {
             var r = color.R / 255.0f;
             var g = color.G / 255.0f;
