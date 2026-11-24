@@ -109,7 +109,7 @@ namespace IntelOrca.PeggleEdit.Tools.Levels.Children
                     location.Y + PegShadowOffset.Y - (size.Height / 2),
                     size.Width,
                     size.Height);
-                g.DrawImage(shadow, dst);
+                g.DrawImageSnapped(shadow, dst);
             }
             else
             {
@@ -148,7 +148,7 @@ namespace IntelOrca.PeggleEdit.Tools.Levels.Children
                     }
 
                     var dstRect = drawbounds;
-                    g.DrawImage(ResourceImages.Peg, dstRect, srcRect, GraphicsUnit.Pixel);
+                    g.DrawImageSnapped(ResourceImages.Peg, dstRect, srcRect);
                 }
                 else
                 {
@@ -167,7 +167,7 @@ namespace IntelOrca.PeggleEdit.Tools.Levels.Children
 
                     var dst = new RectangleF(location.X - Radius, location.Y - Radius, Radius * 2, Radius * 2);
                     g.DrawImageWithColour(ResourceImages.CircleOuter, dst, colour);
-                    g.DrawImage(ResourceImages.CircleInner, dst);
+                    g.DrawImageSnapped(ResourceImages.CircleInner, dst);
                 }
                 else
                 {

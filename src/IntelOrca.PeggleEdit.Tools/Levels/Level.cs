@@ -541,7 +541,7 @@ namespace IntelOrca.PeggleEdit.Tools.Levels
             if (image == null)
                 return;
             var position = BaseObjects.GetLightningRodPosition(ticks, BaseObjects.GetBucketRadius(mDevices));
-            g.DrawImage(PremultipliedImage.Get(image), position.X - (image.Width / 2.0f), position.Y - (image.Height / 2.0f), image.Width, image.Height);
+            g.DrawImageSnapped(PremultipliedImage.Get(image), position.X - (image.Width / 2.0f), position.Y - (image.Height / 2.0f), image.Width, image.Height);
         }
 
         private static readonly Brush TakenAwayBrush = new SolidBrush(Color.FromArgb(96, 255, 0, 0));

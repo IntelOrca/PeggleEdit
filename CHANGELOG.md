@@ -25,6 +25,7 @@ PeggleEdit 5.2.0 (Flamingo) (TBC)
 * [Fix] Level objects are drawn in the game's layers: background objects behind the pegs, foreground objects in front
 * [Fix] The preview no longer draws invisible holes, or where holes send the ball
 * [Fix] Hole images are drawn where the game draws them
+* [Fix] Pegs and images are drawn on whole pixels, so moving objects no longer blur or have their edges cut off or bleed
 * [Fix] peggleedit-cli render draws .jp2 images
 * [Change] Rename Circle, Polygon, Rod and Teleport to Ball, Poly, Line and Hole, the names Peggle itself uses
 * [Change] Use the names from PopCap's own level editor in the property grid, with clearer descriptions
