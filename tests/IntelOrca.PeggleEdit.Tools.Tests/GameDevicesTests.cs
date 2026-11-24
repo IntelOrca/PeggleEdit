@@ -155,7 +155,7 @@ namespace IntelOrca.PeggleEdit.Tools.Tests
             using (level.RenderGameView(drawInterface: false))
             {
             }
-            Assert.Equal(0, level.Entries.Count);
+            Assert.Empty(level.Entries.OfType<LevelEntry>());
         }
 
         static LevelEntry Peg(float x, float y, string flipperFlags = null)
