@@ -113,9 +113,9 @@ namespace IntelOrca.PeggleEdit.Tools.Properties {
         /// <summary>
         ///   Looks up a localized resource of type System.Drawing.Bitmap.
         /// </summary>
-        internal static System.Drawing.Bitmap interface_collision {
+        internal static System.Drawing.Bitmap interface_back {
             get {
-                object obj = ResourceManager.GetObject("interface_collision", resourceCulture);
+                object obj = ResourceManager.GetObject("interface_back", resourceCulture);
                 return ((System.Drawing.Bitmap)(obj));
             }
         }

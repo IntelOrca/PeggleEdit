@@ -203,5 +203,55 @@ namespace IntelOrca.PeggleEdit.Tools.Tests
             Assert.Equal(GameDevices.None, MasterInfo.Get(Master.Bjorn).PowerDevices);
             Assert.Equal(11, MasterInfo.All.Count);
         }
+
+        [Fact]
+        public void Collision_IsWhatTheBallBouncesOff()
+        {
+            var level = new Level();
+            string[] Images(GameDevices devices) => BaseObjects.GetCollisionEntries(level, devices, 0)
+                .Select(x => x.ImageFilename ?? "")
+                .OrderBy(x => x)
+                .ToArray();
+
+            // The bucket's hole and the lip of its rim, but not its front plate
+            Assert.Equal(new[] { "", "catchera" }, Images(GameDevices.Bucket));
+            // The pyramid's image does not collide; its slopes do (not in this cut down _base.dat)
+            Assert.Equal(new[] { "", "catchera" }, Images(GameDevices.Bucket | GameDevices.Pyramid));
+            // A device switched on collides, though the file has it off
+            Assert.Equal(new[] { "", "catchera", "catchercover", "lobsterclawl" }, Images(GameDevices.Bucket | GameDevices.Cover | GameDevices.Flippers));
+            Assert.Empty(Images(GameDevices.None));
+            Assert.All(BaseObjects.GetCollisionEntries(level, GameDevices.Bucket | GameDevices.Cover, 0), x => Assert.True(x.Collidable));
+        }
+
+        [Fact]
+        public void Collision_MovesWithTheBucket()
+        {
+            var hole = BaseObjects.GetCollisionEntries(new Level(), GameDevices.Bucket, 150).OfType<Hole>().Single();
+            Assert.Equal(326 - 260, hole.X, 3);
+        }
+
+        [Fact]
+        public void Cannon_PointsAtTheMouse()
+        {
+            var pivot = Cannon.Pivot;
+            Assert.Equal(new PointF(325, 30), pivot);
+            Assert.Equal(Cannon.RestAngle, Cannon.GetAngle(null));
+            Assert.Equal(Cannon.RestAngle, Cannon.GetAngle(new PointF(pivot.X, pivot.Y + 100)), 5);
+            Assert.Equal(0, Cannon.GetAngle(new PointF(pivot.X + 100, pivot.Y)), 5);
+            Assert.Equal(-Math.PI / 4, Cannon.GetAngle(new PointF(pivot.X + 50, pivot.Y + 50)), 5);
+            // The game does not limit the aim, even upwards
+            Assert.Equal(Math.PI / 2, Cannon.GetAngle(new PointF(pivot.X, pivot.Y - 10)), 5);
+        }
+
+        [Fact]
+        public void Cannon_CollidesAtItsEnd()
+        {
+            // Pointing down, the triangle's tip is 90 below the pivot and its base 60 below, 20 wide
+            var shape = Cannon.GetCollisionShape(Cannon.RestAngle);
+            Assert.Equal(325, shape[0].X, 3);
+            Assert.Equal(120, shape[0].Y, 3);
+            Assert.Equal(new[] { 315f, 335f }, shape.Skip(1).Select(p => (float)Math.Round(p.X, 3)).OrderBy(x => x));
+            Assert.All(shape.Skip(1), p => Assert.Equal(90, p.Y, 3));
+        }
     }
 }

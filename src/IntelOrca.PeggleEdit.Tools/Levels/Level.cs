@@ -18,6 +18,7 @@ using System;
 using System.Collections.Generic;
 using System.Drawing;
 using System.Drawing.Drawing2D;
+using System.Drawing.Imaging;
 using System.IO;
 using System.Linq;
 using IntelOrca.PeggleEdit.Tools.Extensions;
@@ -41,7 +42,10 @@ namespace IntelOrca.PeggleEdit.Tools.Levels
         public static Point ShadowOffset = new Point(-4, 3);
 
         static Image mInterface = Resources._interface;
-        static Image mInterfaceCollision = Resources.interface_collision;
+        // The ring the cannon hangs over (the skin's shooter back), which the frame leaves out, at its place in the
+        // frame
+        static Image mInterfaceBack = Resources.interface_back;
+        static readonly Point InterfaceBackLocation = new Point(333, 25);
 
         LevelInfo mInfo = LevelInfo.DefaultInfo;
         LevelEntryCollection mEntries = new LevelEntryCollection();
@@ -458,10 +462,14 @@ namespace IntelOrca.PeggleEdit.Tools.Levels
             }
             var deviceTime = mShowPreview ? mPreviewTime : 0;
             mDeviceEntries.Clear();
-            foreach (var (le, layer) in BaseObjects.GetEntries(this, mDevices, deviceTime))
+            // The collision of the game's objects is drawn over everything instead
+            if (!mShowCollision)
             {
-                layers[(int)layer].Add(le);
-                mDeviceEntries.Add(le);
+                foreach (var (le, layer) in BaseObjects.GetEntries(this, mDevices, deviceTime))
+                {
+                    layers[(int)layer].Add(le);
+                    mDeviceEntries.Add(le);
+                }
             }
             // A stable sort, so objects at the same y stay in file order
             layers[(int)DrawLayer.DrawSort] = layers[(int)DrawLayer.DrawSort].OrderBy(x => x.DrawY).ToList();
@@ -480,7 +488,7 @@ namespace IntelOrca.PeggleEdit.Tools.Levels
 
             DrawLayerEntries(g, target, layers[(int)DrawLayer.Normal]);
             // The balls would be drawn here, then the lightning rod
-            if ((mDevices & GameDevices.LightningRod) != 0)
+            if ((mDevices & GameDevices.LightningRod) != 0 && !mShowCollision)
                 DrawLightningRod(g, deviceTime);
 
             // The interface is drawn among the foreground objects, as in the game the bucket's front rim covers the
@@ -500,8 +508,14 @@ namespace IntelOrca.PeggleEdit.Tools.Levels
             DrawInterfacePart(DrawInterfaceShadow);
             DrawLayerEntries(g, target, layers[(int)DrawLayer.Foreground]);
             DrawLayerEntries(g, target, layers[(int)DrawLayer.DrawSort]);
+            // The cannon hangs over the ring under the master, and under the rest of the frame
+            DrawInterfacePart(DrawInterfaceBack);
+            DrawCannon(g);
             DrawInterfacePart(DrawInterfaceFrame);
             DrawLayerEntries(g, target, layers[(int)DrawLayer.Foreground2]);
+
+            if (mShowCollision)
+                DrawGameCollision(g, deviceTime);
 
             if (!mShowPreview && takenAway.Count != 0)
                 DrawTakenAway(g, takenAway);
@@ -590,7 +604,65 @@ namespace IntelOrca.PeggleEdit.Tools.Levels
         private void DrawInterface(Graphics g)
         {
             DrawInterfaceShadow(g);
+            DrawInterfaceBack(g);
+            g.TranslateTransform(Level.DrawAdjustX, Level.DrawAdjustY);
+            DrawCannon(g);
+            g.TranslateTransform(-Level.DrawAdjustX, -Level.DrawAdjustY);
             DrawInterfaceFrame(g);
+        }
+
+        /// <summary>
+        /// Draws the cannon pointing at <see cref="CannonTarget"/>. <paramref name="g"/> is in level coordinates.
+        /// </summary>
+        private void DrawCannon(Graphics g)
+        {
+            if (!ShowCannon || mShowCollision)
+                return;
+            Cannon.Draw(g, Cannon.GetAngle(CannonTarget));
+        }
+
+        // The walls around the board in level coordinates, from _base.dat, for when the game's files are not found
+        private static readonly RectangleF[] DefaultWalls =
+        {
+            RectangleF.FromLTRB(-39.5f, -759.5f, -0.5f, 1239.5f),
+            RectangleF.FromLTRB(649.5f, -759.5f, 688.5f, 1239.5f),
+            RectangleF.FromLTRB(0.75f, -15.375f, 649.25f, 9.375f),
+        };
+
+        /// <summary>
+        /// Draws what the ball collides with that the game adds to every level, as the level's collision is drawn: the
+        /// walls around the board, the bucket and the devices that are out, and the end of the cannon. The interface
+        /// itself is not collided with. <paramref name="g"/> is in level coordinates.
+        /// </summary>
+        private void DrawGameCollision(Graphics g, double ticks)
+        {
+            var backupClip = g.Clip;
+            g.SetClip(new RectangleF(-Level.DrawAdjustX, -Level.DrawAdjustY, 800, 600), CombineMode.Intersect);
+
+            var entries = BaseObjects.GetCollisionEntries(this, mDevices, ticks);
+            if (BaseObjects.BaseLevel == null)
+            {
+                foreach (var wall in DefaultWalls)
+                    g.FillRectangle(Brushes.White, wall);
+            }
+
+            // Drawn as in the preview, as they can not be edited
+            var oPreview = mShowPreview;
+            mShowPreview = true;
+            try
+            {
+                foreach (var le in entries)
+                    le.Draw(g);
+            }
+            finally
+            {
+                mShowPreview = oPreview;
+            }
+
+            if (ShowCannon)
+                g.FillPolygon(Brushes.White, Cannon.GetCollisionShape(Cannon.GetAngle(CannonTarget)));
+
+            g.Clip = backupClip;
         }
 
         private static Bitmap mInterfaceShadow;
@@ -620,8 +692,9 @@ namespace IntelOrca.PeggleEdit.Tools.Levels
                 var framePixels = new int[pixels.Length];
                 for (int i = 0; i < pixels.Length; i++)
                 {
+                    // The shadow is black, give or take the rounding of its recovery from screenshots
                     uint p = (uint)pixels[i];
-                    if ((p & 0xFFFFFF) == 0 && (p >> 24) != 255)
+                    if ((p & 0xFCFCFC) == 0 && (p >> 24) != 255)
                         shadowPixels[i] = pixels[i];
                     else
                         framePixels[i] = pixels[i];
@@ -647,15 +720,34 @@ namespace IntelOrca.PeggleEdit.Tools.Levels
             g.DrawImage(PremultipliedImage.Get(mInterfaceShadow), 0, 0, 800, 600);
         }
 
+        // With the collision shown, the interface is faint, as the ball does not collide with it
+        private static readonly ImageAttributes CollisionInterfaceAttributes = MakeAlphaAttributes(0.35f);
+
+        private static ImageAttributes MakeAlphaAttributes(float alpha)
+        {
+            var attributes = new ImageAttributes();
+            attributes.SetColorMatrix(new ColorMatrix { Matrix33 = alpha });
+            return attributes;
+        }
+
+        private void DrawInterfaceBack(Graphics g)
+        {
+            DrawInterfaceImage(g, mInterfaceBack, InterfaceBackLocation);
+        }
+
         private void DrawInterfaceFrame(Graphics g)
         {
-            if (mShowCollision)
-            {
-                g.DrawImage(PremultipliedImage.Get(mInterfaceCollision), 0, 0, 800, 600);
-                return;
-            }
             SplitInterface();
-            g.DrawImage(PremultipliedImage.Get(mInterfaceFrame), 0, 0, 800, 600);
+            DrawInterfaceImage(g, mInterfaceFrame, Point.Empty);
+        }
+
+        private void DrawInterfaceImage(Graphics g, Image image, Point location)
+        {
+            var rect = new Rectangle(location, image.Size);
+            if (mShowCollision)
+                g.DrawImage(PremultipliedImage.Get(image), rect, 0, 0, image.Width, image.Height, GraphicsUnit.Pixel, CollisionInterfaceAttributes);
+            else
+                g.DrawImage(PremultipliedImage.Get(image), rect);
         }
 
         public void DrawAnchorPoint(Graphics g, float x, float y)
@@ -686,9 +778,14 @@ namespace IntelOrca.PeggleEdit.Tools.Levels
             var oPreviewTime = mPreviewTime;
             var oFirstPreviewUpdate = mFirstPreviewUpdate;
             var oTransparent = TransparentObjects;
+            var oShowCannon = ShowCannon;
+            var oCannonTarget = CannonTarget;
             try
             {
                 mShowingInterface = drawInterface;
+                // The cannon is part of what the interface shows, pointing down as at the start of a level
+                ShowCannon = drawInterface;
+                CannonTarget = null;
                 mShowingBackground = true;
                 mShowingEntries = true;
                 mShowCollision = false;
@@ -724,6 +821,8 @@ namespace IntelOrca.PeggleEdit.Tools.Levels
                 mPreviewTime = oPreviewTime;
                 mFirstPreviewUpdate = oFirstPreviewUpdate;
                 TransparentObjects = oTransparent;
+                ShowCannon = oShowCannon;
+                CannonTarget = oCannonTarget;
                 // A running preview starts its emitters again, as they were replaced
                 if (ticks != null)
                     _particlePreview.Clear();
@@ -739,8 +838,10 @@ namespace IntelOrca.PeggleEdit.Tools.Levels
             var oUsePegTextures = UsePegTextures;
             var oShowParticles = ShowParticles;
             var oDevices = mDevices;
+            var oShowCannon = ShowCannon;
 
             mShowingInterface = false;
+            ShowCannon = false;
             mShowingBackground = true;
             mShowCollision = false;
             mShowPreview = true;
@@ -755,6 +856,7 @@ namespace IntelOrca.PeggleEdit.Tools.Levels
             fsG.Dispose();
             ShowParticles = oShowParticles;
             mDevices = oDevices;
+            ShowCannon = oShowCannon;
 
             mShowingInterface = oInterface;
             mShowingBackground = oShowBackground;
@@ -1515,6 +1617,17 @@ namespace IntelOrca.PeggleEdit.Tools.Levels
             get => mDevices;
             set => mDevices = value;
         }
+
+        /// <summary>
+        /// Whether the cannon at the top of the board is shown.
+        /// </summary>
+        public bool ShowCannon { get; set; } = true;
+
+        /// <summary>
+        /// The point, in level coordinates, the cannon points at (as at the mouse in the game), or null for straight
+        /// down.
+        /// </summary>
+        public PointF? CannonTarget { get; set; }
 
         public bool ShowCollision
         {

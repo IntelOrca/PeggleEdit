@@ -207,28 +207,89 @@ namespace IntelOrca.PeggleEdit.Tools.Levels
                 if (!IsShown(entry, devices))
                     continue;
 
-                var copy = (LevelEntry)entry.Clone();
-                var anchor = entry.MoverLink?.Mover is Mover mover ? new PointF(mover.AnchorPointX, mover.AnchorPointY) : entry.Location;
-                copy.MoverLink = null;
-                copy.Level = level;
-                copy.Visible = true;
-                if (entry.Id == "flipper")
-                {
-                    copy.Location = anchor;
-                    if ((devices & GameDevices.FlippersRaised) != 0 && copy is Poly poly)
-                    {
-                        // Raised by twice the max angle: the left claw anticlockwise, the right clockwise
-                        var reverse = entry.MoverLink?.Mover?.Reverse ?? false;
-                        poly.AngleOverride = reverse ? 60 : -60;
-                    }
-                }
-                else
-                {
-                    copy.Location = new PointF(anchor.X + offset, anchor.Y);
-                }
+                var copy = Place(entry, level, devices, offset);
                 result.Add((copy, Level.GetDrawLayer(copy)));
             }
             return result;
+        }
+
+        /// <summary>
+        /// Gets the base objects the ball collides with for the devices shown at a time, moved to where they are then:
+        /// the walls around the board, and the bucket and the devices that are out. Their images are only drawn where
+        /// the game draws them.
+        /// </summary>
+        internal static List<LevelEntry> GetCollisionEntries(Level level, GameDevices devices, double ticks)
+        {
+            var result = new List<LevelEntry>();
+            var baseLevel = BaseLevel;
+            if (baseLevel == null)
+                return result;
+
+            float offset = GetBucketOffset(ticks, GetBucketRadius(devices));
+            foreach (LevelEntry entry in baseLevel.Entries)
+            {
+                if (!IsCollidable(entry, devices))
+                    continue;
+
+                var copy = Place(entry, level, devices, offset);
+                copy.Collidable = true;
+                copy.Visible = IsShown(entry, devices);
+                result.Add(copy);
+            }
+            return result;
+        }
+
+        /// <summary>
+        /// Copies a base object for <paramref name="level"/>, where it is with the devices: the bucket and the objects
+        /// that move with it moved across by <paramref name="offset"/>, the flippers at rest or raised.
+        /// </summary>
+        private static LevelEntry Place(LevelEntry entry, Level level, GameDevices devices, float offset)
+        {
+            var copy = (LevelEntry)entry.Clone();
+            var anchor = entry.MoverLink?.Mover is Mover mover ? new PointF(mover.AnchorPointX, mover.AnchorPointY) : entry.Location;
+            copy.MoverLink = null;
+            copy.Level = level;
+            copy.Visible = true;
+            if (entry.Id == "flipper")
+            {
+                copy.Location = anchor;
+                if ((devices & GameDevices.FlippersRaised) != 0 && copy is Poly poly)
+                {
+                    // Raised by twice the max angle: the left claw anticlockwise, the right clockwise
+                    var reverse = entry.MoverLink?.Mover?.Reverse ?? false;
+                    poly.AngleOverride = reverse ? 60 : -60;
+                }
+            }
+            else if (entry.Id != "wall")
+            {
+                copy.Location = new PointF(anchor.X + offset, anchor.Y);
+            }
+            return copy;
+        }
+
+        /// <summary>
+        /// Whether the ball collides with a base object with the devices, as the game enables them: the walls always,
+        /// the others when their device is out (switching a device on with SetEnabled makes it collidable and visible).
+        /// </summary>
+        private static bool IsCollidable(LevelEntry entry, GameDevices devices)
+        {
+            switch (entry.Id)
+            {
+                case "wall":
+                    return entry.Collidable;
+                case "freeball":
+                    // The bucket's hole and the lips of its rim; its front images are not collidable
+                    return entry.Collidable && (devices & GameDevices.Bucket) != 0;
+                case "bumperhole":
+                    // Sub id 1 are the pyramid's images, the others its slopes
+                    return entry.SubId != 1 && (devices & GameDevices.Pyramid) != 0;
+                case "freeballcover":
+                    return (devices & GameDevices.Cover) != 0;
+                case "flipper":
+                    return (devices & GameDevices.Flippers) != 0;
+                default:
+                    return false;
+            }
         }
 
         /// <summary>

@@ -979,10 +979,29 @@ namespace IntelOrca.PeggleEdit.Designer
             if (lastOverObject != prevObject)
                 UpdateRedraw();
 
+            AimCannon(virtualLocation);
+
             if (mSelectedTool != null)
                 mSelectedTool.MouseMove(e.Button, e.Location, Control.ModifierKeys);
 
             _lastMousePosition = e.Location;
+        }
+
+        /// <summary>
+        /// Turns the cannon to point at the mouse, as the game does, so that it can be seen how near it comes to the
+        /// level's objects. Only the cannon is drawn again.
+        /// </summary>
+        private void AimCannon(Point virtualLocation)
+        {
+            var oldAngle = Cannon.GetAngle(mLevel.CannonTarget);
+            mLevel.CannonTarget = virtualLocation;
+            if (!mLevel.ShowCannon || Cannon.GetAngle(mLevel.CannonTarget) == oldAngle)
+                return;
+
+            var bounds = Cannon.Bounds;
+            var topLeft = mLevel.GetActualXY(bounds.Left, bounds.Top);
+            var bottomRight = mLevel.GetActualXY(bounds.Right, bounds.Bottom);
+            Invalidate(Rectangle.FromLTRB(topLeft.X - 1, topLeft.Y - 1, bottomRight.X + 1, bottomRight.Y + 1));
         }
 
         protected override void OnMouseUp(MouseEventArgs e)
