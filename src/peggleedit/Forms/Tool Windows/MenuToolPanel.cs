@@ -104,6 +104,7 @@ namespace IntelOrca.PeggleEdit.Designer
 
         RibbonCheckBox chkBackground;
         RibbonCheckBox chkInterface;
+        RibbonCheckBox chkCannon;
         RibbonCheckBox chkObjects;
         RibbonCheckBox chkCollision;
         RibbonCheckBox chkTransparent;
@@ -490,6 +491,12 @@ namespace IntelOrca.PeggleEdit.Designer
             chkInterface.Checked = true;
             chkInterface.CheckedChanged += new EventHandler(showInterfaceRibbonButton_Click);
 
+            chkCannon = new RibbonCheckBox("Cannon");
+            chkCannon.Checked = true;
+            chkCannon.ToolTipTitle = "Cannon";
+            chkCannon.ToolTip = "Show the game's cannon, pointing at the mouse, to see whether it is too close to the level's objects.";
+            chkCannon.CheckedChanged += new EventHandler(showCannonRibbonCheckBox_CheckedChanged);
+
             chkObjects = new RibbonCheckBox("Objects");
             chkObjects.Checked = true;
             chkObjects.CheckedChanged += new EventHandler(showPegsRibbonButton_Click);
@@ -523,6 +530,7 @@ namespace IntelOrca.PeggleEdit.Designer
             RibbonPanel panelShowHide = new RibbonPanel("Show / Hide");
             panelShowHide.Items.Add(chkBackground);
             panelShowHide.Items.Add(chkInterface);
+            panelShowHide.Items.Add(chkCannon);
             panelShowHide.Items.Add(chkObjects);
             panelShowHide.Items.Add(chkCollision);
             panelShowHide.Items.Add(chkTransparent);
@@ -1322,6 +1330,15 @@ namespace IntelOrca.PeggleEdit.Designer
                 LevelEditor.Level.ShowPreview = true;
             }
 
+            LevelEditor.UpdateRedraw();
+        }
+
+        private void showCannonRibbonCheckBox_CheckedChanged(object sender, EventArgs e)
+        {
+            if (!IsEditorAvailable())
+                return;
+
+            LevelEditor.Level.ShowCannon = chkCannon.Checked;
             LevelEditor.UpdateRedraw();
         }
 
