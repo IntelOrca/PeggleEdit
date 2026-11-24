@@ -1094,6 +1094,15 @@ namespace IntelOrca.PeggleEdit.Designer
 
         private readonly System.Diagnostics.Stopwatch _clock = System.Diagnostics.Stopwatch.StartNew();
         private TimeSpan _lastFrame = -FrameInterval;
+        private TimeSpan _lastFrameEnd = -FrameInterval;
+        private TimeSpan _lastFrameDuration;
+
+        // The least time left between the end of a frame and the start of the next, as a part of how long the frame
+        // took, so that the rest of the application (painting other windows, timers, input) is never starved by frames
+        // that take longer than the frame interval (e.g. a large level with emitters, zoomed for a high DPI display)
+        private const double FrameGapRatio = 0.2;
+        private static readonly TimeSpan MinFrameGap = TimeSpan.FromMilliseconds(2);
+        private static readonly TimeSpan MaxFrameGap = TimeSpan.FromMilliseconds(30);
         private System.Threading.Timer _frameTimer;
         private bool _frameScheduled;
         private bool _waitingForIdle;
@@ -1145,7 +1154,15 @@ namespace IntelOrca.PeggleEdit.Designer
             }
 
             _frameScheduled = true;
-            var wait = (int)Math.Ceiling((_lastFrame + FrameInterval - _clock.Elapsed).TotalMilliseconds);
+            var gap = TimeSpan.FromTicks((long)(_lastFrameDuration.Ticks * FrameGapRatio));
+            if (gap < MinFrameGap)
+                gap = MinFrameGap;
+            if (gap > MaxFrameGap)
+                gap = MaxFrameGap;
+            var due = _lastFrame + FrameInterval;
+            if (due < _lastFrameEnd + gap)
+                due = _lastFrameEnd + gap;
+            var wait = (int)Math.Ceiling((due - _clock.Elapsed).TotalMilliseconds);
             if (wait <= 0)
             {
                 SetWaitingForIdle(true);
@@ -1216,6 +1233,8 @@ namespace IntelOrca.PeggleEdit.Designer
             {
                 _inFrame = false;
             }
+            _lastFrameEnd = _clock.Elapsed;
+            _lastFrameDuration = _lastFrameEnd - _lastFrame;
 
             if (Animating)
                 ScheduleFrame();
