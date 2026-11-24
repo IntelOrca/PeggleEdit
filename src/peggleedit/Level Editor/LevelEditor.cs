@@ -222,6 +222,8 @@ namespace IntelOrca.PeggleEdit.Designer
             return p;
         }
 
+        public LevelEntry ProvisionalEntry => _provisionalEntry;
+
         public void SetProvisonalEntry(LevelEntry entry)
         {
             _provisionalEntry = entry;

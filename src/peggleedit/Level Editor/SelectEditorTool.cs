@@ -165,7 +165,9 @@ namespace IntelOrca.PeggleEdit.Designer
             _placePosition = Editor.Level.GetVirtualXY(location);
             if (button != MouseButtons.Left)
             {
-                Editor.SetProvisonalEntry(null);
+                // Redraw only to take away a brick that was being placed, not on every move of the mouse
+                if (Editor.ProvisionalEntry != null)
+                    Editor.SetProvisonalEntry(null);
                 if (Editor.SelectedEntries.Count != 0)
                 {
                     PlaceBrick(true, false, false, true);
