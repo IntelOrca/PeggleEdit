@@ -1229,7 +1229,8 @@ namespace IntelOrca.PeggleEdit.Tools.Levels
             mFirstPreviewUpdate = 0;
             mPreviewTime = 0;
             mPreviewRunning = true;
-            _particlePreview.Clear();
+            // The same each time, so that a time can be shown again
+            _particlePreview.Clear(seed: 1);
             _particlePreview.Tick();
             for (int i = 0; i < ticks; i++)
             {
