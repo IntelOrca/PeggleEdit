@@ -34,8 +34,28 @@ namespace IntelOrca.PeggleEdit.Tools.Extensions
 
         public static void DrawImageWithColour(this Graphics g, Image image, Rectangle dst, Color color)
         {
-            var attrs = GetImageAttributes(color);
-            g.DrawImage(image, dst, 0, 0, image.Width, image.Height, GraphicsUnit.Pixel, attrs);
+            var tinted = GetTintedImage(image, color);
+            g.DrawImage(tinted, dst, 0, 0, image.Width, image.Height, GraphicsUnit.Pixel);
+        }
+
+        [ThreadStatic]
+        private static Dictionary<(Image, int), Bitmap> _tinted;
+
+        private static Bitmap GetTintedImage(Image image, Color color)
+        {
+            var cache = _tinted ?? (_tinted = new Dictionary<(Image, int), Bitmap>());
+            var key = (image, color.ToArgb());
+            if (!cache.TryGetValue(key, out var result))
+            {
+                result = new Bitmap(image.Width, image.Height, PixelFormat.Format32bppPArgb);
+                using (var g = Graphics.FromImage(result))
+                {
+                    g.CompositingMode = System.Drawing.Drawing2D.CompositingMode.SourceCopy;
+                    g.DrawImage(image, new Rectangle(0, 0, image.Width, image.Height), 0, 0, image.Width, image.Height, GraphicsUnit.Pixel, GetImageAttributes(color));
+                }
+                cache.Add(key, result);
+            }
+            return result;
         }
 
         // The attributes made for each colour, kept as making them for every image drawn was slow (and they were not
