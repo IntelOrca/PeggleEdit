@@ -477,11 +477,15 @@ namespace IntelOrca.PeggleEdit.Designer
         void mTreeView_ItemDrag(object sender, ItemDragEventArgs e)
         {
             TreeNode node = e.Item as TreeNode;
-            if (e.Button != MouseButtons.Left || !CanMoveNode(node))
+            if (node == null)
                 return;
 
-            //Keep the dragged node selected, otherwise the tree reverts to the previous selection
+            //The tree only selects the pressed node when the mouse is released, and reverts to the previous selection
+            //once a drag starts, so select it here: even when it cannot be moved, pressing on a node should select it
             mTreeView.SelectedNode = node;
+
+            if (e.Button != MouseButtons.Left || !CanMoveNode(node))
+                return;
 
             mDragNode = node;
             try
