@@ -297,8 +297,30 @@ namespace IntelOrca.PeggleEdit.Tools.Levels
             //g.DrawImage(mCanvasBufferImage, dest, src, GraphicsUnit.Pixel);
         }
 
+        /// <summary>
+        /// Whether the level's objects are drawn half transparent, so that the background under them can be seen.
+        /// </summary>
+        public bool TransparentObjects { get; set; }
+
+        private Bitmap mTransparentBuffer;
+        private Bitmap mTransparentBackground;
+        private static readonly System.Drawing.Imaging.ImageAttributes HalfTransparent = CreateHalfTransparent();
+
+        private static System.Drawing.Imaging.ImageAttributes CreateHalfTransparent()
+        {
+            var attributes = new System.Drawing.Imaging.ImageAttributes();
+            attributes.SetColorMatrix(new System.Drawing.Imaging.ColorMatrix { Matrix33 = 0.5f });
+            return attributes;
+        }
+
         private void DrawCanvas(Graphics g, RenderTarget target)
         {
+            if (TransparentObjects && mShowingEntries && target != null && target.Bitmap != mTransparentBuffer)
+            {
+                DrawCanvasTransparent(g);
+                return;
+            }
+
             //Level bounds
             Rectangle bounds = new Rectangle(0, 0, 800, 600);
 
@@ -321,6 +343,36 @@ namespace IntelOrca.PeggleEdit.Tools.Levels
                 DrawEntries(g, target);
             else if (mShowingInterface)
                 DrawInterface(g);
+        }
+
+        /// <summary>
+        /// Draws the level with its objects half transparent: the level is drawn as normal on a bitmap, which is then
+        /// drawn at half opacity over the background alone. The interface is drawn again over it, as it is not one of
+        /// the level's objects.
+        /// </summary>
+        private void DrawCanvasTransparent(Graphics g)
+        {
+            var rect = new Rectangle(0, 0, 800, 600);
+            if (mTransparentBuffer == null)
+            {
+                mTransparentBuffer = new Bitmap(rect.Width, rect.Height, System.Drawing.Imaging.PixelFormat.Format32bppPArgb);
+                mTransparentBackground = new Bitmap(rect.Width, rect.Height, System.Drawing.Imaging.PixelFormat.Format32bppPArgb);
+            }
+
+            using (var bg = Graphics.FromImage(mTransparentBuffer))
+                DrawCanvas(bg, new RenderTarget(mTransparentBuffer, bg));
+
+            using (var bg = Graphics.FromImage(mTransparentBackground))
+            {
+                bg.FillRectangle(Brushes.Black, rect);
+                if (mShowingBackground)
+                    DrawBackground(bg);
+            }
+
+            g.DrawImage(mTransparentBackground, rect, 0, 0, rect.Width, rect.Height, GraphicsUnit.Pixel);
+            g.DrawImage(mTransparentBuffer, rect, 0, 0, rect.Width, rect.Height, GraphicsUnit.Pixel, HalfTransparent);
+            if (mShowingInterface)
+                DrawInterfaceFrame(g);
         }
 
         private void DrawBackground(Graphics g)
@@ -633,6 +685,7 @@ namespace IntelOrca.PeggleEdit.Tools.Levels
             var oPreviewRunning = mPreviewRunning;
             var oPreviewTime = mPreviewTime;
             var oFirstPreviewUpdate = mFirstPreviewUpdate;
+            var oTransparent = TransparentObjects;
             try
             {
                 mShowingInterface = drawInterface;
@@ -641,6 +694,7 @@ namespace IntelOrca.PeggleEdit.Tools.Levels
                 mShowCollision = false;
                 mShowPreview = true;
                 UsePegTextures = true;
+                TransparentObjects = false;
                 if (ticks is int t)
                 {
                     RunPreview(t);
@@ -669,6 +723,7 @@ namespace IntelOrca.PeggleEdit.Tools.Levels
                 mPreviewRunning = oPreviewRunning;
                 mPreviewTime = oPreviewTime;
                 mFirstPreviewUpdate = oFirstPreviewUpdate;
+                TransparentObjects = oTransparent;
                 // A running preview starts its emitters again, as they were replaced
                 if (ticks != null)
                     _particlePreview.Clear();
@@ -1234,9 +1289,28 @@ namespace IntelOrca.PeggleEdit.Tools.Levels
         // The most ticks the emitters are run in one update, so that a long pause does not stall the editor
         const int MaxPreviewTicksPerUpdate = 50;
 
+        /// <summary>
+        /// How many times faster than normal the game plays while fast forwarding.
+        /// </summary>
+        public const double FastForwardSpeed = 4.0;
+
+        // How many times faster than real time the preview plays, and the part of a tick it has played but not run yet
+        private double mPreviewSpeed = 1;
+        private double mPreviewTickFraction;
+
+        /// <summary>
+        /// The speed the preview plays at, as a multiple of the game's normal speed (e.g. the game's fast forward).
+        /// </summary>
+        public double PreviewSpeed
+        {
+            get => mPreviewSpeed;
+            set => mPreviewSpeed = Math.Max(0.0, value);
+        }
+
         public void ResetPreview()
         {
             mFirstPreviewUpdate = Environment.TickCount;
+            mPreviewTickFraction = 0;
             mPreviewTime = 0;
             mPreviewRunning = true;
             _particlePreview.Clear();
@@ -1247,13 +1321,26 @@ namespace IntelOrca.PeggleEdit.Tools.Levels
         {
             if (mFirstPreviewUpdate != 0)
             {
-                var now = (ulong)((uint)(Environment.TickCount - mFirstPreviewUpdate) / 10);
-                if (now <= mPreviewTime)
+                // mFirstPreviewUpdate is the time of the last update, so that the speed can change while it plays
+                var tickCount = Environment.TickCount;
+                var elapsed = (uint)(tickCount - mFirstPreviewUpdate);
+                if (elapsed == 0)
                     return;
-                if (now - mPreviewTime > MaxPreviewTicksPerUpdate)
-                    mPreviewTime = now - MaxPreviewTicksPerUpdate;
+                mFirstPreviewUpdate = tickCount == 0 ? 1 : tickCount;
+
+                mPreviewTickFraction += elapsed * mPreviewSpeed / 10.0;
+                var ticks = (int)Math.Min(mPreviewTickFraction, int.MaxValue);
+                mPreviewTickFraction -= ticks;
+                // A long pause (or a high speed) does not stall the editor: the time skips ahead without running
+                // the emitters for every tick
+                var maxTicks = (int)Math.Ceiling(MaxPreviewTicksPerUpdate * Math.Max(1.0, mPreviewSpeed));
+                if (ticks > maxTicks)
+                {
+                    mPreviewTime += (ulong)(ticks - maxTicks);
+                    ticks = maxTicks;
+                }
                 // Run the emitters for every tick, with the objects where they are at that tick
-                while (mPreviewTime < now)
+                for (int i = 0; i < ticks; i++)
                 {
                     mPreviewTime++;
                     _particlePreview.Tick();

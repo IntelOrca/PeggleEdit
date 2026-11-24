@@ -106,7 +106,9 @@ namespace IntelOrca.PeggleEdit.Designer
         RibbonCheckBox chkInterface;
         RibbonCheckBox chkObjects;
         RibbonCheckBox chkCollision;
+        RibbonCheckBox chkTransparent;
         RibbonCheckBox chkPreview;
+        RibbonCheckBox chkFastForward;
         RibbonCheckBox chkParticles;
         RibbonCheckBox chk3DAcceleration;
 
@@ -495,8 +497,18 @@ namespace IntelOrca.PeggleEdit.Designer
             chkCollision = new RibbonCheckBox("Collision");
             chkCollision.CheckedChanged += new EventHandler(showCollisionRibbonButton_Click);
 
+            chkTransparent = new RibbonCheckBox("Transparent");
+            chkTransparent.ToolTipTitle = "Transparent";
+            chkTransparent.ToolTip = "Draw the level's objects half transparent, so that the background under them can be seen.";
+            chkTransparent.CheckedChanged += new EventHandler(transparentRibbonCheckBox_CheckedChanged);
+
             chkPreview = new RibbonCheckBox("Preview");
             chkPreview.CheckedChanged += new EventHandler(showPreviewRibbonButton_Click);
+
+            chkFastForward = new RibbonCheckBox("Fast Forward");
+            chkFastForward.ToolTipTitle = "Fast Forward";
+            chkFastForward.ToolTip = "Play the preview as fast as the game's fast forward.";
+            chkFastForward.CheckedChanged += new EventHandler(fastForwardRibbonCheckBox_CheckedChanged);
 
             chkParticles = new RibbonCheckBox("Particles");
             chkParticles.Checked = true;
@@ -513,7 +525,9 @@ namespace IntelOrca.PeggleEdit.Designer
             panelShowHide.Items.Add(chkInterface);
             panelShowHide.Items.Add(chkObjects);
             panelShowHide.Items.Add(chkCollision);
+            panelShowHide.Items.Add(chkTransparent);
             panelShowHide.Items.Add(chkPreview);
+            panelShowHide.Items.Add(chkFastForward);
             panelShowHide.Items.Add(chkParticles);
             panelShowHide.Items.Add(chk3DAcceleration);
 
@@ -1272,6 +1286,23 @@ namespace IntelOrca.PeggleEdit.Designer
             }
 
             LevelEditor.UpdateRedraw();
+        }
+
+        private void transparentRibbonCheckBox_CheckedChanged(object sender, EventArgs e)
+        {
+            if (!IsEditorAvailable())
+                return;
+
+            LevelEditor.Level.TransparentObjects = chkTransparent.Checked;
+            LevelEditor.UpdateRedraw();
+        }
+
+        private void fastForwardRibbonCheckBox_CheckedChanged(object sender, EventArgs e)
+        {
+            if (!IsEditorAvailable())
+                return;
+
+            LevelEditor.Level.PreviewSpeed = chkFastForward.Checked ? Level.FastForwardSpeed : 1.0;
         }
 
         private void showParticlesRibbonButton_Click(object sender, EventArgs e)

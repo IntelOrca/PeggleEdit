@@ -18,6 +18,8 @@ PeggleEdit 5.2.0 (Flamingo) (TBC)
 * [Feature] Show the free ball bucket, swinging in the preview, and the masters' devices: Kat Tut's pyramid, Claude's flippers, the lid and Marina's lightning rod (View > Power-ups)
 * [Feature] Mark the objects Claude's flippers take away, and leave them out of the preview
 * [Feature] 3D Mode view option to show emitters as the game does without 3D acceleration
+* [Feature] Transparent view option to draw the level's objects half transparent over the background
+* [Feature] Fast Forward view option to play the preview at the game's fast forward speed
 * [Feature] peggleedit-cli render can run a level for a time, and show the bucket and the masters' devices
 * [Fix] New emitters no longer show a debug box with a particle count in the game, and the preview shows the box where the game does
 * [Fix] Level objects are drawn in the game's layers: background objects behind the pegs, foreground objects in front
