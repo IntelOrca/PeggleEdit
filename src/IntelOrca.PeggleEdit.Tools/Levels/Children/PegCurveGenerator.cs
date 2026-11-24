@@ -41,23 +41,6 @@ namespace IntelOrca.PeggleEdit.Tools.Levels.Children
             return pegs;
         }
 
-        protected override void DrawPregeneratedItems(Graphics g)
-        {
-            ProcessPegs(p => DrawPeg(g, p));
-        }
-
-        private void DrawPeg(Graphics g, PointF p)
-        {
-            var pegBrush = new SolidBrush(Color.FromArgb(128, Color.Orange));
-            var circlePen = new Pen(Color.Black);
-
-            circlePen.DashStyle = DashStyle.Custom;
-            circlePen.DashPattern = new float[] { 2, 4 };
-
-            g.FillEllipse(pegBrush, p.X - 10.0f, p.Y - 10.0f, 20.0f, 20.0f);
-            g.DrawEllipse(circlePen, p.X - 10.0f, p.Y - 10.0f, 20.0f, 20.0f);
-        }
-
         private void ProcessPegs(Action<PointF> callback)
         {
             if (_cache.Count != 0)

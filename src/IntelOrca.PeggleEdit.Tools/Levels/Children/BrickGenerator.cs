@@ -76,8 +76,7 @@ namespace IntelOrca.PeggleEdit.Tools.Levels.Children
 
         public override void RenderShadow(Graphics g)
         {
-            if (Level.ShowPreview)
-                Generators.DrawGenerated(this, g, true);
+            Generators.DrawGenerated(this, g, true);
         }
 
         public override void ReadData(BinaryReader br, int version)
@@ -117,27 +116,20 @@ namespace IntelOrca.PeggleEdit.Tools.Levels.Children
 
         public override void Draw(Graphics g)
         {
-            //Don't show in show collision mode
+            // The bricks are drawn as the game will show them, also while editing and in collision mode
+            Generators.DrawGenerated(this, g, false);
             if (Level.ShowCollision)
                 return;
 
-            if (Level.ShowPreview)
-            {
-                Generators.DrawGenerated(this, g, false);
-                return;
-            }
-
             base.Draw(g);
+
+            // The guides are shown while editing, and in the preview while the generator is selected
+            if (Level.ShowPreview && !Selected)
+                return;
 
             PointF location = DrawLocation;
 
-            Pen brickPen = new Pen(Color.FromArgb(128, Color.Orange), mBrickWidth);
-            Pen circlePen = new Pen(Color.Black);
-
-            circlePen.DashStyle = DashStyle.Custom;
-            circlePen.DashPattern = new float[] { 2, 4 };
-
-            g.DrawArc(brickPen, MidBounds, mAngularOffset - (SectorAngles / 2.0f), mNumberOfBricks * SectorAngles);
+            var circlePen = Generators.CreateGuidePen();
 
             g.DrawEllipse(circlePen, Bounds);
             g.DrawEllipse(circlePen, InnerBounds);
@@ -159,6 +151,7 @@ namespace IntelOrca.PeggleEdit.Tools.Levels.Children
                 if (index == mNumberOfBricks)
                     break;
             }
+            circlePen.Dispose();
         }
 
         public override object Clone()

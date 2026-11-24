@@ -72,8 +72,7 @@ namespace IntelOrca.PeggleEdit.Tools.Levels.Children
 
         public override void RenderShadow(Graphics g)
         {
-            if (Level.ShowPreview)
-                Generators.DrawGenerated(this, g, true);
+            Generators.DrawGenerated(this, g, true);
         }
 
         public override void ReadData(BinaryReader br, int version)
@@ -113,42 +112,19 @@ namespace IntelOrca.PeggleEdit.Tools.Levels.Children
 
         public override void Draw(Graphics g)
         {
+            // The pegs are drawn as the game will show them, also while editing and in collision mode
+            Generators.DrawGenerated(this, g, false);
             if (Level.ShowCollision)
                 return;
 
-            if (Level.ShowPreview)
-            {
-                Generators.DrawGenerated(this, g, false);
-                return;
-            }
-
             base.Draw(g);
 
-            PointF location = DrawLocation;
+            // The guides are shown while editing, and in the preview while the generator is selected
+            if (Level.ShowPreview && !Selected)
+                return;
 
-            Brush pegBrush = new SolidBrush(Color.FromArgb(128, Color.Orange));
-            Pen circlePen = new Pen(Color.Black);
-
-            circlePen.DashStyle = DashStyle.Custom;
-            circlePen.DashPattern = new float[] { 2, 4 };
-
-            g.DrawEllipse(circlePen, Bounds);
-
-            int index = 0;
-            float da = 360.0f / (float)mMaxNumberOfPegs;
-            for (float a = mAngularOffset; a < 360 + mAngularOffset; a += da)
-            {
-                float angle = MathExt.ToRadians(a);
-                float x = location.X + ((float)Math.Cos(angle) * mRadiusX);
-                float y = location.Y + ((float)Math.Sin(angle) * mRadiusY);
-
-                g.FillEllipse(pegBrush, x - 10.0f, y - 10.0f, 20.0f, 20.0f);
-                g.DrawEllipse(circlePen, x - 10.0f, y - 10.0f, 20.0f, 20.0f);
-
-                index++;
-                if (index == mNumberOfPegs)
-                    break;
-            }
+            using (var circlePen = Generators.CreateGuidePen())
+                g.DrawEllipse(circlePen, Bounds);
         }
 
         public override object Clone()

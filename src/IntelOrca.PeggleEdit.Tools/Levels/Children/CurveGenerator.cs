@@ -33,8 +33,7 @@ namespace IntelOrca.PeggleEdit.Tools.Levels.Children
 
         public override void RenderShadow(Graphics g)
         {
-            if (Level.ShowPreview)
-                Generators.DrawGenerated(this, g, true);
+            Generators.DrawGenerated(this, g, true);
         }
 
         // Flags in the top bits of the point count. Older versions saved neither the position (the path is relative to
@@ -94,34 +93,28 @@ namespace IntelOrca.PeggleEdit.Tools.Levels.Children
 
         public override void Draw(Graphics g)
         {
-            // Don't show in show collision mode
+            // The entries are drawn as the game will show them, also while editing and in collision mode
+            Generators.DrawGenerated(this, g, false);
             if (Level.ShowCollision)
                 return;
 
-            if (Level.ShowPreview)
-            {
-                Generators.DrawGenerated(this, g, false);
-                return;
-            }
-
             base.Draw(g);
+
+            // The path is shown while editing (and its points while selected), and in the preview while selected
+            if (Level.ShowPreview && !Selected)
+                return;
 
             var backupTransform = g.Transform;
             g.TranslateTransform(Location.X, Location.Y);
 
-            DrawPregeneratedItems(g);
+            DrawPath(g);
             if (Selected)
             {
-                DrawPath(g);
                 DrawPoints(g);
                 DrawAnchors(g);
             }
 
             g.Transform = backupTransform;
-        }
-
-        protected virtual void DrawPregeneratedItems(Graphics g)
-        {
         }
 
         private void DrawPath(Graphics g)

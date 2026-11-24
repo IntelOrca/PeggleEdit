@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Drawing;
+using System.Drawing.Drawing2D;
 using IntelOrca.PeggleEdit.Tools.Levels.Children;
 
 namespace IntelOrca.PeggleEdit.Tools.Levels
@@ -87,6 +88,12 @@ namespace IntelOrca.PeggleEdit.Tools.Levels
                 level.Entries.Insert(index++, entry);
             }
         }
+
+        /// <summary>
+        /// The dashed pen that a generator's guides (its shape, the outline of each place) are drawn with.
+        /// </summary>
+        public static Pen CreateGuidePen() =>
+            new Pen(Color.Black) { DashStyle = DashStyle.Custom, DashPattern = new float[] { 2, 4 } };
 
         /// <summary>
         /// Draws the entries a generator generates, as they will appear in the game.
