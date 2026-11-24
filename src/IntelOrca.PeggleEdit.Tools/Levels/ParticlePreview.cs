@@ -1,254 +1,231 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Drawing;
+using System.Drawing.Imaging;
+using System.IO;
+using System.Linq;
 using IntelOrca.PeggleEdit.Tools.Extensions;
 using IntelOrca.PeggleEdit.Tools.Levels.Children;
 using IntelOrca.PeggleEdit.Tools.Pack;
 
 namespace IntelOrca.PeggleEdit.Tools.Levels
 {
+    /// <summary>
+    /// What is drawn on: a bitmap, so that particles can be added to what is under them, and the graphics drawing on it.
+    /// </summary>
+    internal sealed class RenderTarget
+    {
+        public Bitmap Bitmap { get; }
+        public Graphics Graphics { get; }
+
+        public RenderTarget(Bitmap bitmap, Graphics graphics)
+        {
+            Bitmap = bitmap;
+            Graphics = graphics;
+        }
+    }
+
+    /// <summary>
+    /// Runs and draws the level's emitters. While the preview plays, each emitter runs live with the preview clock.
+    /// Otherwise each emitter is shown settled: run on its own for a few seconds, so it looks as it does in play.
+    /// </summary>
     internal class ParticlePreview
     {
-        private readonly Random _random = new Random();
-        private readonly List<Particle> _particles = new List<Particle>();
-        private readonly Dictionary<Emitter, EmitterData> _emitterData = new Dictionary<Emitter, EmitterData>();
-        private float _time;
+        // How long an emitter is run to show it settled, in ticks
+        const int MinSettleTicks = 300;
+        const int MaxSettleTicks = 3000;
+
+        private sealed class State
+        {
+            public EmitterSimulation Simulation;
+            public ulong Key;
+        }
+
+        private readonly Dictionary<Emitter, State> _live = new Dictionary<Emitter, State>();
+        private readonly Dictionary<Emitter, State> _settled = new Dictionary<Emitter, State>();
+        private int _liveSeed = Environment.TickCount;
 
         public Level Level { get; set; }
 
+        /// <summary>
+        /// Whether the emitters run as the game does without 3D acceleration.
+        /// </summary>
+        public bool Software { get; set; }
+
+        /// <summary>
+        /// Forgets the live emitters, so that they start again.
+        /// </summary>
         public void Clear()
         {
-            _particles.Clear();
+            _live.Clear();
+            _liveSeed++;
         }
 
-        public void Emit()
-        {
-            var vx = (float)((_random.NextDouble() - 0.5f) * 16);
-            var vy = (float)((_random.NextDouble() - 0.5f) * 16);
+        private IEnumerable<Emitter> GetEmitters() => Level.Entries.OfType<Emitter>();
 
-            var p = new Particle();
-            p.Location = new PointF(200, 200);
-            p.Velocity = new PointF(vx, vy);
-            p.Size = new SizeF(32, 32);
-            p.Life = 100;
-            _particles.Add(p);
-        }
-
-        public void Update(float delta)
+        /// <summary>
+        /// Runs every emitter live for one tick, at the level's current preview time.
+        /// </summary>
+        public void Tick()
         {
             if (Level == null)
                 return;
 
-            while (delta >= 1)
+            var seen = new HashSet<Emitter>();
+            int index = 0;
+            foreach (var emitter in GetEmitters())
             {
-                UpdateInner(1);
-                delta--;
-            }
-        }
-
-        public void UpdateInner(float delta)
-        {
-            _time += delta * 0.01f;
-
-            UpdateEmitters();
-            UpdateParticles(delta);
-        }
-
-        private void UpdateEmitters()
-        {
-            foreach (var entry in Level.Entries)
-            {
-                if (entry is Emitter emitter)
+                seen.Add(emitter);
+                var key = GetKey(emitter);
+                if (!_live.TryGetValue(emitter, out var state) || state.Key != key)
                 {
-                    UpdateEmitter(emitter);
+                    state = new State { Key = key, Simulation = new EmitterSimulation(emitter, _liveSeed + (index * 7919), Software) };
+                    _live[emitter] = state;
                 }
+                state.Simulation.Update(emitter.DrawLocation);
+                index++;
             }
+            foreach (var gone in _live.Keys.Where(x => !seen.Contains(x)).ToArray())
+                _live.Remove(gone);
         }
 
-        private void UpdateEmitter(Emitter emitter)
+        /// <summary>
+        /// A hash of everything about an emitter that changes how it runs, so that it is started again when it is
+        /// edited.
+        /// </summary>
+        private ulong GetKey(Emitter emitter)
         {
-            var edata = GetEmitterData(emitter);
-            var interval = 0.01 / (emitter.Rate.StaticValue + emitter.RandRate);
-            if (interval == 0)
-                return;
+            var ms = new MemoryStream();
+            var bw = new BinaryWriter(ms);
+            emitter.WriteData(bw, LevelWriter.DefaultFileVersion);
+            bw.Write(Software);
+            return ms.ToArray().CalculateFnv1a();
+        }
 
-            var timeSinceLastEmission = _time - edata.LastEmitTime;
-            if (timeSinceLastEmission < interval)
-                return;
+        private EmitterSimulation GetSettled(Emitter emitter)
+        {
+            var key = GetKey(emitter);
+            if (_settled.TryGetValue(emitter, out var state) && state.Key == key)
+                return state.Simulation;
 
-            edata.LastEmitTime = _time;
+            // Run relative to the emitter, so that the settled particles can be drawn wherever it is
+            var simulation = new EmitterSimulation(emitter, 12345, Software);
+            int life = (int)(emitter.Duration * 100);
+            int ticks = Math.Min(MaxSettleTicks, Math.Max(MinSettleTicks, life + 100));
+            for (int i = 0; i < ticks; i++)
+                simulation.Update(PointF.Empty);
 
-            var p = new Particle();
-            p.Image = GetImage(emitter);
-            if (p.Image != null)
+            _settled[emitter] = new State { Key = key, Simulation = simulation };
+            if (_settled.Count > 256)
             {
-                p.Size = p.Image.Size;
+                var emitters = new HashSet<Emitter>(GetEmitters());
+                foreach (var gone in _settled.Keys.Where(x => !emitters.Contains(x)).ToArray())
+                    _settled.Remove(gone);
             }
+            return simulation;
+        }
 
-            p.Location = emitter.DrawLocation;
-            if (emitter.RandomStart)
+        /// <summary>
+        /// Draws an emitter's particles onto the target. <paramref name="live"/> draws them as they are in the
+        /// running preview, otherwise they are drawn settled.
+        /// </summary>
+        public void Draw(RenderTarget target, Graphics g, Emitter emitter, bool live)
+        {
+            EmitterSimulation simulation;
+            PointF offset;
+            var position = emitter.DrawLocation;
+            if (live)
             {
-                var width = emitter.Width * emitter.Distrib.StaticValue;
-                var height = emitter.Height * emitter.Distrib.StaticValue;
-                var minX = p.Location.X - (width / 2);
-                var maxX = p.Location.X + (width / 2);
-                var minY = p.Location.Y - (height / 2);
-                var maxY = p.Location.Y + (height / 2);
-                p.Location = new PointF(
-                    RandomRange(minX, maxX),
-                    RandomRange(minY, maxY));
-            }
-
-            if (emitter.ChangeScale)
-            {
-                var scale = RandomRange(emitter.Scale.StaticValue, emitter.Scale.StaticValue + emitter.ScaleRand);
-                p.Size = new SizeF(p.Size.Width * scale, p.Size.Height * scale);
-            }
-
-            if (emitter.ChangeRotation)
-            {
-                p.RotationVelocity = emitter.RotationVel.StaticValue;
-            }
-
-            p.Acceleration = new PointF(emitter.AccX, emitter.Gravity);
-            if (emitter.ChangeVelocity)
-            {
-                p.Velocity = new PointF(
-                    RandomRange(emitter.VelX.StaticValue, emitter.VelX.StaticValue + emitter.VelXRand),
-                    RandomRange(emitter.VelY.StaticValue, emitter.VelY.StaticValue + emitter.VelYRand));
-            }
-            p.Life = emitter.Duration;
-
-            if (emitter.ChangeAlpha)
-            {
-                p.MaxOpacity = emitter.Alpha.StaticValue;
-                p.FadeIn = emitter.AlphaInto;
-                p.TimeBeforeFadeOut = emitter.AlphaFadeAt;
+                if (!_live.TryGetValue(emitter, out var state))
+                    return;
+                simulation = state.Simulation;
+                offset = PointF.Empty;
             }
             else
             {
-                p.MaxOpacity = 1;
+                simulation = GetSettled(emitter);
+                offset = position;
             }
-
-            while (_particles.Count > 1000)
-                _particles.RemoveAt(0);
-            _particles.Add(p);
-        }
-
-        private float RandomRange(float min, float max)
-        {
-            var range = max - min;
-            return (float)(min + (range * _random.NextDouble()));
-        }
-
-        private Image GetImage(Emitter emitter)
-        {
-            return LevelPack.Current.GetImage(emitter.Image)?.Image;
-        }
-
-        private void UpdateParticles(float delta)
-        {
-            foreach (var p in _particles)
-            {
-                p.Update(delta);
-            }
-            _particles.RemoveAll(x => x.Time >= x.Life);
-        }
-
-        public void Draw(Graphics g)
-        {
-            if (Level == null)
+            if (simulation.Particles.Count == 0)
                 return;
 
-            foreach (var p in _particles)
-            {
-                p.Draw(g);
-            }
+            var sprite = Sprite.FromImage(LevelPack.Current?.GetImage(emitter.Image)?.Image) ?? Sprite.Dot;
+            var particles = simulation.Particles.Select(p => simulation.GetAppearance(p, offset, position)).ToArray();
+            DrawParticles(target, g, sprite, particles, emitter.Additive);
         }
 
-        public EmitterData GetEmitterData(Emitter emitter)
+        /// <summary>
+        /// Draws particles (in level coordinates) onto the target as the game does.
+        /// </summary>
+        internal static void DrawParticles(RenderTarget target, Graphics g, Sprite sprite, IReadOnlyList<ParticleAppearance> particles, bool additive)
         {
-            if (!_emitterData.TryGetValue(emitter, out var data))
+            // Where level (0, 0) is on the bitmap
+            var origin = new[] { PointF.Empty };
+            g.TransformPoints(System.Drawing.Drawing2D.CoordinateSpace.Device, System.Drawing.Drawing2D.CoordinateSpace.World, origin);
+            float ox = (float)Math.Round(origin[0].X);
+            float oy = (float)Math.Round(origin[0].Y);
+
+            var bitmap = target.Bitmap;
+            var clip = new Rectangle(0, 0, bitmap.Width, bitmap.Height);
+            var visible = g.VisibleClipBounds;
+            if (!visible.IsEmpty)
             {
-                data = new EmitterData();
-                _emitterData[emitter] = data;
+                var device = new[] { visible.Location, new PointF(visible.Right, visible.Bottom) };
+                g.TransformPoints(System.Drawing.Drawing2D.CoordinateSpace.Device, System.Drawing.Drawing2D.CoordinateSpace.World, device);
+                clip.Intersect(Rectangle.FromLTRB(
+                    (int)Math.Floor(Math.Min(device[0].X, device[1].X)),
+                    (int)Math.Floor(Math.Min(device[0].Y, device[1].Y)),
+                    (int)Math.Ceiling(Math.Max(device[0].X, device[1].X)),
+                    (int)Math.Ceiling(Math.Max(device[0].Y, device[1].Y))));
             }
-            return data;
-        }
-    }
+            if (clip.Width <= 0 || clip.Height <= 0)
+                return;
 
-    internal class EmitterData
-    {
-        public float LastEmitTime { get; set; }
-    }
-
-    internal class Particle
-    {
-        public PointF Location { get; set; }
-        public PointF Velocity { get; set; }
-        public PointF Acceleration { get; set; }
-        public SizeF Size { get; set; }
-        public float Opacity { get; set; }
-        public float MaxOpacity { get; set; }
-        public float RotationVelocity { get; set; }
-        public float Rotation { get; set; }
-        public float Time { get; set; }
-        public float Life { get; set; }
-        public float FadeIn { get; set; }
-        public float TimeBeforeFadeOut { get; set; }
-        public Image Image { get; set; }
-
-        public void Update(float delta)
-        {
-            Rotation = Rotation + RotationVelocity;
-            Velocity = Velocity.Add(Acceleration);
-            Location = Location.Add(Velocity);
-            Time += delta * 0.01f;
-
-            Opacity = MaxOpacity;
-            if (Time < FadeIn)
+            target.Graphics.Flush(System.Drawing.Drawing2D.FlushIntention.Sync);
+            var data = bitmap.LockBits(new Rectangle(0, 0, bitmap.Width, bitmap.Height), ImageLockMode.ReadWrite, PixelFormat.Format32bppPArgb);
+            try
             {
-                Opacity = MathExt.Lerp(0, MaxOpacity, Time / FadeIn);
-            }
-            else if (Time > TimeBeforeFadeOut)
-            {
-                var t = (Time - TimeBeforeFadeOut) / (Life - TimeBeforeFadeOut);
-                Opacity = MathExt.Lerp(MaxOpacity, 0, t);
-            }
-        }
-
-        public void Draw(Graphics g)
-        {
-            var dstF = new RectangleF(Location, Size);
-            dstF.Offset(-Size.Width / 2, -Size.Height / 2);
-            var dst = new Rectangle((int)dstF.X, (int)dstF.Y, (int)dstF.Width, (int)dstF.Height);
-
-            var a = (byte)Math.Max(0, Math.Min(255, Opacity * 255.0f));
-            var colour = Color.FromArgb(a, 255, 255, 255);
-            var brush = new SolidBrush(colour);
-            // g.FillRectangle(new SolidBrush(colour), dst);
-            // g.CompositingMode = System.Drawing.Drawing2D.CompositingMode.SourceOver;
-            // g.CompositingMode = System.Drawing.Drawing2D.CompositingMode.SourceCopy;
-            if (Image == null)
-            {
-                g.FillEllipse(brush, dst);
-            }
-            else
-            {
-                var img = Image;
-                if (Rotation == 0)
+                int iw = sprite.Width;
+                int ih = sprite.Height;
+                foreach (var p in particles)
                 {
-                    g.DrawImageWithColour(img, dst, colour);
+                    if (p.A == 0)
+                        continue;
+                    if (!p.Matrix)
+                    {
+                        // Drawn stretched to a whole number of pixels, at a whole pixel position
+                        int w = (int)(iw * p.Scale);
+                        int h = (int)(ih * p.Scale);
+                        if (w <= 0 || h <= 0)
+                            continue;
+                        int x = (int)(p.X - (w / 2.0f));
+                        int y = (int)(p.Y - (h / 2.0f));
+                        SpriteRasterizer.Draw(data, clip, sprite,
+                            (float)w / iw, 0, 0, (float)h / ih, x + ox, y + oy,
+                            p.R, p.G, p.B, p.A, additive);
+                    }
+                    else
+                    {
+                        // Drawn with a matrix, centred half the unscaled image up and to the left of the particle
+                        // (as the game does)
+                        float s = p.Scale;
+                        if (s == 0)
+                            continue;
+                        float cos = (float)Math.Cos(p.Rotation);
+                        float sin = (float)Math.Sin(p.Rotation);
+                        float m11 = s * cos, m21 = s * sin, m12 = -s * sin, m22 = s * cos;
+                        float cx = p.X - (iw / 2.0f) + ox;
+                        float cy = p.Y - (ih / 2.0f) + oy;
+                        float dx = cx - ((m11 * iw / 2) + (m21 * ih / 2));
+                        float dy = cy - ((m12 * iw / 2) + (m22 * ih / 2));
+                        SpriteRasterizer.Draw(data, clip, sprite, m11, m12, m21, m22, dx, dy,
+                            p.R, p.G, p.B, p.A, additive);
+                    }
                 }
-                else
-                {
-                    var backupTransform = g.Transform;
-                    var mx = g.Transform;
-                    mx.RotateAt(-Rotation, Location);
-                    g.Transform = mx;
-                    g.DrawImageWithColour(img, dst, colour);
-                    g.Transform = backupTransform;
-                }
+            }
+            finally
+            {
+                bitmap.UnlockBits(data);
             }
         }
     }

@@ -229,7 +229,42 @@ namespace IntelOrca.PeggleEdit.Tools.Levels
 
         #region Painting
 
+        private Bitmap mBuffer;
+
+        /// <summary>
+        /// Draws the level, with the margin around it, onto <paramref name="g"/> (whose origin is the top left of
+        /// <see cref="Bounds"/>). Only the part of the level that is visible is drawn. It is drawn on a bitmap first, so
+        /// that particles can be blended with what is under them as the game does.
+        /// </summary>
         public void Draw(Graphics g)
+        {
+            var clip = g.VisibleClipBounds;
+            var region = Rectangle.Intersect(Rectangle.FromLTRB(
+                (int)Math.Floor(clip.Left), (int)Math.Floor(clip.Top),
+                (int)Math.Ceiling(clip.Right), (int)Math.Ceiling(clip.Bottom)), Bounds);
+            if (region.Width <= 0 || region.Height <= 0)
+                return;
+
+            if (mBuffer == null || mBuffer.Width < region.Width || mBuffer.Height < region.Height)
+            {
+                mBuffer?.Dispose();
+                mBuffer = new Bitmap(region.Width, region.Height, System.Drawing.Imaging.PixelFormat.Format32bppPArgb);
+            }
+
+            using (var bg = Graphics.FromImage(mBuffer))
+            {
+                bg.TranslateTransform(-region.X, -region.Y);
+                bg.SetClip(region);
+                DrawWithMargin(bg, new RenderTarget(mBuffer, bg));
+            }
+
+            var oldMode = g.CompositingMode;
+            g.CompositingMode = CompositingMode.SourceCopy;
+            g.DrawImage(mBuffer, region, new Rectangle(0, 0, region.Width, region.Height), GraphicsUnit.Pixel);
+            g.CompositingMode = oldMode;
+        }
+
+        private void DrawWithMargin(Graphics g, RenderTarget target)
         {
             g.FillRectangle(SystemBrushes.AppWorkspace, Bounds);
 
@@ -239,7 +274,7 @@ namespace IntelOrca.PeggleEdit.Tools.Levels
             GraphicsContainer containerState = g.BeginContainer();
             g.SmoothingMode = SmoothingMode.HighQuality;
 
-            DrawCanvas(g);
+            DrawCanvas(g, target);
 
             g.SmoothingMode = SmoothingMode.Default;
             g.EndContainer(containerState);
@@ -261,7 +296,7 @@ namespace IntelOrca.PeggleEdit.Tools.Levels
             //g.DrawImage(mCanvasBufferImage, dest, src, GraphicsUnit.Pixel);
         }
 
-        private void DrawCanvas(Graphics g)
+        private void DrawCanvas(Graphics g, RenderTarget target)
         {
             //Level bounds
             Rectangle bounds = new Rectangle(0, 0, 800, 600);
@@ -280,11 +315,8 @@ namespace IntelOrca.PeggleEdit.Tools.Levels
             if (mShowingBackground)
                 DrawBackground(g);
 
-            if (mShowPreview && ShowParticles)
-                DrawParticles(g);
-
             if (mShowingEntries)
-                DrawEntries(g);
+                DrawEntries(g, target);
 
             if (mShowingInterface)
                 DrawInterface(g);
@@ -307,49 +339,84 @@ namespace IntelOrca.PeggleEdit.Tools.Levels
             }
         }
 
-        private void DrawParticles(Graphics g)
+        /// <summary>
+        /// The layers the game draws level objects in, in order (Board::Draw): each object goes in one by its flags.
+        /// </summary>
+        internal enum DrawLayer
         {
-            g.TranslateTransform(Level.DrawAdjustX, Level.DrawAdjustY);
-            var containerState = g.BeginContainer();
-            g.SmoothingMode = SmoothingMode.HighQuality;
-
-            _particlePreview.Draw(g);
-
-            g.EndContainer(containerState);
-            g.TranslateTransform(-Level.DrawAdjustX, -Level.DrawAdjustY);
+            /// <summary>Background objects, drawn before any shadow.</summary>
+            Background,
+            /// <summary>Everything else, drawn after the shadows, in file order.</summary>
+            Normal,
+            /// <summary>Foreground objects, drawn after the balls.</summary>
+            Foreground,
+            /// <summary>Draw sort objects, drawn after the foreground objects, sorted by y.</summary>
+            DrawSort,
+            /// <summary>Foreground objects that are also Foreground2, drawn after the cannon and the character.</summary>
+            Foreground2,
         }
 
-        private void DrawEntries(Graphics g)
+        internal static DrawLayer GetDrawLayer(LevelEntry entry)
+        {
+            if (entry.Background)
+                return DrawLayer.Background;
+            if (entry.Foreground && entry.Foreground2)
+                return DrawLayer.Foreground2;
+            if (entry.Foreground)
+                return DrawLayer.Foreground;
+            if (entry.DrawSort)
+                return DrawLayer.DrawSort;
+            return DrawLayer.Normal;
+        }
+
+        /// <summary>
+        /// Whether the emitters are drawn as they are in the running preview, rather than settled.
+        /// </summary>
+        private bool IsPreviewRunning => mShowPreview && mPreviewRunning;
+
+        private void DrawEntries(Graphics g, RenderTarget target)
         {
             g.TranslateTransform(Level.DrawAdjustX, Level.DrawAdjustY);
             GraphicsContainer containerState = g.BeginContainer();
             g.SmoothingMode = SmoothingMode.HighQuality;
 
-            List<int> hidetype = new List<int>();
-            //hidetype.AddRange(new int[] { 5, 6 });	
+            // Put the entries in the game's layers, keeping file order within each
+            var layers = new List<LevelEntry>[5];
+            for (int i = 0; i < layers.Length; i++)
+                layers[i] = new List<LevelEntry>();
+            foreach (LevelEntry le in mEntries)
+                layers[(int)GetDrawLayer(le)].Add(le);
+            // A stable sort, so objects at the same y stay in file order
+            layers[(int)DrawLayer.DrawSort] = layers[(int)DrawLayer.DrawSort].OrderBy(x => x.DrawY).ToList();
 
-            if (mShowingEntries)
+            DrawLayerEntries(g, target, layers[(int)DrawLayer.Background]);
+
+            // Background objects cast no shadow
+            for (int i = (int)DrawLayer.Normal; i < layers.Length; i++)
             {
-                foreach (LevelEntry le in mEntries)
+                foreach (var le in layers[i])
                 {
-                    if (hidetype.Contains(le.Type))
-                        continue;
-
                     if (le.DrawShadow)
                         le.RenderShadow(g);
                 }
-
-                foreach (LevelEntry le in mEntries)
-                {
-                    if (hidetype.Contains(le.Type))
-                        continue;
-
-                    le.Draw(g);
-                }
             }
+
+            for (int i = (int)DrawLayer.Normal; i < layers.Length; i++)
+                DrawLayerEntries(g, target, layers[i]);
 
             g.EndContainer(containerState);
             g.TranslateTransform(-Level.DrawAdjustX, -Level.DrawAdjustY);
+        }
+
+        private void DrawLayerEntries(Graphics g, RenderTarget target, List<LevelEntry> entries)
+        {
+            foreach (var le in entries)
+            {
+                // Particles are drawn where the emitter is in the drawing order, and not at all when it is invisible
+                if (le is Emitter emitter && ShowParticles && target != null && emitter.Visible)
+                    _particlePreview.Draw(target, g, emitter, IsPreviewRunning);
+                le.Draw(g);
+            }
         }
 
         private void DrawInterface(Graphics g)
@@ -371,10 +438,12 @@ namespace IntelOrca.PeggleEdit.Tools.Levels
         }
 
         /// <summary>
-        /// Renders the level as the game shows it at the start of play: the 800x600 screen with the background, the
-        /// level's objects in their starting positions (all pegs blue) and, optionally, the interface around it.
+        /// Renders the level as the game shows it: the 800x600 screen with the background, the level's objects (all
+        /// pegs blue) and, optionally, the interface around it. With no time, the objects are in their starting
+        /// positions and each emitter is shown settled, as it looks once it has been running. With a time (in
+        /// hundredths of a second), the level is run from the start for that long, as the game would.
         /// </summary>
-        public Bitmap RenderGameView(bool drawInterface = true)
+        public Bitmap RenderGameView(bool drawInterface = true, int? ticks = null)
         {
             var oInterface = mShowingInterface;
             var oShowBackground = mShowingBackground;
@@ -382,6 +451,8 @@ namespace IntelOrca.PeggleEdit.Tools.Levels
             var oShowCollision = mShowCollision;
             var oPreview = mShowPreview;
             var oUsePegTextures = UsePegTextures;
+            var oPreviewRunning = mPreviewRunning;
+            var oPreviewTime = mPreviewTime;
             try
             {
                 mShowingInterface = drawInterface;
@@ -390,11 +461,20 @@ namespace IntelOrca.PeggleEdit.Tools.Levels
                 mShowCollision = false;
                 mShowPreview = true;
                 UsePegTextures = true;
+                if (ticks is int t)
+                {
+                    RunPreview(t);
+                }
+                else
+                {
+                    mPreviewRunning = false;
+                    mPreviewTime = 0;
+                }
 
-                var result = new Bitmap(800, 600);
+                var result = new Bitmap(800, 600, System.Drawing.Imaging.PixelFormat.Format32bppPArgb);
                 using (var g = Graphics.FromImage(result))
                 {
-                    DrawCanvas(g);
+                    DrawCanvas(g, new RenderTarget(result, g));
                 }
                 return result;
             }
@@ -406,6 +486,8 @@ namespace IntelOrca.PeggleEdit.Tools.Levels
                 mShowCollision = oShowCollision;
                 mShowPreview = oPreview;
                 UsePegTextures = oUsePegTextures;
+                mPreviewRunning = oPreviewRunning;
+                mPreviewTime = oPreviewTime;
             }
         }
 
@@ -416,17 +498,21 @@ namespace IntelOrca.PeggleEdit.Tools.Levels
             var oShowCollision = mShowCollision;
             var oAllPegsBlue = mShowPreview;
             var oUsePegTextures = UsePegTextures;
+            var oShowParticles = ShowParticles;
 
             mShowingInterface = false;
             mShowingBackground = true;
             mShowCollision = false;
             mShowPreview = true;
             UsePegTextures = true;
+            // The game's thumbnails show no particles
+            ShowParticles = false;
 
             Bitmap fs = new Bitmap(800, 600);
             Graphics fsG = Graphics.FromImage(fs);
-            DrawCanvas(fsG);
+            DrawCanvas(fsG, null);
             fsG.Dispose();
+            ShowParticles = oShowParticles;
 
             mShowingInterface = oInterface;
             mShowingBackground = oShowBackground;
@@ -956,23 +1042,62 @@ namespace IntelOrca.PeggleEdit.Tools.Levels
 
         private ulong mPreviewTime;
         private int mFirstPreviewUpdate;
+        private bool mPreviewRunning;
+
+        // The most ticks the emitters are run in one update, so that a long pause does not stall the editor
+        const int MaxPreviewTicksPerUpdate = 50;
 
         public void ResetPreview()
         {
             mFirstPreviewUpdate = Environment.TickCount;
             mPreviewTime = 0;
+            mPreviewRunning = true;
             _particlePreview.Clear();
+            _particlePreview.Tick();
         }
 
         public void UpdatePreview()
         {
             if (mFirstPreviewUpdate != 0)
             {
-                var lastPreviewTime = mPreviewTime;
-                mPreviewTime = (ulong)((Environment.TickCount - mFirstPreviewUpdate) / 10);
-                var delta = mPreviewTime - lastPreviewTime;
-                _particlePreview.Update(delta);
+                var now = (ulong)((uint)(Environment.TickCount - mFirstPreviewUpdate) / 10);
+                if (now <= mPreviewTime)
+                    return;
+                if (now - mPreviewTime > MaxPreviewTicksPerUpdate)
+                    mPreviewTime = now - MaxPreviewTicksPerUpdate;
+                // Run the emitters for every tick, with the objects where they are at that tick
+                while (mPreviewTime < now)
+                {
+                    mPreviewTime++;
+                    _particlePreview.Tick();
+                }
             }
+        }
+
+        /// <summary>
+        /// Runs the preview from the start for a number of ticks (hundredths of a second), as the game would.
+        /// </summary>
+        public void RunPreview(int ticks)
+        {
+            mFirstPreviewUpdate = 0;
+            mPreviewTime = 0;
+            mPreviewRunning = true;
+            _particlePreview.Clear();
+            _particlePreview.Tick();
+            for (int i = 0; i < ticks; i++)
+            {
+                mPreviewTime++;
+                _particlePreview.Tick();
+            }
+        }
+
+        /// <summary>
+        /// Whether emitters run as the game does without 3D acceleration, where most are not shown.
+        /// </summary>
+        public bool SoftwareRendering
+        {
+            get => _particlePreview.Software;
+            set => _particlePreview.Software = value;
         }
 
         public void UpdatePreview(int elapsedTime)

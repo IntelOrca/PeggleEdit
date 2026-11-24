@@ -17,6 +17,7 @@
 using System;
 using System.Collections.Generic;
 using System.Drawing.Imaging;
+using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Text;
@@ -37,17 +38,21 @@ namespace IntelOrca.PeggleEdit.Cli
   peggleedit-cli to-xml <level.dat>... [-o <output>] [--force]
   peggleedit-cli to-dat <level.xml>... [-o <output>] [--force]
   peggleedit-cli render <level.dat|level.xml>... [-o <output>] [--force]
-                        [--peggle <dir>] [--no-interface]
+                        [--peggle <dir>] [--no-interface] [--time <seconds>]
+                        [--no-particles] [--software]
 
 to-xml and to-dat convert Pego, Peggle and Peggle Nights level files to and from
 XML. Converting a .dat to XML and back gives a byte-for-byte identical file.
 Files that are not levels, or are damaged, are reported as errors.
 
 render draws levels to 800x600 .png images as the game shows them at the start
-of play (all pegs blue). The background is the image next to the level with the
-same name (.jp2, .jpg or .png). Images used by the level are found in the game
-directory, which is the parent of the level's directory if that is called
-'levels', or given with --peggle.
+of play (all pegs blue), with each emitter shown as it looks once it has been
+running. With --time, the level is run from the start for that long instead, as
+the game would: moving objects move and emitters start from nothing. The
+background is the image next to the level with the same name (.jp2, .jpg or
+.png). Images used by the level are found in the game directory, which is the
+parent of the level's directory if that is called 'levels', or given with
+--peggle.
 
 Options:
   -o, --output <path>  Output file, or output directory when converting several
@@ -55,6 +60,10 @@ Options:
   -f, --force          Overwrite output files that already exist.
   --peggle <dir>       The Peggle Nights (or Peggle) game directory (render).
   --no-interface       Leave out the game's interface around the level (render).
+  --time <seconds>     Show the level this long after it starts (render).
+  --no-particles       Leave out the particles of emitters (render).
+  --software           Show emitters as the game does without 3D acceleration,
+                       which leaves most of them out (render).
   -h, --help           Show this help.";
 
         static int Main(string[] args)
@@ -94,7 +103,7 @@ Options:
             string output = null;
             string pegglePath = null;
             bool force = false;
-            bool drawInterface = true;
+            var renderOptions = new RenderOptions();
             for (int i = 1; i < args.Length; i++)
             {
                 switch (args[i])
@@ -117,7 +126,20 @@ Options:
                             throw new UsageException($"{pegglePath} is not a directory");
                         break;
                     case "--no-interface" when render:
-                        drawInterface = false;
+                        renderOptions.DrawInterface = false;
+                        break;
+                    case "--time" when render:
+                        if (++i >= args.Length)
+                            throw new UsageException($"{args[i - 1]} needs a number of seconds");
+                        if (!double.TryParse(args[i], NumberStyles.Float, CultureInfo.InvariantCulture, out var seconds) || seconds < 0 || seconds > 3600)
+                            throw new UsageException($"'{args[i]}' is not a time in seconds");
+                        renderOptions.Ticks = (int)Math.Round(seconds * 100);
+                        break;
+                    case "--no-particles" when render:
+                        renderOptions.ShowParticles = false;
+                        break;
+                    case "--software" when render:
+                        renderOptions.Software = true;
                         break;
                     case "-h":
                     case "--help":
@@ -162,7 +184,7 @@ Options:
                     if (!targets.Add(Path.GetFullPath(target)))
                         throw new IOException($"{target} is also the output of an earlier input");
                     if (render)
-                        Render(input, target, pegglePath, drawInterface, force);
+                        Render(input, target, pegglePath, renderOptions, force);
                     else
                         Convert(input, target, toXml, force);
                     Console.WriteLine($"{input} -> {target}");
@@ -198,7 +220,15 @@ Options:
             }
         }
 
-        static void Render(string input, string target, string pegglePath, bool drawInterface, bool force)
+        class RenderOptions
+        {
+            public bool DrawInterface { get; set; } = true;
+            public int? Ticks { get; set; }
+            public bool ShowParticles { get; set; } = true;
+            public bool Software { get; set; }
+        }
+
+        static void Render(string input, string target, string pegglePath, RenderOptions options, bool force)
         {
             if (Path.GetFullPath(input).Equals(Path.GetFullPath(target), StringComparison.OrdinalIgnoreCase))
                 throw new IOException("the output would overwrite the input");
@@ -232,7 +262,9 @@ Options:
             if (background != null)
                 level.Background = new PakImage(background);
 
-            using (var image = level.RenderGameView(drawInterface))
+            level.ShowParticles = options.ShowParticles;
+            level.SoftwareRendering = options.Software;
+            using (var image = level.RenderGameView(options.DrawInterface, options.Ticks))
             using (var stream = File.Create(target))
             {
                 // Saved to a stream, so that a bad path is an IOException rather than a GDI+ error
