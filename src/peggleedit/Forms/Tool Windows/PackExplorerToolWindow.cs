@@ -104,13 +104,13 @@ namespace IntelOrca.PeggleEdit.Designer
                 if (e.KeyCode == Keys.Up)
                 {
                     MoveNodeBy(SelectedNode, -1);
+                    e.SuppressKeyPress = true;
                 }
                 else if (e.KeyCode == Keys.Down)
                 {
                     MoveNodeBy(SelectedNode, 1);
+                    e.SuppressKeyPress = true;
                 }
-
-                e.SuppressKeyPress = true;
             }
 
             if (e.KeyCode == Keys.Delete)
@@ -625,7 +625,12 @@ namespace IntelOrca.PeggleEdit.Designer
         /// </summary>
         private void ShowDropIndicator(TreeNode parent, int index)
         {
-            if (index < parent.Nodes.Count)
+            if (parent.Nodes.Count > 0 && !parent.IsExpanded)
+            {
+                //Collapsed folder, its rows are hidden so highlight it instead
+                SetDropIndicator(null, false, parent);
+            }
+            else if (index < parent.Nodes.Count)
             {
                 SetDropIndicator(parent.Nodes[index], false, null);
             }

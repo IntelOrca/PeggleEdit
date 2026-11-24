@@ -97,9 +97,50 @@ namespace IntelOrca.PeggleEdit.Designer
             //Only rebuild the list when the entries change, rebuilding it for
             //a selection change makes the whole list flash
             if (entriesChanged)
+            {
                 UpdateList();
-            else if (selectionChanged)
-                UpdateSelection();
+            }
+            else
+            {
+                // Setting an item's text can clear its selection, so the selection is put back after
+                bool textChanged = UpdateItemTexts();
+                if (selectionChanged || textChanged)
+                    UpdateSelection();
+            }
+        }
+
+        private static string GetItemText(int index, LevelEntry entry) => String.Format("{0}. {1}", index, entry);
+
+        /// <summary>
+        /// Updates the text of the items whose entry has changed (it includes the entry's position, which changes as
+        /// it is moved), without rebuilding the list.
+        /// </summary>
+        /// <returns>Whether any text was changed.</returns>
+        private bool UpdateItemTexts()
+        {
+            bool changed = false;
+            mSuspendChangeEvent = true;
+            try
+            {
+                for (int i = 0; i < mEntries.Count && i < mList.Items.Count; i++)
+                {
+                    var text = GetItemText(i, mEntries[i]);
+                    if (!text.Equals(mList.Items[i]))
+                    {
+                        if (!changed)
+                            mList.BeginUpdate();
+                        changed = true;
+                        mList.Items[i] = text;
+                    }
+                }
+            }
+            finally
+            {
+                if (changed)
+                    mList.EndUpdate();
+                mSuspendChangeEvent = false;
+            }
+            return changed;
         }
 
         private void UpdateSelection()
@@ -157,7 +198,7 @@ namespace IntelOrca.PeggleEdit.Designer
             for (int i = 0; i < mEditor.Level.Entries.Count; i++)
             {
                 LevelEntry le = mEditor.Level.Entries[i];
-                items.Add(String.Format("{0}. {1}", i, le.ToString()));
+                items.Add(GetItemText(i, le));
             }
 
             mList.Items.AddRange(items.ToArray());
