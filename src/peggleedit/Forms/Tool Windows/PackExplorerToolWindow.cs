@@ -879,7 +879,7 @@ namespace IntelOrca.PeggleEdit.Designer
         {
             Level level = SelectedNode.Tag as Level;
 
-            DialogResult result = MessageBox.Show(level.Info.Name + " will be deleted permenently?", "Delete Level", MessageBoxButtons.OKCancel, MessageBoxIcon.Question);
+            DialogResult result = MessageBox.Show(level.Info.Name + " will be deleted permanently.", "Delete Level", MessageBoxButtons.OKCancel, MessageBoxIcon.Question);
             if (result == DialogResult.OK)
             {
                 //Close the level first if its open
@@ -1061,7 +1061,7 @@ namespace IntelOrca.PeggleEdit.Designer
 
         private void mnuImageDelete_Click(object sender, EventArgs e)
         {
-            var result = MessageBox.Show("'" + SelectedNode.Text + "' will be deleted permenently?", "Delete Image", MessageBoxButtons.OKCancel, MessageBoxIcon.Question);
+            var result = MessageBox.Show("'" + SelectedNode.Text + "' will be deleted permanently.", "Delete Image", MessageBoxButtons.OKCancel, MessageBoxIcon.Question);
             if (result == DialogResult.OK)
             {
                 mPack.Images.Remove(SelectedNode.Text);
@@ -1135,7 +1135,7 @@ namespace IntelOrca.PeggleEdit.Designer
         {
             ChallengePage challengePage = SelectedNode.Tag as ChallengePage;
 
-            DialogResult result = MessageBox.Show(challengePage.Title + " will be deleted permenently?", "Delete Challenge Page", MessageBoxButtons.OKCancel, MessageBoxIcon.Question);
+            DialogResult result = MessageBox.Show(challengePage.Title + " will be deleted permanently.", "Delete Challenge Page", MessageBoxButtons.OKCancel, MessageBoxIcon.Question);
             if (result == DialogResult.OK)
             {
                 //Remove from pack
@@ -1179,7 +1179,7 @@ namespace IntelOrca.PeggleEdit.Designer
             ChallengePage challengePage = SelectedNode.Parent.Tag as ChallengePage;
             Challenge challenge = SelectedNode.Tag as Challenge;
 
-            DialogResult result = MessageBox.Show(challenge.Name + " will be deleted permenently?", "Delete Challenge", MessageBoxButtons.OKCancel, MessageBoxIcon.Question);
+            DialogResult result = MessageBox.Show(challenge.Name + " will be deleted permanently.", "Delete Challenge", MessageBoxButtons.OKCancel, MessageBoxIcon.Question);
             if (result == DialogResult.OK)
             {
                 //Remove from challenge page

@@ -341,18 +341,25 @@ namespace IntelOrca.PeggleEdit.Designer
         private void mDockContainer_FormClosed(object sender, FormEventArgs e)
         {
             RemoveDisposedLevelToolWindows();
-            if (e.Form is LevelToolWindow)
-                ClearLevelViews();
+            if (e.Form is LevelToolWindow window)
+                LevelWindowClosed(window);
         }
 
         /// <summary>
-        /// Clears the entry list and properties, which show the level that was being edited, once it is closed. They are
-        /// filled again by the next level edited.
+        /// Once the level being edited is closed (or deleted), clears the entry list and properties, which show it, and
+        /// stops the ribbon's commands acting on it. They are filled again by the next level edited. Closing another
+        /// level leaves them as they are.
         /// </summary>
-        private void ClearLevelViews()
+        private void LevelWindowClosed(LevelToolWindow window)
         {
+            if (window != mLastFocusedLevel)
+                return;
+
+            mLastFocusedLevel = null;
             UpdateEntryList(null);
             UpdateProperties(new LevelEntry[0]);
+            SetStatus("");
+            mMenuToolPanel.UpdateViewPanel();
         }
 
         public void RefreshDockContainer()
@@ -625,11 +632,9 @@ namespace IntelOrca.PeggleEdit.Designer
             if (args.Length >= 2)
             {
                 string openWithFilename = args[1];
-                if (File.Exists(openWithFilename))
-                {
-                    OpenPack(openWithFilename);
+                // A new pack is opened instead if it can not be
+                if (File.Exists(openWithFilename) && OpenPack(openWithFilename))
                     return;
-                }
             }
 
             NewPack();
@@ -696,11 +701,13 @@ namespace IntelOrca.PeggleEdit.Designer
             //OpenLevel(pack.Levels[0]);
         }
 
-        public void OpenPack(string filename)
+        /// <returns>Whether the pack was opened.</returns>
+        public bool OpenPack(string filename)
         {
             SetStatus("Opening '{0}'...", Path.GetFileName(filename));
 
             LevelPack pack = new LevelPack();
+            var previousGame = s_openedGame;
             UseSettingsGamePaths();
             if (pack.Open(filename))
             {
@@ -709,12 +716,16 @@ namespace IntelOrca.PeggleEdit.Designer
             }
             else
             {
+                // The pack that is still open keeps its game
+                s_openedGame = previousGame;
+                RegisterGamePaths();
                 MessageBox.Show(String.Format("'{0}' could not be opened.", filename));
-                return;
+                return false;
             }
 
             UpdateRecentList(filename);
             OpenPack(pack);
+            return true;
         }
 
         /// <summary>
@@ -790,8 +801,11 @@ namespace IntelOrca.PeggleEdit.Designer
                     continue;
 
                 mDockContainer.Remove(dfi);
+                if (dfi.DockableForm is LevelToolWindow window)
+                    LevelWindowClosed(window);
             }
-            ClearLevelViews();
+            if (mLastFocusedLevel != null)
+                LevelWindowClosed(mLastFocusedLevel);
         }
 
         public void OpenLevel(Level level)
@@ -833,7 +847,9 @@ namespace IntelOrca.PeggleEdit.Designer
 
                 if (window.Level == level)
                 {
+                    // Removing the window does not close it, so the level's views are cleared here
                     mDockContainer.Remove(dfi);
+                    LevelWindowClosed(window);
                     return;
                 }
             }

@@ -218,6 +218,13 @@ namespace IntelOrca.PeggleEdit.Tools.Tests
                 if (!written.GetProperties(property.Name).Any(x => Values(x, sort).Equals(expected, StringComparison.OrdinalIgnoreCase)))
                     yield return $"{property.Name}: {expected} is missing";
             }
+
+            // Nor written more often than it was read, e.g. both kept and written from the model
+            foreach (var name in original.Properties.Select(x => x.Name).Distinct(StringComparer.OrdinalIgnoreCase))
+            {
+                if (written.GetProperties(name).Length > original.GetProperties(name).Length)
+                    yield return $"{name} is written more than once";
+            }
         }
 
         /// <summary>

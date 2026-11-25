@@ -399,7 +399,10 @@ namespace IntelOrca.PeggleEdit.Tools.Pack
         /// </summary>
         public static string GetGameDirectory(string path)
         {
-            path = Path.GetFullPath(path).TrimEnd(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar);
+            path = Path.GetFullPath(path);
+            // A trailing separator would make the name empty, but a drive's root keeps its own
+            if (path.Length > Path.GetPathRoot(path).Length)
+                path = path.TrimEnd(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar);
             if (Directory.Exists(path))
                 return path;
             var directory = Path.GetDirectoryName(path);
