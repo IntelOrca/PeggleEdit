@@ -344,7 +344,7 @@ namespace System.Windows.Forms
                 {
                     #region Check the Non-client area hit test
                     
-                    m.Result = new IntPtr(Convert.ToInt32(NonClientHitTest(new Point(WinApi.LoWord((int)m.LParam), WinApi.HiWord((int)m.LParam)))));
+                    m.Result = new IntPtr(Convert.ToInt32(NonClientHitTest(new Point(WinApi.LoWord(unchecked((int)m.LParam.ToInt64())), WinApi.HiWord(unchecked((int)m.LParam.ToInt64()))))));
                     handled = true;
 
                     if(Ribbon != null && Ribbon.ActualBorderMode == RibbonWindowMode.NonClientAreaCustomDrawn)

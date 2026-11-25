@@ -1299,7 +1299,7 @@ namespace System.Windows.Forms
                     int captionLeft = QuickAccessVisible ? QuickAcessToolbar.Bounds.Right : OrbBounds.Right;
                     if (QuickAccessVisible && QuickAcessToolbar.DropDownButtonVisible) captionLeft = QuickAcessToolbar.DropDownButton.Bounds.Right;
                     Rectangle caption = Rectangle.FromLTRB(captionLeft, 0, Width, CaptionBarSize);
-                    Point screenPoint = new Point(WinApi.LoWord((int)m.LParam), WinApi.HiWord((int)m.LParam));
+                    Point screenPoint = new Point(WinApi.LoWord(unchecked((int)m.LParam.ToInt64())), WinApi.HiWord(unchecked((int)m.LParam.ToInt64())));
                     Point ribbonPoint = PointToClient(screenPoint);
                     bool onCaptionButtons = false;
 

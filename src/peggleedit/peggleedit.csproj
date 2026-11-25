@@ -6,8 +6,6 @@
     <ApplicationIcon>orca.ico</ApplicationIcon>
     <Description>Creates and edits levels / level packs for PopCap Games's Peggle Nights.</Description>
     <ApplicationManifest>app.manifest</ApplicationManifest>
-    <!-- 32-bit, so that the game's JPEG 2000 codec can be loaded to read the .jp2 images that CSJ2K can not -->
-    <Prefer32Bit>true</Prefer32Bit>
   </PropertyGroup>
   <ItemGroup>
     <PackageReference Include="System.Text.Json" Version="10.0.5" />

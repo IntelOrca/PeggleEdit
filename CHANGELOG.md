@@ -23,6 +23,7 @@ PeggleEdit 5.2.0 (Flamingo) (TBC)
 * [Feature] Show the game's cannon, pointing at the mouse, to check it is clear of the level's objects (View > Cannon)
 * [Feature] Collision mode shows the game's own collision: the walls, the bucket and the devices of the powers
 * [Change] The interface no longer shows a master
+* [Change] PeggleEdit and peggleedit-cli run as 64-bit programs, and decode .jp2 images themselves, so no longer need the game's J2K library
 * [Feature] peggleedit-cli render can run a level for a time, and show the bucket and the masters' devices
 * [Fix] New emitters no longer show a debug box with a particle count in the game, and the preview shows the box where the game does
 * [Fix] Level objects are drawn in the game's layers: background objects behind the pegs, foreground objects in front

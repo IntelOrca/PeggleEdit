@@ -33,7 +33,7 @@ namespace System.Windows.Forms.RibbonHelpers
 
         #region Fields
         private HookProcCallBack _HookProc;
-        private int _hHook;
+        private IntPtr _hHook;
         private HookTypes _hookType;
         #endregion
 
@@ -95,7 +95,7 @@ namespace System.Windows.Forms.RibbonHelpers
         /// <param name="wParam"></param>
         /// <param name="lParam"></param>
         /// <returns></returns>
-        internal delegate int HookProcCallBack(int nCode, IntPtr wParam, IntPtr lParam);
+        internal delegate IntPtr HookProcCallBack(int nCode, IntPtr wParam, IntPtr lParam);
 
         #endregion
 
@@ -113,7 +113,7 @@ namespace System.Windows.Forms.RibbonHelpers
 
         ~GlobalHook()
         {
-            if (Handle != 0)
+            if (Handle != IntPtr.Zero)
             {
                 Unhook();
             }
@@ -134,7 +134,7 @@ namespace System.Windows.Forms.RibbonHelpers
         /// <summary>
         /// Gets the handle of the hook
         /// </summary>
-        public int Handle
+        public IntPtr Handle
         {
             get { return _hHook; }
         }
@@ -262,7 +262,7 @@ namespace System.Windows.Forms.RibbonHelpers
         /// <param name="wParam"></param>
         /// <param name="lParam"></param>
         /// <returns></returns>
-        private int HookProc(int code, IntPtr wParam, IntPtr lParam)
+        private IntPtr HookProc(int code, IntPtr wParam, IntPtr lParam)
         {
             if (code < 0)
             {
@@ -289,7 +289,7 @@ namespace System.Windows.Forms.RibbonHelpers
         /// <param name="wParam"></param>
         /// <param name="lParam"></param>
         /// <returns></returns>
-        private int KeyboardProc(int code, IntPtr wParam, IntPtr lParam)
+        private IntPtr KeyboardProc(int code, IntPtr wParam, IntPtr lParam)
         {
             WinApi.KeyboardLLHookStruct hookStruct = (WinApi.KeyboardLLHookStruct)Marshal.PtrToStructure(lParam, typeof(WinApi.KeyboardLLHookStruct));
 
@@ -332,7 +332,7 @@ namespace System.Windows.Forms.RibbonHelpers
             }
 
 
-            return handled ? 1 : WinApi.CallNextHookEx(Handle, code, wParam, lParam);
+            return handled ? new IntPtr(1) : WinApi.CallNextHookEx(Handle, code, wParam, lParam);
         }
 
         /// <summary>
@@ -342,7 +342,7 @@ namespace System.Windows.Forms.RibbonHelpers
         /// <param name="wParam"></param>
         /// <param name="lParam"></param>
         /// <returns></returns>
-        private int MouseProc(int code, IntPtr wParam, IntPtr lParam)
+        private IntPtr MouseProc(int code, IntPtr wParam, IntPtr lParam)
         {
             WinApi.MouseLLHookStruct hookStruct = (WinApi.MouseLLHookStruct)Marshal.PtrToStructure(lParam, typeof(WinApi.MouseLLHookStruct));
 
@@ -418,7 +418,7 @@ namespace System.Windows.Forms.RibbonHelpers
         private void InstallHook()
         {
             /// Error check
-            if (Handle != 0) throw new Exception("Hook is already installed");
+            if (Handle != IntPtr.Zero) throw new Exception("Hook is already installed");
 
             #region htype
             int htype = 0;
@@ -443,7 +443,7 @@ namespace System.Windows.Forms.RibbonHelpers
             _hHook = WinApi.SetWindowsHookEx(htype, _HookProc, Marshal.GetHINSTANCE(Assembly.GetExecutingAssembly().GetModules()[0]), 0);
             
             /// Error check
-            if (Handle == 0) throw new Win32Exception(Marshal.GetLastWin32Error());
+            if (Handle == IntPtr.Zero) throw new Win32Exception(Marshal.GetLastWin32Error());
         }
 
         /// <summary>
@@ -451,14 +451,14 @@ namespace System.Windows.Forms.RibbonHelpers
         /// </summary>
         private void Unhook()
         {
-            if (Handle != 0)
+            if (Handle != IntPtr.Zero)
             {
                 bool ret = WinApi.UnhookWindowsHookEx(Handle);
 
                 //if (ret == false)
                 //    throw new Win32Exception(Marshal.GetLastWin32Error());
 
-                _hHook = 0; 
+                _hHook = IntPtr.Zero; 
             }
         }
 
@@ -468,7 +468,7 @@ namespace System.Windows.Forms.RibbonHelpers
 
         public void Dispose()
         {
-            if (Handle != 0)
+            if (Handle != IntPtr.Zero)
             {
                 Unhook();
             }

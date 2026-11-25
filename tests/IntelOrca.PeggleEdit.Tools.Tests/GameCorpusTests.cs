@@ -1,7 +1,10 @@
 using System;
 using System.Collections.Generic;
+using System.Drawing;
+using System.Drawing.Imaging;
 using System.IO;
 using System.Linq;
+using System.Runtime.InteropServices;
 using System.Xml.Linq;
 using IntelOrca.PeggleEdit.Tools.Levels;
 using IntelOrca.PeggleEdit.Tools.Levels.Xml;
@@ -88,6 +91,61 @@ namespace IntelOrca.PeggleEdit.Tools.Tests
             Assert.True(failures.Count == 0, string.Join(Environment.NewLine, failures));
         }
 
+        [Fact]
+        public void EveryImage_Decodes()
+        {
+            var failures = new List<string>();
+            int images = 0, transparent = 0;
+            foreach (var (name, data) in GetFiles(".jp2"))
+            {
+                images++;
+                try
+                {
+                    using (var image = (Bitmap)J2K.ConvertJPEG2(data))
+                    {
+                        if (image == null || image.Width <= 0 || image.Height <= 0)
+                            failures.Add($"{name}: no image");
+                        else if (HasTransparency(image))
+                            transparent++;
+                    }
+                }
+                catch (Exception ex)
+                {
+                    failures.Add($"{name}: {ex.Message}");
+                }
+            }
+            mOutput.WriteLine($"{images} images decoded ({(Environment.Is64BitProcess ? 64 : 32)}-bit), {transparent} with transparency.");
+            Assert.True(failures.Count == 0, string.Join(Environment.NewLine, failures));
+            if (images > 0)
+            {
+                // The games have images with an alpha channel, which CSJ2K could not decode
+                Assert.True(transparent > 0, "No image has transparency");
+            }
+        }
+
+        static bool HasTransparency(Bitmap image)
+        {
+            var data = image.LockBits(new Rectangle(0, 0, image.Width, image.Height), ImageLockMode.ReadOnly, PixelFormat.Format32bppArgb);
+            try
+            {
+                var row = new int[image.Width];
+                for (int y = 0; y < image.Height; y++)
+                {
+                    Marshal.Copy(data.Scan0 + y * data.Stride, row, 0, image.Width);
+                    foreach (var pixel in row)
+                    {
+                        if ((uint)pixel >> 24 != 255)
+                            return true;
+                    }
+                }
+                return false;
+            }
+            finally
+            {
+                image.UnlockBits(data);
+            }
+        }
+
         /// <summary>
         /// Whether the file is a level, rather than another file using the same extension such as a trailer
         /// recording or Pego's level editor globals (which has a level header with no entries, then other data).
@@ -132,7 +190,14 @@ namespace IntelOrca.PeggleEdit.Tools.Tests
                 return reader.Read() != null;
         }
 
-        IEnumerable<(string Name, byte[] Data)> GetCorpus()
+        IEnumerable<(string Name, byte[] Data)> GetCorpus() =>
+            // Leaving out player profiles, high scores etc.
+            GetFiles(".dat").Where(x => (@"\" + x.Name).IndexOf(@"\userdata\", StringComparison.OrdinalIgnoreCase) < 0);
+
+        /// <summary>
+        /// Gets the files with the extension in the games, loose and in their .pak files.
+        /// </summary>
+        IEnumerable<(string Name, byte[] Data)> GetFiles(string extension)
         {
             var root = Environment.GetEnvironmentVariable(EnvironmentVariable);
             if (string.IsNullOrEmpty(root) || !Directory.Exists(root))
@@ -142,19 +207,14 @@ namespace IntelOrca.PeggleEdit.Tools.Tests
             }
             root = Path.GetFullPath(root).TrimEnd(Path.DirectorySeparatorChar);
 
-            foreach (var path in Directory.GetFiles(root, "*.dat", SearchOption.AllDirectories))
-            {
-                // Player profiles, high scores etc.
-                if (path.IndexOf(@"\userdata\", StringComparison.OrdinalIgnoreCase) >= 0)
-                    continue;
+            foreach (var path in Directory.GetFiles(root, "*" + extension, SearchOption.AllDirectories))
                 yield return (path.Substring(root.Length + 1), File.ReadAllBytes(path));
-            }
             foreach (var path in Directory.GetFiles(root, "*.pak", SearchOption.AllDirectories))
             {
                 var pak = new PakCollection(path);
                 foreach (var record in pak.Records)
                 {
-                    if (record.FileName.EndsWith(".dat", StringComparison.OrdinalIgnoreCase))
+                    if (record.FileName.EndsWith(extension, StringComparison.OrdinalIgnoreCase))
                         yield return (path.Substring(root.Length + 1) + "|" + record.FileName, record.Buffer);
                 }
             }

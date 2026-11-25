@@ -310,7 +310,6 @@ Options:
                 pegglePath = Path.GetDirectoryName(directory);
             // Registered for every input, so that one input's game is not used for the next
             LevelPack.RegisterPegglePath(pegglePath);
-            J2K.RegisterPegglePath(pegglePath);
             LevelPack.Current = new LevelPack();
 
             var name = Path.GetFileNameWithoutExtension(input);

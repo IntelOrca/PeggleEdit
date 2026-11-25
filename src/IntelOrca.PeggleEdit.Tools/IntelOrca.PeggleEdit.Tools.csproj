@@ -6,7 +6,7 @@
     <Reference Include="System.Windows.Forms" />
   </ItemGroup>
   <ItemGroup>
-    <PackageReference Include="CSJ2K" Version="3.0.0" />
+    <PackageReference Include="CoreJ2K" Version="2.4.1.108" />
   </ItemGroup>
   <ItemGroup>
     <InternalsVisibleTo Include="IntelOrca.PeggleEdit.Tools.Tests" />

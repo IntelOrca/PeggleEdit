@@ -268,7 +268,7 @@ namespace Crom.Controls
       {
          public W32BrushStyle lbStyle;
          public int  lbColor;
-         public int lbHatch;
+         public IntPtr lbHatch;
       };
 
       [DllImport("Gdi32")]
