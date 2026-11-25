@@ -6,6 +6,7 @@ using System.IO;
 using System.Linq;
 using System.Runtime.InteropServices;
 using System.Xml.Linq;
+using IntelOrca.PeggleEdit.Tools.Pack.CFG;
 using IntelOrca.PeggleEdit.Tools.Levels;
 using IntelOrca.PeggleEdit.Tools.Levels.Xml;
 using IntelOrca.PeggleEdit.Tools.Pack;
@@ -176,8 +177,47 @@ namespace IntelOrca.PeggleEdit.Tools.Tests
                     failures.Add($"{game}: no levels");
                 var backgrounds = pack.Levels.Count(x => x.Background != null);
                 mOutput.WriteLine($"{game}: {pack.Levels.Count} levels, {backgrounds} with a background, {pack.ChallengePages.Count} challenge pages");
+
+                // Saved as a level pack, the challenges keep everything they had in the game
+                var trophy = File.Exists(Path.Combine(game, "main.pak"))
+                    ? new PakCollection(Path.Combine(game, "main.pak")).GetRecord(@"levels\trophy.cfg")?.Buffer
+                    : null;
+                trophy = trophy ?? File.ReadAllBytes(Path.Combine(game, "levels", "trophy.cfg"));
+                var pages = CFGDocument.Read(System.Text.Encoding.UTF8.GetString(trophy)).Blocks[0].GetBlocks("page");
+                for (int i = 0; i < pages.Length; i++)
+                {
+                    var written = pack.ChallengePages[i].GetCFGBlock();
+                    failures.AddRange(MissingProperties(pages[i], written).Select(x => $"{game}: page {pages[i].Value}: {x}"));
+                    var trophies = pages[i].GetBlocks("trophy");
+                    var writtenTrophies = written.GetBlocks("trophy");
+                    for (int j = 0; j < trophies.Length; j++)
+                        failures.AddRange(MissingProperties(trophies[j], writtenTrophies[j]).Select(x => $"{game}: {trophies[j].Value}: {x}"));
+                }
             }
             Assert.True(failures.Count == 0, string.Join(Environment.NewLine, failures));
+        }
+
+        /// <summary>
+        /// The properties of <paramref name="original"/> that <paramref name="written"/> does not have, leaving out flags
+        /// that are false (the default), and with the powerups in any order.
+        /// </summary>
+        static IEnumerable<string> MissingProperties(CFGBlock original, CFGBlock written)
+        {
+            string Values(CFGProperty p, bool sort)
+            {
+                var values = Enumerable.Range(0, p.Count).Select(i => p[i]);
+                return string.Join(", ", sort ? values.OrderBy(x => x, StringComparer.OrdinalIgnoreCase) : values);
+            }
+
+            foreach (var property in original.Properties)
+            {
+                if (property.Count == 1 && property[0].Equals("false", StringComparison.OrdinalIgnoreCase))
+                    continue;
+                var sort = property.Name.Equals("Powerups", StringComparison.OrdinalIgnoreCase);
+                var expected = Values(property, sort);
+                if (!written.GetProperties(property.Name).Any(x => Values(x, sort).Equals(expected, StringComparison.OrdinalIgnoreCase)))
+                    yield return $"{property.Name}: {expected} is missing";
+            }
         }
 
         /// <summary>

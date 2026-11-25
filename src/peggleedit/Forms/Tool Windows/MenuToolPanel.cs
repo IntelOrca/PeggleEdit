@@ -148,6 +148,7 @@ namespace IntelOrca.PeggleEdit.Designer
             orbPakTool.Click += new EventHandler(pakToolRibbonButton_Click);
 
             RibbonOrbMenuItem orbClose = new RibbonOrbMenuItem("Close");
+            orbClose.Click += new EventHandler(closeRibbonButton_Click);
 
             RibbonOrbMenuItem orbExit = new RibbonOrbMenuItem("Exit");
             orbExit.SmallImage = Resources.exit_16;
@@ -694,6 +695,15 @@ namespace IntelOrca.PeggleEdit.Designer
             {
                 mParent.OpenPack(dialog.FileName);
             }
+        }
+
+        private void closeRibbonButton_Click(object sender, EventArgs e)
+        {
+            // There is always a pack open, so closing one leaves a new, empty pack
+            if (!mParent.ShowClosePackWarning())
+                return;
+
+            mParent.NewPack();
         }
 
         private void openGameLevelsRibbonButton_Click(object sender, EventArgs e)
@@ -1583,7 +1593,7 @@ namespace IntelOrca.PeggleEdit.Designer
             {
                 MessageBox.Show(String.Format("'{0}' does not exist.", path), "Open Level Pack", MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
-            else
+            else if (mParent.ShowClosePackWarning())
             {
                 mParent.OpenPack(path);
             }

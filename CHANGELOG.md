@@ -29,6 +29,10 @@ PeggleEdit 5.2.0 (Flamingo) (TBC)
 * [Fix] New emitters no longer show a debug box with a particle count in the game, and the preview shows the box where the game does
 * [Fix] Level objects are drawn in the game's layers: background objects behind the pegs, foreground objects in front
 * [Fix] The preview no longer draws invisible holes, or where holes send the ball
+* [Fix] Close in the orb menu closes the level pack, and opening a recent level pack or importing one asks before closing the open pack
+* [Fix] The entry list and properties are cleared when the level they show is closed
+* [Fix] Challenges keep the game's settings that PeggleEdit does not show (e.g. a score ceiling, a background override) when a pack is saved
+* [Fix] Pack names and descriptions with a / in them are kept when a pack is saved
 * [Fix] Hole images are drawn where the game draws them
 * [Fix] Pegs and images are drawn on whole pixels, so moving objects no longer blur or have their edges cut off or bleed
 * [Fix] peggleedit-cli render draws .jp2 images

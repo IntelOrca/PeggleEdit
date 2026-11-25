@@ -94,7 +94,8 @@ namespace IntelOrca.PeggleEdit.Tools.Pack.CFG
             if (String.IsNullOrEmpty(value))
                 return "\"\"";
 
-            if (value.Contains(" ") || value.Contains(","))
+            // Quoted when it has a space or comma, which would split it, or a /, as // and /* start comments
+            if (value.Contains(" ") || value.Contains(",") || value.Contains("/"))
                 return String.Format("\"{0}\"", value);
             else
                 return value;

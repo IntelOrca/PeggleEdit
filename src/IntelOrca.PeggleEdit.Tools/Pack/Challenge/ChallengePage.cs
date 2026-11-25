@@ -31,6 +31,9 @@ namespace IntelOrca.PeggleEdit.Tools.Pack.Challenge
         string mSmallDesc;
         List<Challenge> mChallenges;
 
+        private readonly List<CFGProperty> mOtherProperties = new List<CFGProperty>();
+        private readonly List<CFGBlock> mOtherBlocks = new List<CFGBlock>();
+
         public ChallengePage()
         {
             mChallenges = new List<Challenge>();
@@ -46,10 +49,27 @@ namespace IntelOrca.PeggleEdit.Tools.Pack.Challenge
             CFGProperty cfgp = block.GetFirstProperty("desc");
             if (cfgp != null)
                 mDesc = cfgp.Values[0];
+            cfgp = block.GetFirstProperty("smalldesc");
+            if (cfgp != null)
+                mSmallDesc = cfgp.Values[0];
 
-            CFGBlock[] blocks = block.GetBlocks("trophy");
-            foreach (CFGBlock b in blocks)
-                mChallenges.Add(new Challenge(b));
+            // Any others are written back as they were read
+            foreach (var property in block.Properties)
+            {
+                if (!property.Name.Equals("desc", StringComparison.OrdinalIgnoreCase) &&
+                    !property.Name.Equals("smalldesc", StringComparison.OrdinalIgnoreCase))
+                {
+                    mOtherProperties.Add(property);
+                }
+            }
+
+            foreach (CFGBlock b in block.Blocks)
+            {
+                if (b.Name.Equals("trophy", StringComparison.OrdinalIgnoreCase))
+                    mChallenges.Add(new Challenge(b));
+                else
+                    mOtherBlocks.Add(b);
+            }
         }
 
         public CFGBlock GetCFGBlock()
@@ -63,10 +83,13 @@ namespace IntelOrca.PeggleEdit.Tools.Pack.Challenge
             if (!String.IsNullOrEmpty(mSmallDesc))
                 block.Properties.Add(new CFGProperty("SmallDesc", mSmallDesc));
 
+            block.Properties.AddRange(mOtherProperties);
+
             foreach (Challenge challenge in mChallenges)
             {
                 block.Blocks.Add(challenge.GetCFGBlock());
             }
+            block.Blocks.AddRange(mOtherBlocks);
 
             return block;
         }

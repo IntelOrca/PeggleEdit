@@ -93,12 +93,8 @@ namespace IntelOrca.PeggleEdit.Designer
 
             Application.EnableVisualStyles();
             Application.SetCompatibleTextRenderingDefault(false);
+            // A pack given on the command line is opened by the form as it starts
             Application.Run(new MainMDIForm());
-
-            if (args.Length > 0)
-            {
-                MainMDIForm.Instance.OpenPack(args[0]);
-            }
 
             Settings.Save();
 

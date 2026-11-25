@@ -55,9 +55,21 @@ namespace IntelOrca.PeggleEdit.Designer
             this.Controls.Add(mList);
         }
 
+        /// <summary>
+        /// Shows the entries of the editor's level, or none when <paramref name="editor"/> is null (its level was closed).
+        /// </summary>
         public void UpdateView(LevelEditor editor)
         {
             mEditor = editor;
+            if (mEditor == null)
+            {
+                mSuspendChangeEvent = true;
+                mList.Items.Clear();
+                mEntries.Clear();
+                mSelectedEntries.Clear();
+                mSuspendChangeEvent = false;
+                return;
+            }
 
             //Check if there are any changes
             bool entriesChanged = false;
@@ -224,7 +236,7 @@ namespace IntelOrca.PeggleEdit.Designer
 
         private void mList_SelectedIndexChanged(object sender, EventArgs e)
         {
-            if (mSuspendChangeEvent)
+            if (mSuspendChangeEvent || mEditor == null)
                 return;
 
             mEditor.SelectedEntries.Clear();

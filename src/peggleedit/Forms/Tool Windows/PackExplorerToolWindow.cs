@@ -740,10 +740,14 @@ namespace IntelOrca.PeggleEdit.Designer
 
         private void mnuPackImport_Click(object sender, EventArgs e)
         {
+            if (!mParent.ShowClosePackWarning())
+                return;
+
             using (var folderDialog = new FolderBrowserDialog())
             {
                 if (folderDialog.ShowDialog() == DialogResult.OK)
                 {
+                    MainMDIForm.UseSettingsGamePaths();
                     var pack = new LevelPack();
                     pack.Import(folderDialog.SelectedPath);
                     mParent.OpenPack(pack);
@@ -757,6 +761,13 @@ namespace IntelOrca.PeggleEdit.Designer
             {
                 if (folderDialog.ShowDialog() == DialogResult.OK)
                 {
+                    // Not into an extracted game, whose own levels would be replaced
+                    if (File.Exists(Path.Combine(folderDialog.SelectedPath, "levels", "stages.cfg")))
+                    {
+                        MessageBox.Show("This folder has a game's own levels, which exporting would replace. Choose another folder.",
+                            "Export Level Pack", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                        return;
+                    }
                     mPack.Export(folderDialog.SelectedPath);
                     Process.Start(folderDialog.SelectedPath);
                 }

@@ -49,14 +49,37 @@ namespace IntelOrca.PeggleEdit.Tools.Pack
         public string Name { get; set; } = "Untitled Pack";
         public string Description { get; set; } = "Type your description here.";
 
-        public static void RegisterPegglePath(string pegglePath)
+        /// <summary>
+        /// Points the game file lookups (images, levels\_base.dat) at a game directory, and its main.pak or
+        /// <paramref name="mainPakPath"/> if given (e.g. a game's renamed main.pak).
+        /// </summary>
+        public static void RegisterPegglePath(string pegglePath, string mainPakPath = null)
         {
-            if (_pegglePath != pegglePath)
+            if (_pegglePath != pegglePath || _mainPakPath != mainPakPath)
             {
                 _pegglePath = pegglePath;
+                _mainPakPath = mainPakPath;
                 _mainPakLoad = 0;
                 _mainPak = null;
                 _mainImageCache.Clear();
+            }
+        }
+
+        private static string _mainPakPath;
+
+        /// <summary>
+        /// Whether the file is a game's own .pak (main.pak), with the game's levels\stages.cfg, rather than a level
+        /// pack.
+        /// </summary>
+        public static bool IsGamePak(string path)
+        {
+            try
+            {
+                return File.Exists(path) && new PakCollection(path).GetRecord(Path.Combine("levels", "stages.cfg")) != null;
+            }
+            catch
+            {
+                return false;
             }
         }
 
@@ -83,7 +106,7 @@ namespace IntelOrca.PeggleEdit.Tools.Pack
             if (string.IsNullOrEmpty(_pegglePath))
                 return;
 
-            var mainPak = Path.Combine(_pegglePath, "main.pak");
+            var mainPak = _mainPakPath ?? Path.Combine(_pegglePath, "main.pak");
             try
             {
                 if (File.Exists(mainPak))
@@ -376,7 +399,7 @@ namespace IntelOrca.PeggleEdit.Tools.Pack
         /// </summary>
         public static string GetGameDirectory(string path)
         {
-            path = Path.GetFullPath(path);
+            path = Path.GetFullPath(path).TrimEnd(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar);
             if (Directory.Exists(path))
                 return path;
             var directory = Path.GetDirectoryName(path);
@@ -400,11 +423,20 @@ namespace IntelOrca.PeggleEdit.Tools.Pack
         {
             var gameDirectory = GetGameDirectory(path);
             PakCollection pak = null;
-            var pakPath = path.EndsWith(".pak", StringComparison.OrdinalIgnoreCase) && File.Exists(path)
-                ? path
-                : Path.Combine(gameDirectory, "main.pak");
-            if (File.Exists(pakPath))
-                pak = new PakCollection(pakPath);
+            if (path.EndsWith(".pak", StringComparison.OrdinalIgnoreCase) && File.Exists(path))
+            {
+                // A game's .pak (which may have been renamed), not a level pack, whose levels would be taken as the game's
+                pak = new PakCollection(path);
+                if (pak.GetRecord(Path.Combine("levels", "stages.cfg")) == null)
+                {
+                    throw new InvalidDataException(
+                        $"'{Path.GetFileName(path)}' is not a game's main.pak, as it has no levels\\stages.cfg. A level pack is opened with Open.");
+                }
+            }
+            else if (File.Exists(Path.Combine(gameDirectory, "main.pak")))
+            {
+                pak = new PakCollection(Path.Combine(gameDirectory, "main.pak"));
+            }
 
             byte[] GetFile(string name)
             {
@@ -415,14 +447,13 @@ namespace IntelOrca.PeggleEdit.Tools.Pack
                 return File.Exists(filePath) ? File.ReadAllBytes(filePath) : null;
             }
 
-            PakImage GetBackground(string name)
+            PakImage GetImage(string name)
             {
                 foreach (var extension in new[] { ".jp2", ".jpg", ".png" })
                 {
-                    var fileName = name + extension;
-                    var data = GetFile(Path.Combine("levels", fileName));
+                    var data = GetFile(name + extension);
                     if (data != null)
-                        return new PakImage(fileName, data);
+                        return new PakImage(Path.GetFileName(name) + extension, data);
                 }
                 return null;
             }
@@ -490,15 +521,20 @@ namespace IntelOrca.PeggleEdit.Tools.Pack
                 }
 
                 Level level;
+                string error;
                 using (var reader = new LevelReader(data))
+                {
                     level = reader.Read();
+                    error = reader.Error;
+                }
                 if (level == null)
                 {
-                    problems.Add($"{info.Name}: levels\\{info.Filename}.dat could not be read");
+                    problems.Add($"{info.Name}: levels\\{info.Filename}.dat could not be read ({error})");
                     continue;
                 }
                 level.Info = info;
-                level.Background = GetBackground(info.Filename);
+                level.Background = GetImage(Path.Combine("levels", info.Filename));
+                level.Thumbnail = GetImage(Path.Combine("levels", "cached_thumbnails", info.Filename));
                 level.Hash = GetLevelData(level).CalculateFnv1a();
                 Levels.Add(level);
             }

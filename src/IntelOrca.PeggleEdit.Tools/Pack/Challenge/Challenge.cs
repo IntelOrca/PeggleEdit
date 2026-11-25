@@ -16,6 +16,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Reflection;
 using IntelOrca.PeggleEdit.Tools.Pack.CFG;
 
@@ -115,6 +116,18 @@ namespace IntelOrca.PeggleEdit.Tools.Pack.Challenge
         private float mGravityMod;
         private float mProjectileSpeedMod;
 
+        // The properties and blocks PeggleEdit does not model (e.g. the game's ScoreCeil, StyleShots, InGameDesc and
+        // BackgroundOverride), written back as they were read
+        private readonly List<CFGProperty> mOtherProperties = new List<CFGProperty>();
+        private readonly List<CFGBlock> mOtherBlocks = new List<CFGBlock>();
+
+        private static readonly HashSet<string> KnownProperties = new HashSet<string>(StringComparer.OrdinalIgnoreCase)
+        {
+            "Id", "SmallDesc", "Desc", "NumOrange", "ScoreReq", "StyleScoreReq", "UniqueStyleShotsReq", "ClearLevel",
+            "Characters", "Balls", "Powerups", "ScoreReset", "NoFreeballs", "NoGreens", "NoForceWin", "FreeballCovered",
+            "NoEndOnWin", "GravityMod", "ProjSpeedMod", "Levels", "Opponents", "OpponentDifficulty",
+        };
+
         public Challenge()
         {
             mLevels = new List<ChallengeLevel>();
@@ -171,6 +184,9 @@ namespace IntelOrca.PeggleEdit.Tools.Pack.Challenge
             mGravityMod = Convert.ToSingle(GetProperty(block, "GravityMod", 0.0f));
             mProjectileSpeedMod = Convert.ToSingle(GetProperty(block, "ProjSpeedMod", 0.0f));
             mAgainstOpponents = false;
+
+            mOtherProperties.AddRange(block.Properties.Where(x => !KnownProperties.Contains(x.Name)));
+            mOtherBlocks.AddRange(block.Blocks);
 
             var pLevels = block.GetFirstProperty("Levels");
             var pOpponents = block.GetFirstProperty("Opponents");
@@ -294,6 +310,8 @@ namespace IntelOrca.PeggleEdit.Tools.Pack.Challenge
             if (mProjectileSpeedMod != 0.0f)
                 block.Properties.Add(new CFGProperty("ProjSpeedMod", mProjectileSpeedMod.ToString()));
 
+            block.Properties.AddRange(mOtherProperties);
+            block.Blocks.AddRange(mOtherBlocks);
             return block;
         }
 

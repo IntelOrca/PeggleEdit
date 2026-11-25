@@ -5,6 +5,7 @@ using IntelOrca.PeggleEdit.Tools.Levels;
 using IntelOrca.PeggleEdit.Tools.Levels.Children;
 using IntelOrca.PeggleEdit.Tools.Pack;
 using IntelOrca.PeggleEdit.Tools.Pack.CFG;
+using IntelOrca.PeggleEdit.Tools.Pack.Challenge;
 using Xunit;
 
 namespace IntelOrca.PeggleEdit.Tools.Tests
@@ -35,6 +36,29 @@ namespace IntelOrca.PeggleEdit.Tools.Tests
         }
 
         void WriteStages(string cfg) => File.WriteAllText(Path.Combine(mGame, "levels", "stages.cfg"), cfg);
+
+        static byte[] LevelData(int pegs)
+        {
+            var level = new Level();
+            for (int i = 0; i < pegs; i++)
+                level.Entries.Add(new Ball(level) { X = 100 + i * 20, Y = 200 });
+            return level.GetData(LevelWriter.DefaultFileVersion);
+        }
+
+        /// <summary>
+        /// Writes a .pak with the files, as name and data.
+        /// </summary>
+        string WritePak(string name, params (string Name, byte[] Data)[] files)
+        {
+            var pak = new PakCollection();
+            foreach (var (fileName, data) in files)
+                pak.Records.Add(new PakRecord(pak, fileName, DateTime.Now) { Buffer = data });
+            var path = Path.Combine(mGame, name);
+            pak.Save(path);
+            return path;
+        }
+
+        static byte[] Text(string text) => System.Text.Encoding.ASCII.GetBytes(text);
 
         [Fact]
         public void CfgReader_RemovesLineAndBlockComments()
@@ -95,6 +119,84 @@ namespace IntelOrca.PeggleEdit.Tools.Tests
             Assert.Equal(new[] { "Here" }, pack.Levels.Select(x => x.Info.Filename));
             Assert.Single(problems);
             Assert.Contains("Gone.dat", problems[0]);
+        }
+
+        [Fact]
+        public void OpenGame_ReadsThePakBeforeTheExtractedFiles()
+        {
+            // A game's renamed main.pak, and files of an extracted copy beside it
+            var pak = WritePak("_main.pak",
+                (@"levels\stages.cfg", Text("Stage\n{\n\tLevel: InBoth, \"In Both\"\n\tLevel: OnlyLoose, \"Only Loose\"\n}\n")),
+                (@"levels\InBoth.dat", LevelData(1)),
+                (@"levels\InPak.dat", LevelData(2)));
+            WriteLevel("InBoth", 3);
+            WriteLevel("OnlyLoose", 4);
+
+            var pack = new LevelPack();
+            var problems = pack.OpenGame(pak);
+
+            Assert.Empty(problems);
+            Assert.Equal(new[] { "InBoth", "OnlyLoose", "InPak" }, pack.Levels.Select(x => x.Info.Filename));
+            Assert.Equal(new[] { 1, 4, 2 }, pack.Levels.Select(x => x.Entries.Count));
+            Assert.True(LevelPack.IsGamePak(pak));
+        }
+
+        [Fact]
+        public void OpenGame_RefusesALevelPack()
+        {
+            var levelPack = WritePak("mypack.pak", (@"levels\Mine.dat", LevelData(1)), ("mypack.cfg", Text("Stage\n{\n}\n")));
+            WriteStages("Stage\n{\n\tLevel: Mine, \"Mine\"\n}\n");
+
+            Assert.False(LevelPack.IsGamePak(levelPack));
+            Assert.Throws<InvalidDataException>(() => new LevelPack().OpenGame(levelPack));
+        }
+
+        [Fact]
+        public void CfgWriter_QuotesValuesWithASlash()
+        {
+            var root = new CFGBlock();
+            var stage = new CFGBlock { Name = "Stage" };
+            stage.Properties.Add(new CFGProperty("Name", "Pegs/*"));
+            stage.Properties.Add(new CFGProperty("Desc", "http://example.com"));
+            stage.Properties.Add(new CFGProperty("Level", "A", "One"));
+            root.Blocks.Add(stage);
+            var document = new CFGDocument();
+            document.Blocks.Add(root);
+
+            var read = CFGDocument.Read(new CFGWriter(document).GetText()).Blocks[0].GetBlocks("stage").Single();
+
+            Assert.Equal("Pegs/*", read.GetFirstProperty("Name")[0]);
+            Assert.Equal("http://example.com", read.GetFirstProperty("Desc")[0]);
+            Assert.Equal("A", read.GetFirstProperty("Level")[0]);
+        }
+
+        [Fact]
+        public void Challenges_KeepWhatTheyDoNotModel()
+        {
+            var page = CFGDocument.Read(
+                "Page \"Tricky\"\n{\n" +
+                "\tDesc: \"Some\"\n" +
+                "\tSmallDesc: \"Small\"\n" +
+                "\tTrophy \"Under Where?\"\n\t{\n" +
+                "\t\tId: 5\n" +
+                "\t\tScoreCeil: 150000\n" +
+                "\t\tBackgroundOverride: \"levels/Hu4\"\n" +
+                "\t\tLevels: Tilt\n" +
+                "\t}\n" +
+                "}\n").Blocks[0].GetBlocks("page").Single();
+
+            var root = new CFGBlock();
+            root.Blocks.Add(new ChallengePage(page).GetCFGBlock());
+            var document = new CFGDocument();
+            document.Blocks.Add(root);
+            var written = CFGDocument.Read(new CFGWriter(document).GetText()).Blocks[0].GetBlocks("page").Single();
+
+            Assert.Equal("Small", written.GetFirstProperty("SmallDesc")[0]);
+            var trophy = written.GetBlocks("trophy").Single();
+            Assert.Equal("150000", trophy.GetFirstProperty("ScoreCeil")[0]);
+            Assert.Equal("levels/Hu4", trophy.GetFirstProperty("BackgroundOverride")[0]);
+            Assert.Equal("Tilt", trophy.GetFirstProperty("Levels")[0]);
+            Assert.Single(trophy.GetProperties("ScoreCeil"));
         }
 
         [Fact]
