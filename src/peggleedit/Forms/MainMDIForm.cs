@@ -620,11 +620,6 @@ namespace IntelOrca.PeggleEdit.Designer
                 }
             }
 
-
-            //PeggleNightsStoryExtractor pnse = new PeggleNightsStoryExtractor(@"C:\Program Files\PopCap Games\Peggle Nights\main.pak");
-            //LevelPack pack = pnse.Extract();
-            //OpenPack(pack);
-
             NewPack();
             //OpenPack(@"C:\Program Files\PopCap Games\Peggle Nights\Test\levelpacks\peggle nights\pegglenights.pak");
 
@@ -694,6 +689,41 @@ namespace IntelOrca.PeggleEdit.Designer
             OpenPack(pack);
         }
 
+        /// <summary>
+        /// Opens the levels a game comes with as a new, untitled pack (so that saving it makes a level pack, rather
+        /// than changing the game's files), and points the game file lookups at that game.
+        /// </summary>
+        /// <param name="path">The game's directory, main.pak or levels\stages.cfg.</param>
+        public void OpenGameLevels(string path)
+        {
+            var gameDirectory = LevelPack.GetGameDirectory(path);
+            SetStatus("Opening the levels of '{0}'...", Path.GetFileName(gameDirectory));
+
+            var pack = new LevelPack();
+            IReadOnlyList<string> problems;
+            try
+            {
+                LevelPack.RegisterPegglePath(gameDirectory);
+                problems = pack.OpenGame(path);
+            }
+            catch (Exception ex)
+            {
+                RegisterGamePaths();
+                SetStatus("");
+                MessageBox.Show(ex.Message, "Open Game Levels", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                return;
+            }
+
+            mPackFilename = String.Empty;
+            OpenPack(pack);
+            SetStatus("{0} levels of '{1}' loaded.", pack.Levels.Count, pack.Name);
+            if (problems.Count > 0)
+            {
+                MessageBox.Show(String.Join(Environment.NewLine, problems), "Open Game Levels",
+                    MessageBoxButtons.OK, MessageBoxIcon.Warning);
+            }
+        }
+
         public void OpenPack(LevelPack pack)
         {
             ClosePack();
@@ -706,6 +736,14 @@ namespace IntelOrca.PeggleEdit.Designer
 
         public bool SavePack(string filename)
         {
+            // The game's own levels, opened with Open Game Levels, are saved as a level pack, not over the game's
+            if (Path.GetFileName(filename).Equals("main.pak", StringComparison.OrdinalIgnoreCase))
+            {
+                MessageBox.Show("A level pack can not be saved as main.pak, which is the game's own. Choose another name.",
+                    "Save Level Pack", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                return false;
+            }
+
             UpdateRecentList(filename);
             return mPack.Save(filename);
         }

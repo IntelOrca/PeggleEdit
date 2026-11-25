@@ -370,6 +370,148 @@ namespace IntelOrca.PeggleEdit.Tools.Pack
             }
         }
 
+        /// <summary>
+        /// Gets the game directory of a path given to <see cref="OpenGame"/>: the directory itself, the directory of a
+        /// .pak file, or the directory above the levels directory of a stages.cfg.
+        /// </summary>
+        public static string GetGameDirectory(string path)
+        {
+            path = Path.GetFullPath(path);
+            if (Directory.Exists(path))
+                return path;
+            var directory = Path.GetDirectoryName(path);
+            if (Path.GetFileName(path).Equals("stages.cfg", StringComparison.OrdinalIgnoreCase) &&
+                Path.GetFileName(directory).Equals("levels", StringComparison.OrdinalIgnoreCase))
+            {
+                return Path.GetDirectoryName(directory);
+            }
+            return directory;
+        }
+
+        /// <summary>
+        /// Opens the levels a game comes with (Peggle, Peggle Nights or Pego) into this pack, so that they can be looked
+        /// at, copied from, or saved as a level pack of their own: those its levels\stages.cfg lists, in order, then any
+        /// other levels it has, and the challenges of its levels\trophy.cfg. The path is the game's directory, its
+        /// main.pak (or another .pak of it), or its levels\stages.cfg. Files are read from the .pak first, then from the
+        /// game directory, for a game that has been extracted.
+        /// </summary>
+        /// <returns>The levels that could not be read.</returns>
+        public IReadOnlyList<string> OpenGame(string path)
+        {
+            var gameDirectory = GetGameDirectory(path);
+            PakCollection pak = null;
+            var pakPath = path.EndsWith(".pak", StringComparison.OrdinalIgnoreCase) && File.Exists(path)
+                ? path
+                : Path.Combine(gameDirectory, "main.pak");
+            if (File.Exists(pakPath))
+                pak = new PakCollection(pakPath);
+
+            byte[] GetFile(string name)
+            {
+                var record = pak?.GetRecord(name);
+                if (record != null)
+                    return record.Buffer;
+                var filePath = Path.Combine(gameDirectory, name);
+                return File.Exists(filePath) ? File.ReadAllBytes(filePath) : null;
+            }
+
+            PakImage GetBackground(string name)
+            {
+                foreach (var extension in new[] { ".jp2", ".jpg", ".png" })
+                {
+                    var fileName = name + extension;
+                    var data = GetFile(Path.Combine("levels", fileName));
+                    if (data != null)
+                        return new PakImage(fileName, data);
+                }
+                return null;
+            }
+
+            var stages = GetFile(Path.Combine("levels", "stages.cfg"));
+            if (stages == null)
+                throw new InvalidDataException($"No levels\\stages.cfg was found in '{gameDirectory}'.");
+
+            Name = Path.GetFileName(gameDirectory);
+            Description = $"The levels that {Name} comes with.";
+            Levels.Clear();
+            ChallengePages.Clear();
+
+            // The levels the stages list, then any others in the levels directory (but not the base level that the
+            // others are drawn over, or any others starting with _)
+            var infos = new List<LevelInfo>();
+            var listed = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+            var document = CFGDocument.Read(Encoding.UTF8.GetString(stages));
+            foreach (var block in document.Blocks[0].GetBlocks("stage"))
+            {
+                foreach (var property in block)
+                {
+                    if (!property.Name.Equals("level", StringComparison.OrdinalIgnoreCase) || property.Count == 0)
+                        continue;
+
+                    var fileName = property[0];
+                    if (!listed.Add(fileName))
+                        continue;
+
+                    // Peggle's stages give no ace score
+                    var info = LevelInfo.DefaultInfo;
+                    info.Filename = fileName;
+                    info.Name = property.Count > 1 ? property[1] : fileName;
+                    if (property.Count > 2 && int.TryParse(property[2], out var aceScore))
+                        info.AceScore = aceScore;
+                    infos.Add(info);
+                }
+            }
+            var others = (pak?.GetRecords("levels").Select(x => x.FileName) ?? Enumerable.Empty<string>())
+                .Concat(Directory.Exists(Path.Combine(gameDirectory, "levels"))
+                    ? Directory.GetFiles(Path.Combine(gameDirectory, "levels"), "*.dat")
+                    : new string[0])
+                .Where(x => x.EndsWith(".dat", StringComparison.OrdinalIgnoreCase))
+                .Select(Path.GetFileNameWithoutExtension)
+                .Where(x => !x.StartsWith("_"))
+                .Distinct(StringComparer.OrdinalIgnoreCase)
+                .Where(x => !listed.Contains(x))
+                .OrderBy(x => x, StringComparer.OrdinalIgnoreCase);
+            foreach (var fileName in others)
+            {
+                var info = LevelInfo.DefaultInfo;
+                info.Filename = fileName;
+                info.Name = fileName;
+                infos.Add(info);
+            }
+
+            var problems = new List<string>();
+            foreach (var info in infos)
+            {
+                var data = GetFile(Path.Combine("levels", info.Filename + ".dat"));
+                if (data == null)
+                {
+                    problems.Add($"{info.Name}: levels\\{info.Filename}.dat was not found");
+                    continue;
+                }
+
+                Level level;
+                using (var reader = new LevelReader(data))
+                    level = reader.Read();
+                if (level == null)
+                {
+                    problems.Add($"{info.Name}: levels\\{info.Filename}.dat could not be read");
+                    continue;
+                }
+                level.Info = info;
+                level.Background = GetBackground(info.Filename);
+                level.Hash = GetLevelData(level).CalculateFnv1a();
+                Levels.Add(level);
+            }
+
+            var trophy = GetFile(Path.Combine("levels", "trophy.cfg"));
+            if (trophy != null)
+            {
+                foreach (var block in CFGDocument.Read(Encoding.UTF8.GetString(trophy)).Blocks[0].GetBlocks("page"))
+                    ChallengePages.Add(new ChallengePage(block));
+            }
+            return problems;
+        }
+
         private PakCollection SaveToPack(string path)
         {
             var pakFile = new PakCollection();

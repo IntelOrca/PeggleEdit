@@ -132,6 +132,10 @@ namespace IntelOrca.PeggleEdit.Designer
             orbOpen.Image = Resources.open_32;
             orbOpen.Click += new EventHandler(openRibbonButton_Click);
 
+            RibbonOrbMenuItem orbOpenGameLevels = new RibbonOrbMenuItem("Open Game Levels");
+            orbOpenGameLevels.Image = Resources.open_32;
+            orbOpenGameLevels.Click += new EventHandler(openGameLevelsRibbonButton_Click);
+
             RibbonOrbMenuItem orbSave = new RibbonOrbMenuItem("Save");
             orbSave.Image = Resources.save_32;
             orbSave.Click += new EventHandler(saveRibbonButton_Click);
@@ -155,6 +159,7 @@ namespace IntelOrca.PeggleEdit.Designer
 
             mRibbon.OrbDropDown.MenuItems.Add(orbNew);
             mRibbon.OrbDropDown.MenuItems.Add(orbOpen);
+            mRibbon.OrbDropDown.MenuItems.Add(orbOpenGameLevels);
             mRibbon.OrbDropDown.MenuItems.Add(orbSave);
             mRibbon.OrbDropDown.MenuItems.Add(orbSaveAs);
             mRibbon.OrbDropDown.MenuItems.Add(new RibbonSeparator());
@@ -688,6 +693,23 @@ namespace IntelOrca.PeggleEdit.Designer
             if (dialog.ShowDialog() == DialogResult.OK)
             {
                 mParent.OpenPack(dialog.FileName);
+            }
+        }
+
+        private void openGameLevelsRibbonButton_Click(object sender, EventArgs e)
+        {
+            if (!mParent.ShowClosePackWarning())
+                return;
+
+            using (var dialog = new OpenFileDialog())
+            {
+                dialog.Title = "Open Game Levels (choose the game's main.pak, or levels\\stages.cfg if it has been extracted)";
+                dialog.Filter = "Game levels (*.pak, stages.cfg)|*.pak;stages.cfg|All files (*.*)|*.*";
+                var gameDirectory = Settings.Default.PeggleNightsPath;
+                if (!String.IsNullOrEmpty(gameDirectory) && Directory.Exists(gameDirectory))
+                    dialog.InitialDirectory = gameDirectory;
+                if (dialog.ShowDialog() == DialogResult.OK)
+                    mParent.OpenGameLevels(dialog.FileName);
             }
         }
 

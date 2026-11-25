@@ -65,6 +65,11 @@ namespace IntelOrca.PeggleEdit.Tools.Pack.CFG
         //    mValues.AddRange(values);
         //}
 
+        /// <summary>
+        /// The number of values.
+        /// </summary>
+        public int Count => mValues.Count;
+
         public string this[int index]
         {
             get

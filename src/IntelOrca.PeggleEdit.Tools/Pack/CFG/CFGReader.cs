@@ -16,6 +16,7 @@
 
 using System.Collections.Generic;
 using System.IO;
+using System.Text;
 
 namespace IntelOrca.PeggleEdit.Tools.Pack.CFG
 {
@@ -149,42 +150,56 @@ namespace IntelOrca.PeggleEdit.Tools.Pack.CFG
             return -1;
         }
 
+        // Whether the line being read is inside a /* */ comment that started on an earlier line
+        private bool mInBlockComment;
+
+        /// <summary>
+        /// Removes the line's comments: // to the end of the line, and /* to */, which can span lines (the game's
+        /// stages.cfg has levels commented out this way).
+        /// </summary>
         private string ParseLine(string line)
         {
-            int commentStart = -1;
+            var result = new StringBuilder(line.Length);
             bool inQuotes = false;
             for (int i = 0; i < line.Length; i++)
             {
                 char c = line[i];
+                if (mInBlockComment)
+                {
+                    if (c == '*' && i + 1 < line.Length && line[i + 1] == '/')
+                    {
+                        mInBlockComment = false;
+                        i++;
+                    }
+                    continue;
+                }
+
                 if (c == '"')
                 {
                     inQuotes = !inQuotes;
-                    continue;
                 }
                 else if (inQuotes && c == '\\')
                 {
-                    i++;
+                    // An escaped character, which is kept
+                    result.Append(c);
+                    if (i + 1 < line.Length)
+                        result.Append(line[++i]);
                     continue;
                 }
-                else if (!inQuotes && c == '/')
+                else if (!inQuotes && c == '/' && i + 1 < line.Length)
                 {
-                    if (i == line.Length - 1)
+                    if (line[i + 1] == '/')
+                        break;
+                    if (line[i + 1] == '*')
+                    {
+                        mInBlockComment = true;
+                        i++;
                         continue;
-
-                    if (line[i + 1] != '/')
-                        continue;
-
-                    commentStart = i;
-                    break;
+                    }
                 }
+                result.Append(c);
             }
-
-            if (commentStart != -1)
-            {
-                line = line.Remove(commentStart);
-            }
-
-            return line.Trim();
+            return result.ToString().Trim();
         }
 
         public static string Dequote(string value)

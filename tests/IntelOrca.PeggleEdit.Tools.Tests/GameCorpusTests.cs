@@ -146,6 +146,40 @@ namespace IntelOrca.PeggleEdit.Tools.Tests
             }
         }
 
+        [Fact]
+        public void EveryGame_OpensItsLevels()
+        {
+            var root = Environment.GetEnvironmentVariable(EnvironmentVariable);
+            if (string.IsNullOrEmpty(root) || !Directory.Exists(root))
+            {
+                mOutput.WriteLine($"Skipped: set {EnvironmentVariable} to the folder with the installed games.");
+                return;
+            }
+
+            // The games, extracted or not: those with a levels\stages.cfg in their directory or their main.pak
+            var games = Directory.GetFiles(root, "stages.cfg", SearchOption.AllDirectories)
+                .Where(x => Path.GetFileName(Path.GetDirectoryName(x)).Equals("levels", StringComparison.OrdinalIgnoreCase))
+                .Select(LevelPack.GetGameDirectory)
+                .Concat(Directory.GetFiles(root, "main.pak", SearchOption.AllDirectories)
+                    .Where(x => new PakCollection(x).GetRecord(@"levels\stages.cfg") != null)
+                    .Select(Path.GetDirectoryName))
+                .Distinct(StringComparer.OrdinalIgnoreCase)
+                .ToList();
+
+            var failures = new List<string>();
+            foreach (var game in games)
+            {
+                var pack = new LevelPack();
+                var problems = pack.OpenGame(game);
+                failures.AddRange(problems.Select(x => $"{game}: {x}"));
+                if (pack.Levels.Count == 0)
+                    failures.Add($"{game}: no levels");
+                var backgrounds = pack.Levels.Count(x => x.Background != null);
+                mOutput.WriteLine($"{game}: {pack.Levels.Count} levels, {backgrounds} with a background, {pack.ChallengePages.Count} challenge pages");
+            }
+            Assert.True(failures.Count == 0, string.Join(Environment.NewLine, failures));
+        }
+
         /// <summary>
         /// Whether the file is a level, rather than another file using the same extension such as a trailer
         /// recording or Pego's level editor globals (which has a level header with no entries, then other data).

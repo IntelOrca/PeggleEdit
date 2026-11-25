@@ -11,6 +11,7 @@ PeggleEdit 5.2.0 (Flamingo) (TBC)
 * [Feature] Show more of the game's settings in the property grid: peg type, brick anchor and end angles, poly normal direction, rotation, scale, grow type, mirror and image tile, and hole score, out delay and circular
 * [Feature] Export levels to XML and import them back, losslessly (Pack Explorer: level > Export (XML), Levels > Import Level)
 * [Feature] peggleedit-cli command line tool for converting levels to and from XML
+* [Feature] Open Game Levels: open the levels and challenges Peggle, Peggle Nights or Pego come with as a level pack, to look at, copy from, or save as a level pack of their own
 * [Feature] Generators no longer need to be applied: levels are saved with the pegs and bricks they make, so they are playable, and PeggleEdit keeps the generators in its own data after the level
 * [Feature] Preview shows generators as the pegs and bricks they make, moving as they will in the game
 * [Feature] A generator's movement is passed on to its pegs and bricks, so that they move together as one shape: a rotating ring of bricks stays a ring
