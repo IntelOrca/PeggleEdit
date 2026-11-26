@@ -15,6 +15,10 @@ PeggleEdit 5.2.0 (Flamingo) (TBC)
 * [Feature] A level with unsaved changes has an * after its name on its tab, as does the pack in the title bar
 * [Change] PeggleEdit asks to save only when something has changed, with Save, Don't Save and Cancel, and also when it is closed
 * [Fix] Dialogs and message boxes open centred over PeggleEdit
+* [Change] A peg's Variable, Crumble and Peg Type are shown with the object's other properties, rather than under Peg Properties
+* [Fix] Pegs no longer move by a pixel and back as the mouse moves over them
+* [Fix] The entry list no longer flickers while objects are dragged
+* [Fix] The selection box is drawn on whole pixels, so it looks the same wherever the object is
 * [Feature] Generators no longer need to be applied: levels are saved with the pegs and bricks they make, so they are playable, and PeggleEdit keeps the generators in its own data after the level
 * [Feature] Preview shows generators as the pegs and bricks they make, moving as they will in the game
 * [Feature] A generator's movement is passed on to its pegs and bricks, so that they move together as one shape: a rotating ring of bricks stays a ring

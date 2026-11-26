@@ -37,6 +37,7 @@ namespace IntelOrca.PeggleEdit.Tools.Levels.Children
     /// The base class for all level entries which are stored in levels.
     /// </summary>
     [TypeConverterAttribute(typeof(ExpandableObjectConverter))]
+    [TypeDescriptionProvider(typeof(LevelEntryTypeDescriptionProvider))]
     public abstract class LevelEntry : ICloneable, ILocation, IMovable, ILevelChild
     {
         Level mLevel;
@@ -480,10 +481,9 @@ namespace IntelOrca.PeggleEdit.Tools.Levels.Children
             }
         }
 
+        // Its properties are shown with the object's own (see LevelEntryTypeDescriptionProvider)
         [EntryProperty(EntryPropertyType.SubElement, null)]
-        [DisplayName("Peg Properties")]
-        [Description("The peg properties of the object.")]
-        [Category("Behaviour")]
+        [Browsable(false)]
         public PegInfo PegInfo
         {
             get
@@ -1054,14 +1054,6 @@ namespace IntelOrca.PeggleEdit.Tools.Levels.Children
                 mFlipperFlags = (byte)value;
             }
         }
-
-        /// <summary>
-        /// Whether the game takes the object away while Claude's flippers are out.
-        /// </summary>
-        [DisplayName("Taken Away By Flippers")]
-        [Description("Whether the game takes this object away while Claude's flippers are out, by its Flipper Flags and whether it is in the way of a flipper. Turn on Flippers in View > Game to see which objects are taken away.")]
-        [Category("Behaviour")]
-        public bool TakenAwayByFlippers => BaseObjects.IsTakenAwayByFlippers(this);
 
         [Browsable(false)]
         public virtual Level Level

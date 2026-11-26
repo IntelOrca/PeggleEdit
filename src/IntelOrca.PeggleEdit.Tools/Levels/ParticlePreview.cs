@@ -308,8 +308,8 @@ namespace IntelOrca.PeggleEdit.Tools.Levels
         {
             var origin = new[] { PointF.Empty };
             g.TransformPoints(System.Drawing.Drawing2D.CoordinateSpace.Device, System.Drawing.Drawing2D.CoordinateSpace.World, origin);
-            ox = (float)Math.Round(origin[0].X);
-            oy = (float)Math.Round(origin[0].Y);
+            ox = (float)GraphicsExtensions.RoundToPixel(origin[0].X);
+            oy = (float)GraphicsExtensions.RoundToPixel(origin[0].Y);
 
             var bitmap = target.Bitmap;
             clip = new Rectangle(0, 0, bitmap.Width, bitmap.Height);

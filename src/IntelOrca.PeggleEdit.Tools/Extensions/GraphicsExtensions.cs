@@ -44,8 +44,8 @@ namespace IntelOrca.PeggleEdit.Tools.Extensions
                 m = transform.Elements;
             if (m[1] == 0 && m[2] == 0 && m[0] > 0 && m[3] > 0 && (m[0] != 1 || m[3] != 1))
             {
-                var left = (int)Math.Round((dst.Left * m[0]) + m[4]);
-                var top = (int)Math.Round((dst.Top * m[3]) + m[5]);
+                var left = (int)RoundToPixel((dst.Left * m[0]) + m[4]);
+                var top = (int)RoundToPixel((dst.Top * m[3]) + m[5]);
                 var width = (int)Math.Round(dst.Width * m[0]);
                 var height = (int)Math.Round(dst.Height * m[3]);
                 if (width <= 0 || height <= 0)
@@ -62,7 +62,7 @@ namespace IntelOrca.PeggleEdit.Tools.Extensions
             if (dst.Width == src.Width && dst.Height == src.Height && m[0] == 1 && m[3] == 1 && m[1] == 0 && m[2] == 0)
             {
                 // Not scaled: copied pixel for pixel, without the slower drawing with image attributes
-                g.DrawImage(image, new Rectangle((int)Math.Round(dst.X), (int)Math.Round(dst.Y), src.Width, src.Height), src, GraphicsUnit.Pixel);
+                g.DrawImage(image, new Rectangle((int)RoundToPixel(dst.X), (int)RoundToPixel(dst.Y), src.Width, src.Height), src, GraphicsUnit.Pixel);
                 return;
             }
             var points = new[]
@@ -118,12 +118,19 @@ namespace IntelOrca.PeggleEdit.Tools.Extensions
             if (m[1] != 0 || m[2] != 0 || sx <= 0 || sy <= 0)
                 return rect;
 
-            var left = (float)Math.Round((rect.Left * sx) + ox);
-            var top = (float)Math.Round((rect.Top * sy) + oy);
+            var left = (float)RoundToPixel((rect.Left * sx) + ox);
+            var top = (float)RoundToPixel((rect.Top * sy) + oy);
             var width = (float)Math.Round(rect.Width * sx);
             var height = (float)Math.Round(rect.Height * sy);
             return new RectangleF((left - ox) / sx, (top - oy) / sy, width / sx, height / sy);
         }
+
+        /// <summary>
+        /// Rounds a position on the device to the nearest pixel, a half always up. Math.Round rounds a half to the even
+        /// pixel, which is not the same for a part of the editor drawn on its own (into a buffer moved by a whole number
+        /// of pixels), so an object exactly between two pixels moved by a pixel each time it was drawn that way.
+        /// </summary>
+        public static double RoundToPixel(double value) => Math.Floor(value + 0.5);
 
         public static void DrawRectangle(this Graphics g, Pen pen, RectangleF rect)
         {

@@ -895,19 +895,33 @@ namespace IntelOrca.PeggleEdit.Designer
 
         private void DrawEntrySelection(Graphics g, LevelEntry le)
         {
-            //Set the pen
-            Pen selectedEntryPen = new Pen(Brushes.White, 1.0f);
-            selectedEntryPen.DashPattern = new float[] { 1, 1 };
+            // Around the object, 5 units out
+            var bounds = le.Bounds;
+            var origin = mLevel.GetActualXY(0, 0);
+            var corners = new[]
+            {
+                new PointF(origin.X + bounds.Left - 5, origin.Y + bounds.Top - 5),
+                new PointF(origin.X + bounds.Right + 5, origin.Y + bounds.Bottom + 5),
+            };
 
-            Rectangle rect = new Rectangle();
+            // Drawn on whole device pixels with a pen of whole pixels, at the same size wherever the object is, so that
+            // the dashes look the same as it moves (zoomed, a part of a pixel blurred or moved them)
+            g.TransformPoints(CoordinateSpace.Device, CoordinateSpace.World, corners);
+            int left = (int)Tools.Extensions.GraphicsExtensions.RoundToPixel(corners[0].X);
+            int top = (int)Tools.Extensions.GraphicsExtensions.RoundToPixel(corners[0].Y);
+            int width = (int)Math.Round(corners[1].X - corners[0].X);
+            int height = (int)Math.Round(corners[1].Y - corners[0].Y);
+            int penWidth = Math.Max(1, (int)Math.Round(Zoom));
 
-            Point p = mLevel.GetActualXY(le.Bounds.Location);
-
-            rect = Rectangle.Round(le.Bounds);
-            rect.Location = p;
-            rect.Inflate(5, 5);
-
-            g.DrawRectangle(selectedEntryPen, rect);
+            var state = g.Save();
+            g.ResetTransform();
+            g.SmoothingMode = SmoothingMode.None;
+            using (var pen = new Pen(Color.White, penWidth))
+            {
+                pen.DashPattern = new float[] { 1, 1 };
+                g.DrawRectangle(pen, left, top, width, height);
+            }
+            g.Restore(state);
         }
 
         private void DrawGrid(Graphics g)

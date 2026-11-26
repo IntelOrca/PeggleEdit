@@ -22,10 +22,6 @@ using System.IO;
 namespace IntelOrca.PeggleEdit.Tools.Levels.Children
 {
     /// <summary>
-    /// Represents the information about a level entry which is a peg.
-    /// </summary>
-    [TypeConverterAttribute(typeof(ExpandableObjectConverter))]
-    /// <summary>
     /// The kind of a peg, from peg_type in PopCap's level editor.
     /// </summary>
     public enum PegType : byte
@@ -37,6 +33,10 @@ namespace IntelOrca.PeggleEdit.Tools.Levels.Children
         Powerup,
     }
 
+    /// <summary>
+    /// Represents the information about a level entry which is a peg.
+    /// </summary>
+    [TypeConverterAttribute(typeof(ExpandableObjectConverter))]
     public sealed class PegInfo : ICloneable
     {
         private LevelEntry mParent;

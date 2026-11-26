@@ -17,6 +17,7 @@
 using System;
 using System.Collections.Generic;
 using System.Drawing;
+using System.Linq;
 using System.Runtime.InteropServices;
 using System.Windows.Forms;
 using IntelOrca.PeggleEdit.Designer.Properties;
@@ -30,7 +31,7 @@ namespace IntelOrca.PeggleEdit.Designer
     {
         MainMDIForm mParent;
         LevelEditor mEditor;
-        ListBox mList;
+        EntryListBox mList;
         bool mSuspendChangeEvent;
 
         LevelEntryCollection mEntries = new LevelEntryCollection();
@@ -45,7 +46,7 @@ namespace IntelOrca.PeggleEdit.Designer
             this.FormBorderStyle = FormBorderStyle.SizableToolWindow;
             this.Text = "Entry List";
 
-            mList = new ListBox();
+            mList = new EntryListBox();
             mList.Dock = DockStyle.Fill;
             mList.IntegralHeight = false;
             mList.SelectionMode = SelectionMode.MultiExtended;
@@ -114,45 +115,11 @@ namespace IntelOrca.PeggleEdit.Designer
             }
             else
             {
-                // Setting an item's text can clear its selection, so the selection is put back after
-                bool textChanged = UpdateItemTexts();
-                if (selectionChanged || textChanged)
+                // The items show their entry's position, which changes as it is moved: just those are drawn again
+                mList.UpdateTexts();
+                if (selectionChanged)
                     UpdateSelection();
             }
-        }
-
-        private static string GetItemText(int index, LevelEntry entry) => String.Format("{0}. {1}", index, entry);
-
-        /// <summary>
-        /// Updates the text of the items whose entry has changed (it includes the entry's position, which changes as
-        /// it is moved), without rebuilding the list.
-        /// </summary>
-        /// <returns>Whether any text was changed.</returns>
-        private bool UpdateItemTexts()
-        {
-            bool changed = false;
-            mSuspendChangeEvent = true;
-            try
-            {
-                for (int i = 0; i < mEntries.Count && i < mList.Items.Count; i++)
-                {
-                    var text = GetItemText(i, mEntries[i]);
-                    if (!text.Equals(mList.Items[i]))
-                    {
-                        if (!changed)
-                            mList.BeginUpdate();
-                        changed = true;
-                        mList.Items[i] = text;
-                    }
-                }
-            }
-            finally
-            {
-                if (changed)
-                    mList.EndUpdate();
-                mSuspendChangeEvent = false;
-            }
-            return changed;
         }
 
         private void UpdateSelection()
@@ -206,14 +173,8 @@ namespace IntelOrca.PeggleEdit.Designer
 
             mList.BeginUpdate();
             mList.Items.Clear();
-            List<string> items = new List<string>();
-            for (int i = 0; i < mEditor.Level.Entries.Count; i++)
-            {
-                LevelEntry le = mEditor.Level.Entries[i];
-                items.Add(GetItemText(i, le));
-            }
-
-            mList.Items.AddRange(items.ToArray());
+            mList.Items.AddRange(mEditor.Level.Entries.Cast<LevelEntry>().Select((x, i) => new EntryItem(i, x)).ToArray());
+            mList.UpdateTexts();
 
             foreach (LevelEntry le in mEditor.SelectedEntries)
             {
@@ -246,6 +207,132 @@ namespace IntelOrca.PeggleEdit.Designer
             }
 
             mEditor.UpdateRedraw();
+        }
+
+        /// <summary>
+        /// A list of entries, each shown with its index and what it is (with its position). An item whose text has
+        /// changed is drawn again by itself, rather than being replaced, which repainted the whole list (and its
+        /// selection) for every frame of an entry being dragged, so that it flickered.
+        /// </summary>
+        /// <summary>
+        /// An entry in the list. The list keeps the text it is added with (e.g. for typing to find an item and for screen
+        /// readers), which is its index and what it is.
+        /// </summary>
+        private sealed class EntryItem
+        {
+            private readonly string mText;
+
+            public EntryItem(int index, LevelEntry entry)
+            {
+                Entry = entry;
+                mText = String.Format("{0}. {1}", index, entry);
+            }
+
+            public LevelEntry Entry { get; }
+
+            public override string ToString() => mText;
+        }
+
+        private sealed class EntryListBox : ListBox
+        {
+            private const int WM_ERASEBKGND = 0x0014;
+
+            // The text each item was last drawn with
+            private readonly List<string> mTexts = new List<string>();
+
+            public EntryListBox()
+            {
+                DrawMode = DrawMode.OwnerDrawFixed;
+                UpdateItemHeight();
+            }
+
+            protected override void OnFontChanged(EventArgs e)
+            {
+                base.OnFontChanged(e);
+                UpdateItemHeight();
+            }
+
+            protected override void OnHandleCreated(EventArgs e)
+            {
+                base.OnHandleCreated(e);
+                UpdateItemHeight();
+            }
+
+            // Drawn items are not sized for the font (e.g. on a high DPI display) as the list's own items are
+            private void UpdateItemHeight()
+            {
+                var height = TextRenderer.MeasureText("Ag", Font).Height;
+                if (ItemHeight != height)
+                    ItemHeight = height;
+            }
+
+            private static string GetItemText(int index, object item) => String.Format("{0}. {1}", index, ((EntryItem)item).Entry);
+
+            /// <summary>
+            /// Draws again the items whose text has changed.
+            /// </summary>
+            public void UpdateTexts()
+            {
+                for (int i = 0; i < Items.Count; i++)
+                {
+                    var text = GetItemText(i, Items[i]);
+                    if (i == mTexts.Count)
+                    {
+                        mTexts.Add(text);
+                    }
+                    else if (mTexts[i] != text)
+                    {
+                        mTexts[i] = text;
+                        if (IsHandleCreated)
+                        {
+                            var bounds = GetItemRectangle(i);
+                            if (bounds.IntersectsWith(ClientRectangle))
+                                Invalidate(bounds);
+                        }
+                    }
+                }
+                if (mTexts.Count > Items.Count)
+                    mTexts.RemoveRange(Items.Count, mTexts.Count - Items.Count);
+            }
+
+            protected override void OnDrawItem(DrawItemEventArgs e)
+            {
+                if (e.Index < 0 || e.Index >= Items.Count)
+                    return;
+
+                var text = e.Index < mTexts.Count ? mTexts[e.Index] : GetItemText(e.Index, Items[e.Index]);
+                // Drawn off screen and then copied, so that the row is never seen with only its background drawn
+                using (var buffer = BufferedGraphicsManager.Current.Allocate(e.Graphics, e.Bounds))
+                {
+                    var item = new DrawItemEventArgs(buffer.Graphics, e.Font, e.Bounds, e.Index, e.State, e.ForeColor, e.BackColor);
+                    item.DrawBackground();
+                    TextRenderer.DrawText(buffer.Graphics, text, e.Font, e.Bounds, e.ForeColor, e.BackColor,
+                        TextFormatFlags.Left | TextFormatFlags.VerticalCenter | TextFormatFlags.SingleLine |
+                        TextFormatFlags.NoPrefix | TextFormatFlags.EndEllipsis | TextFormatFlags.PreserveGraphicsTranslateTransform);
+                    item.DrawFocusRectangle();
+                    buffer.Render(e.Graphics);
+                }
+                base.OnDrawItem(e);
+            }
+
+            protected override void WndProc(ref Message m)
+            {
+                // Each item draws all of its background, so on Windows only the space below the items is erased, rather
+                // than everything that is drawn again first being erased (which flickers)
+                if (m.Msg == WM_ERASEBKGND && Environment.OSVersion.Platform == PlatformID.Win32NT)
+                {
+                    var top = Items.Count == 0 ? 0 : Math.Max(0, GetItemRectangle(Items.Count - 1).Bottom);
+                    if (top < ClientSize.Height)
+                    {
+                        using (var g = Graphics.FromHdc(m.WParam))
+                        using (var brush = new SolidBrush(BackColor))
+                            g.FillRectangle(brush, 0, top, ClientSize.Width, ClientSize.Height - top);
+                    }
+                    m.Result = (IntPtr)1;
+                    return;
+                }
+                base.WndProc(ref m);
+            }
         }
     }
 }
