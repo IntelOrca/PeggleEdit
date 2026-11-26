@@ -1,17 +1,37 @@
-# 1. Operating Systems #
-You must have an operating system that supports .NET Framework 3.5 e.g. Windows 2000, XP, Vista and 7. The latest source targets .NET framework 4.7+ under Windows 7 onwards.
+# Getting Started
 
-# 2. Downloading and Compiling #
+## What you need
+* Windows 7 or later. Windows 10 and 11 already have everything PeggleEdit needs. On older versions, install the .NET Framework 4.7.2 or later.
+* PeggleEdit also runs on Linux with Mono or Wine.
+* Peggle Nights, to play the levels you make. PeggleEdit can also open the levels of Peggle, Peggle Deluxe and Pego.
 
-There are three ways to obtain a copy of PeggleEdit:
-  1. A **ready-to-use executable** (compiled binary) in an archive for the latest stable release can be downloaded from the [download page](https://github.com/IntelOrca/PeggleEdit/releases).
-  1. The **source code** of the latest stable release can be downloaded as an archive from the [download page](https://github.com/IntelOrca/PeggleEdit/releases).
-  1. The very latest development source code can be <a href='https://github.com/IntelOrca/PeggleEdit'>cloned from <b>GitHub</b></a>.
+## Installing
+1. Download **peggleedit.zip** from the [latest release](https://github.com/IntelOrca/PeggleEdit/releases/latest).
+2. Make a new folder and extract everything in the zip into it.
+3. Open **peggleedit.exe**.
 
-If you've gone with option 2 or 3, then you will now need to compile PeggleEdit. The solution should be readable by Visual Studio 2010 or C# Express Edition 2010. OpenSource equivalents should also work such as SharpDevelop.
+## Staying up to date
+PeggleEdit checks for a new version when it starts and offers to update itself.
 
-# 3. Go Create! #
+Under **PeggleEdit Options > Application**, you can choose an update ring:
+* **Release**: tested versions only. Best for most people.
+* **Nightly**: a new build for every change. You get new features and fixes first, but they may have bugs.
 
-If you are now at the stage where you have an executable build of PeggleEdit and all the required run-time libraries then you should be able to run PeggleEdit.
+## Your first level pack
+1. PeggleEdit starts with a new, empty pack open in the **Pack Explorer**. It already has one level. (To start again later, click **New** in the orca menu at the top left.)
+2. Double-click the level to open it.
+3. Right-click the level and choose **Properties** to give it a name.
+4. Right-click the level and choose **Set Background** to pick an image. It is resized and cropped to 800 x 600 for you.
+5. Pick a tool from the **Tools** tab, such as **Peg**, and click on the level to place objects.
+6. Click **Save** and save the pack in the `levelpacks` folder inside your Peggle Nights folder. Create the folder if it is not there.
+7. Start Peggle Nights to play it. Close the game before you save again, as it keeps the pack open.
 
-If you have any questions then take a look at the [FAQ](FrequentlyAskedQuestions.md) or e-mail one of the project owners / contributors.
+To add more levels, right-click **Levels** and choose **Add Level**.
+
+See the [Editor Guide](EditorGuide.md) for what each tool does, and [Level Packs](LevelPacks.md) for setting up levels, images and challenges.
+
+## Building from source
+The source code is on [GitHub](https://github.com/IntelOrca/PeggleEdit). Install the [.NET SDK](https://dotnet.microsoft.com/download) and run `dotnet build` in the folder you cloned it to. You can also open `PeggleEdit.sln` in Visual Studio 2022 or later.
+
+## Need help?
+Have a look at the [FAQ](FrequentlyAskedQuestions.md), or ask on the [issues page](https://github.com/IntelOrca/PeggleEdit/issues).

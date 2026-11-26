@@ -1,12 +1,19 @@
-In PeggleEdit, pegs can be round or rectangular ([bricks](bricks.md)). They can be defined as normal (blue) or objective (orange). When playing the game Peggle will,  at random, change two blue pegs to green (powerup) and one to purple (bonus).
+# Pegs
 
-## Peg Info ##
-Pegs are [balls](Balls.md) or [bricks](Bricks.md) with additional information which defines the object as a peg. This information is stored in a small set of properties called PegInfo.
+Pegs are what the player shoots at. They can be round, or [bricks](Bricks.md).
 
-You can place pegs by using the Peg tool found on the tools tab of the ribbon at the top of the main window.
+Use the **Peg** tool on the **Tools** tab to place round pegs. Click to place one, or drag to paint lots at once. Pegs are not placed on top of other objects unless you hold **Ctrl**.
 
-There are two properties in the PegInfo.
+## Peg settings
 
-**Can Be Orange** states whether the peg can be an orange peg. With this property set to false, the peg will never be orange. In PeggleEdit if the property is true, pegs are displayed orange, otherwise blue. Peggle will choose 25 of the **Can Be Orange** pegs (for a default challenge) to be orange when playing the game.
+| Setting | What it does |
+|---|---|
+| Variable | When on, the game chooses whether the peg is orange, purple or green each time the level is played. Leave it on for most pegs. |
+| Peg Type | The peg's colour when Variable is off: Normal (blue), Goal (orange), Score (purple) or Powerup (green). |
+| Crumble | The peg crumbles away soon after it is hit, so the ball cannot get stuck on it. Use it for pegs at the bottom of rings and other places the ball can get trapped. |
 
-**Quick Disappear** states that the peg will disappear shortly after it is hit by the ball. Normally, if the ball does not hit any pegs for a few seconds, there is a delay before the pegs that have been hit will disappear, for instance if the ball is stuck in an arc of pegs. You can set this property on bricks or pegs (e.g. one at the bottom of an arc) to reduce the time that a ball will remain stuck.
+In PeggleEdit, Variable pegs are shown orange and other pegs blue. With **Preview** on, every peg is blue, as at the start of a game.
+
+When a level starts, the game picks which Variable pegs become orange (usually 25), and which become green and purple.
+
+Pegs are [balls](Balls.md) or [bricks](Bricks.md) with these peg settings added.

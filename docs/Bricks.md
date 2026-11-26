@@ -1,12 +1,29 @@
-Bricks are a type of peg which can be straight or curved and are typically rectangles with a width of 20. They should have PegInfo which holds the peg properties such as **Can Be Orange**. See [Pegs](Pegs.md) for more information.
+# Bricks
 
-## Curved Bricks ##
-Technically curved bricks are polygons in the shape of an arc. However they are small enough to look like they are round. However if they are larger and straight lines show on the brick, you can increase the number of vertices so that it appears more rounded.
+Bricks are pegs that are long and thin. They can be straight or curved, and have the same [peg settings](Pegs.md) as round pegs.
 
-Curved bricks are defined by sectors of a circle. When hovering over bricks in PeggleEdit, the inner and outer ring will be displayed showing how the brick fits as a sector in a circle. There are two properties to define the brick.
+## Placing bricks
+* Use the **Brick** tool for straight bricks and the **Curved Brick** tool for curved ones.
+* A brick placed near the end of another brick joins on to it neatly. Hold **Shift** to stop it joining.
+* With the **Select** tool and one brick selected, point at the end you want to add to. A faint brick shows where the new one will go. Then press:
+  * **B** to add a curved brick that carries on the curve.
+  * **V** to add a curved brick that bends the other way.
+  * **Shift+B** to add a straight brick.
+  * Hold **Ctrl** as well to add it even if something is in the way.
+* The [Brick Pen and Brick Generator](Generators.md) can place lots of bricks at once.
 
-**Length / Radius** defines mostly the brick size.
+## Brick settings
 
-**Sector angle** defines how curved the brick is.
+| Setting | What it does |
+|---|---|
+| Type | Curved (normal, outer, inner and their 90 variants) or straight. PeggleEdit draws all the curved types like a normal curved brick. |
+| Radius | How big the curve is. For a straight brick, this is its length. |
+| Angle | How much of a circle a curved brick covers, in degrees. A bigger angle makes a longer, more curved brick. |
+| Thickness | How thick the brick is. |
+| Curve Points | How smooth the curve is. Raise it if a large curved brick looks like it has straight edges. |
+| Texture Flip | Which side the shine is on. Keeps the shine the same along a row of bricks. |
 
-![img/brick-concept.png](img/brick-concept.png)
+## How curved bricks work
+A curved brick is a slice of a ring. When you hover over a brick, PeggleEdit shows the inside and outside of the ring it is part of.
+
+![A curved brick as part of a ring](img/brick-concept.png)

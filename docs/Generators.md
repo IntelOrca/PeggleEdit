@@ -1,30 +1,46 @@
-Generators are objects which generate multiple objects automatically. Normally used to generate objects where their locations and other properties are calculated.
+# Generators
 
-Generators stay generators: you never have to apply them for a level to be playable. When PeggleEdit saves a level, it saves the pegs and bricks each generator makes, which is what Peggle loads and plays. The generators themselves are saved after the level's objects, where Peggle does not read them, so that PeggleEdit opens the level with its generators as you left them (see [Level Format](LevelFormat.md)).
+Generators are PeggleEdit's own objects that place lots of pegs or bricks for you, in a ring or along a path. Change a setting and all the pegs or bricks update at once.
 
-Turn on **Preview** on the View tab to see the level as Peggle will show it: each generator is drawn as the pegs or bricks it makes, moving as they will in the game.
+Generators stay generators. You do not need to do anything before playing the level. When PeggleEdit saves, it saves the pegs and bricks each generator makes, which is what the game plays. It also keeps the generators themselves, so they are still there next time you open the level in PeggleEdit.
 
-To turn a generator into ordinary pegs or bricks, for example to change one of them on its own, select it and click **Apply** on the Tools tab.
+Turn on **Preview** on the **View** tab to see a level as the game will show it, with each generator drawn as its pegs or bricks.
 
-If another program changes a level that PeggleEdit saved, PeggleEdit can not tell which pegs and bricks came from which generator any more. It then opens the level with the generated pegs and bricks as ordinary objects, and tells you.
+To turn a generator into ordinary pegs or bricks, for example to change one of them on its own, select it and click **Apply** on the **Tools** tab.
 
-## Movement
+If another program changes a level saved by PeggleEdit, PeggleEdit can no longer tell which pegs and bricks came from a generator. It opens them as ordinary pegs and bricks, and tells you.
 
-A generator can be given a movement, like any other object. Its pegs or bricks then move together as one shape:
+## Peg Generator
+Places pegs evenly around a circle or oval. Find it under **Generator** on the **Tools** tab.
 
-* **Rotate**: the shape spins around the generator's anchor. Each peg goes round a circle around it, starting at its own place; each brick also turns as it goes, so a ring of bricks stays a ring. With a **Max Angle**, the game holds a rotating object turned by the max angle instead of spinning it, so the shape is held turned by it around the anchor.
-* **Rotate Back And Forth**: the shape swings back and forth around the generator's anchor in the same way, as one object would: the phase is when the swing starts, and the path rotation turns the swing.
-* **Rotate Around Circle** and **Swing Around Circle**: the shape goes round (or swings around) the circle, turning as it goes, as one object would. On an ellipse (a Y Radius different from the Radius), each peg or brick follows a point along the generator's path, and turns around it.
-* **Any other movement** (cycles, circles, infinity, arcs, wraps): each peg or brick follows the generator's path, offset by its place in the shape, so the whole shape moves along the path.
+| Setting | What it does |
+|---|---|
+| Horizontal Radius, Vertical Radius | The size of the circle. Make them different for an oval. |
+| Max Number of Pegs | How many equal places the circle is split into. |
+| Number of Pegs | How many of those places get a peg. Use fewer than the maximum for part of a circle. |
+| Angular Offset | Where the first peg goes, in degrees. |
 
-The pause, phase, offset and parent movement settings of the generator's movement are passed on as well.
+## Brick Generator
+Places curved bricks around a circle.
 
-Other objects can follow a generator's movement by linking to it. In the game they get their own copy of the movement, which moves the same way; PeggleEdit keeps the link.
+| Setting | What it does |
+|---|---|
+| Inner Radius, Mid Radius, Outer Radius | The size of the ring of bricks. |
+| Brick Width | How thick the bricks are. |
+| Max Number of Bricks | How many equal places the circle is split into. |
+| Number of Bricks | How many of those places get a brick. |
+| Angle of Sectors | How much of the circle each brick covers, in degrees. |
+| Angular Offset | Where the first brick goes, in degrees. |
 
-## Generators
+## Peg Pen and Brick Pen
+Draw a path, and pegs or bricks are placed along it.
+1. Pick **Peg Pen** or **Brick Pen** on the **Tools** tab.
+2. Click to add points. Click and drag to make a curve. Hold **Ctrl** to keep lines at neat angles.
+3. Right-click to finish.
 
-**[Peg Generator](PegGenerators.md)** - Generates a circle of pegs by specifying such properties as **x-radius** and **y-radius**.
+**Interval** sets the gap between each peg or brick. To change the path afterwards, select it with the **Select** tool and drag its points.
 
-**[Brick Generator](BrickGenerators.md)** - Generates a circle of bricks by specifying the radius and the number of bricks etc.
+## Moving generators
+You can give a generator a movement, like any other object. Its pegs or bricks then move together as one shape. For example, a spinning ring of bricks stays a ring as it turns.
 
-**Peg Pen** and **Brick Pen** - Generate pegs or bricks along a path that you draw.
+Other objects can follow a generator's movement too. See [Advanced Movement](AdvancedMovement.md).

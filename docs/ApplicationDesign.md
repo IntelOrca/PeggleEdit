@@ -1,18 +1,27 @@
-# Introduction #
-PeggleEdit is written in CSharp uses the .NET Framework. This allows PeggleEdit to maintain a nice hierarchy of classes to implement all the features needed and make it easy to add new tools and functions.
+# Application Design
 
-# Main Assemblies #
-**IntelOrca.PeggleEdit.Tools** contains all the classes need to read and save levels and level packs, display the level, supply any client that uses the assembly to all the properties of the level and the entries.
+PeggleEdit is written in C# with Windows Forms, and targets the .NET Framework 4.7.2. It runs as a 64-bit program on Windows, and on Linux with Mono or Wine. Build it with `dotnet build` using any recent .NET SDK.
 
-**peggleedit** is the executable build of PeggleEdit which includes all the classes for designing and developing the levels. It includes the LevelEditor control and all the MDI components.
+## Projects
+* **IntelOrca.PeggleEdit.Tools**: reads and saves level packs (`.pak`), levels (`.dat`) and level XML. It also draws levels and runs movement and emitters as the game does. It has no editor user interface.
+* **peggleedit**: the editor itself, including the level editor control, the tool windows and the self-updater.
+* **peggleedit-cli**: the [command line tool](CommandLine.md) for converting and drawing levels.
+* **Crom.Controls**: the docking windows.
+* **System.Windows.Forms.Ribbon**: the Office style ribbon.
+* **tests/IntelOrca.PeggleEdit.Tools.Tests**: xUnit tests for the Tools project. Run them with `dotnet test`.
 
-# Other Assemblies #
-Other libraries are used to create PeggleEdit. PeggleEdit needs to be functional but it doesn't hurt to make it look nice and supply it with some more up to date controls. Thus other open source libraries are used.
+## Important classes
+* **LevelPack**: a level pack, with its levels, images and challenges.
+* **Level**: one level and its objects.
+* **LevelEntry**: the base class of every level object (Ball, Brick, Poly, Line, Hole, Emitter and the generators).
+* **Mover** and **MoverLink**: an object's movement, and links to other objects' movement.
+* **LevelXml**: converts levels to and from XML, byte for byte.
 
-**Crom.Controls** is a helpful library which contains the window docking control used in the main MDI window.
+## Saving levels exactly
+PeggleEdit keeps everything it reads from a level, including values it does not understand. A level that is opened and saved without changes is written back exactly as it was. See [Level Format](LevelFormat.md) for how PeggleEdit stores its own data, such as generators, inside a level the game can still play.
 
-**System.Windows.Forms.Ribbon** contains all the classes for the Microsoft Office like ribbon control which is used as the main toolbar.
+## Images
+JPEG 2000 (`.jp2`) images, which the game uses for backgrounds, are decoded with the CoreJ2K library, so the game does not need to be installed to open them.
 
-# Important Classes #
-
-**LevelEntry** is an abstract class which all Peggle objects and PeggleEdit's own objects inherit. Override all the relevant members for the object to be usable.
+## Builds and releases
+Every push to `master` is built by GitHub Actions and published as the rolling `nightly` release. A `v*` tag publishes a full release. Each release has a `build.json` that the self-updater reads to find new versions.

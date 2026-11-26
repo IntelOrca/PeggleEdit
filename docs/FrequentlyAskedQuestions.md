@@ -1,36 +1,43 @@
+# Frequently Asked Questions
 
-### What operating systems are supported? ###
-  * Currently only Windows is supported. PeggleEdit is written in CSharp and .NET framework. It is possible to port it to other operating systems but a developer that has experience porting .NET applications would be required.
-  * Level packs created with PeggleEdit should however still work on the Mac version of Peggle. Install them the same way your would install the official bonus levels.
+### Which computers can run PeggleEdit?
+Windows 7 or later. It also runs on Linux with Mono or Wine. Level packs made with PeggleEdit also work in the Mac version of Peggle Nights. Install them the same way as the official bonus levels.
 
-### Will this work with Peggle 1? ###
-Currently the editor does not make it easy to create levels for the original Peggle game. The game does not have levelpacks which means the only way of playing your own levels is to overwrite an existing quickplay level. This would involve extracting the files from the .pak file. PeggleEdit will hopefully add an easy way of doing this.
+### How do I play my levels?
+Save your level pack in the `levelpacks` folder inside your Peggle Nights folder, then start the game. If there is no `levelpacks` folder, create one. The Peggle Nights folder is usually one of these:
+* `C:\Program Files (x86)\PopCap Games\Peggle Nights`
+* `C:\Program Files (x86)\Steam\steamapps\common\Peggle Nights`
 
-### Can I play my levels in the demo version of Peggle Nights? ###
-Yes, the demo version of Peggle Nights does not restrict levelpacks. As long as the levels do not set their minimum stage above 2, it should be playable.
+### I get an error when saving: "file is being used by another process"
+Peggle Nights is probably running and has the pack open. Close the game and save again. If the game is not running, another program has the file open.
 
-### I get an error when saving, "file is being used by another process" ###
-This might be because Peggle Nights is running, if not something else has the .pak file open. Turn Peggle Nights off to overcome this error.
+### My level says LOCKED
+The level needs more stages to be completed first. Set its minimum stage to -3 in the level's **Properties** (right-click it in the Pack Explorer) and it can always be played.
 
-### How do I play my levels? ###
-You can play your levels in PeggleNights by saving your level pack in the levelpacks folder in your Peggle Nights folder. By default this would be "C:\Program Files\PopCap Games\Peggle Nights\levelpacks\" ("Program Files (x86)" on a 64-bit version of Windows). If levelpacks does not exist, create it.
+### Peggle says "invalid save game" when I play my level
+The game could not read the level. Please report it on the [issues page](https://github.com/IntelOrca/PeggleEdit/issues) with your pack attached. To find what causes it, try deleting objects from a copy of the level until it works.
 
-### I see my level but it says LOCKED ###
-One reason for this may be because you have not completed the required number of stages set by the level. Any level should be playable if the minimum stage on the level properties is set to -3.
+Levels with [generators](Generators.md) used to cause this error. They no longer do, so you do not need to apply generators before playing.
 
-### When I play my level, I get an error saying invalid save game? ###
-  * This error occurs when Peggle cannot read the level file. This may be because of a number of reasons. Due to the complexity of the file structure, it is easy for a small error to cause the whole level to be unreadable. The best way to tackle this is to delete objects that are mostly likely causing the error in the level and try a process of elimination until you find out what is causing it.
-  * You will get this error if you have a [generator](Generators.md) in your level which hasn't been applied. [Generators](Generators.md) are PeggleEdit objects for designing levels, they are not understood by Peggle. If you have saved a level with an unapplied generator then the level will not be able to be loaded into Peggle.
-  * If you still think there is a problem due to PeggleEdit, please submit a bug report with your level as an attachment on the issues page.
+### Peggle says there is a duplicate challenge ID
+Two challenges, in the game or in any of your level packs, have the same ID. Give each of your challenges its own ID. A number between 500 and 10000 makes a clash unlikely.
 
-### When I start Peggle, I get an error about duplicate challenge ID ###
-This means that out of all the challenges in the game and in all the level packs, two of them have the same ID. Make sure that all your challenges have a unique ID. Picking an ID between 500 and 10000 should lower the chances of a clash.
+### Can I make levels for the first Peggle, Peggle Deluxe or Pego?
+Partly. PeggleEdit can open the levels these games come with (open their `main.pak`), and can export a level for each of them (right-click the level, then **Export**). These games do not have level packs, so to play your level you need to put it in place of one of the game's own levels. Back up the game first.
 
-### Is there any faster way to repeatedly test my level? ###
-Because Peggle Nights stops its level packs from being overwritten, you have to keep closing and re-opening the game. Another way to test your level is to extract main.pak found in the PeggleNights folder and delete the .pak file so that Peggle Nights reads the individual files in the folder rather than in main.pak. Then you can export your level and save it over the top of an existing quick-play level such as "bjorn1.dat". Then you simply reload the level in the game.
+### Can I play my levels in the Peggle Nights demo?
+Yes. The demo allows level packs, as long as your levels do not need a stage higher than 2 to be unlocked.
 
-### What resolution do I need to make my art for the levels? ###
-Peggle runs in 800x600 so your art should be the same. If you need a reference on how your art would look in-game, use the image found [here](img/bg_template.png) for reference. Load it into your preferred image editor as a layer on top of your art.
+### Is there a quicker way to test my level over and over?
+The game does not let a level pack change while it is running, so you have to close and reopen it each time. A quicker way is to extract the game's `main.pak` into the Peggle Nights folder with **.pak Extract / Pack** in the orca menu, then rename `main.pak` so the game uses the extracted files instead. Then export your level over one of the game's Quick Play levels (such as `levels\bjorn1.dat`) and reload that level in the game. Back up the game first.
 
-### Why do the images I import for objects have white squares behind them? ###
-Your images need to be transparent. If they are not transparent then you will get this effect. The preferred image type is PNG which supports an alpha channel. Applications such as GIMP or Inkscape allow you to save transparent PNG files. See [GIMP Transparency](http://docs.gimp.org/en/gimp-using-web-transparency.html) for a guide to saving transparent images in GIMP.
+### How do I see how a level will look in the game?
+Turn on **Preview** on the **View** tab. Objects move and emitters run as they will in the game. Use **Power-ups** on the same tab to see the bucket and the masters' powers.
+
+### What size should my level art be?
+800 x 600, the size the game runs at. To see where the game's interface will cover your art, put [this overlay](img/bg_template.png) on top of it as a layer in your image editor.
+
+**Set Background** resizes and crops any image to 800 x 600 for you.
+
+### Why do my images have white boxes around them?
+The image is not transparent. Save it as a PNG with a transparent background. Free programs such as [GIMP](https://www.gimp.org/) and [Inkscape](https://inkscape.org/) can do this.
