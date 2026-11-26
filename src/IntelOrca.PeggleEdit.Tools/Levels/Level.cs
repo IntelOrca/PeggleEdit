@@ -800,10 +800,31 @@ namespace IntelOrca.PeggleEdit.Tools.Levels
         private void DrawInterfaceImage(Graphics g, Image image, Point location)
         {
             var rect = new Rectangle(location, image.Size);
-            if (mShowCollision)
-                g.DrawImage(PremultipliedImage.Get(image), rect, 0, 0, image.Width, image.Height, GraphicsUnit.Pixel, CollisionInterfaceAttributes);
-            else
-                g.DrawImageSnapped(PremultipliedImage.Get(image), rect);
+            g.DrawImageSnapped(mShowCollision ? GetFadedInterfaceImage(image) : PremultipliedImage.Get(image), rect);
+        }
+
+        // The interface's images faded, as they are drawn with the collision shown
+        private static readonly Dictionary<Image, Bitmap> mFadedInterfaceImages = new Dictionary<Image, Bitmap>();
+
+        /// <summary>
+        /// Gets an interface image faded, made once: fading it as it is drawn, every frame of the preview, scaled for a
+        /// high DPI display, was slow enough that frames took longer than the preview's timer.
+        /// </summary>
+        private static Bitmap GetFadedInterfaceImage(Image image)
+        {
+            lock (mFadedInterfaceImages)
+            {
+                if (mFadedInterfaceImages.TryGetValue(image, out var faded))
+                    return faded;
+                faded = new Bitmap(image.Width, image.Height, System.Drawing.Imaging.PixelFormat.Format32bppPArgb);
+                using (var g = Graphics.FromImage(faded))
+                {
+                    g.CompositingMode = CompositingMode.SourceCopy;
+                    g.DrawImage(image, new Rectangle(0, 0, image.Width, image.Height), 0, 0, image.Width, image.Height, GraphicsUnit.Pixel, CollisionInterfaceAttributes);
+                }
+                mFadedInterfaceImages[image] = faded;
+                return faded;
+            }
         }
 
         public void DrawAnchorPoint(Graphics g, float x, float y)

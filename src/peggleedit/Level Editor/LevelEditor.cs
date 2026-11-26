@@ -1125,6 +1125,22 @@ namespace IntelOrca.PeggleEdit.Designer
         private bool _waitingForIdle;
         private bool _inFrame;
 
+        // Each frame scheduled is numbered, and a frame posted for one that has been drawn is ignored (the timer and the
+        // idle event can both post it). Posted while a frame was drawn, it ran the next straight after it, as the posts
+        // waiting are all handled before any other message: each frame then started the next with no gap, as the timer
+        // for one fired during the next, so input was never handled again.
+        private int _frameNumber;
+
+        // When the frame scheduled is due
+        private TimeSpan _frameDue;
+
+        // The timer can fire up to a tick of the system clock early
+        private static readonly TimeSpan TimerResolution = TimeSpan.FromMilliseconds(16);
+
+        // While a frame runs, a frame asked for is scheduled when it ends, as the gap after it depends on how long it took
+        private bool _inRunFrame;
+        private bool _frameRequested;
+
         // What is drawn in the next frame: everything, or this area (nothing when it is empty)
         private bool _redrawAll;
         private Rectangle _redrawArea;
@@ -1163,6 +1179,11 @@ namespace IntelOrca.PeggleEdit.Designer
         {
             if (_frameScheduled || IsDisposed)
                 return;
+            if (_inRunFrame)
+            {
+                _frameRequested = true;
+                return;
+            }
             if (!IsHandleCreated)
             {
                 // Drawn when it is shown (OnHandleCreated starts the frames)
@@ -1171,6 +1192,7 @@ namespace IntelOrca.PeggleEdit.Designer
             }
 
             _frameScheduled = true;
+            Interlocked.Increment(ref _frameNumber);
             var gap = TimeSpan.FromTicks((long)(_lastFrameDuration.Ticks * FrameGapRatio));
             if (gap < MinFrameGap)
                 gap = MinFrameGap;
@@ -1187,6 +1209,7 @@ namespace IntelOrca.PeggleEdit.Designer
                 // such as a window being moved, which has no idle event), it is posted
                 wait = OverdueFrameWait;
             }
+            _frameDue = due;
             if (_frameTimer == null)
                 _frameTimer = new System.Threading.Timer(_ => PostFrame());
             _frameTimer.Change(wait, Timeout.Infinite);
@@ -1215,7 +1238,7 @@ namespace IntelOrca.PeggleEdit.Designer
         {
             try
             {
-                BeginInvoke(new Action(RunFrame));
+                BeginInvoke(new Action<int>(RunFrame), Volatile.Read(ref _frameNumber));
             }
             catch (InvalidOperationException)
             {
@@ -1223,37 +1246,55 @@ namespace IntelOrca.PeggleEdit.Designer
             }
         }
 
-        private void RunFrame()
+        private void RunFrame(int number)
         {
             // The timer and the idle event can both post the frame
-            if (!_frameScheduled || IsDisposed)
+            if (!_frameScheduled || IsDisposed || number != _frameNumber)
                 return;
+            var early = _frameDue - _clock.Elapsed;
+            if (early > TimerResolution)
+            {
+                // Posted for the frame before, by a timer that fired as this one was scheduled
+                _frameTimer?.Change((int)Math.Ceiling(early.TotalMilliseconds), Timeout.Infinite);
+                return;
+            }
             _frameScheduled = false;
             SetWaitingForIdle(false);
+            _frameTimer?.Change(Timeout.Infinite, Timeout.Infinite);
 
             _lastFrame = _clock.Elapsed;
-            FrameStarting?.Invoke(this, EventArgs.Empty);
-            if (Animating || _redrawAll)
-                Invalidate();
-            else if (!_redrawArea.IsEmpty)
-                Invalidate(_redrawArea);
-            _redrawAll = false;
-            _redrawArea = Rectangle.Empty;
-
-            // Drawn now, rather than when there are no other messages
-            _inFrame = true;
+            _inRunFrame = true;
             try
             {
-                Update();
+                FrameStarting?.Invoke(this, EventArgs.Empty);
+                if (Animating || _redrawAll)
+                    Invalidate();
+                else if (!_redrawArea.IsEmpty)
+                    Invalidate(_redrawArea);
+                _redrawAll = false;
+                _redrawArea = Rectangle.Empty;
+                // What was asked for so far is drawn in this frame
+                _frameRequested = false;
+
+                // Drawn now, rather than when there are no other messages
+                _inFrame = true;
+                try
+                {
+                    Update();
+                }
+                finally
+                {
+                    _inFrame = false;
+                }
             }
             finally
             {
-                _inFrame = false;
+                _inRunFrame = false;
             }
             _lastFrameEnd = _clock.Elapsed;
             _lastFrameDuration = _lastFrameEnd - _lastFrame;
 
-            if (Animating)
+            if (Animating || _frameRequested)
                 ScheduleFrame();
         }
 
