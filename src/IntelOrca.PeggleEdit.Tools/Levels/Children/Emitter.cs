@@ -523,6 +523,9 @@ namespace IntelOrca.PeggleEdit.Tools.Levels.Children
             set => base.OutlineColor = value;
         }
 
+        [DisplayName("Spiral Count")]
+        [Description("How many times each particle goes round on its way into the middle of the emitter's area over its life. 0 for no spiral.")]
+        [Category("Direction")]
         public float SpiralCount
         {
             get

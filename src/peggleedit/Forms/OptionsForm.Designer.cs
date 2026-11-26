@@ -349,7 +349,7 @@
             this.grpApperance.Size = new System.Drawing.Size(618, 87);
             this.grpApperance.TabIndex = 2;
             this.grpApperance.TabStop = false;
-            this.grpApperance.Text = "Apperance";
+            this.grpApperance.Text = "Appearance";
             // 
             // chkUsePegTextures
             // 

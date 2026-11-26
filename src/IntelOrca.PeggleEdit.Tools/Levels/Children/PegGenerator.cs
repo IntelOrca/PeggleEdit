@@ -190,7 +190,7 @@ namespace IntelOrca.PeggleEdit.Tools.Levels.Children
             }
         }
 
-        [DisplayName("Vetical Radius")]
+        [DisplayName("Vertical Radius")]
         [Description("The vertical radius of the circle of pegs.")]
         [Category("Pegs")]
         [DefaultValue(90.0f)]

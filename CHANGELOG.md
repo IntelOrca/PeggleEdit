@@ -1,7 +1,7 @@
 PeggleEdit 5.2.0 (Flamingo) (TBC)
 
 * [Feature] Add new pak extract / pack tool
-* [Feature] #23: Hold ALT to move objects by 0.125 units
+* [Feature] #23: Hold ALT to move objects by 0.0625 (1/16) units
 * [Feature] #34: Copy and paste objects between levels and between instances of PeggleEdit
 * [Feature] #14: Remove > Unreachable Pegs removes the pegs and bricks no shot from the cannon can reach without a bounce, worked out from how the game fires the ball
 * [Feature] Nightly builds, published as a rolling "nightly" pre-release on every change
@@ -24,6 +24,7 @@ PeggleEdit 5.2.0 (Flamingo) (TBC)
 * [Fix] A file is only listed once in the recent files, however its path was written
 * [Fix] New and imported levels are given a file name no other level in the pack has, and a pack is not saved while two of its levels share a file name, as one would be saved over the other
 * [Fix] Export in the menu of an image in the Pack Explorer did nothing
+* [Fix] Spelling of the Vertical Radius, Spiral Count and Appearance labels
 * [Feature] Generators no longer need to be applied: levels are saved with the pegs and bricks they make, so they are playable, and PeggleEdit keeps the generators in its own data after the level
 * [Feature] Preview shows generators as the pegs and bricks they make, moving as they will in the game
 * [Feature] A generator's movement is passed on to its pegs and bricks, so that they move together as one shape: a rotating ring of bricks stays a ring
