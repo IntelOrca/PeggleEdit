@@ -24,8 +24,8 @@ using IntelOrca.PeggleEdit.Tools.Pack;
 namespace IntelOrca.PeggleEdit.Tools.Levels
 {
     /// <summary>
-    /// The ball launcher at the top of the board, as Peggle Nights draws it (PeggleNights.exe: the image is made at
-    /// 0x450B10 and drawn at 0x453170, from Board::Draw after the draw sort objects and before the Foreground2 ones).
+    /// The ball launcher at the top of the board, as Peggle Nights draws it: after the draw sort objects and before
+    /// the Foreground2 ones.
     /// </summary>
     public static class Cannon
     {
@@ -35,20 +35,20 @@ namespace IntelOrca.PeggleEdit.Tools.Levels
         public static readonly PointF Pivot = new PointF(325, 30);
 
         /// <summary>
-        /// The angle the cannon points at the start of a level: straight down (0x40B953). Angles are in radians,
+        /// The angle the cannon points at the start of a level: straight down. Angles are in radians,
         /// anticlockwise from pointing right, as the game's.
         /// </summary>
         public const float RestAngle = (float)(-Math.PI / 2);
 
-        // The middle of the image is this far from the pivot, along where it points (0x453307)
+        // The middle of the image is this far from the pivot, along where it points
         const float ImageDistance = 72;
 
-        // The image is the skin's seams (82x14) with the shooter (63x64) over them, 10 across and 3 down (0x450BF2)
+        // The image is the skin's seams (82x14) with the shooter (63x64) over them, 10 across and 3 down
         const int ImageWidth = 82;
         const int ImageHeight = 64;
 
         // The gun's collision is a triangle along where it points: its tip 90 from the pivot, its base 60 from the
-        // pivot and 20 wide (0x497E45, with the sizes set at 0x49796E)
+        // pivot and 20 wide
         const float CollisionBase = 60;
         const float CollisionTip = 90;
         const float CollisionHalfWidth = 10;
@@ -65,11 +65,11 @@ namespace IntelOrca.PeggleEdit.Tools.Levels
             }
         }
 
-        // The cannon can not point within this of straight up (0x428210)
+        // The cannon can not point within this of straight up
         const double UpwardsLimit = 83 * Math.PI / 180;
 
         /// <summary>
-        /// Gets the angle the cannon points to aim at a point, as the game turns it towards the mouse (0x4689D0), or
+        /// Gets the angle the cannon points to aim at a point, as the game turns it towards the mouse, or
         /// straight down with no point. Like the game, it does not point upwards: see <see cref="LimitAngle"/>.
         /// </summary>
         public static float GetAngle(PointF? target)
@@ -84,8 +84,8 @@ namespace IntelOrca.PeggleEdit.Tools.Levels
         }
 
         /// <summary>
-        /// Limits an angle to where the cannon can point, as the game does whenever it sets the cannon's angle
-        /// (0x468D00): an angle within 83 degrees of straight up, i.e. between 7 and 173 degrees, is moved to the
+        /// Limits an angle to where the cannon can point, as the game does whenever it sets the cannon's angle: an
+        /// angle within 83 degrees of straight up, i.e. between 7 and 173 degrees, is moved to the
         /// nearer of them, or to 7 degrees (pointing right) when it is straight up. So the cannon points at most 97
         /// degrees either side of straight down. The angle returned is between -pi and pi.
         /// </summary>

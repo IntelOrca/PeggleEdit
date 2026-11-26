@@ -247,7 +247,7 @@ namespace IntelOrca.PeggleEdit.Tools.Tests
         [Fact]
         public void Cannon_DoesNotPointUpwards()
         {
-            // The game moves an angle between 7 and 173 degrees to the nearer of them (0x468D00)
+            // The game moves an angle between 7 and 173 degrees to the nearer of them
             var pivot = Cannon.Pivot;
             double Degrees(PointF target) => Cannon.GetAngle(target) * 180 / Math.PI;
             Assert.Equal(7, Degrees(new PointF(pivot.X + 100, pivot.Y - 50)), 3);

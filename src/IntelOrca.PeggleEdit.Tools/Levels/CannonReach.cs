@@ -24,27 +24,26 @@ using IntelOrca.PeggleEdit.Tools.Pack;
 namespace IntelOrca.PeggleEdit.Tools.Levels
 {
     /// <summary>
-    /// Where a shot from the cannon can go before it hits anything, from how the game fires the ball
-    /// (PeggleNights.exe; Peggle's are the same). The ball can not go above the highest shots, which the cannon fires
+    /// Where a shot from the cannon can go before it hits anything, from how the game fires the ball (Peggle and
+    /// Peggle Nights fire it the same way). The ball can not go above the highest shots, which the cannon fires
     /// 7 degrees above level either side (see <see cref="Cannon.LimitAngle"/>): the top corners of the board, and
     /// around the cannon, can only be reached by a ball bounced there (or by some of the masters' powers).
     /// </summary>
     public static class CannonReach
     {
         /// <summary>
-        /// How fast the ball is fired, in pixels per tick (the gun's +0x160, set to 4 at 0x497905 and 0x497AC0; the
-        /// ball is given it along the aim at 0x498F96).
+        /// How fast the ball is fired, in pixels per tick, along the aim.
         /// </summary>
         public const float BallSpeed = 4;
 
         /// <summary>
-        /// The pull down on the ball, in pixels per tick per tick (0x6C67CC, added to the ball's y velocity every tick
-        /// at 0x493B84, and set to 0.05 when a level starts at 0x4670DF).
+        /// The pull down on the ball, in pixels per tick per tick: added to the ball's y velocity every tick, and set
+        /// to 0.05 when a level starts.
         /// </summary>
         public const float Gravity = 0.05f;
 
         /// <summary>
-        /// The ball's radius (0x6C5E0C, the ball's +0x13C).
+        /// The ball's radius.
         /// </summary>
         public const float BallRadius = 6;
 
@@ -134,7 +133,7 @@ namespace IntelOrca.PeggleEdit.Tools.Levels
                 {
                     double t = (double)step / StepsPerTick;
                     double x = x0 + (vx * t);
-                    // As the game's guide (0x499240), less half a tick of the pull, as the ball is moved a whole tick
+                    // As the game's guide draws a shot, less half a tick of the pull, as the ball is moved a whole tick
                     // at a time, which can be up to that higher
                     double y = y0 + (vy * t) + (g * t * t / 2) - (g * t / 2);
                     if (x < minX || x > maxX || y > Bottom || step > 100000)
@@ -218,7 +217,7 @@ namespace IntelOrca.PeggleEdit.Tools.Levels
             {
                 if (!challenge.Levels.Any(x => String.Equals(x.Level, filename, StringComparison.OrdinalIgnoreCase)))
                     continue;
-                // The game multiplies them by a challenge's (0x469EB1). PeggleEdit reads one a challenge does not have
+                // The game multiplies them by a challenge's. PeggleEdit reads one a challenge does not have
                 // as 0, which is taken as leaving it as it is. One below 0 (e.g. the ball pulled up) gives a shot that
                 // can reach anywhere (see IsUnreachable).
                 float speed = challenge.ProjectileSpeedMod != 0 ? BallSpeed * challenge.ProjectileSpeedMod : BallSpeed;

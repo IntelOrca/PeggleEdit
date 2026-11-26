@@ -362,14 +362,13 @@ namespace IntelOrca.PeggleEdit.Tools.Levels.Children
 
         /// <summary>
         /// Where the movement puts an object when it is <paramref name="u"/> of the way through its cycle, as the game's
-        /// Mover::Update (0x49D430) works it out: the shape, then turned anticlockwise about the anchor by Path Rotate.
+        /// mover update works it out: the shape, then turned anticlockwise about the anchor by Path Rotate.
         /// </summary>
         private PointF GetPosition(double u, PointF anchor)
         {
             var (x, y) = GetShapeOffset(u);
             if (mMoveRotation != 0)
             {
-                // 0x61ED40
                 double c = Math.Cos(mMoveRotation), s = Math.Sin(mMoveRotation);
                 (x, y) = (x * c + y * s, y * c - x * s);
             }
@@ -476,7 +475,7 @@ namespace IntelOrca.PeggleEdit.Tools.Levels.Children
 
         /// <summary>
         /// The angle, anticlockwise on screen, of where an object a quarter turn on from <paramref name="a"/> round the
-        /// ellipse is, from its centre (0x49D948).
+        /// ellipse is, from its centre.
         /// </summary>
         private double GetEllipseAngle(double a)
         {
@@ -485,7 +484,7 @@ namespace IntelOrca.PeggleEdit.Tools.Levels.Children
         }
 
         /// <summary>
-        /// The angle, in radians anticlockwise on screen, of swing around circle (0x49D9E0):
+        /// The angle, in radians anticlockwise on screen, of swing around circle:
         /// dir × (MaxAngle × sin(2π × (u − Phase)) + PathRotate + 2π × Phase), where dir is 1, or -1 when reversed, and
         /// a max angle of 0 is half a turn. The phase is the centre of the swing, not when it starts. The object turns
         /// by this angle. Its position is then also turned anticlockwise around the anchor by the path rotation, as for
@@ -521,7 +520,7 @@ namespace IntelOrca.PeggleEdit.Tools.Levels.Children
 
         /// <summary>
         /// How far through its cycle the movement is at a tick of the game's clock, as the game's phase function
-        /// (0x49D310) works it out, so in whole ticks: the offset and the phase move the clock on, and with a first pause
+        /// works it out, so in whole ticks: the offset and the phase move the clock on, and with a first pause
         /// the clock stops for Pause 1 ticks at Phase 1 % of the time and for Pause 2 ticks at Phase 2 %, with the post
         /// phase moving the clock on through the whole cycle including the pauses. It can be below 0 (a negative offset).
         /// </summary>

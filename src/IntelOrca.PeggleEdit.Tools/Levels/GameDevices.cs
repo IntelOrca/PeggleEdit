@@ -377,7 +377,7 @@ namespace IntelOrca.PeggleEdit.Tools.Levels
         /// <summary>
         /// Whether the game takes an object away while the flippers are out, by its Flipper Flags: Off always, On
         /// never, Default when its centre is low down (y at least 400) on the left (x under 150) or right (x over 500)
-        /// and it touches that flipper (0x46A0F0).
+        /// and it touches that flipper.
         /// </summary>
         public static bool IsTakenAwayByFlippers(LevelEntry entry)
         {

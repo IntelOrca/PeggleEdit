@@ -438,7 +438,7 @@ namespace IntelOrca.PeggleEdit.Tools.Levels
         }
 
         /// <summary>
-        /// The layers the game draws level objects in, in order (Board::Draw): each object goes in one by its flags.
+        /// The layers the game draws level objects in, in order: each object goes in one by its flags.
         /// </summary>
         internal enum DrawLayer
         {
