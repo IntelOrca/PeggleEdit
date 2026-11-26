@@ -60,6 +60,8 @@ PeggleEdit 5.2.0 (Flamingo) (TBC)
 * [Fix] Peg Pen and Brick Pen keep their position and interval when saved, and update straight away when the interval or path is changed
 * [Fix] Peg and brick generators with a maximum of 0 or less no longer hang PeggleEdit
 * [Fix] Preview of Swing Around Circle, Rotate Back And Forth and Rotate with a max angle matches the game when reversed, path rotated or with a phase, and the movement Offset is now shown
+* [Fix] Movement matches the game: arcs swing through their max angle, easing at each end (e.g. Death Defying), cycles and vertical infinity start where the game starts them, flower loop moves, and the phase is a whole tick as in the game
+* [Fix] A movement's path is drawn through where the object goes, including a negative radius
 * [Fix] Copying a teleport keeps what its destination's movement follows
 * [Fix] Fix unknown data, and values stored in the level that match the default, being lost from level objects when saved
 * [Fix] Use the game's defaults for solid and outline colours: black could not be used as a colour, and colours from the level showed as transparent

@@ -229,6 +229,26 @@ namespace IntelOrca.PeggleEdit.Tools.Levels
             mover.Phase = Fraction(startPhase + (generatorMover.Reverse ? angle : -angle) / 360.0f);
             // Going round turns the entry by its phase, so take off the angle it starts at. A peg does not turn.
             mover.Rotation = turns ? rotation + angle : 0;
+            SnapPhaseToTick(mover, turns);
+        }
+
+        /// <summary>
+        /// The game starts a mover at a whole tick of its time (Phase × Time without the fraction), so the phase is put
+        /// on the nearest tick, for the entry to start as near to its place in the shape as the game can put it, and an
+        /// entry that turns is turned back by as much as that moves it round, so that it starts at the right angle.
+        /// </summary>
+        static void SnapPhaseToTick(Mover mover, bool turns)
+        {
+            if (mover.Time <= 0)
+                return;
+            double ticks = (double)mover.Phase * mover.Time;
+            long tick = (long)Math.Round(ticks);
+            mover.Phase = Mover.GetTickPhase(tick % mover.Time, mover.Time);
+            if (turns)
+            {
+                double turn = 360.0 * (tick - ticks) / mover.Time;
+                mover.Rotation -= (float)(mover.Reverse ? -turn : turn);
+            }
         }
 
         /// <summary>

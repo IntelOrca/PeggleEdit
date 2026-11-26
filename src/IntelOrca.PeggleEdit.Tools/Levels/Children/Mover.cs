@@ -252,116 +252,44 @@ namespace IntelOrca.PeggleEdit.Tools.Levels.Children
         public void DrawPath(Graphics g)
         {
             MoverLink?.Mover?.DrawPath(g);
+            if (!HasPath)
+                return;
 
+            // The path goes where the parent mover has moved the anchor to
             PointF anchor = GetAnchorPoint();
+            anchor = new PointF(anchor.X - ParentLastX, anchor.Y - ParentLastY);
 
-            // Build on the current transform rather than replacing it, otherwise everything drawn
-            // afterwards is offset on GDI+ implementations that do not isolate the transform within
-            // the level's graphics container (e.g. Wine).
-            Matrix backupTransform = g.Transform;
-            Pen pen = null;
-            try
+            // The path is drawn through where the object goes, so that it is the shape the object follows
+            bool wraps = mType == MoverType.HorizontalWrap || mType == MoverType.VerticalWrap;
+            const int Segments = 120;
+            var points = new PointF[Segments + 1];
+            for (int i = 0; i <= Segments; i++)
             {
-                using (Matrix mx = g.Transform)
-                {
-                    mx.Translate(-ParentLastX, -ParentLastY);
-                    mx.RotateAt(-MoveRotation, new PointF(anchor.X, anchor.Y));
-                    g.Transform = mx;
-                }
+                // A wrap is drawn up to where it jumps back to the start
+                double u = (double)i / Segments;
+                points[i] = GetPosition(wraps ? u * 0.999 : u, anchor);
+                // GDI+ fails on points it can not draw (e.g. from a NaN angle in the file)
+                if (!IsDrawable(points[i]))
+                    return;
+            }
 
-                pen = new Pen(Color.White);
+            using (var pen = new Pen(Color.White))
+            {
                 pen.DashPattern = new float[] { 6.0f, 8.0f };
                 pen.DashStyle = DashStyle.Custom;
-
-                switch (mType)
-                {
-                    case MoverType.VerticalCycle:
-                        g.DrawLine(pen, anchor.X, anchor.Y - GetYRadius(),
-                            anchor.X, anchor.Y + GetYRadius());
-                        break;
-                    case MoverType.HorizontalCycle:
-                        g.DrawLine(pen, anchor.X - GetXRadius(), anchor.Y,
-                            anchor.X + GetXRadius(), anchor.Y);
-                        break;
-                    case MoverType.Circle:
-                    case MoverType.RotateAroundCircle:
-                        g.DrawEllipse(pen, anchor.X - GetXRadius(), anchor.Y - GetYRadius(),
-                                        GetXRadius() * 2, GetYRadius() * 2);
-                        break;
-                    case MoverType.HorizontalInfinity:
-                        g.DrawBezier(pen,
-                            anchor.X, anchor.Y,
-                            anchor.X - (GetXRadius() * 1.35f), anchor.Y - (GetYRadius() * 1.8f),
-                            anchor.X - (GetXRadius() * 1.35f), anchor.Y + (GetYRadius() * 1.8f),
-                            anchor.X, anchor.Y);
-                        g.DrawBezier(pen,
-                            anchor.X, anchor.Y,
-                            anchor.X + (GetXRadius() * 1.35f), anchor.Y - (GetYRadius() * 1.8f),
-                            anchor.X + (GetXRadius() * 1.35f), anchor.Y + (GetYRadius() * 1.8f),
-                            anchor.X, anchor.Y);
-                        break;
-                    case MoverType.VerticalInfinity:
-                        g.DrawBezier(pen,
-                            anchor.X, anchor.Y,
-                            anchor.X - GetXRadius(), anchor.Y - GetYRadius(),
-                            anchor.X + GetXRadius(), anchor.Y - GetYRadius(),
-                            anchor.X, anchor.Y);
-                        g.DrawBezier(pen,
-                            anchor.X, anchor.Y,
-                            anchor.X - GetXRadius(), anchor.Y + GetYRadius(),
-                            anchor.X + GetXRadius(), anchor.Y + GetYRadius(),
-                            anchor.X, anchor.Y);
-                        break;
-                    case MoverType.VerticalArc:
-                        g.DrawArc(pen, anchor.X - GetXRadius(), anchor.Y - GetYRadius(),
-                            GetXRadius() * 2, GetYRadius() * 2, -90.0f, 180.0f);
-                        break;
-                    case MoverType.HorizontalArc:
-                        g.DrawArc(pen, anchor.X - GetXRadius(), anchor.Y - GetYRadius(),
-                                        GetXRadius() * 2, GetYRadius() * 2, 180.0f, 180.0f);
-                        break;
-                    case MoverType.HorizontalWrap:
-                        if (mReverse)
-                        {
-                            g.DrawLine(pen, anchor.X, anchor.Y,
-                                anchor.X - GetXRadius(), anchor.Y);
-                        }
-                        else
-                        {
-                            g.DrawLine(pen, anchor.X, anchor.Y,
-                                anchor.X + GetXRadius(), anchor.Y);
-                        }
-                        break;
-                    case MoverType.VerticalWrap:
-                        if (mReverse)
-                        {
-                            g.DrawLine(pen, anchor.X, anchor.Y,
-                                anchor.X, anchor.Y + GetYRadius());
-                        }
-                        else
-                        {
-                            g.DrawLine(pen, anchor.X, anchor.Y,
-                                anchor.X, anchor.Y - GetYRadius());
-                        }
-                        break;
-                    case MoverType.SwingAroundCircle:
-                        g.DrawEllipse(pen, anchor.X - GetXRadius(), anchor.Y - GetYRadius(),
-                            GetXRadius() * 2, GetYRadius() * 2);
-                        break;
-                }
-
-            }
-            catch
-            {
-
-            }
-            finally
-            {
-                pen?.Dispose();
-                g.Transform = backupTransform;
-                backupTransform.Dispose();
+                g.DrawLines(pen, points);
             }
         }
+
+        private static bool IsDrawable(PointF p) =>
+            !float.IsNaN(p.X) && !float.IsNaN(p.Y) && Math.Abs(p.X) < 1e6f && Math.Abs(p.Y) < 1e6f;
+
+        /// <summary>
+        /// Whether the movement moves the object along a path, rather than only turning it or holding it still.
+        /// </summary>
+        private bool HasPath =>
+            mType != MoverType.NoMovement && mType != MoverType.Rotate && mType != MoverType.RotateBackAndForth &&
+            mType != MoverType.Unused;
 
         /// <summary>
         /// Whether this is the mover of an entry made by a generator to be drawn, which is not in the level's entries.
@@ -427,85 +355,90 @@ namespace IntelOrca.PeggleEdit.Tools.Levels.Children
 
         public PointF GetMyEstimatedMovePosition()
         {
-            if (mTime == 0 || (!mAtStart && !HasEntryParent()))
+            if (mTime <= 0 || mType == MoverType.NoMovement || (!mAtStart && !HasEntryParent()))
                 return mAnchorPoint;
+            return GetPosition(GetCycle(GetMoveTime()), mAnchorPoint);
+        }
 
-            float angle, circle_x, circle_y;
-            float phase = GetCurrentPhase();
-            if (!mReverse && mType != MoverType.HorizontalWrap && mType != MoverType.VerticalWrap)
-                phase = 100.0f - phase;
+        /// <summary>
+        /// Where the movement puts an object when it is <paramref name="u"/> of the way through its cycle, as the game's
+        /// Mover::Update (0x49D430) works it out: the shape, then turned anticlockwise about the anchor by Path Rotate.
+        /// </summary>
+        private PointF GetPosition(double u, PointF anchor)
+        {
+            var (x, y) = GetShapeOffset(u);
+            if (mMoveRotation != 0)
+            {
+                // 0x61ED40
+                double c = Math.Cos(mMoveRotation), s = Math.Sin(mMoveRotation);
+                (x, y) = (x * c + y * s, y * c - x * s);
+            }
+            return new PointF((float)(anchor.X + x), (float)(anchor.Y + y));
+        }
 
-            Matrix matrix = new Matrix();
-            matrix.RotateAt(-MoveRotation, new PointF(mAnchorPoint.X, mAnchorPoint.Y));
-
+        /// <summary>
+        /// Where the shape of the movement is, from the anchor, before Path Rotate turns it (y is down the screen). The
+        /// radii are used as they are, so a negative one flips the shape, and the y-radius is the radius when it is 0.
+        /// </summary>
+        private (double X, double Y) GetShapeOffset(double u)
+        {
+            double r = mRadius;
+            double ry = GetYRadius();
+            double dir = mReverse ? -1 : 1;
+            double a = 2 * Math.PI * u * dir;
             switch (mType)
             {
                 case MoverType.VerticalCycle:
-                    angle = (phase * (float)(2 * Math.PI)) + (float)Math.PI;
-                    circle_y = (float)Math.Sin(angle) * (float)GetYRadius();
-                    return TransformPoint(matrix, new PointF(mAnchorPoint.X, mAnchorPoint.Y + circle_y));
-
+                    return (0, -ry * Math.Sin(a));
                 case MoverType.HorizontalCycle:
-                    angle = (phase * (float)(2 * Math.PI)) + (float)Math.PI;
-                    circle_x = (float)Math.Cos(angle) * (float)GetXRadius();
-                    return TransformPoint(matrix, new PointF(mAnchorPoint.X + circle_x, mAnchorPoint.Y));
-
+                    return (r * Math.Cos(a), 0);
                 case MoverType.Circle:
                 case MoverType.RotateAroundCircle:
-                    angle = phase * (float)(2 * Math.PI);
-                    circle_x = (float)Math.Cos(angle) * (float)GetXRadius();
-                    circle_y = (float)Math.Sin(angle) * (float)GetYRadius();
-                    return TransformPoint(matrix, new PointF(mAnchorPoint.X + circle_x, mAnchorPoint.Y + circle_y));
-
+                    return (r * Math.Cos(a), -ry * Math.Sin(a));
                 case MoverType.HorizontalInfinity:
-                    angle = phase * (float)(2 * Math.PI);
-                    circle_x = (float)Math.Sin(angle + (Math.PI / 2)) * GetXRadius();
-                    circle_y = (float)Math.Sin(2 * angle) * GetYRadius() * 0.5f;
-                    return TransformPoint(matrix, new PointF(mAnchorPoint.X + circle_x, mAnchorPoint.Y + circle_y));
-
+                    return (r * Math.Cos(a), -ry * Math.Sin(2 * a) * 0.5);
                 case MoverType.VerticalInfinity:
-                    angle = phase * (float)(2 * Math.PI);
-                    circle_x = (float)Math.Sin(2 * angle) * GetXRadius();
-                    circle_y = (float)Math.Sin(angle + (Math.PI / 2)) * GetYRadius();
-                    return TransformPoint(matrix, new PointF(mAnchorPoint.X + circle_x, mAnchorPoint.Y + circle_y));
-
+                    return (r * Math.Sin(2 * a), -ry * Math.Sin(a));
                 case MoverType.HorizontalArc:
-                    angle = phase * (float)(2 * Math.PI);
-                    circle_x = (float)Math.Cos(angle) * (float)GetXRadius();
-                    circle_y = (float)Math.Sin(angle) * (float)GetYRadius();
-                    return TransformPoint(matrix, new PointF(mAnchorPoint.X + circle_x, mAnchorPoint.Y - Math.Abs(circle_y)));
-
+                {
+                    // Eases back and forth over the max angle (half a turn when 0), whichever way it is reversed
+                    double t = GetArcAngle(u);
+                    return (r * Math.Cos(t), -ry * Math.Sin(t));
+                }
                 case MoverType.VerticalArc:
-                    angle = phase * (float)(2 * Math.PI) + (float)(Math.PI / 2);
-                    circle_x = (float)Math.Cos(angle) * (float)GetXRadius();
-                    circle_y = (float)Math.Sin(angle) * (float)GetYRadius();
-                    return TransformPoint(matrix, new PointF(mAnchorPoint.X + Math.Abs(circle_x), mAnchorPoint.Y - circle_y));
-
-                case MoverType.HorizontalWrap:
-                    angle = (phase * GetXRadius()) % GetXRadius();
-                    if (mReverse)
-                        return TransformPoint(matrix, new PointF(mAnchorPoint.X - angle, mAnchorPoint.Y));
-                    else
-                        return TransformPoint(matrix, new PointF(mAnchorPoint.X + angle, mAnchorPoint.Y));
-
+                {
+                    double t = GetArcAngle(u);
+                    return (r * Math.Sin(t), -ry * Math.Cos(t));
+                }
                 case MoverType.VerticalWrap:
-                    angle = (phase * GetYRadius()) % GetYRadius();
-                    if (mReverse)
-                        return TransformPoint(matrix, new PointF(mAnchorPoint.X, mAnchorPoint.Y + angle));
-                    else
-                        return TransformPoint(matrix, new PointF(mAnchorPoint.X, mAnchorPoint.Y - angle));
+                    return (0, -(u - Math.Truncate(u)) * ry * dir);
+                case MoverType.HorizontalWrap:
+                    return ((u - Math.Truncate(u)) * r * dir, 0);
                 case MoverType.SwingAroundCircle:
-                    angle = (float)GetSwingAngle();
-                    circle_x = (float)Math.Cos(angle) * GetXRadius();
-                    circle_y = (float)Math.Sin(angle) * GetYRadius();
-                    return TransformPoint(matrix, new PointF(mAnchorPoint.X + circle_x, mAnchorPoint.Y + circle_y));
+                {
+                    double theta = GetSwingAngle(u);
+                    return (r * Math.Cos(theta), -ry * Math.Sin(theta));
+                }
+                case MoverType.FlowerLoop:
+                    return (r * (0.8 * Math.Cos(4 * a) + 0.2 * Math.Cos(3 * a)),
+                            -ry * (0.8 * Math.Sin(3 * a) + 0.17725 * Math.Sin(4 * a)));
                 default:
-                    return new PointF(mAnchorPoint.X, mAnchorPoint.Y);
+                    return (0, 0);
             }
         }
 
+        /// <summary>
+        /// How far round an arc is: from 0 to the max angle (half a turn when 0) and back, slowing at each end.
+        /// </summary>
+        private double GetArcAngle(double u) =>
+            (Math.Sin((2 * Math.PI * u) - (Math.PI / 2)) + 1) * SwingAmplitude * 0.5;
+
         public float GetEstimatedMoveAngle(float initialAngle)
         {
+            // Without a time (or a type) the game leaves the object at its anchor, turned only by the rotation
+            if (mTime <= 0 || mType == MoverType.NoMovement)
+                return mType == MoverType.RotateAroundCircle || mType == MoverType.SwingAroundCircle ? initialAngle + Rotation : initialAngle;
+
             float phase = GetCurrentPhase();
 
             if (!mReverse)
@@ -519,153 +452,130 @@ namespace IntelOrca.PeggleEdit.Tools.Levels.Children
                         return initialAngle + (float)MathExt.ToDegrees(mReverse ? -mMaxAngle : mMaxAngle);
                     return (initialAngle) - (phase * 360.0f);
                 case MoverType.RotateAroundCircle:
+                    if (HasEllipseAngle)
+                        return initialAngle + Rotation + (float)MathExt.ToDegrees(GetEllipseAngle(2 * Math.PI * GetCycle(GetMoveTime()) * (mReverse ? -1 : 1)));
                     return (initialAngle + Rotation) - (phase * 360.0f);
                 case MoverType.RotateBackAndForth:
-                    return initialAngle - (float)MathExt.ToDegrees(GetBackAndForthAngle());
+                    return initialAngle + (float)MathExt.ToDegrees(GetBackAndForthAngle());
                 case MoverType.SwingAroundCircle:
                     // The object turns as it goes round the circle (but not by the path rotation that turns its position)
-                    return initialAngle + Rotation - (float)MathExt.ToDegrees(GetSwingAngle());
+                    if (HasEllipseAngle)
+                        return initialAngle + Rotation + (float)MathExt.ToDegrees(GetEllipseAngle(GetSwingAngle(GetCycle(GetMoveTime()))));
+                    return initialAngle + Rotation + (float)MathExt.ToDegrees(GetSwingAngle(GetCycle(GetMoveTime())));
                 default:
                     return initialAngle;
             }
         }
 
         /// <summary>
-        /// The angle, in radians clockwise on screen, of swing around circle:
-        /// dir × (MaxAngle × sin(2π × time) + 2π × Phase + PathRotate), where dir is -1, or 1 when reversed, and a max
-        /// angle of 0 is half a turn (0x49D9E0). The phase is the centre of the swing, not when it starts. The object
-        /// turns by this angle. Its position is then also turned anticlockwise around the anchor by the path rotation,
-        /// as for every mover, so the path rotation moves it twice (seen in the game).
+        /// Whether an object going round an ellipse is turned to face along it: when it has a y-radius (even one the same
+        /// as the radius) and a radius, the game turns it by the direction a quarter turn on round the ellipse instead
+        /// of by how far round it is.
         /// </summary>
-        private double GetSwingAngle()
+        private bool HasEllipseAngle => mRadius2 != 0 && mRadius != 0;
+
+        /// <summary>
+        /// The angle, anticlockwise on screen, of where an object a quarter turn on from <paramref name="a"/> round the
+        /// ellipse is, from its centre (0x49D948).
+        /// </summary>
+        private double GetEllipseAngle(double a)
         {
-            double time = GetCurrentPhase();
-            double dir = mReverse ? 1 : -1;
+            double b = a + (Math.PI / 2);
+            return Math.Atan2(GetYRadius() * Math.Sin(b), mRadius * Math.Cos(b));
+        }
+
+        /// <summary>
+        /// The angle, in radians anticlockwise on screen, of swing around circle (0x49D9E0):
+        /// dir × (MaxAngle × sin(2π × (u − Phase)) + PathRotate + 2π × Phase), where dir is 1, or -1 when reversed, and
+        /// a max angle of 0 is half a turn. The phase is the centre of the swing, not when it starts. The object turns
+        /// by this angle. Its position is then also turned anticlockwise around the anchor by the path rotation, as for
+        /// every mover, so the path rotation moves it twice (seen in the game).
+        /// </summary>
+        private double GetSwingAngle(double u)
+        {
+            double time = u - mPhase;
+            double dir = mReverse ? -1 : 1;
             return dir * ((SwingAmplitude * Math.Sin(2 * Math.PI * time)) + (2 * Math.PI * mPhase) + mMoveRotation);
         }
 
         /// <summary>
-        /// The angle, in radians clockwise on screen, that rotate back and forth turns an object by:
-        /// dir × (MaxAngle × sin(2π × time) + PathRotate), where the time starts at the phase, as for other movers
+        /// The angle, in radians anticlockwise on screen, that rotate back and forth turns an object by:
+        /// dir × (MaxAngle × sin(2π × u) + PathRotate), where u starts at the phase, as for other movers
         /// (seen in the game: unlike swing around circle, the phase is not the centre of the swing).
         /// </summary>
         private double GetBackAndForthAngle()
         {
-            double time = GetCurrentPhase();
-            double dir = mReverse ? 1 : -1;
+            double time = GetCycle(GetMoveTime());
+            double dir = mReverse ? -1 : 1;
             return dir * ((SwingAmplitude * Math.Sin(2 * Math.PI * time)) + mMoveRotation);
         }
 
         private double SwingAmplitude => mMaxAngle != 0 ? mMaxAngle : Math.PI;
 
-        private float GetCurrentPhase()
+        /// <summary>
+        /// The game's clock for the movement (MoveTime): the preview's ticks, or 0 when it starts.
+        /// </summary>
+        private long GetMoveTime() => !mAtStart && mLevel != null && mLevel.ShowPreview ? (long)mLevel.PreviewTime : 0;
+
+        private float GetCurrentPhase() => mTime > 0 ? (float)GetCycle(GetMoveTime()) : mPhase;
+
+        /// <summary>
+        /// How far through its cycle the movement is at a tick of the game's clock, as the game's phase function
+        /// (0x49D310) works it out, so in whole ticks: the offset and the phase move the clock on, and with a first pause
+        /// the clock stops for Pause 1 ticks at Phase 1 % of the time and for Pause 2 ticks at Phase 2 %, with the post
+        /// phase moving the clock on through the whole cycle including the pauses. It can be below 0 (a negative offset).
+        /// </summary>
+        private double GetCycle(long moveTime)
         {
-            var startPhrase = mPhase;
-            // The phase of a swing around circle is where it is centred, not when it starts
-            if (mType == MoverType.SwingAroundCircle)
-                startPhrase = 0;
-            if (!mAtStart && mLevel != null && mLevel.ShowPreview)
+            long time = mTime;
+            if (time <= 0)
+                return 0;
+            long m = mOffset + moveTime;
+            if (mPause1 > 0)
             {
-                ulong previewTime = mLevel.PreviewTime;
-
-                double time_period = mTime;
-                double total_time = GetTotalCycleTime();
-                double ph1, ph2;
-                double pa1, pa2;
-
-                if (mPhase1 > mPhase2)
+                long length = time + mPause1 + mPause2;
+                if (length > 0)
                 {
-                    ph1 = (double)mPhase2 / 100.0;
-                    pa1 = (double)mPause2;
-                    ph2 = (double)mPhase1 / 100.0;
-                    pa2 = (double)mPause1;
+                    long p1 = time * mPhase1 / 100;
+                    long p2 = (mPhase2 - mPhase1) * time / 100;
+                    long r = (Truncate(mPostDelayPhase * length) + m) % length;
+                    if (r <= p1)
+                        m = r;
+                    else if (r <= p1 + mPause1)
+                        m = p1;
+                    else if (r <= p1 + mPause1 + p2)
+                        m = r - mPause1;
+                    else if (r <= p1 + mPause1 + p2 + mPause2)
+                        m = p1 + p2;
+                    else
+                        m = r - mPause1 - mPause2;
                 }
-                else
-                {
-                    ph1 = (double)mPhase1 / 100.0;
-                    pa1 = (double)mPause1;
-                    ph2 = (double)mPhase2 / 100.0;
-                    pa2 = (double)mPause2;
-                }
-
-                double ph_offset = startPhrase % 1.0;
-                double remainder_time = 0;
-
-
-                //ph1 = (ph1 + mStartPhase) % 1.0;
-                //ph2 = (ph2 + mStartPhase) % 1.0;
-
-                //if (ph_offset < ph1)
-                //    remainder_time = (mTimePeriod * ph_offset);
-                //else if (ph_offset < ph2)
-                //    remainder_time = (mTimePeriod * ph_offset) + pa1;
-                //else
-                //    remainder_time = (mTimePeriod * ph_offset) + pa1 + pa2;
-
-                // The offset moves the clock on, as in the game
-                remainder_time = ((double)previewTime + remainder_time + mOffset) % total_time;
-                if (remainder_time < 0)
-                    remainder_time += total_time;
-
-                double stg1time = ph1 * time_period;
-                double stg2time = (ph2 * time_period) - stg1time;
-                double stg3time = time_period - stg2time - stg1time;
-
-                if (remainder_time > stg1time)
-                    remainder_time -= stg1time;
-                else
-                    return (float)((remainder_time / time_period) + ph_offset);
-
-                if (remainder_time > pa1)
-                    remainder_time -= pa1;
-                else
-                    return (float)(ph1 + ph_offset);
-
-                if (remainder_time > stg2time)
-                    remainder_time -= stg2time;
-                else
-                    return (float)(ph1 + (remainder_time / time_period) + ph_offset);
-
-                if (remainder_time > pa2)
-                    remainder_time -= pa2;
-                else
-                    return (float)(ph2 + ph_offset);
-
-                return (float)(ph2 + (remainder_time / time_period) + ph_offset);
-
-                //Stage 1
-                //Pause 1
-                //Stage 2
-                //Pause 2
-                //Stage 3
-
-                //double additionalPhase = (double)previewTime / GetTotalCycleTime();
-                //additionalPhase = (additionalPhase * 100.0f) % 100;
-                //additionalPhase /= 100.0f;
-
-                //return mStartPhase + (float)additionalPhase;
             }
-            else
-            {
-                // The offset moves the clock on, as in the game
-                return mTime != 0 ? startPhrase + ((float)mOffset / mTime) : startPhrase;
-            }
+            // Phase × Time and the clock are added as floats before the fraction is dropped (fimul, fiadd, ftol)
+            return Truncate((double)(float)((double)mPhase * time) + m) % time / (double)time;
+        }
+
+        /// <summary>
+        /// Rounds to a float, then drops the fraction, as the game does: it runs the FPU at single precision (as Direct3D
+        /// sets it), so that a phase of 0.7 (0.69999999 as a float) of 1000 ticks is 700 ticks rather than 699.
+        /// </summary>
+        private static long Truncate(double value) => (long)(float)value;
+
+        /// <summary>
+        /// The phase that starts a mover with this time at <paramref name="tick"/>: the nearest float to
+        /// tick ÷ time that the game does not take for the tick before.
+        /// </summary>
+        internal static float GetTickPhase(long tick, short time)
+        {
+            float phase = (float)((double)tick / time);
+            while (Truncate((double)phase * time) < tick)
+                phase = BitConverter.ToSingle(BitConverter.GetBytes(BitConverter.ToInt32(BitConverter.GetBytes(phase), 0) + 1), 0);
+            return phase;
         }
 
         public float GetTotalCycleTime()
         {
             return mTime + mPause1 + mPause2;
-        }
-
-        /// <summary>
-        /// Transforms a point by a matrix that is not used again, and disposes it (as many are made each frame).
-        /// </summary>
-        private PointF TransformPoint(Matrix matrix, PointF pnt)
-        {
-            PointF[] pnts = new PointF[] { pnt };
-            matrix.TransformPoints(pnts);
-            matrix.Dispose();
-            return pnts[0];
         }
 
         private PointF GetAnchorPoint()

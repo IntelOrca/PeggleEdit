@@ -228,6 +228,41 @@ namespace IntelOrca.PeggleEdit.Tools.Tests
         }
 
         /// <summary>
+        /// PopCap's editor saves where each moving object is when its movement starts (as the game works it out), so
+        /// each mover's start in PeggleEdit is checked against it, in the levels the games come with (custom level packs
+        /// may have been saved by other editors).
+        /// </summary>
+        [Fact]
+        public void EveryMover_StartsWhereTheGameSays()
+        {
+            var failures = new List<string>();
+            var checkedByType = new Dictionary<string, int>();
+            foreach (var (name, data) in GetCorpus())
+            {
+                if (name.IndexOf("levelpacks", StringComparison.OrdinalIgnoreCase) >= 0 || !Loads(data))
+                    continue;
+                var level = Read(data);
+                foreach (var entry in level.Entries.ToArray())
+                {
+                    var mover = entry.MoverLink?.OwnsMover == true ? entry.MoverLink.Mover : null;
+                    // Only top level movers, as a parent mover moves the anchor too, and only where the start was saved
+                    if (mover == null || mover.MoverLink != null || (mover.CurrentX == 0 && mover.CurrentY == 0))
+                        continue;
+                    var key = mover.Type + (mover.Reverse ? " reversed" : "");
+                    checkedByType[key] = checkedByType.TryGetValue(key, out var n) ? n + 1 : 1;
+                    var start = mover.GetStartPosition();
+                    var dx = start.X - mover.CurrentX;
+                    var dy = start.Y - mover.CurrentY;
+                    if (Math.Sqrt(dx * dx + dy * dy) > 0.1)
+                        failures.Add($"{key}: {name}: starts at {start.X:0.##},{start.Y:0.##}, but the game says {mover.CurrentX:0.##},{mover.CurrentY:0.##}");
+                }
+            }
+            foreach (var pair in checkedByType.OrderBy(x => x.Key))
+                mOutput.WriteLine($"{pair.Key}: {pair.Value} checked, {failures.Count(x => x.StartsWith(pair.Key + ":"))} wrong");
+            Assert.True(failures.Count == 0, string.Join(Environment.NewLine, failures.GroupBy(x => x.Substring(0, x.IndexOf(':'))).SelectMany(x => x.Take(5))));
+        }
+
+        /// <summary>
         /// Whether the file is a level, rather than another file using the same extension such as a trailer
         /// recording or Pego's level editor globals (which has a level header with no entries, then other data).
         /// </summary>

@@ -504,7 +504,11 @@ namespace IntelOrca.PeggleEdit.Tools.Tests
             {
                 var bricks = generator.Generate().Cast<Brick>().ToArray();
                 var centre = mover.GetEstimatedMovePosition();
-                float turn = mover.GetEstimatedMoveAngle(0); // anticlockwise
+                // On an ellipse the game turns an object to face along it, unevenly, which entries going round circles
+                // can not do, so the shape turns evenly, as an object on a circle does
+                var turning = mover.Clone();
+                turning.Radius2 = 0;
+                float turn = turning.GetEstimatedMoveAngle(0); // anticlockwise
                 // A swing around circle object is not turned by its path rotation in the game, but the shape is, so
                 // that it stays together
                 if (type == MoverType.SwingAroundCircle && radius2 == 0)
@@ -541,7 +545,8 @@ namespace IntelOrca.PeggleEdit.Tools.Tests
                     float angle = i * 45.0f;
                     float expected = ((reverse ? angle : -angle) + 30.0f) / 360.0f;
                     expected -= (float)Math.Floor(expected);
-                    Assert.Equal(expected, pegMover.Phase, 4);
+                    // On the nearest tick of the time, as the game starts a mover at a whole tick
+                    Assert.True(Math.Abs(expected - pegMover.Phase) <= 0.5f / pegMover.Time + 1e-6f, $"expected {expected}, was {pegMover.Phase}");
                 }
             }
         }
