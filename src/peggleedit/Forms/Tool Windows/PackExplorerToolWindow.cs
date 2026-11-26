@@ -210,6 +210,8 @@ namespace IntelOrca.PeggleEdit.Designer
             mTreeView.Nodes.Add(packNode);
 
             mTreeView.ExpandAll();
+            // Expanding scrolls to the last node: a pack is shown from the top
+            mTreeView.TopNode = packNode;
         }
 
         void mTreeView_NodeMouseClick(object sender, TreeNodeMouseClickEventArgs e)

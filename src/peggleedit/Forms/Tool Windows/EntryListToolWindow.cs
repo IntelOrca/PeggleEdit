@@ -31,6 +31,8 @@ namespace IntelOrca.PeggleEdit.Designer
     {
         MainMDIForm mParent;
         LevelEditor mEditor;
+        // The level whose entries are listed, which keep their scroll position as they change
+        Level mListedLevel;
         EntryListBox mList;
         bool mSuspendChangeEvent;
 
@@ -65,6 +67,7 @@ namespace IntelOrca.PeggleEdit.Designer
             if (mEditor == null)
             {
                 mSuspendChangeEvent = true;
+                mListedLevel = null;
                 mList.Items.Clear();
                 mEntries.Clear();
                 mSelectedEntries.Clear();
@@ -169,7 +172,9 @@ namespace IntelOrca.PeggleEdit.Designer
         {
             mSuspendChangeEvent = true;
 
-            int topIndex = mList.TopIndex;
+            // Another level's entries are shown from the top
+            int topIndex = mEditor.Level == mListedLevel ? mList.TopIndex : 0;
+            mListedLevel = mEditor.Level;
 
             mList.BeginUpdate();
             mList.Items.Clear();

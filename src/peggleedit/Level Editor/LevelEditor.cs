@@ -895,22 +895,24 @@ namespace IntelOrca.PeggleEdit.Designer
 
         private void DrawEntrySelection(Graphics g, LevelEntry le)
         {
-            // Around the object, 5 units out
             var bounds = le.Bounds;
             var origin = mLevel.GetActualXY(0, 0);
             var corners = new[]
             {
-                new PointF(origin.X + bounds.Left - 5, origin.Y + bounds.Top - 5),
-                new PointF(origin.X + bounds.Right + 5, origin.Y + bounds.Bottom + 5),
+                new PointF(origin.X + bounds.Left, origin.Y + bounds.Top),
+                new PointF(origin.X + bounds.Right, origin.Y + bounds.Bottom),
             };
 
             // Drawn on whole device pixels with a pen of whole pixels, at the same size wherever the object is, so that
-            // the dashes look the same as it moves (zoomed, a part of a pixel blurred or moved them)
+            // the dashes look the same as it moves (zoomed, a part of a pixel blurred or moved them). The object's edge
+            // is put on a pixel as its image is (see DrawImageSnapped), and the box a whole number of pixels (5 units)
+            // out from it, so that it stays the same distance from the object.
             g.TransformPoints(CoordinateSpace.Device, CoordinateSpace.World, corners);
-            int left = (int)Tools.Extensions.GraphicsExtensions.RoundToPixel(corners[0].X);
-            int top = (int)Tools.Extensions.GraphicsExtensions.RoundToPixel(corners[0].Y);
-            int width = (int)Math.Round(corners[1].X - corners[0].X);
-            int height = (int)Math.Round(corners[1].Y - corners[0].Y);
+            int margin = (int)Math.Round(5 * Zoom);
+            int left = (int)Tools.Extensions.GraphicsExtensions.RoundToPixel(corners[0].X) - margin;
+            int top = (int)Tools.Extensions.GraphicsExtensions.RoundToPixel(corners[0].Y) - margin;
+            int width = (int)Math.Round(corners[1].X - corners[0].X) + (2 * margin);
+            int height = (int)Math.Round(corners[1].Y - corners[0].Y) + (2 * margin);
             int penWidth = Math.Max(1, (int)Math.Round(Zoom));
 
             var state = g.Save();

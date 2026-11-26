@@ -18,7 +18,8 @@ PeggleEdit 5.2.0 (Flamingo) (TBC)
 * [Change] A peg's Variable, Crumble and Peg Type are shown with the object's other properties, rather than under Peg Properties
 * [Fix] Pegs no longer move by a pixel and back as the mouse moves over them
 * [Fix] The entry list no longer flickers while objects are dragged
-* [Fix] The selection box is drawn on whole pixels, so it looks the same wherever the object is
+* [Fix] The selection box is drawn on whole pixels, the same distance from the object wherever it is
+* [Fix] Pack Explorer shows a pack that is opened from the top, as the entry list does another level's entries
 * [Feature] Generators no longer need to be applied: levels are saved with the pegs and bricks they make, so they are playable, and PeggleEdit keeps the generators in its own data after the level
 * [Feature] Preview shows generators as the pegs and bricks they make, moving as they will in the game
 * [Feature] A generator's movement is passed on to its pegs and bricks, so that they move together as one shape: a rotating ring of bricks stays a ring
