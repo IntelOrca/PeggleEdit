@@ -1087,19 +1087,7 @@ namespace IntelOrca.PeggleEdit.Designer
         {
             PlatformServices.Current.AddRecentDocument(path);
 
-            var recentPackFiles = Settings.Default.RecentPackFiles;
-            var index = recentPackFiles.IndexOf(path);
-            if (index != -1)
-            {
-                recentPackFiles.RemoveAt(index);
-            }
-
-            recentPackFiles.Insert(0, path);
-            if (recentPackFiles.Count > 10)
-            {
-                recentPackFiles.RemoveRange(10, recentPackFiles.Count - 10);
-            }
-
+            RecentFiles.Add(Settings.Default.RecentPackFiles, path);
             Settings.Save();
 
             mMenuToolPanel.UpdateRecentPackFiles();

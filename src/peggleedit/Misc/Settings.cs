@@ -21,6 +21,7 @@ using System.IO;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 using System.Windows.Forms;
+using IntelOrca.PeggleEdit.Tools;
 using IntelOrca.PeggleEdit.Tools.Levels;
 using Microsoft.Win32;
 
@@ -100,6 +101,8 @@ namespace IntelOrca.PeggleEdit.Designer
 
                 if (Default.RecentPackFiles == null)
                     Default.RecentPackFiles = new List<string>();
+                // A list saved by an earlier version can have a file in it more than once
+                RecentFiles.RemoveDuplicates(Default.RecentPackFiles);
             }
             catch (Exception ex)
             {
