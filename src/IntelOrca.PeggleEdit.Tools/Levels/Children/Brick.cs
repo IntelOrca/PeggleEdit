@@ -558,6 +558,13 @@ namespace IntelOrca.PeggleEdit.Tools.Levels.Children
                 (float)Math.Sin(MathExt.ToRadians(angle)) * radius + circleCentre.Y);
         }
 
+        /// <summary>
+        /// Gets whether the brick has a scale or a pivot offset other than none, which the game may draw it with but
+        /// PeggleEdit does not.
+        /// </summary>
+        internal bool HasScaleOrPivotOffset =>
+            (mHasScale && mScale != 1) || (mHasPivotOffsetX && mPivotOffsetX != 0) || (mHasPivotOffsetY && mPivotOffsetY != 0);
+
         public PointF GetCentrePoint()
         {
             PointF cc = new PointF();

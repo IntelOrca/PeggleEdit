@@ -421,8 +421,14 @@ namespace IntelOrca.PeggleEdit.Designer
             RibbonButton btnOffscreenPegs = new RibbonButton("Offscreen Pegs");
             btnOffscreenPegs.Click += new EventHandler(removeOffscreenPegsRibbonButton_Click);
 
+            RibbonButton btnUnreachablePegs = new RibbonButton("Unreachable Pegs");
+            btnUnreachablePegs.ToolTipTitle = "Unreachable Pegs";
+            btnUnreachablePegs.ToolTip = "Remove the pegs and bricks that no shot from the cannon can hit before it bounces off something: those above the highest shots, in the top corners, and around the cannon. A ball bounced there, or some of the masters' powers, can still reach them. Moving pegs are left alone, and the pack's challenges that change the ball's speed or gravity are allowed for.";
+            btnUnreachablePegs.Click += new EventHandler(removeUnreachablePegsRibbonButton_Click);
+
             btnRemove.DropDownItems.Add(btnDuplicatePegs);
             btnRemove.DropDownItems.Add(btnOffscreenPegs);
+            btnRemove.DropDownItems.Add(btnUnreachablePegs);
 
             panelRemove = new RibbonPanel("Remove");
             panelRemove.Items.Add(btnRemove);
@@ -1063,6 +1069,17 @@ namespace IntelOrca.PeggleEdit.Designer
                 return;
 
             LevelEditor.RemoveOffscreenObjects();
+        }
+
+        private void removeUnreachablePegsRibbonButton_Click(object sender, EventArgs e)
+        {
+            if (!IsEditorAvailable())
+                return;
+
+            int removed = LevelEditor.RemoveUnreachableObjects();
+            mParent.SetStatus(removed == 0 ? "No pegs or bricks are out of the cannon's reach." :
+                removed == 1 ? "Removed 1 peg or brick that the cannon can not reach." :
+                String.Format("Removed {0} pegs and bricks that the cannon can not reach.", removed));
         }
 
 

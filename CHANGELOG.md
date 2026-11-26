@@ -3,6 +3,7 @@ PeggleEdit 5.2.0 (Flamingo) (TBC)
 * [Feature] Add new pak extract / pack tool
 * [Feature] #23: Hold ALT to move objects by 0.125 units
 * [Feature] #34: Copy and paste objects between levels and between instances of PeggleEdit
+* [Feature] #14: Remove > Unreachable Pegs removes the pegs and bricks no shot from the cannon can reach without a bounce, worked out from how the game fires the ball
 * [Feature] Nightly builds, published as a rolling "nightly" pre-release on every change
 * [Feature] Choose a Release or Nightly update ring in Options
 * [Feature] PeggleEdit can now update itself when a new version is available

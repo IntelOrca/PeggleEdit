@@ -796,6 +796,30 @@ namespace IntelOrca.PeggleEdit.Designer
 
         }
 
+        /// <summary>
+        /// Removes the pegs and bricks that no shot from the cannon can hit before it hits anything else (see
+        /// <see cref="CannonReach"/>), in normal play or in any challenge in the pack that plays the level, returning
+        /// how many were removed.
+        /// </summary>
+        public int RemoveUnreachableObjects()
+        {
+            var shots = CannonReach.GetShots(Tools.Pack.LevelPack.Current, mLevel);
+            var removes = mLevel.Entries.Cast<LevelEntry>().Where(x => CannonReach.IsUnreachable(x, shots)).ToList();
+            if (removes.Count == 0)
+                return 0;
+
+            CreateUndoPoint();
+            foreach (LevelEntry le in removes)
+            {
+                le.OnDelete();
+                mLevel.Entries.Remove(le);
+            }
+
+            UpdateRedraw();
+            CheckSelectionChanged();
+            return removes.Count;
+        }
+
         public void RemoveOffscreenObjects()
         {
             bool firstOne = true;
