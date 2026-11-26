@@ -1081,7 +1081,44 @@ namespace IntelOrca.PeggleEdit.Designer
 
         private void mnuImageExport_Click(object sender, EventArgs e)
         {
+            if (!(SelectedNode?.Tag is PakImage image))
+                return;
 
+            // The image as it is stored in the pack, or as a PNG, which any image editor can open (e.g. for a .jp2)
+            var extension = Path.GetExtension(image.FileName).ToLowerInvariant();
+            var isPng = extension == ".png";
+            using (var dialog = new SaveFileDialog())
+            {
+                dialog.Title = "Export image";
+                dialog.FileName = Path.GetFileNameWithoutExtension(image.FileName);
+                dialog.Filter = isPng || extension.Length == 0
+                    ? "Portable Network Graphics (*.png)|*.png"
+                    : $"{extension.Substring(1).ToUpperInvariant()} image (*{extension})|*{extension}|Portable Network Graphics (*.png)|*.png";
+                if (dialog.ShowDialog(mParent) != DialogResult.OK)
+                    return;
+
+                try
+                {
+                    var asStored = Path.GetExtension(dialog.FileName).Equals(isPng ? ".png" : extension, StringComparison.OrdinalIgnoreCase);
+                    if (asStored)
+                    {
+                        File.WriteAllBytes(dialog.FileName, image.Data);
+                    }
+                    else if (image.Image != null)
+                    {
+                        image.Image.Save(dialog.FileName, System.Drawing.Imaging.ImageFormat.Png);
+                    }
+                    else
+                    {
+                        MessageBox.Show(mParent, "This image could not be read, so it can only be exported as it is stored.", "Export Image",
+                            MessageBoxButtons.OK, MessageBoxIcon.Error);
+                    }
+                }
+                catch (Exception ex) when (ex is IOException || ex is UnauthorizedAccessException || ex is System.Runtime.InteropServices.ExternalException)
+                {
+                    MessageBox.Show(mParent, ex.Message, "Export Image", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                }
+            }
         }
 
         #endregion
