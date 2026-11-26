@@ -17,6 +17,7 @@
 using System;
 using System.Windows.Forms;
 using IntelOrca.PeggleEdit.Tools.Levels;
+using IntelOrca.PeggleEdit.Tools.Pack;
 
 namespace IntelOrca.PeggleEdit.Designer
 {
@@ -48,6 +49,15 @@ namespace IntelOrca.PeggleEdit.Designer
             if (txtFilename.TextLength == 0)
             {
                 MessageBox.Show("No filename specified.", "Properties", MessageBoxButtons.OK, MessageBoxIcon.Exclamation);
+                return;
+            }
+
+            // Each level is saved to its own file, so two levels can not have the same file name
+            var pack = LevelPack.Current;
+            if (pack != null && pack.GetUniqueLevelFilename(txtFilename.Text, mLevel) != txtFilename.Text)
+            {
+                MessageBox.Show("Another level in this pack already has this filename. Give each level its own filename.",
+                    "Properties", MessageBoxButtons.OK, MessageBoxIcon.Exclamation);
                 return;
             }
 

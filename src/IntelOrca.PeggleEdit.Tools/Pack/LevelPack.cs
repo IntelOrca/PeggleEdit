@@ -551,8 +551,50 @@ namespace IntelOrca.PeggleEdit.Tools.Pack
             return problems;
         }
 
+        /// <summary>
+        /// Gets a level file name like the given one that no other level in the pack uses (each level is saved as
+        /// levels\&lt;file name&gt;.dat): the name itself if it is free, otherwise the name with _2, _3 and so on after it.
+        /// </summary>
+        /// <param name="filename">The file name wanted.</param>
+        /// <param name="level">The level being named, whose own file name does not count as used.</param>
+        public string GetUniqueLevelFilename(string filename, Level level = null)
+        {
+            var used = new HashSet<string>(
+                Levels.Where(x => x != level).Select(x => x.Info.Filename),
+                StringComparer.OrdinalIgnoreCase);
+            if (!used.Contains(filename))
+                return filename;
+            for (int i = 2; ; i++)
+            {
+                var candidate = $"{filename}_{i}";
+                if (!used.Contains(candidate))
+                    return candidate;
+            }
+        }
+
+        /// <summary>
+        /// Gets the file names that more than one level of the pack has, whose levels would be saved over each other.
+        /// </summary>
+        public IReadOnlyList<string> GetDuplicateLevelFilenames()
+        {
+            return Levels
+                .GroupBy(x => x.Info.Filename, StringComparer.OrdinalIgnoreCase)
+                .Where(x => x.Count() > 1)
+                .Select(x => x.Key)
+                .ToList();
+        }
+
         private PakCollection SaveToPack(string path)
         {
+            // Levels with the same file name would be written to the same file, losing all but one of them
+            var duplicates = GetDuplicateLevelFilenames();
+            if (duplicates.Count != 0)
+            {
+                throw new InvalidDataException(
+                    $"More than one level has the file name {String.Join(", ", duplicates.Select(x => $"'{x}'"))}, so they would be saved over each other. " +
+                    "Give each level its own file name in its Properties (right-click it in the Pack Explorer).");
+            }
+
             var pakFile = new PakCollection();
 
             // CFG

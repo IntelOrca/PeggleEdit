@@ -19,7 +19,12 @@ namespace IntelOrca.PeggleEdit.Tools.Tests
             var level = new Level();
             level.Entries.Add(new Ball(level) { X = 100, Y = 200 });
             pack.Levels.Add(level);
-            pack.Levels.Add(new Level());
+            // Each level has its own file name, as levels are saved to levels\<file name>.dat
+            var second = new Level();
+            var info = second.Info;
+            info.Filename = "second_level";
+            second.Info = info;
+            pack.Levels.Add(second);
             pack.MarkSaved();
             return pack;
         }

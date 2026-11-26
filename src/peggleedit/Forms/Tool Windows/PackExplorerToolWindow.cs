@@ -791,6 +791,17 @@ namespace IntelOrca.PeggleEdit.Designer
         private void mnuLevelFolderAdd_Click(object sender, EventArgs e)
         {
             Level level = new Level();
+
+            // Each level is saved to its own file, so a new level is not given one another level already has
+            var info = level.Info;
+            var filename = mPack.GetUniqueLevelFilename(info.Filename);
+            if (filename != info.Filename)
+            {
+                var suffix = filename.Substring(info.Filename.Length + 1);
+                info.Filename = filename;
+                info.Name = $"{info.Name} {suffix}";
+                level.Info = info;
+            }
             mPack.Levels.Add(level);
 
             LevelFolderNode.Nodes.Add(GetLevelNode(level));
@@ -823,7 +834,7 @@ namespace IntelOrca.PeggleEdit.Designer
                 if (level != null)
                 {
                     LevelInfo info = LevelInfo.DefaultInfo;
-                    info.Filename = Path.GetFileNameWithoutExtension(dialog.FileName).ToLower();
+                    info.Filename = mPack.GetUniqueLevelFilename(Path.GetFileNameWithoutExtension(dialog.FileName).ToLower());
                     info.Name = Path.GetFileNameWithoutExtension(dialog.FileName);
                     level.Info = info;
 
