@@ -15,6 +15,7 @@
 // along with PeggleEdit. If not, see <http://www.gnu.org/licenses/>.
 
 using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Runtime.InteropServices;
 using System.Text;
@@ -41,6 +42,12 @@ namespace IntelOrca.PeggleEdit.Designer
         /// Gets whether the given window accepts input, i.e. it is not disabled by a modal dialog.
         /// </summary>
         bool AcceptsInput(Form form);
+
+        /// <summary>
+        /// From now on, centres the system's dialogs (message boxes, folder browsers) shown on this thread over the
+        /// window they belong to, as the application's own dialogs are, rather than over the screen.
+        /// </summary>
+        void CentreSystemDialogs();
     }
 
     static class PlatformServices
@@ -86,6 +93,119 @@ namespace IntelOrca.PeggleEdit.Designer
         {
             return IsWindowEnabled(form.Handle);
         }
+
+        #region Centring system dialogs
+
+        private const int WH_CBT = 5;
+        private const int HCBT_ACTIVATE = 5;
+        private const int HCBT_DESTROYWND = 4;
+        private const uint GW_OWNER = 4;
+        private const uint SWP_NOSIZE = 0x0001;
+        private const uint SWP_NOZORDER = 0x0004;
+        private const uint SWP_NOACTIVATE = 0x0010;
+
+        private delegate IntPtr HookProc(int code, IntPtr wParam, IntPtr lParam);
+
+        [StructLayout(LayoutKind.Sequential)]
+        private struct RECT
+        {
+            public int Left, Top, Right, Bottom;
+        }
+
+        [DllImport("user32.dll")]
+        private static extern IntPtr SetWindowsHookEx(int idHook, HookProc lpfn, IntPtr hMod, uint dwThreadId);
+
+        [DllImport("user32.dll")]
+        private static extern IntPtr CallNextHookEx(IntPtr hhk, int nCode, IntPtr wParam, IntPtr lParam);
+
+        [DllImport("kernel32.dll")]
+        private static extern uint GetCurrentThreadId();
+
+        [DllImport("user32.dll", CharSet = CharSet.Unicode)]
+        private static extern int GetClassName(IntPtr hWnd, StringBuilder lpClassName, int nMaxCount);
+
+        [DllImport("user32.dll")]
+        private static extern IntPtr GetWindow(IntPtr hWnd, uint uCmd);
+
+        [DllImport("user32.dll")]
+        private static extern bool GetWindowRect(IntPtr hWnd, out RECT lpRect);
+
+        [DllImport("user32.dll")]
+        private static extern bool IsWindowVisible(IntPtr hWnd);
+
+        [DllImport("user32.dll")]
+        private static extern bool IsIconic(IntPtr hWnd);
+
+        [DllImport("user32.dll")]
+        private static extern bool SetWindowPos(IntPtr hWnd, IntPtr hWndInsertAfter, int x, int y, int cx, int cy, uint uFlags);
+
+        // Kept, so that the delegate the hook calls is not collected
+        private HookProc _cbtHook;
+        private IntPtr _cbtHookHandle;
+        // The dialogs centred, each only when it is first shown, so that one the user has moved stays where it is
+        private readonly HashSet<IntPtr> _centredDialogs = new HashSet<IntPtr>();
+
+        public void CentreSystemDialogs()
+        {
+            if (_cbtHookHandle != IntPtr.Zero)
+                return;
+
+            _cbtHook = OnCbt;
+            _cbtHookHandle = SetWindowsHookEx(WH_CBT, _cbtHook, IntPtr.Zero, GetCurrentThreadId());
+        }
+
+        private IntPtr OnCbt(int code, IntPtr wParam, IntPtr lParam)
+        {
+            try
+            {
+                if (code == HCBT_ACTIVATE)
+                {
+                    if (!_centredDialogs.Contains(wParam) && IsSystemDialog(wParam))
+                    {
+                        _centredDialogs.Add(wParam);
+                        CentreOnOwner(wParam);
+                    }
+                }
+                else if (code == HCBT_DESTROYWND)
+                {
+                    _centredDialogs.Remove(wParam);
+                }
+            }
+            catch
+            {
+                // A dialog left where Windows put it is better than an exception thrown into Windows
+            }
+            return CallNextHookEx(_cbtHookHandle, code, wParam, lParam);
+        }
+
+        private static bool IsSystemDialog(IntPtr hWnd)
+        {
+            var className = new StringBuilder(16);
+            GetClassName(hWnd, className, className.Capacity);
+            return className.ToString() == "#32770";
+        }
+
+        private static void CentreOnOwner(IntPtr hWnd)
+        {
+            var owner = GetWindow(hWnd, GW_OWNER);
+            if (owner == IntPtr.Zero || !IsWindowVisible(owner) || IsIconic(owner))
+                return;
+            if (!GetWindowRect(hWnd, out var dialog) || !GetWindowRect(owner, out var ownerRect))
+                return;
+
+            var width = dialog.Right - dialog.Left;
+            var height = dialog.Bottom - dialog.Top;
+            var x = ownerRect.Left + ((ownerRect.Right - ownerRect.Left - width) / 2);
+            var y = ownerRect.Top + ((ownerRect.Bottom - ownerRect.Top - height) / 2);
+
+            // Kept on the owner's screen
+            var area = Screen.FromHandle(owner).WorkingArea;
+            x = Math.Max(area.Left, Math.Min(x, area.Right - width));
+            y = Math.Max(area.Top, Math.Min(y, area.Bottom - height));
+            SetWindowPos(hWnd, IntPtr.Zero, x, y, 0, 0, SWP_NOSIZE | SWP_NOZORDER | SWP_NOACTIVATE);
+        }
+
+        #endregion
     }
 
     /// <summary>
@@ -95,6 +215,11 @@ namespace IntelOrca.PeggleEdit.Designer
     {
         public void AddRecentDocument(string path)
         {
+        }
+
+        public void CentreSystemDialogs()
+        {
+            // Mono's message boxes are its own forms
         }
 
         public string CompactPath(string path, int length)

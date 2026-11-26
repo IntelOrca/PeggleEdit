@@ -538,6 +538,8 @@ namespace IntelOrca.PeggleEdit.Designer
                 MoveNode(node, parent, index);
             else
                 mTreeView.SelectedNode = node;
+            // Dragging runs its own message loop, so the change is not seen as input
+            mParent.UpdateChanges();
         }
 
         void mTreeView_DragLeave(object sender, EventArgs e)
@@ -731,7 +733,7 @@ namespace IntelOrca.PeggleEdit.Designer
         private void mnuPackProperties_Click(object sender, EventArgs e)
         {
             PackDetailsForm form = new PackDetailsForm(mPack);
-            if (form.ShowDialog() == DialogResult.OK)
+            if (form.ShowDialog(mParent) == DialogResult.OK)
             {
                 //Pack name may have changed
                 SelectedNode.Text = mPack.Name;
@@ -740,18 +742,13 @@ namespace IntelOrca.PeggleEdit.Designer
 
         private void mnuPackImport_Click(object sender, EventArgs e)
         {
-            if (!mParent.ShowClosePackWarning())
+            if (!mParent.ConfirmClosePack())
                 return;
 
             using (var folderDialog = new FolderBrowserDialog())
             {
-                if (folderDialog.ShowDialog() == DialogResult.OK)
-                {
-                    MainMDIForm.UseSettingsGamePaths();
-                    var pack = new LevelPack();
-                    pack.Import(folderDialog.SelectedPath);
-                    mParent.OpenPack(pack);
-                }
+                if (folderDialog.ShowDialog(mParent) == DialogResult.OK)
+                    mParent.ImportPack(folderDialog.SelectedPath);
             }
         }
 
@@ -759,7 +756,7 @@ namespace IntelOrca.PeggleEdit.Designer
         {
             using (var folderDialog = new FolderBrowserDialog())
             {
-                if (folderDialog.ShowDialog() == DialogResult.OK)
+                if (folderDialog.ShowDialog(mParent) == DialogResult.OK)
                 {
                     // Not into an extracted game, whose own levels would be replaced
                     if (File.Exists(Path.Combine(folderDialog.SelectedPath, "levels", "stages.cfg")))
@@ -802,7 +799,7 @@ namespace IntelOrca.PeggleEdit.Designer
             OpenFileDialog dialog = new OpenFileDialog();
             dialog.Title = "Import level";
             dialog.Filter = "Peggle Levels (*.dat;*.xml)|*.dat;*.xml|Peggle Level Files (*.dat)|*.dat|Peggle Level XML (*.xml)|*.xml";
-            if (dialog.ShowDialog() == DialogResult.OK)
+            if (dialog.ShowDialog(mParent) == DialogResult.OK)
             {
                 byte[] data;
                 try
@@ -904,7 +901,7 @@ namespace IntelOrca.PeggleEdit.Designer
             {
                 dialog.Title = "Export level";
                 dialog.Filter = "Peggle Level Files (*.dat)|*.dat";
-                if (dialog.ShowDialog() == DialogResult.OK)
+                if (dialog.ShowDialog(mParent) == DialogResult.OK)
                 {
                     var writer = new LevelWriter(dialog.FileName);
                     writer.Write(level, version);
@@ -920,7 +917,7 @@ namespace IntelOrca.PeggleEdit.Designer
                 dialog.Title = "Export level as XML";
                 dialog.Filter = "Peggle Level XML (*.xml)|*.xml";
                 dialog.FileName = (string.IsNullOrEmpty(level.Info.Filename) ? level.Info.Name : level.Info.Filename) + ".xml";
-                if (dialog.ShowDialog() == DialogResult.OK)
+                if (dialog.ShowDialog(mParent) == DialogResult.OK)
                 {
                     try
                     {
@@ -939,17 +936,12 @@ namespace IntelOrca.PeggleEdit.Designer
         {
             Level level = SelectedNode.Tag as Level;
             LevelDetailsForm form = new LevelDetailsForm(level);
-            if (form.ShowDialog() == DialogResult.OK)
+            if (form.ShowDialog(mParent) == DialogResult.OK)
             {
                 //Level name may have changed
                 SelectedNode.Text = level.Info.Name;
 
-                LevelToolWindow ltw = mParent.GetLevelToolWindow(level);
-                if (ltw != null)
-                {
-                    ltw.Text = level.Info.Name;
-                    mParent.RefreshDockContainer();
-                }
+                mParent.UpdateChanges();
             }
         }
 
@@ -959,7 +951,7 @@ namespace IntelOrca.PeggleEdit.Designer
             OpenFileDialog dialog = new OpenFileDialog();
             dialog.Title = "Import background image";
             dialog.Filter = "Supported Image Files|*.png;*.jpg|Portable Network Graphics (*.png)|*.png|Joint Photographic Experts Group (*.jpg)|*.jpg";
-            if (dialog.ShowDialog() == DialogResult.OK)
+            if (dialog.ShowDialog(mParent) == DialogResult.OK)
             {
                 using (var fileImage = Image.FromFile(dialog.FileName))
                 {
@@ -1009,7 +1001,7 @@ namespace IntelOrca.PeggleEdit.Designer
         {
             OpenFileDialog dialog = new OpenFileDialog();
             dialog.Filter = "Portable Network Graphics (*.png)|*.png";
-            if (dialog.ShowDialog() == DialogResult.OK)
+            if (dialog.ShowDialog(mParent) == DialogResult.OK)
             {
                 var image = new PakImage(dialog.FileName);
 
@@ -1150,7 +1142,7 @@ namespace IntelOrca.PeggleEdit.Designer
         {
             ChallengePage challengePage = SelectedNode.Tag as ChallengePage;
             ChallengePageForm form = new ChallengePageForm(challengePage);
-            if (form.ShowDialog() == DialogResult.OK)
+            if (form.ShowDialog(mParent) == DialogResult.OK)
             {
                 //Challenge page name may have changed
                 SelectedNode.Text = challengePage.Title;
@@ -1194,7 +1186,7 @@ namespace IntelOrca.PeggleEdit.Designer
         {
             Challenge challenge = SelectedNode.Tag as Challenge;
             ChallengeDetailsForm form = new ChallengeDetailsForm(mPack, challenge);
-            if (form.ShowDialog() == DialogResult.OK)
+            if (form.ShowDialog(mParent) == DialogResult.OK)
             {
                 //Challenge name may have changed
                 SelectedNode.Text = challenge.Name;

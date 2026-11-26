@@ -132,10 +132,6 @@ namespace IntelOrca.PeggleEdit.Designer
             orbOpen.Image = Resources.open_32;
             orbOpen.Click += new EventHandler(openRibbonButton_Click);
 
-            RibbonOrbMenuItem orbOpenGameLevels = new RibbonOrbMenuItem("Open Game Levels");
-            orbOpenGameLevels.Image = Resources.open_32;
-            orbOpenGameLevels.Click += new EventHandler(openGameLevelsRibbonButton_Click);
-
             RibbonOrbMenuItem orbSave = new RibbonOrbMenuItem("Save");
             orbSave.Image = Resources.save_32;
             orbSave.Click += new EventHandler(saveRibbonButton_Click);
@@ -160,7 +156,6 @@ namespace IntelOrca.PeggleEdit.Designer
 
             mRibbon.OrbDropDown.MenuItems.Add(orbNew);
             mRibbon.OrbDropDown.MenuItems.Add(orbOpen);
-            mRibbon.OrbDropDown.MenuItems.Add(orbOpenGameLevels);
             mRibbon.OrbDropDown.MenuItems.Add(orbSave);
             mRibbon.OrbDropDown.MenuItems.Add(orbSaveAs);
             mRibbon.OrbDropDown.MenuItems.Add(new RibbonSeparator());
@@ -678,7 +673,7 @@ namespace IntelOrca.PeggleEdit.Designer
 
         private void newRibbonButton_Click(object sender, EventArgs e)
         {
-            if (!mParent.ShowClosePackWarning())
+            if (!mParent.ConfirmClosePack())
                 return;
 
             mParent.NewPack();
@@ -686,74 +681,49 @@ namespace IntelOrca.PeggleEdit.Designer
 
         private void openRibbonButton_Click(object sender, EventArgs e)
         {
-            if (!mParent.ShowClosePackWarning())
+            if (!mParent.ConfirmClosePack())
                 return;
 
-            OpenFileDialog dialog = new OpenFileDialog();
-            dialog.Filter = "Peggle Level Packs (*.pak)|*.pak";
-            if (dialog.ShowDialog() == DialogResult.OK)
+            // A level pack, or a game's own levels: its main.pak, or levels\stages.cfg if it has been extracted
+            using (var dialog = new OpenFileDialog())
             {
-                mParent.OpenPack(dialog.FileName);
+                dialog.Filter = "Level packs and game levels (*.pak, stages.cfg)|*.pak;stages.cfg|All files (*.*)|*.*";
+                if (dialog.ShowDialog(mParent) == DialogResult.OK)
+                    mParent.Open(dialog.FileName);
             }
         }
 
         private void closeRibbonButton_Click(object sender, EventArgs e)
         {
             // There is always a pack open, so closing one leaves a new, empty pack
-            if (!mParent.ShowClosePackWarning())
+            if (!mParent.ConfirmClosePack())
                 return;
 
             mParent.NewPack();
         }
 
-        private void openGameLevelsRibbonButton_Click(object sender, EventArgs e)
-        {
-            if (!mParent.ShowClosePackWarning())
-                return;
-
-            using (var dialog = new OpenFileDialog())
-            {
-                dialog.Title = "Open Game Levels (choose the game's main.pak, or levels\\stages.cfg if it has been extracted)";
-                dialog.Filter = "Game levels (*.pak, stages.cfg)|*.pak;stages.cfg|All files (*.*)|*.*";
-                var gameDirectory = Settings.Default.PeggleNightsPath;
-                if (!String.IsNullOrEmpty(gameDirectory) && Directory.Exists(gameDirectory))
-                    dialog.InitialDirectory = gameDirectory;
-                if (dialog.ShowDialog() == DialogResult.OK)
-                    mParent.OpenGameLevels(dialog.FileName);
-            }
-        }
-
         private void saveRibbonButton_Click(object sender, EventArgs e)
         {
-            if (String.IsNullOrEmpty(mParent.PackFilename))
-                saveAsRibbonButton_Click(sender, e);
-            else
-                mParent.SavePack(mParent.PackFilename);
+            mParent.Save();
         }
 
         private void saveAsRibbonButton_Click(object sender, EventArgs e)
         {
-            SaveFileDialog dialog = new SaveFileDialog();
-            dialog.Filter = "Peggle Level Packs (*.pak)|*.pak";
-            if (dialog.ShowDialog() == DialogResult.OK)
-            {
-                if (mParent.SavePack(dialog.FileName))
-                    mParent.PackFilename = dialog.FileName;
-            }
+            mParent.SaveAs();
         }
 
         private void pakToolRibbonButton_Click(object sender, EventArgs e)
         {
             using (var pakToolForm = new PakToolForm())
             {
-                pakToolForm.ShowDialog();
+                pakToolForm.ShowDialog(mParent);
             }
         }
 
         private void packDetailsRibbonButton_Click(object sender, EventArgs e)
         {
             PackDetailsForm pack = new PackDetailsForm(mParent.LevelPack);
-            pack.ShowDialog();
+            pack.ShowDialog(mParent);
         }
 
         private void challengesRibbonButton_Click(object sender, EventArgs e)
@@ -774,7 +744,7 @@ namespace IntelOrca.PeggleEdit.Designer
         private void optionsRibbonButton_Click(object sender, EventArgs e)
         {
             OptionsForm form = new OptionsForm();
-            form.ShowDialog();
+            form.ShowDialog(mParent);
 
             DoSettingUpdate();
         }
@@ -1179,7 +1149,7 @@ namespace IntelOrca.PeggleEdit.Designer
             }
 
             //Find out how many pegs to duplicate
-            string ans = InputForm.Show("How many pegs would you like in this movement cycle, including the selected one?", "Duplicate and Phase", "8");
+            string ans = InputForm.Show(mParent, "How many pegs would you like in this movement cycle, including the selected one?", "Duplicate and Phase", "8");
             int num_pegs;
             if (!Int32.TryParse(ans, out num_pegs) || num_pegs < 0 || num_pegs > 100)
             {
@@ -1447,7 +1417,7 @@ namespace IntelOrca.PeggleEdit.Designer
         private void aboutRibbonButton_Click(object sender, EventArgs e)
         {
             AboutForm aboutForm = new AboutForm();
-            aboutForm.ShowDialog();
+            aboutForm.ShowDialog(mParent);
         }
 
         #endregion
@@ -1593,9 +1563,9 @@ namespace IntelOrca.PeggleEdit.Designer
             {
                 MessageBox.Show(String.Format("'{0}' does not exist.", path), "Open Level Pack", MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
-            else if (mParent.ShowClosePackWarning())
+            else if (mParent.ConfirmClosePack())
             {
-                mParent.OpenPack(path);
+                mParent.Open(path);
             }
         }
 

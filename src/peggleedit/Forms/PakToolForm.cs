@@ -35,7 +35,7 @@ namespace IntelOrca.PeggleEdit.Designer.Forms
             using (var dialog = new SaveFileDialog())
             {
                 dialog.Filter = ".pak Files (*.pak)|*.pak";
-                if (dialog.ShowDialog() == DialogResult.OK)
+                if (dialog.ShowDialog(this) == DialogResult.OK)
                 {
                     txtPakLocation.Text = dialog.FileName;
                 }
@@ -46,7 +46,7 @@ namespace IntelOrca.PeggleEdit.Designer.Forms
         {
             using (var dialog = new FolderBrowserDialog())
             {
-                if (dialog.ShowDialog() == DialogResult.OK)
+                if (dialog.ShowDialog(this) == DialogResult.OK)
                 {
                     txtExtractLocation.Text = dialog.SelectedPath;
                 }

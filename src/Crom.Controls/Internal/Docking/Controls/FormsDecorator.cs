@@ -660,6 +660,7 @@ namespace Crom.Controls.Docking
          if (e.OldControl != null)
          {
             e.OldControl.Resize -= OnTopFormResize;
+            e.OldControl.TextChanged -= OnTopFormTextChanged;
          }
 
          SetFormsPanelBounds();
@@ -668,9 +669,21 @@ namespace Crom.Controls.Docking
          if (e.NewControl != null)
          {
             e.NewControl.Resize += OnTopFormResize;
+            e.NewControl.TextChanged += OnTopFormTextChanged;
          }
 
          return;
+      }
+
+      /// <summary>
+      /// Shows the new text of the top form in the title bar
+      /// </summary>
+      /// <param name="sender">sender of the event</param>
+      /// <param name="e">event argument</param>
+      private void OnTopFormTextChanged(object sender, EventArgs e)
+      {
+         _titleRenderer.Text = ((Control)sender).Text;
+         TitleBar.Invalidate();
       }
 
       /// <summary>

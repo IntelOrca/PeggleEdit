@@ -614,6 +614,121 @@ namespace IntelOrca.PeggleEdit.Tools.Pack
             return pakFile;
         }
 
+        #region Changes since saved
+
+        private SavedState _savedState;
+
+        /// <summary>
+        /// Takes the pack as it is now as saved (or as opened), so that <see cref="IsModified()"/> says whether it has
+        /// been changed since.
+        /// </summary>
+        public void MarkSaved() => _savedState = new SavedState(this);
+
+        /// <summary>
+        /// Whether anything that would be saved has changed since <see cref="MarkSaved"/>: a level, the levels or their
+        /// order, a background, the pack's details, its challenges or its images. Changing something and changing it
+        /// back again is no change.
+        /// </summary>
+        public bool IsModified() => IsModified(Levels);
+
+        /// <summary>
+        /// As <see cref="IsModified()"/>, but comparing the objects of only the given levels (which is the slow part),
+        /// e.g. those that have been edited.
+        /// </summary>
+        public bool IsModified(IEnumerable<Level> levelsToCompare)
+        {
+            if (_savedState == null || !_savedState.PackMatches(this))
+                return true;
+            foreach (var level in levelsToCompare)
+            {
+                if (Levels.Contains(level) && IsLevelModified(level))
+                    return true;
+            }
+            return false;
+        }
+
+        /// <summary>
+        /// Whether a level has changed since <see cref="MarkSaved"/>: its objects, details or background. A level that
+        /// was not in the pack then has.
+        /// </summary>
+        public bool IsLevelModified(Level level) => _savedState == null || !_savedState.LevelMatches(level, GetLevelData(level));
+
+        /// <summary>
+        /// The levels that have changed since <see cref="MarkSaved"/>.
+        /// </summary>
+        public IReadOnlyList<Level> GetModifiedLevels() => Levels.Where(IsLevelModified).ToArray();
+
+        /// <summary>
+        /// What is saved of a pack, at one time.
+        /// </summary>
+        private sealed class SavedState
+        {
+            private readonly string _cfg;
+            private readonly Level[] _levels;
+            private readonly Dictionary<Level, (byte[] Data, LevelInfo Info, PakImage Background)> _levelStates =
+                new Dictionary<Level, (byte[], LevelInfo, PakImage)>();
+            private readonly KeyValuePair<string, PakImage>[] _images;
+
+            public SavedState(LevelPack pack)
+            {
+                _cfg = pack.WriteCFG(signature: false);
+                _levels = pack.Levels.ToArray();
+                foreach (var level in _levels)
+                    _levelStates[level] = (pack.GetLevelData(level), level.Info, level.Background);
+                _images = GetImages(pack);
+            }
+
+            private static KeyValuePair<string, PakImage>[] GetImages(LevelPack pack) =>
+                pack.Images.OrderBy(x => x.Key, StringComparer.Ordinal).ToArray();
+
+            /// <summary>
+            /// Whether all but the levels' objects are as they were: the details, levels and order (in the cfg), the
+            /// levels themselves, their backgrounds and the images.
+            /// </summary>
+            public bool PackMatches(LevelPack pack)
+            {
+                if (pack.Levels.Count != _levels.Length || pack.Images.Count != _images.Length)
+                    return false;
+                for (int i = 0; i < _levels.Length; i++)
+                {
+                    if (pack.Levels[i] != _levels[i] || !SameImage(pack.Levels[i].Background, _levelStates[_levels[i]].Background))
+                        return false;
+                }
+                // By name as it is saved, so that a change of case is a change
+                var images = GetImages(pack);
+                for (int i = 0; i < _images.Length; i++)
+                {
+                    if (images[i].Key != _images[i].Key || !SameImage(images[i].Value, _images[i].Value))
+                        return false;
+                }
+                return pack.WriteCFG(signature: false) == _cfg;
+            }
+
+            public bool LevelMatches(Level level, byte[] data)
+            {
+                if (!_levelStates.TryGetValue(level, out var saved))
+                    return false;
+                return saved.Info.Equals(level.Info) && SameImage(saved.Background, level.Background) &&
+                    data.AsSpan().SequenceEqual(saved.Data);
+            }
+
+            /// <summary>
+            /// Whether two images would be saved the same: the same type (which is the extension of a background
+            /// saved) and data, e.g. the same file added again.
+            /// </summary>
+            private static bool SameImage(PakImage a, PakImage b)
+            {
+                if (a == b)
+                    return true;
+                if (a == null || b == null || a.Data == null || b.Data == null)
+                    return false;
+                return String.Equals(Path.GetExtension(a.FileName), Path.GetExtension(b.FileName), StringComparison.OrdinalIgnoreCase) &&
+                    a.Data.AsSpan().SequenceEqual(b.Data);
+            }
+        }
+
+        #endregion
+
         private PakRecord GetCFGRecord(string pakFilename, PakCollection pakFile)
         {
             var cfgRecord = pakFile.GetRecord(pakFilename + ".cfg");
@@ -672,7 +787,7 @@ namespace IntelOrca.PeggleEdit.Tools.Pack
             }
         }
 
-        private string WriteCFG()
+        private string WriteCFG(bool signature = true)
         {
             var document = new CFGDocument();
             var docblock = new CFGBlock();
@@ -706,11 +821,15 @@ namespace IntelOrca.PeggleEdit.Tools.Pack
 
             document.Blocks.Add(docblock);
 
-            var writer = new CFGWriter(document);
+            var writer = new CFGWriter(document) { IncludeSignature = signature };
             return writer.GetText();
         }
 
-        public void Import(string selectedPath)
+        /// <summary>
+        /// Opens a level pack that has been exported to a folder.
+        /// </summary>
+        /// <returns>Whether it was opened.</returns>
+        public bool Import(string selectedPath)
         {
             try
             {
@@ -723,10 +842,12 @@ namespace IntelOrca.PeggleEdit.Tools.Pack
                     pak.ImportFile(relativeDirectory, file);
                 }
                 OpenFromPack(pak, selectedPath);
+                return true;
             }
             catch (Exception ex)
             {
-                MessageBox.Show(ex.Message, "Export Level Pack", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                MessageBox.Show(ex.Message, "Import Level Pack", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                return false;
             }
         }
 

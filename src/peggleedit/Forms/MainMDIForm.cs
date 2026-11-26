@@ -19,6 +19,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Drawing;
 using System.IO;
+using System.Linq;
 using System.Reflection;
 using System.Runtime.InteropServices;
 using System.Threading;
@@ -42,8 +43,10 @@ namespace IntelOrca.PeggleEdit.Designer
         {
             Instance = this;
 
+            PlatformServices.Current.CentreSystemDialogs();
             InitIdentifierMap();
             InitForm();
+            InitChangesTimer();
 
             DefaultStartupPack();
         }
@@ -72,7 +75,7 @@ namespace IntelOrca.PeggleEdit.Designer
             this.Icon = Icon.FromHandle(Resources.orca_32.GetHicon());
 
             //Set the form title
-            this.Text = String.Format("{0} {1}", Program.AppTitle, Program.AppVersionLabel);
+            UpdateTitle();
 
             //Set the form size (saved sizes are scaled if they were saved at another DPI)
             float sizesScale = Settings.Default.SizesScale > 0 ? Dpi.Factor / Settings.Default.SizesScale : 1;
@@ -196,6 +199,15 @@ namespace IntelOrca.PeggleEdit.Designer
 
         protected override void OnClosing(System.ComponentModel.CancelEventArgs e)
         {
+            if (!ConfirmClosePack())
+            {
+                e.Cancel = true;
+                // An update that was to be installed now is installed when the editor is closed
+                if (Updater.PendingInstall != null)
+                    SetStatus("The update will be installed when {0} is closed.", Program.AppTitle);
+                return;
+            }
+
             // Saved in 96 DPI units (see InitDockContainer)
             Settings.Default.MDIFormSize = new Size(
                 (int)Math.Round(ClientSize.Width / Dpi.Factor),
@@ -209,6 +221,13 @@ namespace IntelOrca.PeggleEdit.Designer
 
             SaveLayout();
             base.OnClosing(e);
+        }
+
+        protected override void OnClosed(EventArgs e)
+        {
+            mChangesTimer.Dispose();
+            Application.RemoveMessageFilter(mInputFilter);
+            base.OnClosed(e);
         }
 
         #endregion
@@ -460,6 +479,9 @@ namespace IntelOrca.PeggleEdit.Designer
             mLevelToolWindowInfos.Add(dfi);
             mLastFocusedLevel = ltw;
             mMenuToolPanel.UpdateViewPanel();
+
+            mEditedLevels.Add(level);
+            ltw.UpdateTitle(mPack.IsLevelModified(level));
         }
 
         private DockableFormInfo AddToolWindow(Form form)
@@ -633,7 +655,7 @@ namespace IntelOrca.PeggleEdit.Designer
             {
                 string openWithFilename = args[1];
                 // A new pack is opened instead if it can not be
-                if (File.Exists(openWithFilename) && OpenPack(openWithFilename))
+                if (File.Exists(openWithFilename) && Open(openWithFilename))
                     return;
             }
 
@@ -659,13 +681,16 @@ namespace IntelOrca.PeggleEdit.Designer
 
                 mPack.Levels.Clear();
                 mPack.Levels.Add(level);
+                // Nothing to save, as the level is in its file
+                mPack.MarkSaved();
                 OpenLevel(level);
             }
 
             UpdatePackExplorerView();
+            UpdateChanges();
         }
 
-        // The game whose levels are open (with Open Game Levels), whose files are used rather than those of the game
+        // The game whose levels are open (from its main.pak), whose files are used rather than those of the game
         // in the settings, until another pack is opened
         private static (string Directory, string MainPak)? s_openedGame;
 
@@ -701,6 +726,27 @@ namespace IntelOrca.PeggleEdit.Designer
             //OpenLevel(pack.Levels[0]);
         }
 
+        /// <summary>
+        /// Opens a level pack, or a game's own levels from its main.pak (or another .pak of the game's, or its
+        /// levels\stages.cfg), whichever the file is.
+        /// </summary>
+        /// <returns>Whether it was opened.</returns>
+        public bool Open(string path)
+        {
+            return IsGameLevels(path) ? OpenGameLevels(path) : OpenPack(path);
+        }
+
+        /// <summary>
+        /// Whether a file has a game's own levels, rather than being a level pack: a game's .pak, which has its
+        /// levels\stages.cfg, or the stages.cfg of an extracted game.
+        /// </summary>
+        public static bool IsGameLevels(string path)
+        {
+            if (Path.GetFileName(path).Equals("stages.cfg", StringComparison.OrdinalIgnoreCase))
+                return true;
+            return path.EndsWith(".pak", StringComparison.OrdinalIgnoreCase) && LevelPack.IsGamePak(path);
+        }
+
         /// <returns>Whether the pack was opened.</returns>
         public bool OpenPack(string filename)
         {
@@ -719,7 +765,8 @@ namespace IntelOrca.PeggleEdit.Designer
                 // The pack that is still open keeps its game
                 s_openedGame = previousGame;
                 RegisterGamePaths();
-                MessageBox.Show(String.Format("'{0}' could not be opened.", filename));
+                MessageBox.Show(DialogOwner, String.Format("'{0}' could not be opened.", filename), "Open",
+                    MessageBoxButtons.OK, MessageBoxIcon.Error);
                 return false;
             }
 
@@ -733,7 +780,8 @@ namespace IntelOrca.PeggleEdit.Designer
         /// than changing the game's files), and points the game file lookups at that game.
         /// </summary>
         /// <param name="path">The game's directory, main.pak or levels\stages.cfg.</param>
-        public void OpenGameLevels(string path)
+        /// <returns>Whether the levels were opened.</returns>
+        public bool OpenGameLevels(string path)
         {
             var gameDirectory = LevelPack.GetGameDirectory(path);
             SetStatus("Opening the levels of '{0}'...", Path.GetFileName(gameDirectory));
@@ -755,18 +803,43 @@ namespace IntelOrca.PeggleEdit.Designer
                 s_openedGame = previousGame;
                 RegisterGamePaths();
                 SetStatus("");
-                MessageBox.Show(ex.Message, "Open Game Levels", MessageBoxButtons.OK, MessageBoxIcon.Error);
-                return;
+                MessageBox.Show(DialogOwner, ex.Message, "Open", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                return false;
             }
 
             mPackFilename = String.Empty;
+            UpdateRecentList(path);
             OpenPack(pack);
             SetStatus("{0} levels of '{1}' loaded.", pack.Levels.Count, pack.Name);
             if (problems.Count > 0)
             {
-                MessageBox.Show(String.Join(Environment.NewLine, problems), "Open Game Levels",
+                MessageBox.Show(DialogOwner, String.Join(Environment.NewLine, problems), "Open",
                     MessageBoxButtons.OK, MessageBoxIcon.Warning);
             }
+            return true;
+        }
+
+        /// <summary>
+        /// Opens a level pack that has been exported to a folder, as a pack with no file yet, so that saving it asks
+        /// for one.
+        /// </summary>
+        /// <returns>Whether it was opened.</returns>
+        public bool ImportPack(string folder)
+        {
+            var pack = new LevelPack();
+            var previousGame = s_openedGame;
+            UseSettingsGamePaths();
+            if (!pack.Import(folder))
+            {
+                // The pack that is still open keeps its game
+                s_openedGame = previousGame;
+                RegisterGamePaths();
+                return false;
+            }
+
+            mPackFilename = String.Empty;
+            OpenPack(pack);
+            return true;
         }
 
         public void OpenPack(LevelPack pack)
@@ -775,35 +848,89 @@ namespace IntelOrca.PeggleEdit.Designer
 
             mPack = pack;
             LevelPack.Current = pack;
+            // As it was opened, so that only changes from now on are asked to be saved
+            pack.MarkSaved();
+            mEditedLevels.Clear();
 
             UpdatePackExplorerView();
+            UpdateChanges();
         }
+
+        /// <summary>
+        /// The window that owns a message box: this one, once it is shown (and not while the pack given on the
+        /// command line is opened, when a message box it owned would have no button on the taskbar).
+        /// </summary>
+        private IWin32Window DialogOwner => Visible ? this : null;
+
+        /// <summary>
+        /// Whether a file is one of a game's own .pak files, which a level pack is not saved over.
+        /// </summary>
+        private static bool IsGamePakName(string filename) =>
+            Path.GetFileName(filename).Equals("main.pak", StringComparison.OrdinalIgnoreCase) || LevelPack.IsGamePak(filename);
 
         public bool SavePack(string filename)
         {
-            // The game's own levels, opened with Open Game Levels, are saved as a level pack, not over the game's
-            if (Path.GetFileName(filename).Equals("main.pak", StringComparison.OrdinalIgnoreCase) || LevelPack.IsGamePak(filename))
+            // The game's own levels, opened from the game's .pak, are saved as a level pack, not over the game's
+            if (IsGamePakName(filename))
             {
-                MessageBox.Show("A level pack can not be saved as main.pak or over another of the game's own .pak files. Choose another name.",
+                MessageBox.Show(this, "A level pack can not be saved as main.pak or over another of the game's own .pak files. Choose another name.",
                     "Save Level Pack", MessageBoxButtons.OK, MessageBoxIcon.Warning);
                 return false;
             }
 
             UpdateRecentList(filename);
-            return mPack.Save(filename);
+            if (!mPack.Save(filename))
+                return false;
+
+            mPack.MarkSaved();
+            UpdateChanges();
+            return true;
+        }
+
+        /// <summary>
+        /// Saves the pack to its file, or asks for one if it has none.
+        /// </summary>
+        /// <returns>Whether the pack was saved.</returns>
+        public bool Save()
+        {
+            // A pack whose file is named as a game's .pak is saved as another
+            if (String.IsNullOrEmpty(mPackFilename) || IsGamePakName(mPackFilename))
+                return SaveAs();
+            return SavePack(mPackFilename);
+        }
+
+        /// <summary>
+        /// Asks for a file to save the pack to, and saves it there.
+        /// </summary>
+        /// <returns>Whether the pack was saved.</returns>
+        public bool SaveAs()
+        {
+            using (var dialog = new SaveFileDialog())
+            {
+                dialog.Filter = "Peggle Level Packs (*.pak)|*.pak";
+                if (dialog.ShowDialog(this) != DialogResult.OK || !SavePack(dialog.FileName))
+                    return false;
+
+                mPackFilename = dialog.FileName;
+                return true;
+            }
         }
 
         public void ClosePack()
         {
-            foreach (DockableFormInfo dfi in mLevelToolWindowInfos)
+            // A copy, as removing a window can raise FormClosed, which removes it from the list
+            foreach (DockableFormInfo dfi in mLevelToolWindowInfos.ToArray())
             {
                 if (dfi.IsDisposed)
                     continue;
 
+                // Taken before the window is removed, which disposes its info
+                var window = dfi.DockableForm as LevelToolWindow;
                 mDockContainer.Remove(dfi);
-                if (dfi.DockableForm is LevelToolWindow window)
+                if (window != null)
                     LevelWindowClosed(window);
             }
+            RemoveDisposedLevelToolWindows();
             if (mLastFocusedLevel != null)
                 LevelWindowClosed(mLastFocusedLevel);
         }
@@ -855,11 +982,106 @@ namespace IntelOrca.PeggleEdit.Designer
             }
         }
 
-        public bool ShowClosePackWarning()
+        /// <summary>
+        /// Asks whether to save the pack before it is closed, if it has changed since it was opened or saved.
+        /// </summary>
+        /// <returns>Whether to go on and close the pack: it has not changed, it has been saved, or the changes are
+        /// not wanted.</returns>
+        public bool ConfirmClosePack()
         {
-            DialogResult result = MessageBox.Show("Close this project without saving?", "Close Project", MessageBoxButtons.OKCancel, MessageBoxIcon.Question);
-            return (result == DialogResult.OK);
+            if (mPack == null || !mPack.IsModified())
+                return true;
+
+            var changedLevels = mPack.GetModifiedLevels().Select(x => x.Info.Name).ToArray();
+            switch (SaveChangesForm.Show(this, mPack.Name, changedLevels))
+            {
+                case DialogResult.Yes:
+                    return Save();
+                case DialogResult.No:
+                    return true;
+                default:
+                    return false;
+            }
         }
+
+        #region Changes
+
+        // The levels opened in an editor since the pack was opened, the only ones whose objects can have changed
+        private readonly HashSet<Level> mEditedLevels = new HashSet<Level>();
+        private System.Windows.Forms.Timer mChangesTimer;
+
+        private void InitChangesTimer()
+        {
+            // Changes are found by comparing the pack with how it was saved, which sees every change and undo
+            // however it was made. Only the user changes the pack, so it is compared again only after a key or
+            // button, and not at all while the preview plays on its own.
+            Application.AddMessageFilter(mInputFilter);
+            mChangesTimer = new System.Windows.Forms.Timer { Interval = 500 };
+            mChangesTimer.Tick += (s, e) =>
+            {
+                if (mInputFilter.TakeInput())
+                    UpdateChanges();
+            };
+            mChangesTimer.Start();
+        }
+
+        private readonly InputFilter mInputFilter = new InputFilter();
+
+        /// <summary>
+        /// Notes whether a key or mouse button has been used (anywhere in the application) since it was last asked.
+        /// </summary>
+        private sealed class InputFilter : IMessageFilter
+        {
+            private const int WM_KEYFIRST = 0x0100;
+            private const int WM_KEYLAST = 0x0109;
+            private const int WM_LBUTTONDOWN = 0x0201;
+            private const int WM_MOUSEWHEEL = 0x020A;
+            private const int WM_MOUSEHWHEEL = 0x020E;
+
+            private bool mInput = true;
+
+            public void NoteInput() => mInput = true;
+
+            public bool TakeInput()
+            {
+                var input = mInput;
+                mInput = false;
+                return input;
+            }
+
+            public bool PreFilterMessage(ref Message m)
+            {
+                // Keys, and mouse buttons (down, up or double clicked) and wheels, but not the mouse moving
+                if ((m.Msg >= WM_KEYFIRST && m.Msg <= WM_KEYLAST) || (m.Msg >= WM_LBUTTONDOWN && m.Msg <= WM_MOUSEHWHEEL))
+                    mInput = true;
+                return false;
+            }
+        }
+
+        /// <summary>
+        /// Shows whether each open level, and the pack, has changed since the pack was opened or saved, with an *
+        /// after its name.
+        /// </summary>
+        public void UpdateChanges()
+        {
+            if (mPack == null)
+                return;
+
+            foreach (var window in GetAllOpenLevelToolWindows())
+                window.UpdateTitle(mPack.IsLevelModified(window.Level));
+            UpdateTitle();
+        }
+
+        private void UpdateTitle()
+        {
+            var title = String.Format("{0} {1}", Program.AppTitle, Program.AppVersionLabel);
+            if (mPack != null)
+                title = String.Format("{0}{1} - {2}", mPack.Name, mPack.IsModified(mEditedLevels) ? "*" : "", title);
+            if (Text != title)
+                Text = title;
+        }
+
+        #endregion
 
         private void UpdateRecentList(string path)
         {
@@ -992,6 +1214,9 @@ namespace IntelOrca.PeggleEdit.Designer
         protected override void OnActivated(EventArgs e)
         {
             base.OnActivated(e);
+            // A message box or file dialog, after which the editor is active again, runs its own message loop, so the
+            // click that made a change in it is not seen as input
+            mInputFilter.NoteInput();
             if (mPendingUpdate != null)
                 BeginInvoke((Action)OfferPendingUpdate);
         }

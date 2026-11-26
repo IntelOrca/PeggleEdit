@@ -34,7 +34,7 @@ namespace IntelOrca.PeggleEdit.Designer.Forms
                 $"A new {ringName} build of {Program.AppTitle} is available: {update.DisplayVersion}\n" +
                 $"You have {Program.AppVersionLabel}.\n\n" +
                 $"Do you want to update now? {Program.AppTitle} will close, update and restart. " +
-                "Any unsaved changes will be lost.";
+                "You will be asked to save any changes first.";
             lnkReleasePage.Text = update.PageUrl;
             chkSkipVersion.Text = update.IsNightly ? "Skip this nightly build" : "Skip this version";
         }

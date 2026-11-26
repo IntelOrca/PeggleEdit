@@ -32,11 +32,17 @@ namespace IntelOrca.PeggleEdit.Tools.Pack.CFG
             mDocument = document;
         }
 
+        /// <summary>
+        /// Whether the text starts with a comment saying that PeggleEdit wrote it, and when.
+        /// </summary>
+        public bool IncludeSignature { get; set; } = true;
+
         public string GetText()
         {
             StringBuilder sb = new StringBuilder();
 
-            WriteApplicationSigniture(sb);
+            if (IncludeSignature)
+                WriteApplicationSigniture(sb);
 
             if (mDocument.Blocks.Count > 0)
                 WriteBlock(sb, mDocument.Blocks[0], 0, true);

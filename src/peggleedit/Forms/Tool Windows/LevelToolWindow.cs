@@ -60,6 +60,16 @@ namespace IntelOrca.PeggleEdit.Designer
             this.AutoScroll = true;
         }
 
+        /// <summary>
+        /// Shows the level's name, with an * after it if the level has changed since it was saved.
+        /// </summary>
+        public void UpdateTitle(bool modified)
+        {
+            var title = Level.Info.Name + (modified ? "*" : "");
+            if (Text != title)
+                Text = title;
+        }
+
         protected override void OnShown(EventArgs e)
         {
             CentreScrollPosition();

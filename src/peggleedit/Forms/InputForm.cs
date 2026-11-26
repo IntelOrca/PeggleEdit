@@ -30,7 +30,7 @@ namespace IntelOrca.PeggleEdit.Designer
             Text = title;
             ShowIcon = false;
             ClientSize = new Size(280, 141);
-            StartPosition = FormStartPosition.CenterScreen;
+            StartPosition = FormStartPosition.CenterParent;
             FormBorderStyle = FormBorderStyle.FixedToolWindow;
             MaximizeBox = false;
             ControlBox = false;
@@ -84,10 +84,10 @@ namespace IntelOrca.PeggleEdit.Designer
             }
         }
 
-        public static string Show(string title, string caption, string defaultText)
+        public static string Show(IWin32Window owner, string title, string caption, string defaultText)
         {
             InputForm frm = new InputForm(title, caption, defaultText);
-            if (frm.ShowDialog() == DialogResult.OK)
+            if (frm.ShowDialog(owner) == DialogResult.OK)
             {
                 return frm.InputText;
             }
