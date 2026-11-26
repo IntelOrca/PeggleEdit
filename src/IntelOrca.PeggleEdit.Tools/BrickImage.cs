@@ -2,6 +2,8 @@
 using System.Collections.Generic;
 using System.Drawing;
 using System.Drawing.Drawing2D;
+using System.Drawing.Imaging;
+using System.Runtime.InteropServices;
 using IntelOrca.PeggleEdit.Tools.Properties;
 
 namespace IntelOrca.PeggleEdit.Tools
@@ -50,16 +52,124 @@ namespace IntelOrca.PeggleEdit.Tools
 
         /// <summary>
         /// Draws a textured brick centred on <paramref name="location"/> with the current transform of
-        /// <paramref name="g"/>, which includes the brick's rotation.
+        /// <paramref name="g"/>, which includes the brick's rotation. <paramref name="drawn"/> keeps how the brick was
+        /// last drawn, so that a brick drawn the same way again (as each one that is not moving is, every frame of the
+        /// preview) is copied pixel for pixel rather than drawn rotated and scaled again, which is slow.
         /// </summary>
-        public static void Draw(Graphics g, in BrickData brick, PointF location)
+        public static void Draw(Graphics g, in BrickData brick, PointF location, ref DrawnBrick drawn)
         {
             var image = GetBrickImage(brick);
+            float x = location.X - (image.Width / 2);
+            float y = location.Y - (image.Height / 2);
+
+            float[] m;
+            using (var transform = g.Transform)
+                m = transform.Elements;
+            // Where the image goes on the device, with the screen offset after the transform
+            float dx = m[4] + ScreenOffset.X;
+            float dy = m[5] + ScreenOffset.Y;
+            float minX = float.MaxValue, minY = float.MaxValue, maxX = float.MinValue, maxY = float.MinValue;
+            foreach (var (cx, cy) in new[] { (x, y), (x + image.Width, y), (x, y + image.Height), (x + image.Width, y + image.Height) })
+            {
+                float px = (cx * m[0]) + (cy * m[2]) + dx;
+                float py = (cx * m[1]) + (cy * m[3]) + dy;
+                minX = Math.Min(minX, px);
+                minY = Math.Min(minY, py);
+                maxX = Math.Max(maxX, px);
+                maxY = Math.Max(maxY, py);
+            }
+
+            // Drawn as it is when it is too large (or the transform not usable) to keep
+            bool keepable = !float.IsNaN(minX) && !float.IsNaN(minY) && maxX - minX < 4096 && maxY - minY < 4096 &&
+                Math.Abs(minX) < 1e6 && Math.Abs(minY) < 1e6;
+            int left = keepable ? (int)Math.Floor(minX) - 1 : 0;
+            int top = keepable ? (int)Math.Floor(minY) - 1 : 0;
+
+            // The same image, transform and position of the image within a device pixel draw the same pixels
+            float originX = (x * m[0]) + (y * m[2]) + dx;
+            float originY = (x * m[1]) + (y * m[3]) + dy;
+            var key = new DrawnBrick.DrawKey(image, m, originX - left, originY - top, g.InterpolationMode, g.PixelOffsetMode, g.CompositingQuality);
+            if (keepable && drawn != null && drawn.Key.Equals(key))
+            {
+                var size = new Size((int)Math.Ceiling(maxX) + 2 - left, (int)Math.Ceiling(maxY) + 2 - top);
+                if (drawn.Image == null || drawn.Image.Size != size)
+                {
+                    // Drawn the same way twice running, so it is not moving: kept drawn
+                    drawn.Image?.Dispose();
+                    var result = new Bitmap(size.Width, size.Height, PixelFormat.Format32bppPArgb);
+                    using (var bg = Graphics.FromImage(result))
+                    using (var transform = new Matrix(m[0], m[1], m[2], m[3], dx - left, dy - top))
+                    {
+                        bg.InterpolationMode = g.InterpolationMode;
+                        bg.PixelOffsetMode = g.PixelOffsetMode;
+                        bg.CompositingQuality = g.CompositingQuality;
+                        bg.Transform = transform;
+                        bg.DrawImage(image, x, y);
+                    }
+                    drawn.Image = result;
+                }
+                var state = g.Save();
+                g.ResetTransform();
+                g.DrawImage(drawn.Image, new Rectangle(left, top, size.Width, size.Height), 0, 0, size.Width, size.Height, GraphicsUnit.Pixel);
+                g.Restore(state);
+                return;
+            }
+
+            // Drawn for the first time, or moved: drawn as it is
+            if (drawn == null)
+                drawn = new DrawnBrick();
+            drawn.Image?.Dispose();
+            drawn.Image = null;
+            drawn.Key = key;
             var backup = g.Transform;
             g.TranslateTransform(ScreenOffset.X, ScreenOffset.Y, MatrixOrder.Append);
-            g.DrawImage(image, location.X - (image.Width / 2), location.Y - (image.Height / 2));
+            g.DrawImage(image, x, y);
             g.Transform = backup;
             backup.Dispose();
+        }
+
+        /// <summary>
+        /// How a brick was last drawn, and the brick drawn that way once it has been drawn the same way twice.
+        /// </summary>
+        internal sealed class DrawnBrick
+        {
+            public DrawKey Key;
+            public Bitmap Image;
+
+            internal readonly struct DrawKey : IEquatable<DrawKey>
+            {
+                private readonly Bitmap _image;
+                private readonly float _m11, _m12, _m21, _m22, _x, _y;
+                private readonly InterpolationMode _interpolation;
+                private readonly PixelOffsetMode _pixelOffset;
+                private readonly CompositingQuality _compositing;
+
+                public DrawKey(Bitmap image, float[] m, float x, float y, InterpolationMode interpolation,
+                    PixelOffsetMode pixelOffset, CompositingQuality compositing)
+                {
+                    _image = image;
+                    _m11 = m[0];
+                    _m12 = m[1];
+                    _m21 = m[2];
+                    _m22 = m[3];
+                    _x = x;
+                    _y = y;
+                    _interpolation = interpolation;
+                    _pixelOffset = pixelOffset;
+                    _compositing = compositing;
+                }
+
+                public bool Equals(DrawKey other) =>
+                    _image != null && _image == other._image &&
+                    _m11 == other._m11 && _m12 == other._m12 && _m21 == other._m21 && _m22 == other._m22 &&
+                    _x == other._x && _y == other._y &&
+                    _interpolation == other._interpolation && _pixelOffset == other._pixelOffset &&
+                    _compositing == other._compositing;
+
+                public override bool Equals(object obj) => obj is DrawKey other && Equals(other);
+
+                public override int GetHashCode() => _x.GetHashCode() ^ (_y.GetHashCode() * 31);
+            }
         }
 
         private const int MaxCachedBitmaps = 256;
@@ -97,68 +207,110 @@ namespace IntelOrca.PeggleEdit.Tools
 
         private static Bitmap CreateBrickBitmap(in BrickData brickData)
         {
-            var supersample = true;
             CalculateBrickVertices(brickData, out var vertices, out var texCoords);
 
-            // Large enough for the brick (centred, so an even size), at least 100x100
-            var extent = 0.0f;
+            // Large enough for the brick, centred (so each side is even), drawn at twice the size and then scaled down
+            var extentX = 0.0f;
+            var extentY = 0.0f;
             foreach (var v in vertices)
-                extent = Math.Max(extent, Math.Max(Math.Abs(v.X), Math.Abs(v.Y)));
-            var size = Math.Min(2048, Math.Max(100, 2 * (int)Math.Ceiling(extent + 2)));
-            var bitmapSize = new Size(size, size);
-            if (supersample)
             {
-                bitmapSize = new Size(bitmapSize.Width * 2, bitmapSize.Height * 2);
+                extentX = Math.Max(extentX, Math.Abs(v.X));
+                extentY = Math.Max(extentY, Math.Abs(v.Y));
+            }
+            // A brick with no size (or one that is not a number) is still drawn, as nothing
+            if (!(extentX < 1024))
+                extentX = float.IsNaN(extentX) ? 0 : 1024;
+            if (!(extentY < 1024))
+                extentY = float.IsNaN(extentY) ? 0 : 1024;
+            var size = new Size(
+                Math.Min(2048, 2 * (int)Math.Ceiling(extentX + 2)),
+                Math.Min(2048, 2 * (int)Math.Ceiling(extentY + 2)));
+            const int Scale = 2;
+            var largeSize = new Size(size.Width * Scale, size.Height * Scale);
+
+            var texture = GetTexturePixels(GetBrickTexture(brickData));
+            var pixels = new int[largeSize.Width * largeSize.Height];
+            for (int i = 0; i < vertices.Length; i++)
+                vertices[i] = new PointF((largeSize.Width / 2) + (vertices[i].X * Scale), (largeSize.Height / 2) + (vertices[i].Y * Scale));
+            var numTriangles = vertices.Length / 3;
+            for (int i = 0; i < numTriangles; i++)
+            {
+                FillTriangle(texture, pixels, largeSize,
+                    new ReadOnlySpan<PointF>(vertices, i * 3, 3),
+                    new ReadOnlySpan<PointF>(texCoords, i * 3, 3));
             }
 
-            var bitmapLarge = new Bitmap(bitmapSize.Width, bitmapSize.Height);
-            try
+            using (var bitmapLarge = new Bitmap(largeSize.Width, largeSize.Height, PixelFormat.Format32bppArgb))
             {
-                var scale = supersample ? 2 : 1;
-                for (int i = 0; i < vertices.Length; i++)
+                var data = bitmapLarge.LockBits(new Rectangle(Point.Empty, largeSize), ImageLockMode.WriteOnly, PixelFormat.Format32bppArgb);
+                try
                 {
-                    vertices[i] = new PointF((bitmapSize.Width / 2) + (vertices[i].X * scale), (bitmapSize.Height / 2) + (vertices[i].Y * scale));
+                    for (int y = 0; y < largeSize.Height; y++)
+                        Marshal.Copy(pixels, y * largeSize.Width, data.Scan0 + (y * data.Stride), largeSize.Width);
+                }
+                finally
+                {
+                    bitmapLarge.UnlockBits(data);
                 }
 
-                var texture = GetBrickTexture(brickData);
-                var numTriangles = vertices.Length / 3;
-                for (int i = 0; i < numTriangles; i++)
-                {
-                    SetPixelBufferColor(
-                        (u, v) => GetTexture(texture, u, v),
-                        (x, y, c) => SetPixel(bitmapLarge, x, y, c),
-                        new ReadOnlySpan<PointF>(vertices, i * 3, 3),
-                        new ReadOnlySpan<PointF>(texCoords, i * 3, 3));
-                }
-            }
-            catch
-            {
-            }
-
-            if (supersample)
-            {
-                var bitmapSmall = new Bitmap(bitmapSize.Width / 2, bitmapSize.Height / 2);
+                var bitmapSmall = new Bitmap(size.Width, size.Height, PixelFormat.Format32bppPArgb);
                 using (var g = Graphics.FromImage(bitmapSmall))
                 {
-                    g.InterpolationMode = System.Drawing.Drawing2D.InterpolationMode.HighQualityBilinear;
-                    g.DrawImage(bitmapLarge, 0, 0, bitmapLarge.Width / 2, bitmapLarge.Height / 2);
+                    g.InterpolationMode = InterpolationMode.HighQualityBilinear;
+                    g.DrawImage(bitmapLarge, 0, 0, size.Width, size.Height);
                 }
-                bitmapLarge.Dispose();
                 return bitmapSmall;
-            }
-            else
-            {
-                return bitmapLarge;
             }
         }
 
-        private static uint GetTexture(Bitmap bitmap, float u, float v)
+        /// <summary>
+        /// A texture's pixels (ARGB, not premultiplied) with its size.
+        /// </summary>
+        private readonly struct TexturePixels
         {
-            int width = bitmap.Width;
-            int height = bitmap.Height;
+            public readonly int[] Pixels;
+            public readonly int Width;
+            public readonly int Height;
 
-            if (u < 0) u = 0;
-            if (v < 0) v = 0;
+            public TexturePixels(int[] pixels, int width, int height)
+            {
+                Pixels = pixels;
+                Width = width;
+                Height = height;
+            }
+        }
+
+        private static readonly Dictionary<Bitmap, TexturePixels> _texturePixels = new Dictionary<Bitmap, TexturePixels>();
+
+        private static TexturePixels GetTexturePixels(Bitmap texture)
+        {
+            if (!_texturePixels.TryGetValue(texture, out var result))
+            {
+                var pixels = new int[texture.Width * texture.Height];
+                var data = texture.LockBits(new Rectangle(0, 0, texture.Width, texture.Height), ImageLockMode.ReadOnly, PixelFormat.Format32bppArgb);
+                try
+                {
+                    for (int y = 0; y < texture.Height; y++)
+                        Marshal.Copy(data.Scan0 + (y * data.Stride), pixels, y * texture.Width, texture.Width);
+                }
+                finally
+                {
+                    texture.UnlockBits(data);
+                }
+                result = new TexturePixels(pixels, texture.Width, texture.Height);
+                _texturePixels.Add(texture, result);
+            }
+            return result;
+        }
+
+        private static int GetTexture(in TexturePixels texture, float u, float v)
+        {
+            int width = texture.Width;
+            int height = texture.Height;
+
+            // Not a number (from a triangle with no area) is the edge
+            if (!(u >= 0)) u = 0;
+            if (!(v >= 0)) v = 0;
             if (u > 1) u = 1;
             if (v > 1) v = 1;
 
@@ -175,37 +327,30 @@ namespace IntelOrca.PeggleEdit.Tools
             var dy = y - y0;
 
             // Get the texel colors of the four surrounding texels
-            var color00 = bitmap.GetPixel(x0, y0);
-            var color10 = bitmap.GetPixel(x1, y0);
-            var color01 = bitmap.GetPixel(x0, y1);
-            var color11 = bitmap.GetPixel(x1, y1);
+            var c00 = texture.Pixels[(y0 * width) + x0];
+            var c10 = texture.Pixels[(y0 * width) + x1];
+            var c01 = texture.Pixels[(y1 * width) + x0];
+            var c11 = texture.Pixels[(y1 * width) + x1];
 
             // Perform linear interpolation to get the final texel color
-            var interpolatedColor = Color.FromArgb(
-                (int)Math.Round((1 - dx) * (1 - dy) * color00.A + dx * (1 - dy) * color10.A + (1 - dx) * dy * color01.A + dx * dy * color11.A),
-                (int)Math.Round((1 - dx) * (1 - dy) * color00.R + dx * (1 - dy) * color10.R + (1 - dx) * dy * color01.R + dx * dy * color11.R),
-                (int)Math.Round((1 - dx) * (1 - dy) * color00.G + dx * (1 - dy) * color10.G + (1 - dx) * dy * color01.G + dx * dy * color11.G),
-                (int)Math.Round((1 - dx) * (1 - dy) * color00.B + dx * (1 - dy) * color10.B + (1 - dx) * dy * color01.B + dx * dy * color11.B)
-            );
-
-            return (uint)interpolatedColor.ToArgb();
+            int Channel(int shift) => (int)Math.Round(
+                ((1 - dx) * (1 - dy) * ((c00 >> shift) & 0xFF)) + (dx * (1 - dy) * ((c10 >> shift) & 0xFF)) +
+                ((1 - dx) * dy * ((c01 >> shift) & 0xFF)) + (dx * dy * ((c11 >> shift) & 0xFF))) << shift;
+            return Channel(24) | Channel(16) | Channel(8) | Channel(0);
         }
 
-        private static void SetPixel(Bitmap bitmap, int x, int y, uint colour)
-        {
-            bitmap.SetPixel(x, y, Color.FromArgb((int)colour));
-        }
-
-        private static void SetPixelBufferColor(
-            Func<float, float, uint> getTexture,
-            Action<int, int, uint> setPixel,
-            ReadOnlySpan<PointF> vertices,
+        private static void FillTriangle(in TexturePixels texture, int[] pixels, Size size, ReadOnlySpan<PointF> vertices,
             ReadOnlySpan<PointF> texCoords)
         {
-            int minX = (int)Math.Min(vertices[0].X, Math.Min(vertices[1].X, vertices[2].X));
-            int maxX = (int)Math.Max(vertices[0].X, Math.Max(vertices[1].X, vertices[2].X));
-            int minY = (int)Math.Min(vertices[0].Y, Math.Min(vertices[1].Y, vertices[2].Y));
-            int maxY = (int)Math.Max(vertices[0].Y, Math.Max(vertices[1].Y, vertices[2].Y));
+            // A triangle with no area (e.g. of a brick with no length) covers nothing
+            var area = ((vertices[1].Y - vertices[2].Y) * (vertices[0].X - vertices[2].X)) +
+                       ((vertices[2].X - vertices[1].X) * (vertices[0].Y - vertices[2].Y));
+            if (!(area != 0) || float.IsInfinity(area))
+                return;
+            int minX = Math.Max(0, (int)Math.Min(vertices[0].X, Math.Min(vertices[1].X, vertices[2].X)));
+            int maxX = Math.Min(size.Width - 1, (int)Math.Max(vertices[0].X, Math.Max(vertices[1].X, vertices[2].X)));
+            int minY = Math.Max(0, (int)Math.Min(vertices[0].Y, Math.Min(vertices[1].Y, vertices[2].Y)));
+            int maxY = Math.Min(size.Height - 1, (int)Math.Max(vertices[0].Y, Math.Max(vertices[1].Y, vertices[2].Y)));
             for (int y = minY; y <= maxY; y++)
             {
                 for (int x = minX; x <= maxX; x++)
@@ -215,8 +360,7 @@ namespace IntelOrca.PeggleEdit.Tools
                     if (PointInTriangle(new PointF(x + 0.5f, y + 0.5f), vertices[0], vertices[1], vertices[2]))
                     {
                         var uv = InterpolateUV(x + 0.5f, y + 0.5f, vertices, texCoords);
-                        var c = getTexture(uv.X, uv.Y);
-                        setPixel(x, y, c);
+                        pixels[(y * size.Width) + x] = GetTexture(texture, uv.X, uv.Y);
                     }
                 }
             }

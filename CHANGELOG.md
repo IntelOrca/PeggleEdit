@@ -62,6 +62,7 @@ PeggleEdit 5.2.0 (Flamingo) (TBC)
 * [Fix] Preview of Swing Around Circle, Rotate Back And Forth and Rotate with a max angle matches the game when reversed, path rotated or with a phase, and the movement Offset is now shown
 * [Fix] Movement matches the game: arcs swing through their max angle, easing at each end (e.g. Death Defying), cycles and vertical infinity start where the game starts them, flower loop moves, and the phase is a whole tick as in the game
 * [Fix] A movement's path is drawn through where the object goes, including a negative radius
+* [Fix] The preview with peg textures is several times faster, especially zoomed on a high DPI display, so PeggleEdit stays responsive while it plays
 * [Fix] Copying a teleport keeps what its destination's movement follows
 * [Fix] Fix unknown data, and values stored in the level that match the default, being lost from level objects when saved
 * [Fix] Use the game's defaults for solid and outline colours: black could not be used as a colour, and colours from the level showed as transparent

@@ -398,7 +398,7 @@ namespace IntelOrca.PeggleEdit.Tools.Levels.Children
             }
             else
             {
-                BrickImage.Draw(g, BrickData, location);
+                BrickImage.Draw(g, BrickData, location, ref mDrawnTexture);
             }
 
             if (Provisional)
@@ -428,7 +428,7 @@ namespace IntelOrca.PeggleEdit.Tools.Levels.Children
             }
             else
             {
-                BrickImage.Draw(g, BrickData, location);
+                BrickImage.Draw(g, BrickData, location, ref mDrawnTexture);
             }
 
             if (Provisional)
@@ -629,6 +629,9 @@ namespace IntelOrca.PeggleEdit.Tools.Levels.Children
                 (float)(Math.Sin(angle) * radius));
             return location.Subtract(originDelta);
         }
+
+        // How the textured brick was last drawn, so that it is quick to draw again the same way
+        private BrickImage.DrawnBrick mDrawnTexture;
 
         private BrickData BrickData
         {
