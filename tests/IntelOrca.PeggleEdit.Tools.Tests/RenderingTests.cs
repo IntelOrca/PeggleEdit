@@ -3,6 +3,7 @@ using System.Drawing;
 using System.Drawing.Imaging;
 using System.IO;
 using IntelOrca.PeggleEdit.Tools.Levels;
+using IntelOrca.PeggleEdit.Tools.Levels.Children;
 using IntelOrca.PeggleEdit.Tools.Levels.Xml;
 using IntelOrca.PeggleEdit.Tools.Pack;
 using Xunit;
@@ -161,6 +162,51 @@ namespace IntelOrca.PeggleEdit.Tools.Tests
                 // Centred on (75 + 100 + 20, 40 + 100 - 10)
                 Assert.Equal(new Rectangle(190, 127, 10, 6), GetDrawnBounds(image));
             }
+        }
+
+        [Fact]
+        public void ObjectImage_IsTurnedByItsImageRotation_WithItsOffset()
+        {
+            // A quarter turn anticlockwise around the ball: the offset (20, -10) is then (-10, -20), and the image is
+            // 6 wide and 10 tall
+            var level = ReadXml(@"<PeggleLevel schema=""1"" fileVersion=""0x52"">
+  <Ball x=""100"" y=""100"" radius=""5"">
+    <Properties image=""testimage"" imageDx=""20"" imageDy=""-10"" imageRot=""1.5707964"" />
+  </Ball>
+</PeggleLevel>");
+            using (var image = level.RenderGameView(drawInterface: false))
+            {
+                // Centred on (75 + 100 - 10, 40 + 100 - 20)
+                var bounds = GetDrawnBounds(image);
+                Assert.InRange(bounds.X, 161, 163);
+                Assert.InRange(bounds.Y, 114, 116);
+                Assert.InRange(bounds.Width, 6, 7);
+                Assert.InRange(bounds.Height, 10, 11);
+            }
+        }
+
+        [Fact]
+        public void Poly_ThatDoesNotMove_IsTurnedByItsRotation()
+        {
+            var level = new Level();
+            var poly = new Poly(level) { X = 100, Y = 100 };
+            poly.SetPoints(new[] { new PointF(0, 0), new PointF(10, 0) });
+            poly.Rotation = 90;
+            // A quarter turn anticlockwise: the point to the right is above, as edited and picked
+            Assert.Equal(100, poly.GetInteractionPoint(1).X, 3);
+            Assert.Equal(90, poly.GetInteractionPoint(1).Y, 3);
+            Assert.True(poly.HitTest(new RectangleF(99, 89, 2, 2)));
+            Assert.False(poly.HitTest(new RectangleF(109, 99, 2, 2)));
+            Assert.Equal(90, poly.Bounds.Top, 3);
+
+            // A point set where it is drawn is kept where it would be unturned
+            poly.SetInteractionPoint(1, new PointF(100, 80));
+            Assert.Equal(20, poly.Points[1].X, 3);
+            Assert.Equal(0, poly.Points[1].Y, 3);
+
+            // A moving poly is turned by its mover, not its rotation
+            poly.MoverLink = new MoverLink(level) { Mover = new Mover(level) { AnchorPointX = 100, AnchorPointY = 100 } };
+            Assert.Equal(poly.Location.X + 20, poly.GetInteractionPoint(1).X, 3);
         }
     }
 }

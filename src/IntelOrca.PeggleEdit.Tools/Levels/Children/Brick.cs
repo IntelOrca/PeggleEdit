@@ -328,8 +328,9 @@ namespace IntelOrca.PeggleEdit.Tools.Levels.Children
                 var image = Pack.LevelPack.Current?.GetImage(ImageFilename)?.Image;
                 if (image != null)
                 {
+                    // The game only turns a brick's image while the brick turns
                     if (!shadow && (!Level.ShowPreview || Visible))
-                        DrawObjectImage(g, image, location);
+                        DrawObjectImage(g, image, location, mHasPolyRotation && mPolyRotation != 0);
                     if (Level.ShowPreview || shadow)
                         return;
                 }
@@ -377,8 +378,31 @@ namespace IntelOrca.PeggleEdit.Tools.Levels.Children
         private Color GetOuterColour() => HasPegInfo ? PegInfo.GetOuterColour() : Color.Gray;
         private Color GetInnerColour() => HasPegInfo ? PegInfo.GetInnerColour() : Color.DimGray;
 
+        /// <summary>
+        /// Gets the outline of the brick with the shape the game gives it (see <see cref="BrickShape"/>), from
+        /// <paramref name="location"/>, as drawn turned to 0 degrees (a quarter turn clockwise further for a straight
+        /// brick).
+        /// </summary>
+        private PointF[] GetGameOutline(PointF location, float thickness)
+        {
+            BrickShape.GetEdges(BrickType, mRadius, mAngle, thickness, mCurvePoints, mLeftAngle, mRightAngle2, out var inner, out var outer);
+            var outline = BrickShape.GetOutline(inner, outer);
+            for (int i = 0; i < outline.Length; i++)
+            {
+                var p = outline[i];
+                outline[i] = Curved ? new PointF(location.X + p.X, location.Y + p.Y) : new PointF(location.X + p.Y, location.Y - p.X);
+            }
+            return outline;
+        }
+
         private void DrawStrightBrick(Graphics g, PointF location, bool shadow)
         {
+            if (BrickData.HasGameShape)
+            {
+                DrawGameShape(g, location, shadow);
+                return;
+            }
+
             var dest = new RectangleF(location.X - (Radius / 2), location.Y - (Thickness / 2), Radius, Thickness);
             if (shadow)
             {
@@ -405,8 +429,53 @@ namespace IntelOrca.PeggleEdit.Tools.Levels.Children
                 g.FillRectangle(new SolidBrush(Color.FromArgb(128, 255, 255, 255)), dest);
         }
 
+        /// <summary>
+        /// Draws the brick with the shape the game gives it: textured, plain, as its shadow, or as what the ball hits.
+        /// </summary>
+        private void DrawGameShape(Graphics g, PointF location, bool shadow)
+        {
+            var outline = GetGameOutline(location, mThickness);
+            if (shadow)
+            {
+                using (var brush = new SolidBrush(ShadowColour))
+                    g.FillPolygon(brush, outline);
+            }
+            else if (Level.ShowCollision)
+            {
+                g.FillPolygon(Brushes.White, outline);
+            }
+            else if (!Level.UsePegTextures || !HasPegInfo)
+            {
+                using (var brush = new SolidBrush(GetOuterColour()))
+                    g.FillPolygon(brush, outline);
+                // The inner shading: half as thick, towards the side the light is not on
+                var shading = GetGameOutline(location, mThickness / 2);
+                var shift = (mTextureFlip ? 2 : 8) - (mThickness / 4);
+                for (int i = 0; i < shading.Length; i++)
+                    shading[i] = Curved ? new PointF(shading[i].X + shift, shading[i].Y) : new PointF(shading[i].X, shading[i].Y - shift);
+                using (var brush = new SolidBrush(GetInnerColour()))
+                    g.FillPolygon(brush, shading);
+            }
+            else
+            {
+                BrickImage.Draw(g, BrickData, location, ref mDrawnTexture);
+            }
+
+            if (Provisional)
+            {
+                using (var brush = new SolidBrush(Color.FromArgb(128, 255, 255, 255)))
+                    g.FillPolygon(brush, outline);
+            }
+        }
+
         private void DrawCurvedBrick(Graphics g, PointF location, bool shadow)
         {
+            if (BrickData.HasGameShape)
+            {
+                DrawGameShape(g, location, shadow);
+                return;
+            }
+
             if (shadow)
             {
                 DrawCurvedBrick(g, ShadowColour, location, true);
@@ -630,6 +699,11 @@ namespace IntelOrca.PeggleEdit.Tools.Levels.Children
         private PointF GetOrigin(PointF location, float rotation)
         {
             var radius = MidRadius;
+            if (Curved && BrickData.HasGameShape)
+            {
+                // The position of the other types is nearer the centre, half way between the middles of the edges
+                BrickShape.GetEdges(BrickType, mRadius, mAngle, mThickness, mCurvePoints, mLeftAngle, mRightAngle2, out _, out _, out radius);
+            }
             var angle = MathExt.ToRadians(-rotation);
             var originDelta = new PointF(
                 (float)(Math.Cos(angle) * radius),
@@ -659,8 +733,30 @@ namespace IntelOrca.PeggleEdit.Tools.Levels.Children
                     brickData.SectorAngle = Angle;
                     brickData.CurvePoints = CurvePoints;
                 }
+                brickData.Type = BrickType;
+                if (!Curved)
+                {
+                    brickData.LeftAngle = mLeftAngle;
+                    brickData.RightAngle = mRightAngle2;
+                }
                 return brickData;
             }
+        }
+
+        /// <summary>
+        /// Gets the middle of one end of a curved brick with the shape the game gives it: the left end (anticlockwise),
+        /// or the right.
+        /// </summary>
+        private PointF GetGameEndPosition(bool left)
+        {
+            BrickShape.GetEdges(BrickType, mRadius, mAngle, mThickness, mCurvePoints, mLeftAngle, mRightAngle2, out var inner, out var outer);
+            var a = left ? inner[inner.Length - 1] : inner[0];
+            var b = left ? outer[outer.Length - 1] : outer[0];
+            var p = new PointF((a.X + b.X) / 2, (a.Y + b.Y) / 2);
+            // Turned anticlockwise by the rotation (y is down)
+            var angle = MathExt.ToRadians(Rotation);
+            double c = Math.Cos(angle), s = Math.Sin(angle);
+            return new PointF(Location.X + (float)((p.X * c) + (p.Y * s)), Location.Y + (float)((p.Y * c) - (p.X * s)));
         }
 
         public float MidRadius
@@ -704,7 +800,11 @@ namespace IntelOrca.PeggleEdit.Tools.Levels.Children
         {
             get
             {
-                if (Curved)
+                if (Curved && BrickData.HasGameShape)
+                {
+                    return GetGameEndPosition(true);
+                }
+                else if (Curved)
                 {
                     var angle = MathExt.ToRadians(-Rotation - (Angle / 2));
                     var radius = MidRadius;
@@ -749,7 +849,11 @@ namespace IntelOrca.PeggleEdit.Tools.Levels.Children
         {
             get
             {
-                if (Curved)
+                if (Curved && BrickData.HasGameShape)
+                {
+                    return GetGameEndPosition(false);
+                }
+                else if (Curved)
                 {
                     var angle = MathExt.ToRadians(-Rotation + (Angle / 2));
                     var radius = MidRadius;
@@ -894,7 +998,7 @@ namespace IntelOrca.PeggleEdit.Tools.Levels.Children
         }
 
         [DisplayName("Type")]
-        [Description("The shape of the brick: curved (normal, outer, inner, and the 90 variants) or straight. PeggleEdit draws all of the curved types like a normal curved brick.")]
+        [Description("The shape of the brick: curved (normal, outer, inner, and the 90 variants) or straight. Outer curved bricks have a straight inner edge, and inner curved bricks a straight outer edge; the 90 variants have ends that meet the straight edge at right angles.")]
         [Category("Layout")]
         public BrickType BrickType
         {
@@ -952,7 +1056,7 @@ namespace IntelOrca.PeggleEdit.Tools.Levels.Children
         }
 
         [DisplayName("Left Angle")]
-        [Description("The angle of the left end of the brick. PeggleEdit does not show it when drawing the brick.")]
+        [Description("The angle, in degrees anticlockwise, one end of a straight brick is tilted by: the end on the right when its rotation is 90, as it is placed. Curved bricks do not use it.")]
         [Category("Layout")]
         [DefaultValue(0.0f)]
         public float LeftAngle
@@ -969,14 +1073,15 @@ namespace IntelOrca.PeggleEdit.Tools.Levels.Children
         }
 
         [DisplayName("Right Angle")]
-        [Description("The angle of the right end of the brick. PeggleEdit does not show it when drawing the brick.")]
+        [Description("The angle, in degrees anticlockwise, the other end of a straight brick is tilted by: the end on the left when its rotation is 90, as it is placed. Curved bricks do not use it.")]
         [Category("Layout")]
         [DefaultValue(0.0f)]
         public float RightAngle
         {
             get
             {
-                return mRightAngle;
+                // It is stored twice, and the game uses the second
+                return mRightAngle2;
             }
             set
             {

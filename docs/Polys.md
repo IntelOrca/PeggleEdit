@@ -16,7 +16,8 @@ With the **Select** tool, you can also drag a selected poly's points to move the
 | Setting | What it does |
 |---|---|
 | Normal Dir | Which side the ball is kept on: Keep Out, Keep In, or Both. |
-| Rotation, Scale | Turn the poly or change its size in the game. PeggleEdit does not show these yet. |
+| Rotation | Turns a poly that does not move, anticlockwise around its position, with its points. A moving poly turns as its movement turns it instead. |
+| Scale | The size the poly was last scaled to in PopCap's level editor, which changed its points. The game does not use it, as the points are already that size. |
 | Grow Type | How the poly appears and disappears when the game shows or hides it. |
 | Mirror, Image Tile | Mirror the image, or repeat it across the poly. |
 

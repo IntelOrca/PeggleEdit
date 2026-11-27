@@ -332,15 +332,27 @@ namespace IntelOrca.PeggleEdit.Tools.Levels.Children
 
         /// <summary>
         /// Draws the object's image as the game does: centred on <paramref name="location"/>, moved by the image's
-        /// centre offset (ImageDX, ImageDY).
+        /// centre offset (ImageDX, ImageDY), and turned (with its offset) around <paramref name="location"/> by its image
+        /// rotation, unless <paramref name="rotate"/> is false.
         /// </summary>
-        protected void DrawObjectImage(Graphics g, Image image, PointF location)
+        protected void DrawObjectImage(Graphics g, Image image, PointF location, bool rotate = true)
         {
+            System.Drawing.Drawing2D.GraphicsState state = null;
+            if (rotate && mImageRotation != 0)
+            {
+                state = g.Save();
+                g.TranslateTransform(location.X, location.Y);
+                // Anticlockwise
+                g.RotateTransform(-MathExt.ToDegrees(mImageRotation));
+                location = PointF.Empty;
+            }
             g.DrawImageSnapped(PremultipliedImage.Get(image),
                 location.X + mImageDX - (image.Width / 2.0f),
                 location.Y + mImageDY - (image.Height / 2.0f),
                 image.Width,
                 image.Height);
+            if (state != null)
+                g.Restore(state);
         }
 
         public virtual void Draw(Graphics g)
@@ -991,7 +1003,7 @@ namespace IntelOrca.PeggleEdit.Tools.Levels.Children
 
         [EntryProperty(EntryPropertyType.Attribute, 0.0f)]
         [DisplayName("Image Rotation")]
-        [Description("The rotation of the image in degrees.")]
+        [Description("The rotation of the image in degrees, anticlockwise around the object's position. Bricks only use it while they turn.")]
         [Category("Appearance")]
         [DefaultValue(0.0f)]
         public float ImageRotation

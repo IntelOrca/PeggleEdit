@@ -424,8 +424,12 @@ namespace IntelOrca.PeggleEdit.Tools.Levels
             }
             if (entry is Poly poly)
             {
-                var location = poly.DrawLocation;
-                var points = poly.GetPoints().Select(p => new PointF(p.X + location.X, p.Y + location.Y)).ToArray();
+                // Its points as it is drawn: turned by its rotation if it does not move
+                var offset = new PointF(poly.DrawLocation.X - poly.Location.X, poly.DrawLocation.Y - poly.Location.Y);
+                var points = Enumerable.Range(0, poly.InteractionPointCount)
+                    .Select(i => poly.GetInteractionPoint(i))
+                    .Select(p => new PointF(p.X + offset.X, p.Y + offset.Y))
+                    .ToArray();
                 if (points.Length > 0)
                     return PolygonsTouch(points, polygon);
             }

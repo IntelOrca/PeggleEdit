@@ -16,12 +16,24 @@ Bricks are pegs that are long and thin. They can be straight or curved, and have
 
 | Setting | What it does |
 |---|---|
-| Type | Curved (normal, outer, inner and their 90 variants) or straight. PeggleEdit draws all the curved types like a normal curved brick. |
-| Radius | How big the curve is. For a straight brick, this is its length. |
+| Type | The shape of the brick, which the game both draws and bounces the ball off. See below. |
+| Radius | How big the curve is. For a straight brick, this is its length, which the game keeps to 600 at most. |
 | Angle | How much of a circle a curved brick covers, in degrees. A bigger angle makes a longer, more curved brick. |
 | Thickness | How thick the brick is. |
 | Curve Points | How smooth the curve is. Raise it if a large curved brick looks like it has straight edges. |
 | Texture Flip | Which side the shine is on. Keeps the shine the same along a row of bricks. |
+| Left Angle, Right Angle | Tilt the ends of a straight brick, in degrees anticlockwise, e.g. to make the corners of a frame meet. With the brick as placed (rotation 90), Left Angle tilts the end on the right and Right Angle the end on the left. Curved bricks do not use them. |
+
+## Brick types
+
+| Type | Shape |
+|---|---|
+| Normal Curved | Both edges curve. |
+| Outer Curved | The outer edge curves and the inner edge is straight. The ends point at the middle of the curve, like a normal curved brick's. |
+| Outer Curved 90 | The outer edge curves and the inner edge is straight, with ends that meet it at right angles: a block with a rounded top. |
+| Inner Curved | The inner edge curves and the outer edge is straight. |
+| Inner Curved 90 | The inner edge curves and the outer edge is straight, with ends that meet it at right angles. |
+| Straight | A straight brick, whose length is its **Radius**. |
 
 ## How curved bricks work
 A curved brick is a slice of a ring. When you hover over a brick, PeggleEdit shows the inside and outside of the ring it is part of.

@@ -187,7 +187,12 @@ namespace IntelOrca.PeggleEdit.Tools.Levels.Children
             }
             else if (MoverLink?.Mover is Mover movement)
             {
+                // The game turns a moving poly as its mover does, whatever its own rotation
                 angle = movement.GetEstimatedMoveAngle(angle);
+            }
+            else
+            {
+                angle = StaticAngle;
             }
 
             var backupMatrix = g.Transform;
@@ -227,7 +232,7 @@ namespace IntelOrca.PeggleEdit.Tools.Levels.Children
                 var anchorBrush = new SolidBrush(Color.FromArgb(196, 0x23, 0xB0, 0xDC));
                 foreach (var p in mPoints)
                 {
-                    g.DrawSquare(anchorOutline, anchorBrush, p.Add(DrawLocation), 8);
+                    g.DrawSquare(anchorOutline, anchorBrush, Turn(p).Add(DrawLocation), 8);
                 }
             }
         }
@@ -236,6 +241,26 @@ namespace IntelOrca.PeggleEdit.Tools.Levels.Children
         /// The angle the poly is drawn at, in degrees clockwise, instead of its mover's, e.g. a raised flipper.
         /// </summary>
         internal float? AngleOverride { get; set; }
+
+        /// <summary>
+        /// The angle a poly that does not move is turned by, in degrees clockwise: its rotation, which is anticlockwise.
+        /// Its points, as edited and picked, are turned by it too.
+        /// </summary>
+        private float StaticAngle => MoverLink?.Mover == null && AngleOverride == null && mHasRotation ? -MathExt.ToDegrees(mRotation) : 0;
+
+        /// <summary>
+        /// Turns one of the poly's points (from its position) as it is drawn when it does not move.
+        /// </summary>
+        private PointF Turn(PointF p) => Turn(p, StaticAngle);
+
+        private static PointF Turn(PointF p, float degrees)
+        {
+            if (degrees == 0)
+                return p;
+            double radians = degrees * Math.PI / 180;
+            double cos = Math.Cos(radians), sin = Math.Sin(radians);
+            return new PointF((float)((p.X * cos) - (p.Y * sin)), (float)((p.X * sin) + (p.Y * cos)));
+        }
 
         public Image GetPolygonImage()
         {
@@ -294,8 +319,9 @@ namespace IntelOrca.PeggleEdit.Tools.Levels.Children
                 float top = float.MaxValue;
                 float right = float.MinValue;
                 float bottom = float.MinValue;
-                foreach (PointF pnt in mPoints)
+                foreach (PointF point in mPoints)
                 {
+                    var pnt = Turn(point);
                     left = Math.Min(pnt.X, left);
                     top = Math.Min(pnt.Y, top);
                     right = Math.Max(pnt.X, right);
@@ -339,7 +365,7 @@ namespace IntelOrca.PeggleEdit.Tools.Levels.Children
         }
 
         [DisplayName("Rotation")]
-        [Description("The rotation of the poly in degrees, used when it has no movement. PeggleEdit does not show it when drawing the poly.")]
+        [Description("The rotation of the poly in degrees, anticlockwise around its position, used when it has no movement. A moving poly is turned as its movement turns it instead.")]
         [Category("Layout")]
         [DefaultValue(0.0f)]
         public float Rotation
@@ -356,7 +382,7 @@ namespace IntelOrca.PeggleEdit.Tools.Levels.Children
         }
 
         [DisplayName("Scale")]
-        [Description("How much larger or smaller the poly is drawn and collides, 1 being its normal size. PeggleEdit does not show it when drawing the poly.")]
+        [Description("The scale the poly was last given in PopCap's level editor, which changed its points to that size. The game does not use it when it draws the poly or the ball hits it, as the points are already that size.")]
         [Category("Layout")]
         [DefaultValue(1.0f)]
         public float Scale
@@ -425,11 +451,11 @@ namespace IntelOrca.PeggleEdit.Tools.Levels.Children
         {
             rect.Offset(-Location.X, -Location.Y);
             rect.Inflate(8, 8);
-            return MathExt.RectIntersectsPolygon(rect, mPoints);
+            return MathExt.RectIntersectsPolygon(rect, StaticAngle == 0 ? mPoints : mPoints.Select(p => Turn(p)).ToList());
         }
 
         public int InteractionPointCount => mPoints.Count;
-        public PointF GetInteractionPoint(int index) => mPoints[index].Add(Location);
-        public void SetInteractionPoint(int index, PointF value) => mPoints[index] = value.Subtract(Location);
+        public PointF GetInteractionPoint(int index) => Turn(mPoints[index]).Add(Location);
+        public void SetInteractionPoint(int index, PointF value) => mPoints[index] = Turn(value.Subtract(Location), -StaticAngle);
     }
 }

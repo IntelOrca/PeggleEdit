@@ -353,7 +353,13 @@ namespace IntelOrca.PeggleEdit.Tools
             int maxY = Math.Min(size.Height - 1, (int)Math.Max(vertices[0].Y, Math.Max(vertices[1].Y, vertices[2].Y)));
             for (int y = minY; y <= maxY; y++)
             {
-                for (int x = minX; x <= maxX; x++)
+                // Only the pixels near where the row crosses the triangle, as a thin triangle's box can be most of the
+                // brick (each is still checked, so the same pixels are filled)
+                if (!GetRowSpan(vertices, y + 0.5f, out var left, out var right))
+                    continue;
+                int fromX = Math.Max(minX, (int)Math.Floor(left) - 1);
+                int toX = Math.Min(maxX, (int)Math.Ceiling(right) + 1);
+                for (int x = fromX; x <= toX; x++)
                 {
                     // Check if the pixel is inside the triangle
                     // Sample at the centre of the pixel
@@ -364,6 +370,34 @@ namespace IntelOrca.PeggleEdit.Tools
                     }
                 }
             }
+        }
+
+        /// <summary>
+        /// Gets where a row crosses a triangle, from left to right. Returns false if it does not.
+        /// </summary>
+        private static bool GetRowSpan(ReadOnlySpan<PointF> vertices, float y, out float left, out float right)
+        {
+            left = float.MaxValue;
+            right = float.MinValue;
+            for (int i = 0; i < 3; i++)
+            {
+                var a = vertices[i];
+                var b = vertices[(i + 1) % 3];
+                if ((a.Y > y && b.Y > y) || (a.Y < y && b.Y < y))
+                    continue;
+                if (a.Y == b.Y)
+                {
+                    left = Math.Min(left, Math.Min(a.X, b.X));
+                    right = Math.Max(right, Math.Max(a.X, b.X));
+                }
+                else
+                {
+                    var x = a.X + ((y - a.Y) * (b.X - a.X) / (b.Y - a.Y));
+                    left = Math.Min(left, x);
+                    right = Math.Max(right, x);
+                }
+            }
+            return left <= right && !float.IsNaN(left) && !float.IsNaN(right);
         }
 
         private static PointF InterpolateUV(float x, float y, ReadOnlySpan<PointF> vertices, ReadOnlySpan<PointF> texCoords)
@@ -397,7 +431,21 @@ namespace IntelOrca.PeggleEdit.Tools
 
         private static void CalculateBrickVertices(BrickData b, out PointF[] vertices, out PointF[] textureCoords)
         {
-            if (b.Curved)
+            if (b.HasGameShape)
+            {
+                var curvePoints = b.CurvePoints == 0 ? 4 : b.CurvePoints;
+                BrickShape.GetEdges(b.Type, b.Length, b.SectorAngle, b.Width, curvePoints, b.LeftAngle, b.RightAngle, out var inner, out var outer);
+                BrickShape.GetTriangles(inner, outer, out vertices, out textureCoords);
+                for (int i = 0; i < vertices.Length; i++)
+                {
+                    var v = vertices[i];
+                    // A straight brick is drawn turned a quarter turn clockwise from a curved one, along x
+                    vertices[i] = b.Curved ?
+                        new PointF(v.X + CurvedOffset.X, v.Y + CurvedOffset.Y) :
+                        new PointF(v.Y + StraightOffset.X, -v.X + StraightOffset.Y);
+                }
+            }
+            else if (b.Curved)
             {
                 // The brick's position is half way between its inner and outer edge, the texture runs along the curve
                 var curvePoints = Math.Max(2, b.CurvePoints == 0 ? 4 : b.CurvePoints);

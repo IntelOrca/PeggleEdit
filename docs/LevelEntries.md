@@ -36,5 +36,7 @@ Add your image to the pack first (see [Level Packs](LevelPacks.md#images)). Then
 
 To use one of the game's own level images, type just its name, such as `flame4`.
 
+**Image DX** and **Image DY** move the image from the object's position, and **Image Rotation** turns it (with that offset) anticlockwise around the position, in degrees. A poly's image turns with the poly too. Bricks only use Image Rotation while they turn.
+
 ## Drawing order
 Objects are drawn in the order shown in the **Entry List**. Use **Bring to Front**, **Send to Back** and the other Z Order buttons on the **Home** tab to change it.

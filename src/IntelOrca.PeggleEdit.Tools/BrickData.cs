@@ -20,6 +20,18 @@ namespace IntelOrca.PeggleEdit.Tools
         public float Rotation { get; set; }
         public float SectorAngle { get; set; }
         public int CurvePoints { get; set; }
+        public Levels.Children.BrickType Type { get; set; }
+        public float LeftAngle { get; set; }
+        public float RightAngle { get; set; }
+
+        /// <summary>
+        /// Whether the brick is drawn with the shape the game gives it (see <see cref="BrickShape"/>): the curved types
+        /// other than normal, and straight bricks with tilted ends or longer than the game makes them. Normal curved
+        /// bricks and other straight bricks are drawn as they have been, matched to screenshots of the game.
+        /// </summary>
+        public bool HasGameShape => Curved ?
+            Type >= Levels.Children.BrickType.OuterCurved && Type <= Levels.Children.BrickType.InnerCurved90 :
+            LeftAngle != 0 || RightAngle != 0 || Length > BrickShape.MaxStraightLength;
 
         public bool Curved
         {
@@ -58,7 +70,10 @@ namespace IntelOrca.PeggleEdit.Tools
                    Width == other.Width &&
                    Rotation == other.Rotation &&
                    SectorAngle == other.SectorAngle &&
-                   CurvePoints == other.CurvePoints;
+                   CurvePoints == other.CurvePoints &&
+                   Type == other.Type &&
+                   LeftAngle == other.LeftAngle &&
+                   RightAngle == other.RightAngle;
         }
 
         public override int GetHashCode()
@@ -71,6 +86,9 @@ namespace IntelOrca.PeggleEdit.Tools
             hashCode = hashCode * -1521134295 + Rotation.GetHashCode();
             hashCode = hashCode * -1521134295 + SectorAngle.GetHashCode();
             hashCode = hashCode * -1521134295 + CurvePoints.GetHashCode();
+            hashCode = hashCode * -1521134295 + Type.GetHashCode();
+            hashCode = hashCode * -1521134295 + LeftAngle.GetHashCode();
+            hashCode = hashCode * -1521134295 + RightAngle.GetHashCode();
             return hashCode;
         }
     }
