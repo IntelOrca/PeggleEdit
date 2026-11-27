@@ -17,6 +17,7 @@
 using System;
 using System.Collections.Generic;
 using System.Drawing;
+using System.Globalization;
 using System.Linq;
 using System.Runtime.InteropServices;
 using System.Windows.Forms;
@@ -33,8 +34,10 @@ namespace IntelOrca.PeggleEdit.Designer
         LevelEditor mEditor;
         // The level whose entries are listed, which keep their scroll position as they change
         Level mListedLevel;
-        EntryListBox mList;
+        EntryListView mList;
         bool mSuspendChangeEvent;
+        // Whether the editor is to be given the list's selection, once the list has finished changing it
+        bool mSelectionPending;
 
         LevelEntryCollection mEntries = new LevelEntryCollection();
         LevelEntryCollection mSelectedEntries = new LevelEntryCollection();
@@ -48,12 +51,10 @@ namespace IntelOrca.PeggleEdit.Designer
             this.FormBorderStyle = FormBorderStyle.SizableToolWindow;
             this.Text = "Entry List";
 
-            mList = new EntryListBox();
+            mList = new EntryListView();
             mList.Dock = DockStyle.Fill;
-            mList.IntegralHeight = false;
-            mList.SelectionMode = SelectionMode.MultiExtended;
-
-            mList.SelectedIndexChanged += new System.EventHandler(mList_SelectedIndexChanged);
+            mList.SelectedIndexChanged += (sender, e) => OnListSelectionChanged();
+            mList.VirtualItemsSelectionRangeChanged += (sender, e) => OnListSelectionChanged();
 
             this.Controls.Add(mList);
         }
@@ -67,11 +68,17 @@ namespace IntelOrca.PeggleEdit.Designer
             if (mEditor == null)
             {
                 mSuspendChangeEvent = true;
-                mListedLevel = null;
-                mList.Items.Clear();
-                mEntries.Clear();
-                mSelectedEntries.Clear();
-                mSuspendChangeEvent = false;
+                try
+                {
+                    mListedLevel = null;
+                    mList.SetEntries(null, new LevelEntry[0], false);
+                    mEntries.Clear();
+                    mSelectedEntries.Clear();
+                }
+                finally
+                {
+                    mSuspendChangeEvent = false;
+                }
                 return;
             }
 
@@ -110,244 +117,728 @@ namespace IntelOrca.PeggleEdit.Designer
                 selectionChanged = true;
             }
 
-            //Only rebuild the list when the entries change, rebuilding it for
-            //a selection change makes the whole list flash
             if (entriesChanged)
             {
                 UpdateList();
             }
             else
             {
-                // The items show their entry's position, which changes as it is moved: just those are drawn again
-                mList.UpdateTexts();
+                // The rows show their entry's position, which changes as it is moved: just those are drawn again
+                mList.UpdateRows();
                 if (selectionChanged)
                     UpdateSelection();
             }
         }
 
+        /// <summary>
+        /// Gets which rows the editor's selected entries are.
+        /// </summary>
+        private bool[] GetSelectedRows()
+        {
+            bool[] selected = new bool[mList.VirtualListSize];
+            var indices = new Dictionary<LevelEntry, int>();
+            for (int i = 0; i < mEntries.Count; i++)
+                indices[mEntries[i]] = i;
+            foreach (LevelEntry le in mEditor.SelectedEntries)
+            {
+                if (indices.TryGetValue(le, out var index) && index < selected.Length)
+                    selected[index] = true;
+            }
+            return selected;
+        }
+
         private void UpdateSelection()
         {
             mSuspendChangeEvent = true;
-
-            bool[] selected = new bool[mList.Items.Count];
-            foreach (LevelEntry le in mEditor.SelectedEntries)
+            try
             {
-                int index = mEditor.Level.Entries.IndexOf(le);
-                if (index >= 0 && index < selected.Length)
-                    selected[index] = true;
-            }
+                int lastSelected = mList.SetSelectedRows(GetSelectedRows());
+                if (lastSelected != -1)
+                    mList.EnsureVisible(lastSelected);
 
-            //Only touch the items whose state differs, so just those are repainted
-            int lastSelected = -1;
-            for (int i = 0; i < selected.Length; i++)
+                mSelectedEntries.Clear();
+                mSelectedEntries.AddRange(mEditor.SelectedEntries);
+            }
+            finally
             {
-                if (mList.GetSelected(i) != selected[i])
-                {
-                    mList.SetSelected(i, selected[i]);
-                    if (selected[i])
-                        lastSelected = i;
-                }
+                mSuspendChangeEvent = false;
             }
-
-            if (lastSelected != -1)
-                ScrollIntoView(lastSelected);
-
-            mSelectedEntries.Clear();
-            mSelectedEntries.AddRange(mEditor.SelectedEntries);
-
-            mSuspendChangeEvent = false;
-        }
-
-        private void ScrollIntoView(int index)
-        {
-            int itemHeight = Math.Max(1, mList.ItemHeight);
-            int visibleCount = Math.Max(1, mList.ClientSize.Height / itemHeight);
-            if (index < mList.TopIndex)
-                mList.TopIndex = index;
-            else if (index >= mList.TopIndex + visibleCount)
-                mList.TopIndex = index - visibleCount + 1;
         }
 
         private void UpdateList()
         {
             mSuspendChangeEvent = true;
-
-            // Another level's entries are shown from the top
-            int topIndex = mEditor.Level == mListedLevel ? mList.TopIndex : 0;
-            mListedLevel = mEditor.Level;
-
-            mList.BeginUpdate();
-            mList.Items.Clear();
-            mList.Items.AddRange(mEditor.Level.Entries.Cast<LevelEntry>().Select((x, i) => new EntryItem(i, x)).ToArray());
-            mList.UpdateTexts();
-
-            foreach (LevelEntry le in mEditor.SelectedEntries)
+            try
             {
-                int index = mEditor.Level.Entries.IndexOf(le);
-                mList.SelectedIndices.Add(index);
+                // Another level's entries are shown from the top
+                bool sameLevel = mEditor.Level == mListedLevel;
+                mListedLevel = mEditor.Level;
+
+                mEntries.Clear();
+                mEntries.AddRange(mEditor.Level.Entries);
+                mList.SetEntries(mEditor.Level, mEntries.Cast<LevelEntry>().ToArray(), sameLevel);
+                mList.SetSelectedRows(GetSelectedRows());
+
+                mSelectedEntries.Clear();
+                mSelectedEntries.AddRange(mEditor.SelectedEntries);
             }
-
-            mList.EndUpdate();
-
-            mEntries.Clear();
-            mSelectedEntries.Clear();
-
-            mEntries.AddRange(mEditor.Level.Entries);
-            mSelectedEntries.AddRange(mEditor.SelectedEntries);
-
-            mList.TopIndex = Math.Min(topIndex, mEntries.Count);
-
-            mSuspendChangeEvent = false;
+            finally
+            {
+                mSuspendChangeEvent = false;
+            }
         }
 
-        private void mList_SelectedIndexChanged(object sender, EventArgs e)
+        private void OnListSelectionChanged()
         {
-            if (mSuspendChangeEvent || mEditor == null)
+            if (mSuspendChangeEvent || mList.IsRestoringSelection || mEditor == null || mSelectionPending)
+                return;
+            // A click can change many rows one at a time: the editor is given the selection once they have all changed
+            mSelectionPending = true;
+            BeginInvoke((Action)ApplyListSelection);
+        }
+
+        private void ApplyListSelection()
+        {
+            mSelectionPending = false;
+            if (mEditor == null || IsDisposed)
                 return;
 
+            var selected = mList.SelectedIndices.Cast<int>().Where(i => i < mEntries.Count).OrderBy(i => i).ToList();
             mEditor.SelectedEntries.Clear();
-            foreach (int i in mList.SelectedIndices)
-            {
-                mEditor.SelectedEntries.Add(mEditor.Level.Entries[i]);
-            }
+            foreach (int i in selected)
+                mEditor.SelectedEntries.Add(mEntries[i]);
+            mSelectedEntries.Clear();
+            mSelectedEntries.AddRange(mEditor.SelectedEntries);
 
             mEditor.UpdateRedraw();
         }
 
         /// <summary>
-        /// A list of entries, each shown with its index and what it is (with its position). An item whose text has
-        /// changed is drawn again by itself, rather than being replaced, which repainted the whole list (and its
-        /// selection) for every frame of an entry being dragged, so that it flickered.
+        /// What a row shows for its entry. Rows are only drawn again when what they show changes.
         /// </summary>
-        /// <summary>
-        /// An entry in the list. The list keeps the text it is added with (e.g. for typing to find an item and for screen
-        /// readers), which is its index and what it is.
-        /// </summary>
-        private sealed class EntryItem
+        private struct Row : IEquatable<Row>
         {
-            private readonly string mText;
+            public string Index;
+            public string Type;
+            public string X;
+            public string Y;
+            public string Group;
+            public bool Locked;
+            // Whether the entry is shown in the level (its kind may be hidden)
+            public bool Shown;
 
-            public EntryItem(int index, LevelEntry entry)
+            public static Row Get(Level level, int index, LevelEntry entry)
             {
-                Entry = entry;
-                mText = GetText(index, entry);
+                var culture = CultureInfo.CurrentCulture;
+                return new Row
+                {
+                    Index = index.ToString(culture),
+                    Type = entry.GetType().Name,
+                    X = entry.X.ToString("0.##", culture),
+                    Y = entry.Y.ToString("0.##", culture),
+                    Group = entry.Group == 0 ? "" : entry.Group.ToString(culture),
+                    Locked = entry.Locked,
+                    Shown = level == null || level.IsShown(entry),
+                };
             }
 
+            public bool Equals(Row other) =>
+                Index == other.Index && Type == other.Type && X == other.X && Y == other.Y && Group == other.Group &&
+                Locked == other.Locked && Shown == other.Shown;
+
+            public override bool Equals(object obj) => obj is Row other && Equals(other);
+
+            public override int GetHashCode() => (Index, Type, X, Y, Group, Locked, Shown).GetHashCode();
+
             /// <summary>
-            /// The entry's index and what it is, and the group it is in and whether it is locked, if so.
+            /// The row's text, as one line, e.g. for screen readers.
             /// </summary>
-            public static string GetText(int index, LevelEntry entry)
+            public override string ToString()
             {
-                var text = String.Format("{0}. {1}", index, entry);
-                if (entry.Group != 0)
-                    text += String.Format(" [group {0}]", entry.Group);
-                if (entry.Locked)
+                var text = String.Format("{0}. {1}, ({2}, {3})", Index, Type, X, Y);
+                if (Group != "")
+                    text += String.Format(" [group {0}]", Group);
+                if (Locked)
                     text += " [locked]";
                 return text;
             }
-
-            public LevelEntry Entry { get; }
-
-            public override string ToString() => mText;
         }
 
-        private sealed class EntryListBox : ListBox
+        /// <summary>
+        /// A table of entries: each one's index, type, position and group, and whether it is locked. It is not edited:
+        /// rows are only selected. Its rows are drawn as they are needed (so that it is quick for thousands of entries),
+        /// off screen and then copied, and only the rows that change are drawn again, so that it never flickers, even
+        /// while entries are dragged.
+        /// </summary>
+        private sealed class EntryListView : ListView
         {
-            private const int WM_ERASEBKGND = 0x0014;
+            private const int WM_LBUTTONDOWN = 0x0201;
+            private const int LVM_SETITEMSTATE = 0x1000 + 43;
+            private const int LVIS_FOCUSED = 0x0001;
+            private const int WM_LBUTTONDBLCLK = 0x0203;
+            private const int WM_RBUTTONDOWN = 0x0204;
+            private const int WM_RBUTTONDBLCLK = 0x0206;
+            private const int LVM_FIRST = 0x1000;
+            private const int LVM_GETTOPINDEX = LVM_FIRST + 39;
+            private const int LVM_SCROLL = LVM_FIRST + 20;
+            private const int LVM_SETSELECTIONMARK = LVM_FIRST + 67;
 
-            // The text each item was last drawn with
-            private readonly List<string> mTexts = new List<string>();
+            [DllImport("user32.dll")]
+            private static extern IntPtr SendMessage(IntPtr hWnd, int msg, IntPtr wParam, IntPtr lParam);
 
-            public EntryListBox()
+            [StructLayout(LayoutKind.Sequential)]
+            private struct LVITEM
             {
-                DrawMode = DrawMode.OwnerDrawFixed;
-                UpdateItemHeight();
+                public int mask;
+                public int iItem;
+                public int iSubItem;
+                public int state;
+                public int stateMask;
+                public IntPtr pszText;
+                public int cchTextMax;
+                public int iImage;
+                public IntPtr lParam;
+                public int iIndent;
+                public int iGroupId;
+                public int cColumns;
+                public IntPtr puColumns;
+                public IntPtr piColFmt;
+                public int iGroup;
             }
 
-            protected override void OnFontChanged(EventArgs e)
+            [DllImport("user32.dll")]
+            private static extern IntPtr SendMessage(IntPtr hWnd, int msg, IntPtr wParam, ref LVITEM lParam);
+
+            /// <summary>
+            /// Whether the rows are being selected again, as the list's window has been made (again), rather than by the
+            /// user.
+            /// </summary>
+            public bool IsRestoringSelection { get; private set; }
+
+            private Level mLevel;
+            private LevelEntry[] mEntries = new LevelEntry[0];
+            private readonly List<Row> mRows = new List<Row>();
+            // The first column, which Windows always aligns to the left, is not shown, so that the index can be aligned to
+            // the right
+            private readonly ColumnHeader mHiddenColumn;
+            private readonly ColumnHeader mIndexColumn;
+            private readonly ColumnHeader mTypeColumn;
+            private readonly ColumnHeader mXColumn;
+            private readonly ColumnHeader mYColumn;
+            private readonly ColumnHeader mGroupColumn;
+            private readonly ColumnHeader mLockedColumn;
+            // How wide the type column is at least: for the widest type listed
+            private int mTypeWidth;
+            private bool mSizingColumns;
+            private bool mFillPending;
+            private Bitmap mLockIcon;
+            // Which rows are to be selected, kept for when the list's window is made (again)
+            private bool[] mSelectedRows = new bool[0];
+            // The digits typed to go to a row, and when the last was typed
+            private string mTypedIndex = "";
+            private DateTime mLastTyped;
+            // The row a drag to select rows started from, and the row it has reached
+            private int mDragAnchor = -1;
+            private int mDragRow = -1;
+            // Goes on with a drag while the mouse is still, e.g. above or below the list to scroll it. The mouse is not
+            // captured, as the list lets go of it once it has handled the button being pressed, so this also sees the
+            // button let go outside the list.
+            private readonly Timer mDragTimer = new Timer { Interval = 50 };
+
+            public EntryListView()
             {
-                base.OnFontChanged(e);
-                UpdateItemHeight();
+                View = View.Details;
+                VirtualMode = true;
+                OwnerDraw = true;
+                DoubleBuffered = true;
+                FullRowSelect = true;
+                HideSelection = false;
+                MultiSelect = true;
+                LabelEdit = false;
+                AllowColumnReorder = false;
+                HeaderStyle = ColumnHeaderStyle.Nonclickable;
+                ShowItemToolTips = false;
+
+                mHiddenColumn = Columns.Add("", 0);
+                mIndexColumn = Columns.Add("#", 40, HorizontalAlignment.Right);
+                mTypeColumn = Columns.Add("Type", 100, HorizontalAlignment.Left);
+                mXColumn = Columns.Add("X", 60, HorizontalAlignment.Right);
+                mYColumn = Columns.Add("Y", 60, HorizontalAlignment.Right);
+                mGroupColumn = Columns.Add("Group", 50, HorizontalAlignment.Right);
+                // Its header is a padlock
+                mLockedColumn = Columns.Add("", 24, HorizontalAlignment.Center);
+                SizeColumns();
+            }
+
+            protected override void OnColumnWidthChanging(ColumnWidthChangingEventArgs e)
+            {
+                // The hidden column stays hidden
+                if (e.ColumnIndex == mHiddenColumn.Index)
+                {
+                    e.Cancel = true;
+                    e.NewWidth = 0;
+                }
+                base.OnColumnWidthChanging(e);
+            }
+
+            protected override void OnColumnWidthChanged(ColumnWidthChangedEventArgs e)
+            {
+                base.OnColumnWidthChanged(e);
+                if (mSizingColumns)
+                    return;
+                // e.g. all the columns sized to their text with Ctrl and the keypad's +, which would show the hidden one
+                if (mHiddenColumn.Width != 0)
+                {
+                    mSizingColumns = true;
+                    mHiddenColumn.Width = 0;
+                    mSizingColumns = false;
+                }
+                FillTypeColumnLater();
+            }
+
+            protected override void OnClientSizeChanged(EventArgs e)
+            {
+                base.OnClientSizeChanged(e);
+                // Not while the list is changing how big it is (e.g. its scroll bar comes or goes as rows are added or
+                // removed), which goes wrong if the columns change too
+                FillTypeColumnLater();
+            }
+
+            private void FillTypeColumnLater()
+            {
+                if (mFillPending || !IsHandleCreated)
+                    return;
+                mFillPending = true;
+                BeginInvoke((Action)(() =>
+                {
+                    mFillPending = false;
+                    FillTypeColumn();
+                }));
+            }
+
+            /// <summary>
+            /// Makes the type column as wide as the space the other columns leave, so that they all fit.
+            /// </summary>
+            private void FillTypeColumn()
+            {
+                if (mSizingColumns || !IsHandleCreated || IsDisposed)
+                    return;
+                mSizingColumns = true;
+                int others = Columns.Cast<ColumnHeader>().Where(x => x != mTypeColumn).Sum(x => x.Width);
+                int width = Math.Max(mTypeWidth, ClientSize.Width - others);
+                if (mTypeColumn.Width != width)
+                    mTypeColumn.Width = width;
+                mSizingColumns = false;
             }
 
             protected override void OnHandleCreated(EventArgs e)
             {
                 base.OnHandleCreated(e);
-                UpdateItemHeight();
+                // A list of rows made as they are needed keeps no selection without its window
+                IsRestoringSelection = true;
+                try
+                {
+                    var selected = mSelectedRows;
+                    mSelectedRows = new bool[0];
+                    SetSelectedRows(selected);
+                }
+                finally
+                {
+                    IsRestoringSelection = false;
+                }
+                FillTypeColumnLater();
             }
 
-            // Drawn items are not sized for the font (e.g. on a high DPI display) as the list's own items are
-            private void UpdateItemHeight()
+            protected override void OnFontChanged(EventArgs e)
             {
-                var height = TextRenderer.MeasureText("Ag", Font).Height;
-                if (ItemHeight != height)
-                    ItemHeight = height;
+                base.OnFontChanged(e);
+                SizeColumns();
             }
 
-            private static string GetItemText(int index, object item) => EntryItem.GetText(index, ((EntryItem)item).Entry);
+            protected override void Dispose(bool disposing)
+            {
+                if (disposing)
+                {
+                    mLockIcon?.Dispose();
+                    mDragTimer.Dispose();
+                }
+                base.Dispose(disposing);
+            }
 
             /// <summary>
-            /// Draws again the items whose text has changed.
+            /// Makes each column wide enough for what it shows, for the font (e.g. on a high DPI display).
             /// </summary>
-            public void UpdateTexts()
+            private void SizeColumns()
             {
-                for (int i = 0; i < Items.Count; i++)
-                {
-                    var text = GetItemText(i, Items[i]);
-                    if (i == mTexts.Count)
-                    {
-                        mTexts.Add(text);
-                    }
-                    else if (mTexts[i] != text)
-                    {
-                        mTexts[i] = text;
-                        if (IsHandleCreated)
-                        {
-                            var bounds = GetItemRectangle(i);
-                            if (bounds.IntersectsWith(ClientRectangle))
-                                Invalidate(bounds);
-                        }
-                    }
-                }
-                if (mTexts.Count > Items.Count)
-                    mTexts.RemoveRange(Items.Count, mTexts.Count - Items.Count);
+                mIndexColumn.Width = ColumnWidth("0000");
+                mXColumn.Width = ColumnWidth("-000.00");
+                mYColumn.Width = ColumnWidth("-000.00");
+                mGroupColumn.Width = ColumnWidth("Group");
+                mLockedColumn.Width = GetLockIconSize() + 10;
+                SizeTypeColumn();
+                FillTypeColumnLater();
             }
 
-            protected override void OnDrawItem(DrawItemEventArgs e)
-            {
-                if (e.Index < 0 || e.Index >= Items.Count)
-                    return;
+            private int ColumnWidth(string text) => TextRenderer.MeasureText(text, Font).Width + 10;
 
-                var text = e.Index < mTexts.Count ? mTexts[e.Index] : GetItemText(e.Index, Items[e.Index]);
-                // Drawn off screen and then copied, so that the row is never seen with only its background drawn
-                using (var buffer = BufferedGraphicsManager.Current.Allocate(e.Graphics, e.Bounds))
+            private void SizeTypeColumn()
+            {
+                mTypeWidth = ColumnWidth("Type");
+                foreach (var name in mRows.Select(x => x.Type).Distinct())
+                    mTypeWidth = Math.Max(mTypeWidth, ColumnWidth(name));
+                FillTypeColumnLater();
+            }
+
+            /// <summary>
+            /// Lists <paramref name="entries"/>, keeping the rows that were at the top there if
+            /// <paramref name="keepScroll"/>, or from the top.
+            /// </summary>
+            public void SetEntries(Level level, LevelEntry[] entries, bool keepScroll)
+            {
+                int top = keepScroll && IsHandleCreated && VirtualListSize > 0 ? GetTopIndex() : 0;
+                mLevel = level;
+                mEntries = entries;
+                mRows.Clear();
+                for (int i = 0; i < entries.Length; i++)
+                    mRows.Add(Row.Get(level, i, entries[i]));
+                SizeTypeColumn();
+
+                EndDrag();
+                SelectedIndices.Clear();
+                mSelectedRows = new bool[0];
+                if (VirtualListSize != entries.Length)
+                    VirtualListSize = entries.Length;
+                if (IsHandleCreated && entries.Length > 0)
                 {
-                    var item = new DrawItemEventArgs(buffer.Graphics, e.Font, e.Bounds, e.Index, e.State, e.ForeColor, e.BackColor);
-                    item.DrawBackground();
-                    TextRenderer.DrawText(buffer.Graphics, text, e.Font, e.Bounds, e.ForeColor, e.BackColor,
-                        TextFormatFlags.Left | TextFormatFlags.VerticalCenter | TextFormatFlags.SingleLine |
-                        TextFormatFlags.NoPrefix | TextFormatFlags.EndEllipsis | TextFormatFlags.PreserveGraphicsTranslateTransform);
-                    item.DrawFocusRectangle();
-                    buffer.Render(e.Graphics);
+                    // Back to the row that was at the top, by scrolling the list by the difference
+                    top = Math.Min(top, entries.Length - 1);
+                    int now = GetTopIndex();
+                    if (now >= 0 && now != top)
+                    {
+                        int rowHeight = GetItemRect(now).Height;
+                        SendMessage(Handle, LVM_SCROLL, IntPtr.Zero, (IntPtr)((top - now) * rowHeight));
+                    }
                 }
-                base.OnDrawItem(e);
+                Invalidate();
+            }
+
+            private int GetTopIndex() => (int)SendMessage(Handle, LVM_GETTOPINDEX, IntPtr.Zero, IntPtr.Zero);
+
+            /// <summary>
+            /// Draws again the rows whose entry has changed what they show (e.g. its position, as it is moved).
+            /// </summary>
+            public void UpdateRows()
+            {
+                int first = -1;
+                for (int i = 0; i < mEntries.Length && i < mRows.Count; i++)
+                {
+                    var row = Row.Get(mLevel, i, mEntries[i]);
+                    bool changed = !row.Equals(mRows[i]);
+                    if (changed)
+                        mRows[i] = row;
+                    // Each run of changed rows is drawn again together
+                    if (changed && first == -1)
+                        first = i;
+                    else if (!changed && first != -1)
+                    {
+                        RedrawRows(first, i - 1);
+                        first = -1;
+                    }
+                }
+                if (first != -1)
+                    RedrawRows(first, mRows.Count - 1);
+            }
+
+            private void RedrawRows(int first, int last)
+            {
+                if (IsHandleCreated && VirtualListSize > 0)
+                    RedrawItems(first, Math.Min(last, VirtualListSize - 1), true);
+            }
+
+            /// <summary>
+            /// Selects the rows that are true in <paramref name="selected"/> and no others, changing only the rows that
+            /// differ (so only they are drawn again). Returns the last row that was newly selected, or -1.
+            /// </summary>
+            public int SetSelectedRows(bool[] selected)
+            {
+                mSelectedRows = selected;
+                if (!IsHandleCreated)
+                    return -1;
+                var current = new HashSet<int>(SelectedIndices.Cast<int>());
+                int lastSelected = -1;
+                foreach (var i in current)
+                {
+                    if (i >= selected.Length || !selected[i])
+                        SelectedIndices.Remove(i);
+                }
+                for (int i = 0; i < selected.Length; i++)
+                {
+                    if (selected[i] && !current.Contains(i))
+                    {
+                        SelectedIndices.Add(i);
+                        lastSelected = i;
+                    }
+                }
+                // Shift+click, and the arrow keys, in the list go from the row selected last
+                if (lastSelected != -1)
+                    SetFocusedRow(lastSelected);
+                return lastSelected;
+            }
+
+            /// <summary>
+            /// Makes a row the one the keyboard is on, and that Shift+click selects from.
+            /// </summary>
+            private void SetFocusedRow(int index)
+            {
+                var item = new LVITEM { stateMask = LVIS_FOCUSED, state = LVIS_FOCUSED };
+                SendMessage(Handle, LVM_SETITEMSTATE, (IntPtr)index, ref item);
+                SendMessage(Handle, LVM_SETSELECTIONMARK, IntPtr.Zero, (IntPtr)index);
+            }
+
+            /// <summary>
+            /// Selects just one row, as the user did.
+            /// </summary>
+            private void SelectOnly(int index)
+            {
+                var selected = new bool[VirtualListSize];
+                selected[index] = true;
+                SetSelectedRows(selected);
+                SetFocusedRow(index);
+                EnsureVisible(index);
+            }
+
+            /// <summary>
+            /// Selects the rows from one to another, as the user did.
+            /// </summary>
+            private void SelectRange(int from, int to)
+            {
+                var selected = new bool[VirtualListSize];
+                for (int i = Math.Min(from, to); i <= Math.Max(from, to); i++)
+                    selected[i] = true;
+                SetSelectedRows(selected);
+            }
+
+            protected override void OnRetrieveVirtualItem(RetrieveVirtualItemEventArgs e)
+            {
+                var row = e.ItemIndex < mRows.Count ? mRows[e.ItemIndex] : default;
+                // The hidden column has the whole row's text, e.g. for screen readers
+                var item = new ListViewItem(e.ItemIndex < mRows.Count ? row.ToString() : "");
+                item.SubItems.Add(row.Index ?? "");
+                item.SubItems.Add(row.Type ?? "");
+                item.SubItems.Add(row.X ?? "");
+                item.SubItems.Add(row.Y ?? "");
+                item.SubItems.Add(row.Group ?? "");
+                item.SubItems.Add(row.Locked ? "Locked" : "");
+                e.Item = item;
+            }
+
+            protected override void OnKeyDown(KeyEventArgs e)
+            {
+                // Ctrl and the keypad's + sizes the columns to their text, which the type column already fills
+                if (e.Control && e.KeyCode == Keys.Add)
+                {
+                    e.Handled = true;
+                    return;
+                }
+                base.OnKeyDown(e);
+            }
+
+            protected override void OnKeyPress(KeyPressEventArgs e)
+            {
+                // Typing a row's index goes to it (the list's own search is by text, which repeated digits get wrong)
+                e.Handled = true;
+                if (e.KeyChar < '0' || e.KeyChar > '9')
+                    return;
+                var now = DateTime.UtcNow;
+                if ((now - mLastTyped).TotalSeconds > 1)
+                    mTypedIndex = "";
+                mLastTyped = now;
+                mTypedIndex += e.KeyChar;
+                if (int.TryParse(mTypedIndex, NumberStyles.None, CultureInfo.InvariantCulture, out var index) && index < mRows.Count)
+                    SelectOnly(index);
+            }
+
+            protected override void OnItemDrag(ItemDragEventArgs e)
+            {
+                // Dragging over the rows selects them, as in a list box
+                base.OnItemDrag(e);
+                if (e.Button != MouseButtons.Left || mRows.Count == 0)
+                    return;
+                mDragAnchor = (e.Item as ListViewItem)?.Index ?? -1;
+                mDragRow = mDragAnchor;
+                if (mDragAnchor != -1)
+                {
+                    mDragTimer.Tick -= OnDragTimerTick;
+                    mDragTimer.Tick += OnDragTimerTick;
+                    mDragTimer.Start();
+                }
+            }
+
+            private void OnDragTimerTick(object sender, EventArgs e) => ContinueDrag();
+
+            protected override void OnMouseMove(MouseEventArgs e)
+            {
+                base.OnMouseMove(e);
+                ContinueDrag();
+            }
+
+            protected override void OnMouseUp(MouseEventArgs e)
+            {
+                base.OnMouseUp(e);
+                EndDrag();
+            }
+
+            /// <summary>
+            /// Selects the rows from the one the drag started from to the one under the mouse, of the rows shown in
+            /// full, or to the next one past the top or the bottom when the mouse is above or below the rows, which
+            /// scrolls the list to it.
+            /// </summary>
+            private void ContinueDrag()
+            {
+                if (mDragAnchor == -1)
+                    return;
+                // The button as it is now, as one let go over another program is not seen here
+                if (!IsHandleCreated || !PlatformServices.Current.IsLeftMouseButtonDown())
+                {
+                    EndDrag();
+                    return;
+                }
+                int top = GetTopIndex();
+                if (top < 0 || mRows.Count == 0)
+                    return;
+                var y = PointToClient(Cursor.Position).Y;
+                var topRow = GetItemRect(top);
+                int height = Math.Max(1, topRow.Height);
+                // The last row shown in full (the row below it is usually partly shown, and scrolling to it while the
+                // mouse was still over it went on to the end of the list)
+                int lastShown = top + Math.Max(0, ((ClientSize.Height - topRow.Top) / height) - 1);
+                int row;
+                if (y < topRow.Top)
+                    row = top - 1;
+                else if (y >= ClientSize.Height)
+                    row = lastShown + 1;
+                else
+                    row = Math.Min(lastShown, top + ((y - topRow.Top) / height));
+                row = Math.Max(0, Math.Min(VirtualListSize - 1, row));
+                if (row != mDragRow)
+                {
+                    mDragRow = row;
+                    SelectRange(mDragAnchor, row);
+                    SetFocusedRow(row);
+                    SendMessage(Handle, LVM_SETSELECTIONMARK, IntPtr.Zero, (IntPtr)mDragAnchor);
+                }
+                if (row < top || row > lastShown)
+                    EnsureVisible(row);
+            }
+
+            private void EndDrag()
+            {
+                mDragAnchor = -1;
+                mDragRow = -1;
+                mDragTimer.Stop();
+            }
+
+            protected override void OnDrawColumnHeader(DrawListViewColumnHeaderEventArgs e)
+            {
+                if (e.Header != mLockedColumn)
+                {
+                    e.DrawDefault = true;
+                    return;
+                }
+                e.DrawBackground();
+                DrawLockIcon(e.Graphics, e.Bounds);
+            }
+
+            protected override void OnDrawItem(DrawListViewItemEventArgs e)
+            {
+                // The whole row is drawn here, as it is not always drawn again cell by cell
+                int index = e.ItemIndex;
+                if (index < 0 || index >= mRows.Count)
+                    return;
+                var row = mRows[index];
+                bool selected = e.Item.Selected;
+                var bounds = new Rectangle(0, e.Bounds.Y, ClientSize.Width, e.Bounds.Height);
+                var back = selected ? SystemColors.Highlight : BackColor;
+                var fore = selected ? SystemColors.HighlightText : row.Shown ? ForeColor : SystemColors.GrayText;
+                var g = e.Graphics;
+
+                using (var brush = new SolidBrush(back))
+                    g.FillRectangle(brush, bounds);
+
+                // Each cell, where its column is (the columns may have been made wider or narrower)
+                int x = e.Bounds.X;
+                for (int c = 0; c < Columns.Count; c++)
+                {
+                    var column = Columns[c];
+                    var cell = new Rectangle(x, bounds.Y, column.Width, bounds.Height);
+                    x += column.Width;
+                    if (column == mHiddenColumn)
+                        continue;
+                    if (column == mLockedColumn)
+                    {
+                        if (row.Locked)
+                            DrawLockIcon(g, cell);
+                        continue;
+                    }
+                    var flags = TextFormatFlags.VerticalCenter | TextFormatFlags.SingleLine | TextFormatFlags.NoPrefix |
+                                TextFormatFlags.EndEllipsis | TextFormatFlags.PreserveGraphicsTranslateTransform;
+                    flags |= column.TextAlign == HorizontalAlignment.Right ? TextFormatFlags.Right : TextFormatFlags.Left;
+                    var text = cell;
+                    text.Inflate(-4, 0);
+                    TextRenderer.DrawText(g, GetCellText(row, column), Font, text, fore, back, flags);
+                }
+
+                if (e.Item.Focused && Focused)
+                    ControlPaint.DrawFocusRectangle(g, bounds, fore, back);
+            }
+
+            private string GetCellText(Row row, ColumnHeader column) =>
+                column == mIndexColumn ? row.Index :
+                column == mTypeColumn ? row.Type :
+                column == mXColumn ? row.X :
+                column == mYColumn ? row.Y :
+                column == mGroupColumn ? row.Group : "";
+
+            protected override void OnDrawSubItem(DrawListViewSubItemEventArgs e)
+            {
+                // Drawn with the row
+            }
+
+            // As big as the text, whatever the display's scale
+            private int GetLockIconSize() => Math.Max(12, (int)Math.Round(Font.Height * 0.85));
+
+            private void DrawLockIcon(Graphics g, Rectangle cell)
+            {
+                int size = Math.Max(8, Math.Min(cell.Height - 2, GetLockIconSize()));
+                if (mLockIcon == null || mLockIcon.Width != size)
+                {
+                    mLockIcon?.Dispose();
+                    mLockIcon = MenuToolPanel.CreateLockIcon(size, true);
+                }
+                g.DrawImage(mLockIcon, cell.X + ((cell.Width - size) / 2), cell.Y + ((cell.Height - size) / 2), size, size);
             }
 
             protected override void WndProc(ref Message m)
             {
-                // Each item draws all of its background, so on Windows only the space below the items is erased, rather
-                // than everything that is drawn again first being erased (which flickers)
-                if (m.Msg == WM_ERASEBKGND && Environment.OSVersion.Platform == PlatformID.Win32NT)
+                switch (m.Msg)
                 {
-                    var top = Items.Count == 0 ? 0 : Math.Max(0, GetItemRectangle(Items.Count - 1).Bottom);
-                    if (top < ClientSize.Height)
+                    case WM_LBUTTONDOWN:
+                    case WM_LBUTTONDBLCLK:
                     {
-                        using (var g = Graphics.FromHdc(m.WParam))
-                        using (var brush = new SolidBrush(BackColor))
-                            g.FillRectangle(brush, 0, top, ClientSize.Width, ClientSize.Height - top);
+                        // As in a list box, clicking below the rows does not clear the selection
+                        var point = new Point((short)((long)m.LParam & 0xFFFF), (short)(((long)m.LParam >> 16) & 0xFFFF));
+                        if (HitTest(point).Item == null)
+                        {
+                            Focus();
+                            return;
+                        }
+                        break;
                     }
-                    m.Result = (IntPtr)1;
-                    return;
+                    case WM_RBUTTONDOWN:
+                    case WM_RBUTTONDBLCLK:
+                        // As in a list box, the right button does not select
+                        Focus();
+                        return;
                 }
                 base.WndProc(ref m);
             }

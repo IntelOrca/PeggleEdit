@@ -781,7 +781,7 @@ namespace IntelOrca.PeggleEdit.Designer
         /// <summary>
         /// Draws a padlock, closed (<paramref name="locked"/>) or open.
         /// </summary>
-        private static Bitmap CreateLockIcon(int size, bool locked)
+        internal static Bitmap CreateLockIcon(int size, bool locked)
         {
             var bitmap = new Bitmap(size, size);
             using (var g = Graphics.FromImage(bitmap))

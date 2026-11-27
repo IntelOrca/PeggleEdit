@@ -7,7 +7,7 @@
 * **Level**: the level you are working on, in the middle. You can open several levels at once, each in its own tab. A level with unsaved changes has a `*` after its name.
 * **Pack Explorer**: the levels, images and challenges in your pack. See [Level Packs](LevelPacks.md).
 * **Properties**: the settings of the selected objects. Click a setting to see what it does at the bottom of the window.
-* **Entry List**: every object in the level, in the order the game draws them.
+* **Entry List**: every object in the level, in the order the game draws them, as a table: its index, type, position and group, and a padlock if it is locked. Objects whose kind is hidden are greyed. Click a row to select its object, drag over rows or use **Ctrl** or **Shift** to select more, or type an index to go to it.
 
 If you close a window, open it again from the **View** tab. PeggleEdit remembers where you put each window.
 
@@ -18,7 +18,7 @@ If you close a window, open it again from the **View** tab. PeggleEdit remembers
 * **Group**: group objects, and lock them.
   * **Group** puts the selected objects in a group. Clicking or boxing any object in a group selects the whole group, with a yellow box around it; hold **Alt** as you click or box to select just the objects themselves. **Ungroup** takes the selected objects out of their groups.
   * **Lock** locks the selected objects, so that they can not be selected or moved in the level, for example a background of bricks you are building on. You can still select a locked object in the Entry List, which shows it with a red box, and change it in the Properties window (**Locked** turns it off for just that object). **Unlock All** unlocks every object in the level.
-  * The Entry List marks objects that are in a group or locked. Groups and locks are kept in PeggleEdit's own data in the level, which the game ignores. Pasted objects are put in new groups of their own and are not locked.
+  * The Entry List shows the group each object is in, and a padlock for each locked object. Groups and locks are kept in PeggleEdit's own data in the level, which the game ignores. Pasted objects are put in new groups of their own and are not locked.
 * **Nights**: start Peggle Nights. If it does not start, set where the game is under **PeggleEdit Options > Peggle Nights**.
 
 ## Rotating objects

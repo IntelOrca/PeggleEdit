@@ -55,6 +55,12 @@ namespace IntelOrca.PeggleEdit.Designer
         /// part way through.
         /// </summary>
         IDisposable SuspendDrawing(Control control);
+
+        /// <summary>
+        /// Gets whether the left mouse button (the main one, if they are swapped) is held down now, including when it
+        /// was let go over another program, which <see cref="Control.MouseButtons"/> does not see.
+        /// </summary>
+        bool IsLeftMouseButtonDown();
     }
 
     static class PlatformServices
@@ -99,6 +105,19 @@ namespace IntelOrca.PeggleEdit.Designer
         public bool AcceptsInput(Form form)
         {
             return IsWindowEnabled(form.Handle);
+        }
+
+        private const int VK_LBUTTON = 0x01;
+        private const int VK_RBUTTON = 0x02;
+
+        [DllImport("user32.dll")]
+        private static extern short GetAsyncKeyState(int vKey);
+
+        public bool IsLeftMouseButtonDown()
+        {
+            // The physical button, so the right one when they are swapped
+            var key = SystemInformation.MouseButtonsSwapped ? VK_RBUTTON : VK_LBUTTON;
+            return (GetAsyncKeyState(key) & 0x8000) != 0;
         }
 
         #region Suspending drawing
@@ -275,6 +294,11 @@ namespace IntelOrca.PeggleEdit.Designer
         public void CentreSystemDialogs()
         {
             // Mono's message boxes are its own forms
+        }
+
+        public bool IsLeftMouseButtonDown()
+        {
+            return (Control.MouseButtons & MouseButtons.Left) != 0;
         }
 
         public IDisposable SuspendDrawing(Control control)

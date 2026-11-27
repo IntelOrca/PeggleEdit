@@ -13,6 +13,7 @@ PeggleEdit 5.2.0 (Flamingo) (TBC)
 * [Feature] Export levels to XML and import them back, losslessly (Pack Explorer: level > Export (XML), Levels > Import Level)
 * [Feature] peggleedit-cli command line tool for converting levels to and from XML
 * [Feature] Open a game's main.pak to open the levels and challenges Peggle, Peggle Nights or Pego come with as a level pack, to look at, copy from, or save as a level pack of their own
+* [Feature] #42: The Entry List is a table, with columns for each object's index, type, position and group, and a padlock for locked objects
 * [Feature] #39: Rotate the selected objects with the mouse, around their middle or a point you choose, by whole degrees or in steps of 22.5 or 45 degrees with Ctrl
 * [Feature] #36: Draw each brick type with the shape the game gives it (outer and inner curved, their 90 variants, and straight bricks with tilted ends), and draw objects' image rotation and the rotation of polys that do not move, as the game does
 * [Feature] #40: Group objects, so that they are selected together, and lock objects, so that they can not be selected or moved in the level (Home > Group, Ctrl+G, Ctrl+L)
