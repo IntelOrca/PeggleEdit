@@ -772,6 +772,15 @@ namespace IntelOrca.PeggleEdit.Tools.Levels.Children
             }
         }
 
+        /// <summary>
+        /// The path rotation in radians anticlockwise, as stored in the level file.
+        /// </summary>
+        internal float MoveRotationRadians
+        {
+            get => mMoveRotation;
+            set => mMoveRotation = value;
+        }
+
         [Description("The speed of the object in pixels per second.")]
         [ReadOnly(true)]
         public float Speed

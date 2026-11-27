@@ -21,11 +21,14 @@ If you close a window, open it again from the **View** tab. PeggleEdit remembers
   * The Entry List marks objects that are in a group or locked. Groups and locks are kept in PeggleEdit's own data in the level, which the game ignores. Pasted objects are put in new groups of their own and are not locked.
 * **Nights**: start Peggle Nights. If it does not start, set where the game is under **PeggleEdit Options > Peggle Nights**.
 
+## Rotating objects
+With the **Select** tool, a round handle shows above the selected objects. Drag it to turn them around their middle, marked with a cross, in steps of 1 degree; the angle is shown as you drag. Hold **Ctrl** to turn in steps of 22.5 degrees, or **Ctrl+Shift** for 45 degrees. To turn them around another point, hold **Shift** and click (or drag) to move the cross there first; it stays there for them, and moves with them as you move them, until you select something else. The objects turn together: each is moved around the point, bricks and generators turn, and the points of lines, polys, holes' destinations and pens turn with them. An object that moves has its movement path turned with it, and an object that moves along with another keeps where it is from it (see **Parent Mover**). A peg generator's ellipse (with different radii) only keeps its shape when turned by a quarter turn or a half turn; at other angles its pegs go round the ellipse instead. Locked objects are left where they are, and the whole turn is undone in one go.
+
 ## Tools tab
 
 | Tool | What it does |
 |---|---|
-| Select | Select and move objects. Drag a box to select several. Hold **Ctrl** and click to add or remove an object from the selection. Right-click for more options. |
+| Select | Select and move objects. Drag a box to select several. Hold **Ctrl** and click to add or remove an object from the selection. Drag the round handle above the selection to rotate it (see below). Right-click for more options. |
 | Eyedropper | Click an object to start placing more objects like it. |
 | Peg | Click to place a peg, or drag to paint lots of them. Pegs are not placed on top of other objects unless you hold **Ctrl**. |
 | Brick | Click to place a straight brick, or drag to paint several. A brick placed near the end of another joins on to it. Hold **Shift** to stop it joining, and **Ctrl** to place it on top of other objects. |
@@ -96,6 +99,7 @@ Open the README, the GitHub page, or see which version you have.
 | Ctrl+G, Ctrl+Shift+G | Group and ungroup the selected objects |
 | Ctrl+L, Ctrl+Shift+L | Lock the selected objects, and unlock everything |
 | Alt+click | Select an object without the rest of its group |
+| Shift+click | Move the point the selection turns around |
 | Home, End | Bring to front, send to back |
 | Page Up, Page Down | Bring forwards, send backwards |
 | B, V | Add a brick joined on to the selected brick. See [Bricks](Bricks.md) |

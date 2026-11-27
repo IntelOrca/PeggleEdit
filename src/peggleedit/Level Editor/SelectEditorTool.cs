@@ -21,6 +21,7 @@ using System.Linq;
 using System.Windows.Forms;
 using IntelOrca.PeggleEdit.Designer.Properties;
 using IntelOrca.PeggleEdit.Tools;
+using IntelOrca.PeggleEdit.Tools.Levels;
 using IntelOrca.PeggleEdit.Tools.Levels.Children;
 
 namespace IntelOrca.PeggleEdit.Designer
@@ -44,12 +45,220 @@ namespace IntelOrca.PeggleEdit.Designer
         /// </summary>
         private float PointTolerance => Math.Max(8, Editor.PixelsToUnits(8));
 
+        #region Rotating
+
+        // The objects being turned, as they were, while the rotate handle is dragged
+        private EntryRotation _rotation;
+        // The direction of the mouse from the pivot when the rotate handle was picked up, in degrees clockwise
+        private float _rotationStart;
+        // How far the objects are turned, in degrees clockwise
+        private float _rotationAngle;
+        // Where the mouse is while turning, in level coordinates
+        private PointF _rotationMouse;
+        // The point the selection turns around, once it has been set (with Shift), and the selection it is for
+        private PointF? _pivot;
+        private LevelEntry[] _pivotSelection;
+        // Where the pivot was when the objects started to be dragged
+        private PointF? _pivotDragStart;
+
+        // How far the rotate handle is above the selection, its radius, and how near the mouse is to pick it, in pixels
+        private const float RotateHandleGap = 24;
+        private const float RotateHandleRadius = 5;
+        private const float HandleTolerance = 8;
+
+        /// <summary>
+        /// The selected objects that can be turned: those that are moved (not locked), that have a place in the level.
+        /// </summary>
+        private LevelEntry[] GetRotatableSelection() =>
+            Editor.GetMovableSelectedObjects().Cast<LevelEntry>().Where(le => le.Bounds != RectangleF.Empty).ToArray();
+
+        private static RectangleF GetBounds(IEnumerable<LevelEntry> entries)
+        {
+            var bounds = RectangleF.Empty;
+            bool first = true;
+            foreach (var le in entries)
+            {
+                var b = le.Bounds;
+                bounds = first ? b : RectangleF.Union(bounds, b);
+                first = false;
+            }
+            return bounds;
+        }
+
+        /// <summary>
+        /// The point the objects turn around: the one set for them, or the middle of them.
+        /// </summary>
+        private PointF GetPivot(LevelEntry[] entries)
+        {
+            if (GetSetPivot(entries) is PointF pivot)
+                return pivot;
+            var bounds = GetBounds(entries);
+            return new PointF(bounds.X + (bounds.Width / 2), bounds.Y + (bounds.Height / 2));
+        }
+
+        /// <summary>
+        /// The point set for the objects to turn around, if it was set for them.
+        /// </summary>
+        private PointF? GetSetPivot(LevelEntry[] entries) =>
+            _pivotSelection != null && _pivotSelection.SequenceEqual(entries) ? _pivot : null;
+
+        private void SetPivot(LevelEntry[] entries, PointF pivot)
+        {
+            _pivot = pivot;
+            _pivotSelection = entries;
+        }
+
+        private PointF GetRotateHandle(RectangleF bounds) =>
+            new PointF(bounds.X + (bounds.Width / 2), bounds.Top - Editor.PixelsToUnits(RotateHandleGap));
+
+        /// <summary>
+        /// Gets a point of the editor (as the mouse gives it) in level coordinates.
+        /// </summary>
+        private PointF ToLevel(Point location)
+        {
+            var origin = Editor.Level.GetActualXY(0, 0);
+            return new PointF(location.X - origin.X, location.Y - origin.Y);
+        }
+
+        private static float Distance(PointF a, PointF b) => (float)Math.Sqrt(((a.X - b.X) * (a.X - b.X)) + ((a.Y - b.Y) * (a.Y - b.Y)));
+
+        /// <summary>
+        /// The direction of a point from another, in degrees clockwise from the right.
+        /// </summary>
+        private static float Direction(PointF from, PointF to) =>
+            (float)(Math.Atan2(to.Y - from.Y, to.X - from.X) * 180 / Math.PI);
+
+        /// <summary>
+        /// Starts turning the selection, if the rotate handle is at <paramref name="p"/>, or moves the pivot there with
+        /// Shift held. Returns whether it did.
+        /// </summary>
+        private bool BeginRotating(PointF p, Keys modifierKeys)
+        {
+            var entries = GetRotatableSelection();
+            if (entries.Length == 0)
+                return false;
+            if ((modifierKeys & Keys.Shift) != 0 && (modifierKeys & (Keys.Control | Keys.Alt)) == 0)
+            {
+                SetPivot(entries, p);
+                _state = State.MovingPivot;
+                return true;
+            }
+            if (Distance(p, GetRotateHandle(GetBounds(entries))) > Editor.PixelsToUnits(HandleTolerance))
+                return false;
+
+            var pivot = GetPivot(entries);
+            _rotation = new EntryRotation(entries, pivot);
+            _rotationStart = Direction(pivot, p);
+            _rotationAngle = 0;
+            _rotationMouse = p;
+            _firstObjectMovement = true;
+            _state = State.Rotating;
+            return true;
+        }
+
+        private void Rotate(PointF p, Keys modifierKeys)
+        {
+            _rotationMouse = p;
+            var angle = Direction(_rotation.Pivot, p) - _rotationStart;
+            // Whole degrees, or with Ctrl in steps of 22.5 degrees, or 45 with Shift too
+            float step = (modifierKeys & Keys.Control) == 0 ? 1 : (modifierKeys & Keys.Shift) != 0 ? 45 : 22.5f;
+            angle = (float)Math.Round(angle / step) * step;
+            // From -180 to 180, so that the angle shown does not jump as the mouse goes round
+            angle = EntryRotation.NormaliseAngle(angle);
+            if (angle > 180)
+                angle -= 360;
+            if (angle != _rotationAngle)
+            {
+                if (_firstObjectMovement)
+                {
+                    Editor.CreateUndoPoint();
+                    _firstObjectMovement = false;
+                }
+                _rotationAngle = angle;
+                _rotation.Rotate(angle);
+                Editor.UpdateRedraw();
+            }
+            else
+            {
+                Editor.RequestRedraw(null);
+            }
+        }
+
+        private void DrawRotation(Graphics g)
+        {
+            if (_state == State.Selecting || _state == State.MovingObjects || _state == State.MovingPoints)
+                return;
+            var entries = GetRotatableSelection();
+            if (entries.Length == 0)
+                return;
+
+            var origin = Editor.Level.GetActualXY(0, 0);
+            var state = g.Save();
+            g.TranslateTransform(origin.X, origin.Y);
+            g.SmoothingMode = System.Drawing.Drawing2D.SmoothingMode.AntiAlias;
+            var unit = Editor.OverlayLineWidth;
+            var pivot = _rotation?.Pivot ?? GetPivot(entries);
+
+            using (var dark = new Pen(Color.FromArgb(40, 40, 40), 3 * unit))
+            using (var light = new Pen(Color.White, unit))
+            using (var fill = new SolidBrush(Color.White))
+            using (var pivotPen = new Pen(Color.FromArgb(255, 200, 60), 1.5f * unit))
+            {
+                // The handle, above the selection, or at the mouse while turning
+                var bounds = GetBounds(entries);
+                var top = new PointF(bounds.X + (bounds.Width / 2), bounds.Top);
+                var handle = _state == State.Rotating ? _rotationMouse : GetRotateHandle(bounds);
+                var from = _state == State.Rotating ? pivot : top;
+                g.DrawLine(dark, from, handle);
+                g.DrawLine(light, from, handle);
+                var r = RotateHandleRadius * unit;
+                g.FillEllipse(fill, handle.X - r, handle.Y - r, 2 * r, 2 * r);
+                g.DrawEllipse(dark, handle.X - r, handle.Y - r, 2 * r, 2 * r);
+                g.DrawEllipse(light, handle.X - r, handle.Y - r, 2 * r, 2 * r);
+
+                // The pivot: a circle with a cross
+                var pr = 4 * unit;
+                var cross = 8 * unit;
+                foreach (var pen in new[] { dark, pivotPen })
+                {
+                    g.DrawEllipse(pen, pivot.X - pr, pivot.Y - pr, 2 * pr, 2 * pr);
+                    g.DrawLine(pen, pivot.X - cross, pivot.Y, pivot.X + cross, pivot.Y);
+                    g.DrawLine(pen, pivot.X, pivot.Y - cross, pivot.X, pivot.Y + cross);
+                }
+
+                // How far they are turned
+                if (_state == State.Rotating)
+                {
+                    var text = _rotationAngle.ToString("0.#", System.Globalization.CultureInfo.CurrentCulture) + "\u00b0";
+                    using (var systemFont = SystemFonts.MessageBoxFont)
+                    using (var font = new Font(systemFont.FontFamily, 12 * unit, FontStyle.Bold, GraphicsUnit.Pixel))
+                    {
+                        var at = new PointF(handle.X + (10 * unit), handle.Y - (10 * unit) - font.Height);
+                        var size = g.MeasureString(text, font);
+                        using (var back = new SolidBrush(Color.FromArgb(180, 0, 0, 0)))
+                            g.FillRectangle(back, at.X - (2 * unit), at.Y, size.Width + (4 * unit), size.Height);
+                        g.DrawString(text, font, Brushes.White, at);
+                    }
+                }
+            }
+            g.Restore(state);
+        }
+
+        #endregion
+
         public override void MouseDown(MouseButtons button, Point location, Keys modifierKeys)
         {
             var level = Editor.Level;
             var vl = Editor.Level.GetVirtualXY(location);
 
             Editor.SetProvisonalEntry(null);
+
+            // The rotate handle and the pivot come before the objects under them
+            if (button == MouseButtons.Left && BeginRotating(ToLevel(location), modifierKeys))
+            {
+                Editor.RequestRedraw(null);
+                return;
+            }
 
             foreach (LevelEntry e in Editor.SelectedEntries)
             {
@@ -158,6 +367,7 @@ namespace IntelOrca.PeggleEdit.Designer
                     _dragObject = le;
                     _state = State.MovingObjects;
                     _firstObjectMovement = true;
+                    _pivotDragStart = GetSetPivot(GetRotatableSelection());
                 }
             }
             else
@@ -267,9 +477,24 @@ namespace IntelOrca.PeggleEdit.Designer
 
                     MoveSelectingObjectsBy(delta.X, delta.Y, true);
 
+                    // A pivot that has been set moves with the objects, as far as the dragged one moved
+                    int dragged = Editor.SelectedEntries.IndexOf(_dragObject);
+                    if (_pivotDragStart is PointF pivotStart && dragged >= 0 && dragged < _objectPoints.Count)
+                    {
+                        var moved = new PointF(_dragObject.X - _objectPoints[dragged].X, _dragObject.Y - _objectPoints[dragged].Y);
+                        SetPivot(GetRotatableSelection(), new PointF(pivotStart.X + moved.X, pivotStart.Y + moved.Y));
+                    }
+
                     Editor.UpdateRedraw();
                     break;
                 }
+                case State.Rotating:
+                    Rotate(ToLevel(location), modifierKeys);
+                    break;
+                case State.MovingPivot:
+                    SetPivot(GetRotatableSelection(), ToLevel(location));
+                    Editor.RequestRedraw(null);
+                    break;
                 case State.MovingPoints:
                 {
                     if (_dragObject is IPointContainer pc)
@@ -560,6 +785,8 @@ namespace IntelOrca.PeggleEdit.Designer
 
             _state = State.None;
             _selectionRect = Rectangle.Empty;
+            _rotation = null;
+            _pivotDragStart = null;
 
             Editor.UpdateRedraw();
             Editor.InvokeSelectionChangedEvent();
@@ -567,6 +794,9 @@ namespace IntelOrca.PeggleEdit.Designer
 
         public override void KeyDown(KeyEventArgs e)
         {
+            // Not while turning the objects, as each turn is from where they were
+            if (_state == State.Rotating)
+                return;
             float x = 0f;
             float y = 0f;
             switch (e.KeyCode)
@@ -607,6 +837,9 @@ namespace IntelOrca.PeggleEdit.Designer
             }
 
             Editor.MoveObjects(x, y);
+            // A pivot that has been set moves with the objects
+            if (GetSetPivot(GetRotatableSelection()) is PointF pivot)
+                _pivot = new PointF(pivot.X + x, pivot.Y + y);
         }
 
         public override void KeyUp(KeyEventArgs e)
@@ -617,6 +850,8 @@ namespace IntelOrca.PeggleEdit.Designer
 
         public override void Draw(Graphics g)
         {
+            DrawRotation(g);
+
             // Draw the mouse selection
             if (_state == State.Selecting)
             {
@@ -707,6 +942,8 @@ namespace IntelOrca.PeggleEdit.Designer
             Selecting,
             MovingObjects,
             MovingPoints,
+            Rotating,
+            MovingPivot,
         }
     }
 }
