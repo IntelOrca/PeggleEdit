@@ -40,8 +40,9 @@ namespace IntelOrca.PeggleEdit.Designer
             txtAceScore.Text = mLevel.Info.AceScore.ToString();
             txtMinStage.Text = mLevel.Info.MinStage.ToString();
 
-            pnlThumnail.BackgroundImage = mLevel.GetThumbnail();
-            pnlThumnail.BackgroundImageLayout = ImageLayout.Center;
+            pnlThumnail.BackgroundImage = mLevel.GetSavedThumbnail();
+            // Scaled with the panel, which is scaled for the display's DPI
+            pnlThumnail.BackgroundImageLayout = ImageLayout.Zoom;
         }
 
         private void btnOK_Click(object sender, EventArgs e)

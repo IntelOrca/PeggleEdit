@@ -104,7 +104,7 @@ namespace IntelOrca.PeggleEdit.Tools.Levels
                 bw.Write(nullEntries[nullIndex].Magic);
 
             // PeggleEdit's own data goes after the last entry, where the game does not read
-            if (generators.Count != 0)
+            if (generators.Count != 0 || level.CustomThumbnail)
             {
                 bw.Flush();
                 var written = ms.ToArray();
@@ -125,7 +125,7 @@ namespace IntelOrca.PeggleEdit.Tools.Levels
                         links[i] = link;
                     }
                 }
-                EditorData.Write(bw, ms.ToArray(), generators, links, version);
+                EditorData.Write(bw, ms.ToArray(), generators, links, level.CustomThumbnail, version);
             }
 
             bw.Flush();

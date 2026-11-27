@@ -606,6 +606,11 @@ namespace IntelOrca.PeggleEdit.Tools.Pack
             // Levels
             foreach (var lvl in Levels)
             {
+                // A level that says its thumbnail is the user's own, but came without one (e.g. imported on its own), has
+                // one made from it
+                if (lvl.CustomThumbnail && lvl.Thumbnail == null)
+                    lvl.CustomThumbnail = false;
+
                 var datRecord = new PakRecord(pakFile, Path.Combine("levels", $"{lvl.Info.Filename}.dat"), DateTime.Now);
                 datRecord.Buffer = GetLevelData(lvl);
                 pakFile.Records.Add(datRecord);
@@ -623,7 +628,9 @@ namespace IntelOrca.PeggleEdit.Tools.Pack
                 if (oldHash != newHash)
                 {
                     lvl.Hash = newHash;
-                    lvl.Thumbnail = null;
+                    // A thumbnail of the user's own is kept, one made from the level is made again
+                    if (!lvl.CustomThumbnail)
+                        lvl.Thumbnail = null;
                 }
 
                 if (lvl.Thumbnail == null)
@@ -690,8 +697,8 @@ namespace IntelOrca.PeggleEdit.Tools.Pack
         }
 
         /// <summary>
-        /// Whether a level has changed since <see cref="MarkSaved"/>: its objects, details or background. A level that
-        /// was not in the pack then has.
+        /// Whether a level has changed since <see cref="MarkSaved"/>: its objects, details, background or thumbnail of the
+        /// user's own. A level that was not in the pack then has.
         /// </summary>
         public bool IsLevelModified(Level level) => _savedState == null || !_savedState.LevelMatches(level, GetLevelData(level));
 
@@ -707,8 +714,8 @@ namespace IntelOrca.PeggleEdit.Tools.Pack
         {
             private readonly string _cfg;
             private readonly Level[] _levels;
-            private readonly Dictionary<Level, (byte[] Data, LevelInfo Info, PakImage Background)> _levelStates =
-                new Dictionary<Level, (byte[], LevelInfo, PakImage)>();
+            private readonly Dictionary<Level, (byte[] Data, LevelInfo Info, PakImage Background, bool CustomThumbnail, PakImage Thumbnail)> _levelStates =
+                new Dictionary<Level, (byte[], LevelInfo, PakImage, bool, PakImage)>();
             private readonly KeyValuePair<string, PakImage>[] _images;
 
             public SavedState(LevelPack pack)
@@ -716,7 +723,7 @@ namespace IntelOrca.PeggleEdit.Tools.Pack
                 _cfg = pack.WriteCFG(signature: false);
                 _levels = pack.Levels.ToArray();
                 foreach (var level in _levels)
-                    _levelStates[level] = (pack.GetLevelData(level), level.Info, level.Background);
+                    _levelStates[level] = (pack.GetLevelData(level), level.Info, level.Background, level.CustomThumbnail, level.Thumbnail);
                 _images = GetImages(pack);
             }
 
@@ -725,7 +732,7 @@ namespace IntelOrca.PeggleEdit.Tools.Pack
 
             /// <summary>
             /// Whether all but the levels' objects are as they were: the details, levels and order (in the cfg), the
-            /// levels themselves, their backgrounds and the images.
+            /// levels themselves, their backgrounds, their thumbnails of the user's own and the images.
             /// </summary>
             public bool PackMatches(LevelPack pack)
             {
@@ -733,7 +740,8 @@ namespace IntelOrca.PeggleEdit.Tools.Pack
                     return false;
                 for (int i = 0; i < _levels.Length; i++)
                 {
-                    if (pack.Levels[i] != _levels[i] || !SameImage(pack.Levels[i].Background, _levelStates[_levels[i]].Background))
+                    var level = pack.Levels[i];
+                    if (level != _levels[i] || !SameImage(level.Background, _levelStates[level].Background) || !SameThumbnail(level))
                         return false;
                 }
                 // By name as it is saved, so that a change of case is a change
@@ -750,8 +758,20 @@ namespace IntelOrca.PeggleEdit.Tools.Pack
             {
                 if (!_levelStates.TryGetValue(level, out var saved))
                     return false;
-                return saved.Info.Equals(level.Info) && SameImage(saved.Background, level.Background) &&
+                return saved.Info.Equals(level.Info) && SameImage(saved.Background, level.Background) && SameThumbnail(level) &&
                     data.AsSpan().SequenceEqual(saved.Data);
+            }
+
+            /// <summary>
+            /// Whether a level's thumbnail is as it was: a thumbnail made from the level changes with it, so only one of
+            /// the user's own (or a change to or from one) is a change of its own.
+            /// </summary>
+            private bool SameThumbnail(Level level)
+            {
+                var saved = _levelStates[level];
+                if (level.CustomThumbnail != saved.CustomThumbnail)
+                    return false;
+                return !level.CustomThumbnail || SameImage(saved.Thumbnail, level.Thumbnail);
             }
 
             /// <summary>

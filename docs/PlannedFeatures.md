@@ -2,7 +2,6 @@
 
 Ideas for future versions of PeggleEdit:
 
-* Custom level pages.
 * Grouping objects.
 * Rotating objects with the mouse.
 * Zooming in and out.

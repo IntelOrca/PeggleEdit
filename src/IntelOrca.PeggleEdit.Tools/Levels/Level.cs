@@ -70,6 +70,12 @@ namespace IntelOrca.PeggleEdit.Tools.Levels
 
         public PakImage Background { get; set; }
         public PakImage Thumbnail { get; set; }
+
+        /// <summary>
+        /// Whether <see cref="Thumbnail"/> is an image chosen by the user, which is kept when the level changes, rather
+        /// than one PeggleEdit makes from the level. Saved in PeggleEdit's own data in the level.
+        /// </summary>
+        public bool CustomThumbnail { get; set; }
         public bool ShowParticles { get; set; } = true;
         public bool UsePegTextures { get; set; }
         public ulong Hash { get; set; }
@@ -906,6 +912,47 @@ namespace IntelOrca.PeggleEdit.Tools.Levels
             }
         }
 
+        /// <summary>
+        /// The size of the thumbnails the game shows when choosing a level.
+        /// </summary>
+        public static readonly Size ThumbnailSize = new Size(200, 177);
+
+        /// <summary>
+        /// Makes a thumbnail from an image of the user's own: scaled to cover the thumbnail and cropped to it, about the
+        /// middle.
+        /// </summary>
+        public static Bitmap MakeThumbnail(Image image)
+        {
+            var result = new Bitmap(ThumbnailSize.Width, ThumbnailSize.Height);
+            // The middle of the image with the thumbnail's shape, scaled to it
+            var scale = Math.Max((float)result.Width / image.Width, (float)result.Height / image.Height);
+            var width = Math.Min(image.Width, result.Width / scale);
+            var height = Math.Min(image.Height, result.Height / scale);
+            var src = new RectangleF((image.Width - width) / 2, (image.Height - height) / 2, width, height);
+            using (var g = Graphics.FromImage(result))
+            using (var attributes = new ImageAttributes())
+            {
+                g.InterpolationMode = InterpolationMode.HighQualityBicubic;
+                g.PixelOffsetMode = PixelOffsetMode.HighQuality;
+                // Stops the edges fading where the scaling reads past the image
+                attributes.SetWrapMode(WrapMode.TileFlipXY);
+                g.DrawImage(image, new Rectangle(Point.Empty, result.Size), src.X, src.Y, src.Width, src.Height, GraphicsUnit.Pixel, attributes);
+            }
+            return result;
+        }
+
+        /// <summary>
+        /// Gets the thumbnail the level is saved with: the user's own, the one it has while it is unchanged since the
+        /// pack was opened or saved, or one made from the level.
+        /// </summary>
+        public Image GetSavedThumbnail()
+        {
+            var image = Thumbnail?.Image;
+            if (image != null && (CustomThumbnail || GetData(LevelWriter.DefaultFileVersion).CalculateFnv1a() == Hash))
+                return image;
+            return GetThumbnail();
+        }
+
         public Image GetThumbnail()
         {
             var oInterface = mShowingInterface;
@@ -942,7 +989,7 @@ namespace IntelOrca.PeggleEdit.Tools.Levels
             UsePegTextures = oUsePegTextures;
 
             Rectangle sRect = new Rectangle(100, 64, 600, 531);
-            Size tbSize = new Size(200, 177);
+            Size tbSize = ThumbnailSize;
             Bitmap tb = new Bitmap(tbSize.Width, tbSize.Height);
             Graphics tbG = Graphics.FromImage(tb);
             tbG.InterpolationMode = InterpolationMode.HighQualityBicubic;

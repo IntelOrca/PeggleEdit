@@ -147,6 +147,8 @@ namespace IntelOrca.PeggleEdit.Tools.Levels.Xml
         const string EntryHashName = "entryHash";
 
         const string LinkName = "Link";
+        // Whether the level's thumbnail is the user's own
+        const string CustomThumbnailName = "customThumbnail";
 
         /// <summary>
         /// Reads PeggleEdit's data after the last entry, if it is there, belongs to this level, and can be read.
@@ -161,6 +163,8 @@ namespace IntelOrca.PeggleEdit.Tools.Levels.Xml
                 return null;
 
             var result = new XElement(EditorDataName);
+            if (chunks.Exists(x => x.Tag == EditorData.CustomThumbnailTag && x.Length == 0))
+                result.Add(new XAttribute(CustomThumbnailName, "true"));
             try
             {
                 var chunk = chunks[generatorsChunk];
@@ -219,6 +223,7 @@ namespace IntelOrca.PeggleEdit.Tools.Levels.Xml
         static byte[] WriteEditorData(Node n, byte[] levelPart, int version, int entryCount)
         {
             var w = new BinWriter();
+            bool customThumbnail = n.Bool(CustomThumbnailName, false);
             var children = n.RemainingChildren();
             var generators = children.Where(x => x.Name != LinkName).ToList();
             var links = new List<EditorData.LinkRecord>();
@@ -257,6 +262,8 @@ namespace IntelOrca.PeggleEdit.Tools.Levels.Xml
             var chunks = new List<KeyValuePair<string, byte[]>> { new KeyValuePair<string, byte[]>(EditorData.GeneratorsTag, w.ToArray()) };
             if (links.Count != 0)
                 chunks.Add(new KeyValuePair<string, byte[]>(EditorData.LinksTag, EditorData.WriteLinks(links)));
+            if (customThumbnail)
+                chunks.Add(new KeyValuePair<string, byte[]>(EditorData.CustomThumbnailTag, new byte[0]));
             return EditorData.Build(levelPart, chunks);
         }
 

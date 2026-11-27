@@ -877,6 +877,12 @@ namespace IntelOrca.PeggleEdit.Designer
             mContextMenu.Items.Add(new ToolStripSeparator());
             mContextMenu.Items.Add(new ToolStripMenuItem("Properties", Resources.properties_16, mnuLevelProperties_Click));
             mContextMenu.Items.Add(new ToolStripMenuItem("Set Background", Resources.image_16, mnuSetBackground_Click));
+            mContextMenu.Items.Add(new ToolStripMenuItem("Set Thumbnail...", Resources.image_16, mnuSetThumbnail_Click));
+            var level = SelectedNode?.Tag as Level;
+            mContextMenu.Items.Add(new ToolStripMenuItem("Reset Thumbnail", null, mnuResetThumbnail_Click)
+            {
+                Enabled = level != null && level.CustomThumbnail && level.Thumbnail != null,
+            });
         }
 
         private void mnuLevelOpen_Click(object sender, EventArgs e)
@@ -986,7 +992,9 @@ namespace IntelOrca.PeggleEdit.Designer
                             GraphicsUnit.Pixel);
                     }
                     level.Background = new PakImage(Path.GetFileName(dialog.FileName), bitmap);
-                    level.Thumbnail = null;
+                    // A thumbnail made from the level is made again; one of the user's own is kept
+                    if (!level.CustomThumbnail)
+                        level.Thumbnail = null;
                 }
 
                 LevelToolWindow ltw = mParent.GetLevelToolWindow(level);
@@ -995,6 +1003,48 @@ namespace IntelOrca.PeggleEdit.Designer
                     ltw.LevelEditor.UpdateRedraw();
                 }
             }
+        }
+
+        private void mnuSetThumbnail_Click(object sender, EventArgs e)
+        {
+            if (!(SelectedNode?.Tag is Level level))
+                return;
+            using (var dialog = new OpenFileDialog())
+            {
+                dialog.Title = "Set Thumbnail";
+                dialog.Filter = "Supported Image Files|*.png;*.jpg;*.jpeg;*.bmp;*.gif|All Files|*.*";
+                if (dialog.ShowDialog(mParent) != DialogResult.OK)
+                    return;
+
+                Bitmap thumbnail;
+                try
+                {
+                    using (var fileImage = Image.FromFile(dialog.FileName))
+                        thumbnail = Level.MakeThumbnail(fileImage);
+                }
+                catch (Exception ex) when (ex is IOException || ex is OutOfMemoryException || ex is UnauthorizedAccessException)
+                {
+                    // Image.FromFile throws OutOfMemoryException for a file that is not an image it can read
+                    var message = ex is OutOfMemoryException ? "The file is not an image that can be read." : ex.Message;
+                    MessageBox.Show(message, "Set Thumbnail", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                    return;
+                }
+
+                level.Thumbnail = new PakImage($"{level.Info.Filename}.png", thumbnail);
+                level.CustomThumbnail = true;
+                mParent.UpdateChanges();
+            }
+        }
+
+        private void mnuResetThumbnail_Click(object sender, EventArgs e)
+        {
+            if (!(SelectedNode?.Tag is Level level) || !level.CustomThumbnail)
+                return;
+
+            // Made from the level again when the pack is saved
+            level.CustomThumbnail = false;
+            level.Thumbnail = null;
+            mParent.UpdateChanges();
         }
 
         #endregion

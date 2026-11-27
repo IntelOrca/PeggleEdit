@@ -13,6 +13,7 @@ PeggleEdit 5.2.0 (Flamingo) (TBC)
 * [Feature] Export levels to XML and import them back, losslessly (Pack Explorer: level > Export (XML), Levels > Import Level)
 * [Feature] peggleedit-cli command line tool for converting levels to and from XML
 * [Feature] Open a game's main.pak to open the levels and challenges Peggle, Peggle Nights or Pego come with as a level pack, to look at, copy from, or save as a level pack of their own
+* [Feature] #41: Set a level's thumbnail to an image of your own, kept when the level changes (Pack Explorer: level > Set Thumbnail)
 * [Feature] A level with unsaved changes has an * after its name on its tab, as does the pack in the title bar
 * [Change] PeggleEdit asks to save only when something has changed, with Save, Don't Save and Cancel, and also when it is closed
 * [Fix] Dialogs and message boxes open centred over PeggleEdit

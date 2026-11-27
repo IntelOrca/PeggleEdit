@@ -28,7 +28,7 @@ A level pack holds:
 * `<pack>.cfg`, named after the `.pak` file: the pack's name and description, its levels, and its challenges.
 * `levels\<level>.dat`: each level. See [Level Format](LevelFormat.md).
 * `levels\<level>.jpg`, `.png` or `.jp2`: each level's background.
-* `levels\cached_thumbnails\<level>.jpg`, `.png` or `.jp2`: each level's thumbnail.
+* `levels\cached_thumbnails\<level>.jpg`, `.png` or `.jp2`: each level's thumbnail, 200 x 177.
 * Any other images that the levels use.
 
 A game's `main.pak` instead lists its levels in `levels\stages.cfg` and its challenges in `levels\trophy.cfg`.

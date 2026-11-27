@@ -28,6 +28,10 @@ namespace IntelOrca.PeggleEdit.Tools.Levels
     /// sees them; PeggleEdit replaces them by the generator when it reads the level, if they still match the hash.
     /// The LINK chunk holds links to generators' movers (see <see cref="LinkRecord"/>): i32 count, then five i32s for
     /// each.
+    /// The THMB chunk, which is empty, says that the level's thumbnail is one chosen by the user, so PeggleEdit keeps
+    /// it rather than making a new one when the level changes. It is kept even when the level has been changed by
+    /// another program since.
+    /// The GENS chunk is always written first, even with no generators.
     /// </remarks>
     public static class EditorData
     {
@@ -35,6 +39,7 @@ namespace IntelOrca.PeggleEdit.Tools.Levels
         public const int FormatVersion = 1;
         public const string GeneratorsTag = "GENS";
         public const string LinksTag = "LINK";
+        public const string CustomThumbnailTag = "THMB";
 
         static readonly byte[] Magic = Encoding.ASCII.GetBytes(MagicText);
         const int HeaderSize = 8 + 4 + 8 + 4;
@@ -112,7 +117,7 @@ namespace IntelOrca.PeggleEdit.Tools.Levels
 
         /// <summary>
         /// Looks for PeggleEdit's data after the level, which ends at <paramref name="levelEnd"/>, and lists its chunks
-        /// when it is valid.
+        /// when it is valid, or stale (the level has changed since, but the data can still be read).
         /// </summary>
         public static Status Find(byte[] data, int levelEnd, out List<Chunk> chunks)
         {
@@ -133,8 +138,7 @@ namespace IntelOrca.PeggleEdit.Tools.Levels
             int start = levelEnd + HeaderSize;
             if (version != FormatVersion || size < 0 || size > data.Length - start)
                 return Status.Unreadable;
-            if (new ReadOnlySpan<byte>(data, 0, levelEnd).CalculateFnv1a() != hash)
-                return Status.Stale;
+            var status = new ReadOnlySpan<byte>(data, 0, levelEnd).CalculateFnv1a() == hash ? Status.Valid : Status.Stale;
 
             var result = new List<Chunk>();
             int position = start;
@@ -152,13 +156,14 @@ namespace IntelOrca.PeggleEdit.Tools.Levels
                 position += length;
             }
             chunks = result;
-            return Status.Valid;
+            return status;
         }
 
         /// <summary>
         /// Writes PeggleEdit's data for a level whose file so far is <paramref name="levelPart"/>.
         /// </summary>
-        public static void Write(BinaryWriter bw, byte[] levelPart, IReadOnlyList<GeneratorRecord> generators, IReadOnlyList<LinkRecord> links, int version)
+        public static void Write(BinaryWriter bw, byte[] levelPart, IReadOnlyList<GeneratorRecord> generators, IReadOnlyList<LinkRecord> links,
+            bool customThumbnail, int version)
         {
             var chunks = new List<KeyValuePair<string, byte[]>>();
             var payload = new MemoryStream();
@@ -176,6 +181,8 @@ namespace IntelOrca.PeggleEdit.Tools.Levels
             chunks.Add(new KeyValuePair<string, byte[]>(GeneratorsTag, payload.ToArray()));
             if (links.Count != 0)
                 chunks.Add(new KeyValuePair<string, byte[]>(LinksTag, WriteLinks(links)));
+            if (customThumbnail)
+                chunks.Add(new KeyValuePair<string, byte[]>(CustomThumbnailTag, new byte[0]));
             bw.Write(Build(levelPart, chunks));
         }
 

@@ -46,4 +46,8 @@ The game has no generators, so an object whose mover links to a generator's move
   * the index of the generator linked to
   * how many owned movers down that generator's movers the mover linked to is (0 for its own mover)
 
+The `THMB` chunk, which is empty, says that the level's thumbnail is one the user chose, so PeggleEdit keeps it when the level changes, rather than making a new one.
+
+The `GENS` chunk is always the first chunk, even when the level has no generators.
+
 Peg Pen and Brick Pen generators store, after the generic data, a 2 byte point count whose top bits are flags: 0x4000, the position (two floats) follows; 0x8000, the interval (4 byte integer) follows the points. Each point is two floats, a kind byte and a padding byte.

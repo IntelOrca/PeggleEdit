@@ -71,6 +71,8 @@ namespace IntelOrca.PeggleEdit.Tools.Levels
                     ReadEntries(data, ref entry_index);
                 }
                 mLevel.EditorDataStatus = status;
+                // Kept even when the generators could not be restored, as it does not depend on them
+                mLevel.CustomThumbnail = mCustomThumbnail;
                 mLevel.SetOriginalData(data);
                 return mLevel;
             }
@@ -129,6 +131,9 @@ namespace IntelOrca.PeggleEdit.Tools.Levels
             return (int)br.BaseStream.Position;
         }
 
+        // Whether PeggleEdit's data says the thumbnail is the user's own
+        bool mCustomThumbnail;
+
         // Where each entry (not counting null entries) is in the file
         List<(int Start, int End)> mEntryBytes;
 
@@ -140,6 +145,17 @@ namespace IntelOrca.PeggleEdit.Tools.Levels
         private EditorData.Status ReadEditorData(byte[] data, int levelEnd)
         {
             var status = EditorData.Find(data, levelEnd, out var chunks);
+            if (chunks != null)
+            {
+                // Kept even when the level has been changed by another program, as it is about the thumbnail, not the
+                // level
+                mCustomThumbnail = chunks.Exists(x => x.Tag == EditorData.CustomThumbnailTag && x.Length == 0);
+            }
+            if (status == EditorData.Status.Stale && !HasGenerators(data, chunks))
+            {
+                // Nothing that depends on the level as it was is lost, so there is nothing to warn about
+                return EditorData.Status.None;
+            }
             if (status != EditorData.Status.Valid)
                 return status;
 
@@ -168,6 +184,15 @@ namespace IntelOrca.PeggleEdit.Tools.Levels
             {
                 return EditorData.Status.Unreadable;
             }
+        }
+
+        /// <summary>
+        /// Whether PeggleEdit's data has any generators in it.
+        /// </summary>
+        private static bool HasGenerators(byte[] data, List<EditorData.Chunk> chunks)
+        {
+            var chunk = chunks.FindIndex(x => x.Tag == EditorData.GeneratorsTag);
+            return chunk >= 0 && (chunks[chunk].Length < 4 || BitConverter.ToInt32(data, chunks[chunk].Offset) != 0);
         }
 
         private void SeekToNextEntry(BinaryReader br)
