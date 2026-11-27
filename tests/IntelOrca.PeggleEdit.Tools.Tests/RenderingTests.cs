@@ -105,6 +105,40 @@ namespace IntelOrca.PeggleEdit.Tools.Tests
         }
 
         [Fact]
+        public void Image_ZoomedFarIn_IsDrawn()
+        {
+            // Scaled to 10000 x 10000, too large to keep, so only the part drawn is scaled
+            using (var image = new Bitmap(10, 10))
+            using (var target = new Bitmap(100, 100))
+            {
+                using (var g = Graphics.FromImage(image))
+                {
+                    g.Clear(Color.Blue);
+                    g.FillRectangle(Brushes.Red, 5, 5, 5, 5);
+                }
+                // The middle of the blue part, then of the red part, far from where they blend
+                Color Middle(float x, float y)
+                {
+                    using (var g = Graphics.FromImage(target))
+                    {
+                        g.Clear(Color.Black);
+                        g.TranslateTransform(50 - (x * 1000), 50 - (y * 1000));
+                        g.ScaleTransform(1000, 1000);
+                        Tools.Extensions.GraphicsExtensions.DrawImageSnapped(g, image, 0, 0, 10, 10);
+                    }
+                    return target.GetPixel(50, 50);
+                }
+                Assert.Equal(Color.Blue.ToArgb(), Middle(2.5f, 2.5f).ToArgb());
+                Assert.Equal(Color.Red.ToArgb(), Middle(7.5f, 7.5f).ToArgb());
+
+                // Where the blue and red parts meet, half of each, as when the image is scaled and kept: not moved by
+                // half a pixel of the image
+                var edge = Middle(5, 7.5f);
+                Assert.InRange(edge.R - edge.B, -40, 40);
+            }
+        }
+
+        [Fact]
         public void LevelImage_IsFoundInImagesLevels_WithItsAlphaImage()
         {
             var image = (Bitmap)LevelPack.Current.GetImage("testimage")?.Image;

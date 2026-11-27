@@ -245,6 +245,65 @@ namespace IntelOrca.PeggleEdit.Tools.Tests
             }
         }
 
+        /// <summary>
+        /// Draws the part of the level around a point (in level coordinates) zoomed, as the editor does: the point is
+        /// at (50, 50) of a 100 x 100 image.
+        /// </summary>
+        static Bitmap DrawZoomed(Level level, PointF point, float zoom)
+        {
+            // As the game shows it (without the editor's marks), but not running, so the particles are settled
+            level.ShowPreview = true;
+            var image = new Bitmap(100, 100, PixelFormat.Format32bppPArgb);
+            using (var g = Graphics.FromImage(image))
+            {
+                var origin = level.GetActualXY(0, 0);
+                g.TranslateTransform(50 - ((origin.X + point.X) * zoom), 50 - ((origin.Y + point.Y) * zoom));
+                g.ScaleTransform(zoom, zoom);
+                level.Draw(g);
+            }
+            return image;
+        }
+
+        [Fact]
+        public void SettledParticles_ZoomedFarIn_AreDrawnWhereTheyAre()
+        {
+            var level = ReadXml(EmitterXml(@"max=""1"""));
+            level.ShowingBackground = false;
+            level.ShowingInterface = false;
+            using (var image = DrawZoomed(level, new PointF(100, 100), 14))
+            {
+                // The particle is 4 units across, 56 pixels
+                Assert.Equal(Color.White.ToArgb(), image.GetPixel(52, 52).ToArgb());
+                Assert.Equal(Color.Black.ToArgb(), image.GetPixel(95, 95).ToArgb());
+            }
+        }
+
+        [Fact]
+        public void SettledParticles_SpreadOutAndZoomedFarIn_AreDrawn()
+        {
+            // Spread over hundreds of units, too large a layer to keep zoomed this far, so drawn where they are seen
+            var level = ReadXml(EmitterXml(@"max=""100"" velXRand=""3"" velYRand=""3"" accX=""0"" gravity=""0""",
+                @"<VelX value=""0"" /><VelY value=""0"" />", rate: "1"));
+            level.ShowingBackground = false;
+            level.ShowingInterface = false;
+            var emitter = level.Entries.OfType<Emitter>().Single();
+            using (var near = DrawZoomed(level, new PointF(100, 100), 2))
+            using (var far = DrawZoomed(level, new PointF(100, 100), 14))
+            {
+                int Lit(Bitmap b)
+                {
+                    int n = 0;
+                    for (int y = 0; y < b.Height; y++)
+                        for (int x = 0; x < b.Width; x++)
+                            if (b.GetPixel(x, y).ToArgb() != Color.Black.ToArgb())
+                                n++;
+                    return n;
+                }
+                Assert.True(Lit(near) > 0);
+                Assert.True(Lit(far) > 0);
+            }
+        }
+
         [Fact]
         public void InvisibleEmitters_DrawNoParticles()
         {

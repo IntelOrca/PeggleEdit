@@ -291,6 +291,10 @@ namespace IntelOrca.PeggleEdit.Tools.Levels
 
             using (var bg = Graphics.FromImage(mBuffer))
             {
+                // The buffer is kept from one draw to the next, and the pixels at the edge of the region that it only
+                // partly covers are not drawn over, so they are cleared rather than left as they were
+                bg.SetClip(new Rectangle(0, 0, device.Width, device.Height));
+                bg.Clear(SystemColors.AppWorkspace);
                 bg.TranslateTransform(offsetX - device.X, offsetY - device.Y);
                 bg.ScaleTransform(scale, scale);
                 bg.SetClip(region);
@@ -388,40 +392,65 @@ namespace IntelOrca.PeggleEdit.Tools.Levels
         /// <summary>
         /// Draws the level with its objects half transparent: the level is drawn as normal on a bitmap, which is then
         /// drawn at half opacity over the background alone. The interface is drawn again over it, as it is not one of
-        /// the level's objects.
+        /// the level's objects. Only the part of the level that is visible is drawn, pixel for pixel as it is on
+        /// <paramref name="g"/>, so that it stays sharp however far it is zoomed.
         /// </summary>
         private void DrawCanvasTransparent(Graphics g)
         {
-            // The bitmaps are as large as the level is on screen (it is zoomed on high DPI displays), so that it stays sharp
-            float scale;
+            var canvas = new RectangleF(0, 0, 800, 600);
+            var area = RectangleF.Intersect(canvas, g.VisibleClipBounds);
+            float[] m;
             using (var transform = g.Transform)
-                scale = Math.Max(1.0f, Math.Abs(transform.Elements[0]));
-            var size = new Size((int)Math.Ceiling(800 * scale), (int)Math.Ceiling(600 * scale));
-            if (mTransparentBuffer == null || mTransparentBuffer.Size != size)
+                m = transform.Elements;
+            if (area.Width > 0 && area.Height > 0)
             {
-                mTransparentBuffer?.Dispose();
-                mTransparentBackground?.Dispose();
-                mTransparentBuffer = new Bitmap(size.Width, size.Height, System.Drawing.Imaging.PixelFormat.Format32bppPArgb);
-                mTransparentBackground = new Bitmap(size.Width, size.Height, System.Drawing.Imaging.PixelFormat.Format32bppPArgb);
-            }
+                // Where the visible part is in device pixels
+                var corners = new[] { area.Location, new PointF(area.Right, area.Bottom) };
+                g.TransformPoints(CoordinateSpace.Device, CoordinateSpace.World, corners);
+                var device = Rectangle.FromLTRB(
+                    (int)Math.Floor(Math.Min(corners[0].X, corners[1].X)), (int)Math.Floor(Math.Min(corners[0].Y, corners[1].Y)),
+                    (int)Math.Ceiling(Math.Max(corners[0].X, corners[1].X)), (int)Math.Ceiling(Math.Max(corners[0].Y, corners[1].Y)));
+                if (device.Width > 0 && device.Height > 0)
+                {
+                    if (mTransparentBuffer == null || mTransparentBuffer.Width < device.Width || mTransparentBuffer.Height < device.Height)
+                    {
+                        mTransparentBuffer?.Dispose();
+                        mTransparentBackground?.Dispose();
+                        mTransparentBuffer = new Bitmap(device.Width, device.Height, System.Drawing.Imaging.PixelFormat.Format32bppPArgb);
+                        mTransparentBackground = new Bitmap(device.Width, device.Height, System.Drawing.Imaging.PixelFormat.Format32bppPArgb);
+                    }
 
-            var rect = new Rectangle(0, 0, 800, 600);
-            using (var bg = Graphics.FromImage(mTransparentBuffer))
-            {
-                bg.ScaleTransform(scale, scale);
-                DrawCanvas(bg, new RenderTarget(mTransparentBuffer, bg));
-            }
+                    // The same transform as g, moved so that the visible part is at the bitmaps' top left
+                    void Prepare(Graphics bg)
+                    {
+                        using (var transform = new Matrix(m[0], m[1], m[2], m[3], m[4] - device.X, m[5] - device.Y))
+                            bg.Transform = transform;
+                        bg.SetClip(area);
+                        bg.SmoothingMode = g.SmoothingMode;
+                    }
 
-            using (var bg = Graphics.FromImage(mTransparentBackground))
-            {
-                bg.ScaleTransform(scale, scale);
-                bg.FillRectangle(Brushes.Black, rect);
-                if (mShowingBackground)
-                    DrawBackground(bg);
-            }
+                    using (var bg = Graphics.FromImage(mTransparentBuffer))
+                    {
+                        Prepare(bg);
+                        DrawCanvas(bg, new RenderTarget(mTransparentBuffer, bg));
+                    }
 
-            g.DrawImage(mTransparentBackground, rect, 0, 0, size.Width, size.Height, GraphicsUnit.Pixel);
-            g.DrawImage(mTransparentBuffer, rect, 0, 0, size.Width, size.Height, GraphicsUnit.Pixel, HalfTransparent);
+                    using (var bg = Graphics.FromImage(mTransparentBackground))
+                    {
+                        Prepare(bg);
+                        bg.FillRectangle(Brushes.Black, canvas);
+                        if (mShowingBackground)
+                            DrawBackground(bg);
+                    }
+
+                    var state = g.Save();
+                    g.ResetTransform();
+                    var src = new Rectangle(0, 0, device.Width, device.Height);
+                    g.DrawImage(mTransparentBackground, device, src, GraphicsUnit.Pixel);
+                    g.DrawImage(mTransparentBuffer, device, 0, 0, device.Width, device.Height, GraphicsUnit.Pixel, HalfTransparent);
+                    g.Restore(state);
+                }
+            }
             if (mShowingInterface)
                 DrawInterfaceFrame(g);
         }

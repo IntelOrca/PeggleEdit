@@ -173,7 +173,20 @@ namespace IntelOrca.PeggleEdit.Tools.Levels
             /// <summary>Premultiplied ARGB pixels.</summary>
             public uint[] Pixels;
             public bool Additive;
+            /// <summary>
+            /// The particles, when the layer would be too large to keep (zoomed far in), so they are drawn each time,
+            /// only where they are seen.
+            /// </summary>
+            public ParticleAppearance[] Particles;
+            public Sprite Sprite;
         }
+
+        // The most pixels a layer has (e.g. 2400 x 2000, the whole of the area below at 200%), so that zooming far in
+        // does not use a lot of memory
+        private const long MaxLayerPixels = 5 * 1024 * 1024;
+
+        // Where settled particles are drawn: the screen (the game only shows that) with a margin
+        private static readonly Rectangle SettledArea = new Rectangle(-Level.DrawAdjustX - 200, -Level.DrawAdjustY - 200, 1200, 1000);
 
         private readonly Dictionary<Emitter, Layer> _layers = new Dictionary<Emitter, Layer>();
 
@@ -195,7 +208,15 @@ namespace IntelOrca.PeggleEdit.Tools.Levels
             else
             {
                 var layer = GetSettledLayer(emitter, GetScale(g));
-                if (layer != null)
+                if (layer?.Particles != null)
+                {
+                    // Clipped as the layer would be
+                    var state = g.Save();
+                    g.IntersectClip(SettledArea);
+                    DrawParticles(target, g, layer.Sprite, layer.Particles, layer.Additive);
+                    g.Restore(state);
+                }
+                else if (layer != null)
                     DrawLayer(target, g, layer);
             }
         }
@@ -228,7 +249,7 @@ namespace IntelOrca.PeggleEdit.Tools.Levels
             key = (key * 1099511628211UL) ^ (ulong)(image == null ? 0 : (image.Width << 16) ^ image.Height ^ 1);
             key = (key * 1099511628211UL) ^ (ulong)scale.GetHashCode();
             if (_layers.TryGetValue(emitter, out var layer) && layer.Key == key)
-                return layer.Pixels == null ? null : layer;
+                return layer.Pixels == null && layer.Particles == null ? null : layer;
 
             layer = new Layer { Key = key, Additive = emitter.Additive };
             _layers[emitter] = layer;
@@ -238,8 +259,7 @@ namespace IntelOrca.PeggleEdit.Tools.Levels
             var sprite = Sprite.FromImage(image) ?? Sprite.Dot;
             var particles = simulation.Particles.Select(p => simulation.GetAppearance(p, position, position)).ToArray();
             var bounds = GetBounds(sprite, particles);
-            // Not larger than the screen (the game only shows that) with a margin
-            bounds.Intersect(new Rectangle(-Level.DrawAdjustX - 200, -Level.DrawAdjustY - 200, 1200, 1000));
+            bounds.Intersect(SettledArea);
             if (bounds.Width <= 0 || bounds.Height <= 0)
                 return null;
             if (scale != 1)
@@ -247,6 +267,12 @@ namespace IntelOrca.PeggleEdit.Tools.Levels
                 bounds = Rectangle.FromLTRB(
                     (int)Math.Floor(bounds.Left * scale), (int)Math.Floor(bounds.Top * scale),
                     (int)Math.Ceiling(bounds.Right * scale), (int)Math.Ceiling(bounds.Bottom * scale));
+            }
+            if ((long)bounds.Width * bounds.Height > MaxLayerPixels)
+            {
+                layer.Particles = particles;
+                layer.Sprite = sprite;
+                return layer;
             }
 
             var pixels = new uint[bounds.Width * bounds.Height];

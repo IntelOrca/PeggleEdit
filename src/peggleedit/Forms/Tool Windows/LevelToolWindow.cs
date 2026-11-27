@@ -53,12 +53,143 @@ namespace IntelOrca.PeggleEdit.Designer
             mLevelEditor.SelectionChanged += new EventHandler(mLevelEditor_SelectionChanged);
             mLevelEditor.MouseMove += new MouseEventHandler(mLevelEditor_MouseMove);
             mLevelEditor.FrameStarting += mLevelEditor_FrameStarting;
+            mLevelEditor.MouseWheel += mLevelEditor_MouseWheel;
+            mLevelEditor.ZoomChanged += (sender, e) => mParent.LevelZoomChanged(mLevelEditor);
             mParent.Activated += mParent_Activated;
 
             this.Controls.Add(mLevelEditor);
 
+            // Around the level when it is smaller than the window, as its margin is
+            this.BackColor = SystemColors.AppWorkspace;
             this.AutoScroll = true;
         }
+
+        #region Zoom
+
+        // Mouse wheel movement towards the next zoom step, as a precise wheel or touchpad moves in smaller steps
+        int mWheelZoom;
+
+        /// <summary>
+        /// Zooms the level, keeping the point of the level at <paramref name="anchor"/> (in this window's client
+        /// coordinates) where it is, or the point in the middle of the window when it is null.
+        /// </summary>
+        public void SetZoomLevel(float zoomLevel, Point? anchor = null)
+        {
+            var oldZoom = mLevelEditor.Zoom;
+            var at = anchor ?? new Point(ClientSize.Width / 2, ClientSize.Height / 2);
+            // The point of the level (in unzoomed units) under the anchor
+            var levelPoint = new PointF((at.X - mLevelEditor.Left) / oldZoom, (at.Y - mLevelEditor.Top) / oldZoom);
+
+            // Drawn once it has been resized and scrolled, as otherwise the level as it was is moved on screen first
+            using (PlatformServices.Current.SuspendDrawing(this))
+            {
+                mLevelEditor.ZoomLevel = zoomLevel;
+                if (mLevelEditor.Zoom != oldZoom)
+                    ScrollTo(levelPoint, at);
+            }
+        }
+
+        /// <summary>
+        /// Scrolls so that a point of the level (in unzoomed units) is at a point of the window, as near as it can be,
+        /// with the level in the middle of the window in each direction it is smaller than the window.
+        /// </summary>
+        private void ScrollTo(PointF levelPoint, Point at)
+        {
+            var zoom = mLevelEditor.Zoom;
+            AutoScrollPosition = Point.Empty;
+            mLevelEditor.Location = Point.Empty;
+            PerformLayout();
+            AutoScrollPosition = new Point(
+                Math.Max(0, (int)Math.Round((levelPoint.X * zoom) - at.X)),
+                Math.Max(0, (int)Math.Round((levelPoint.Y * zoom) - at.Y)));
+            LayoutEditor();
+        }
+
+        void mLevelEditor_MouseWheel(object sender, MouseEventArgs e)
+        {
+            HandleMouseWheel(PointToClient(mLevelEditor.PointToScreen(e.Location)), e);
+        }
+
+        protected override void OnMouseWheel(MouseEventArgs e)
+        {
+            // Over the space around a level smaller than the window
+            if (!HandleMouseWheel(e.Location, e))
+                base.OnMouseWheel(e);
+        }
+
+        /// <summary>
+        /// Zooms with Ctrl + wheel, around the mouse at <paramref name="location"/> (in this window's client
+        /// coordinates), and scrolls sideways with Shift + wheel. Returns whether the wheel was used.
+        /// </summary>
+        private bool HandleMouseWheel(Point location, MouseEventArgs e)
+        {
+            var modifiers = Control.ModifierKeys;
+            if (modifiers == Keys.Control)
+            {
+                // Ctrl + wheel zooms in and out around the mouse
+                if (e is HandledMouseEventArgs handled)
+                    handled.Handled = true;
+                mWheelZoom += e.Delta;
+                var steps = mWheelZoom / SystemInformation.MouseWheelScrollDelta;
+                if (steps == 0)
+                    return true;
+                mWheelZoom -= steps * SystemInformation.MouseWheelScrollDelta;
+
+                var zoomLevel = mLevelEditor.ZoomLevel;
+                for (int i = 0; i < Math.Abs(steps); i++)
+                    zoomLevel = mLevelEditor.GetNextZoomLevel(zoomLevel, Math.Sign(steps));
+                SetZoomLevel(zoomLevel, location);
+                return true;
+            }
+            else if (modifiers == Keys.Shift)
+            {
+                // Shift + wheel scrolls sideways
+                if (e is HandledMouseEventArgs handled)
+                    handled.Handled = true;
+                var position = AutoScrollPosition;
+                AutoScrollPosition = new Point(-position.X - e.Delta, -position.Y);
+                return true;
+            }
+            return false;
+        }
+
+        /// <summary>
+        /// Keeps the scroll position when the level is focused (e.g. clicked), rather than scrolling to show its top
+        /// left.
+        /// </summary>
+        protected override Point ScrollToControl(Control activeControl) => DisplayRectangle.Location;
+
+        protected override void OnLayout(LayoutEventArgs levent)
+        {
+            base.OnLayout(levent);
+            // The scroll range is worked out from where the level is, so again once it has moved (and the scroll bars
+            // shown or hidden then can change where it goes)
+            for (int i = 0; i < 3 && LayoutEditor(); i++)
+                base.OnLayout(levent);
+        }
+
+        /// <summary>
+        /// Puts the level in the middle of the window in each direction it is smaller than the window (with no scroll
+        /// bar that way), and at the start of the scrolled area in each it is larger, so that the scroll range is the
+        /// level's size. Returns whether it moved.
+        /// </summary>
+        private bool LayoutEditor()
+        {
+            if (mLevelEditor == null)
+                return false;
+            var client = ClientSize;
+            var size = mLevelEditor.Size;
+            var location = mLevelEditor.Location;
+            var scroll = AutoScrollPosition;
+            var x = size.Width < client.Width ? (client.Width - size.Width) / 2 : scroll.X;
+            var y = size.Height < client.Height ? (client.Height - size.Height) / 2 : scroll.Y;
+            if (x == location.X && y == location.Y)
+                return false;
+            mLevelEditor.Location = new Point(x, y);
+            return true;
+        }
+
+        #endregion
 
         /// <summary>
         /// Shows the level's name, with an * after it if the level has changed since it was saved.
@@ -88,11 +219,9 @@ namespace IntelOrca.PeggleEdit.Designer
 
         private void CentreScrollPosition()
         {
-            int x = (mLevelEditor.Width / 2) - (Width / 2);
-            int y = (mLevelEditor.Height / 2) - (Height / 2);
-
-            this.AutoScrollPosition = new Point(x, y);
-            mLevelEditor.AutoScrollOffset = new Point(-x, -y);
+            // The middle of the level in the middle of the window
+            var bounds = mLevelEditor.Level.Bounds;
+            ScrollTo(new PointF(bounds.Width / 2f, bounds.Height / 2f), new Point(ClientSize.Width / 2, ClientSize.Height / 2));
         }
 
         /// <summary>
@@ -156,8 +285,6 @@ namespace IntelOrca.PeggleEdit.Designer
 
         protected override void OnGotFocus(EventArgs e)
         {
-            mLevelEditor.AutoScrollOffset = new Point(this.AutoScrollPosition.X, this.AutoScrollPosition.Y);
-
             mParent.LevelWindowHasFocus(this);
             // Resumes the preview
             mLevelEditor.RequestRedraw(null);

@@ -547,6 +547,7 @@ namespace IntelOrca.PeggleEdit.Designer
             panelShowHide.Items.Add(chk3DAcceleration);
 
             RibbonPanel panelPowerUps = InitPowerUpsPanel();
+            RibbonPanel panelZoom = InitZoomPanel();
 
             RibbonButton btnPackExplorer = new RibbonButton("Pack Explorer");
             btnPackExplorer.Image = Resources.pack_explorer_32;
@@ -567,9 +568,119 @@ namespace IntelOrca.PeggleEdit.Designer
 
             RibbonTab tabView = new RibbonTab(mRibbon, "View");
             tabView.Panels.Add(panelShowHide);
+            tabView.Panels.Add(panelZoom);
             tabView.Panels.Add(panelPowerUps);
             tabView.Panels.Add(panelWindow);
             mRibbon.Tabs.Add(tabView);
+        }
+
+        RibbonButton btnZoom;
+
+        /// <summary>
+        /// The panel that zooms the level in and out. The large button shows the zoom, and lists the zoom levels.
+        /// </summary>
+        private RibbonPanel InitZoomPanel()
+        {
+            btnZoom = new RibbonButton(FormatZoom(1));
+            btnZoom.Image = CreateZoomIcon(32, 0);
+            btnZoom.Style = RibbonButtonStyle.DropDown;
+            btnZoom.ToolTipTitle = "Zoom";
+            btnZoom.ToolTip = "Choose how large the level is shown. Hold Ctrl and turn the mouse wheel to zoom in and out around the mouse.";
+            foreach (var zoomLevel in LevelEditor.ZoomLevels)
+            {
+                var item = new RibbonButton(FormatZoom(zoomLevel));
+                item.Click += (sender, e) => SetZoomLevel(editor => zoomLevel);
+                btnZoom.DropDownItems.Add(item);
+            }
+
+            var btnZoomIn = new RibbonButton("Zoom In");
+            btnZoomIn.MaxSizeMode = RibbonElementSizeMode.Medium;
+            btnZoomIn.SmallImage = CreateZoomIcon(16, 1);
+            btnZoomIn.ToolTipTitle = "Zoom In (Ctrl++)";
+            btnZoomIn.ToolTip = "Show the level larger.";
+            btnZoomIn.Click += (sender, e) => SetZoomLevel(editor => editor.GetNextZoomLevel(1));
+
+            var btnZoomOut = new RibbonButton("Zoom Out");
+            btnZoomOut.MaxSizeMode = RibbonElementSizeMode.Medium;
+            btnZoomOut.SmallImage = CreateZoomIcon(16, -1);
+            btnZoomOut.ToolTipTitle = "Zoom Out (Ctrl+-)";
+            btnZoomOut.ToolTip = "Show the level smaller.";
+            btnZoomOut.Click += (sender, e) => SetZoomLevel(editor => editor.GetNextZoomLevel(-1));
+
+            var btnActualSize = new RibbonButton("100%");
+            btnActualSize.MaxSizeMode = RibbonElementSizeMode.Medium;
+            btnActualSize.SmallImage = CreateZoomIcon(16, 0);
+            btnActualSize.ToolTipTitle = "100% (Ctrl+0)";
+            btnActualSize.ToolTip = "Show the level at its usual size.";
+            btnActualSize.Click += (sender, e) => SetZoomLevel(editor => 1);
+
+            var panel = new RibbonPanel("Zoom");
+            panel.Items.Add(btnZoom);
+            panel.Items.Add(btnZoomIn);
+            panel.Items.Add(btnZoomOut);
+            panel.Items.Add(btnActualSize);
+            return panel;
+        }
+
+        private static string FormatZoom(float zoomLevel) => Math.Round(zoomLevel * 100) + "%";
+
+        /// <summary>
+        /// Zooms the level being worked on, keeping the middle of its window where it is.
+        /// </summary>
+        private void SetZoomLevel(Func<LevelEditor, float> zoomLevel)
+        {
+            var editor = LevelEditor;
+            if (editor == null)
+                return;
+            mParent.GetLevelToolWindow(editor.Level)?.SetZoomLevel(zoomLevel(editor));
+        }
+
+        /// <summary>
+        /// Shows the zoom of the level being worked on, and which zoom levels it can be.
+        /// </summary>
+        private void UpdateZoomButton()
+        {
+            var editor = LevelEditor;
+            var text = FormatZoom(editor == null ? 1 : editor.ZoomLevel);
+            if (btnZoom.Text != text)
+                btnZoom.Text = text;
+            for (int i = 0; i < btnZoom.DropDownItems.Count; i++)
+                btnZoom.DropDownItems[i].Enabled = editor == null || LevelEditor.ZoomLevels[i] <= editor.MaxZoomLevel;
+        }
+
+        /// <summary>
+        /// Draws a magnifying glass, with a plus (<paramref name="sign"/> 1) or minus (-1) in it, or nothing (0).
+        /// </summary>
+        private static Bitmap CreateZoomIcon(int size, int sign)
+        {
+            var bitmap = new Bitmap(size, size);
+            using (var g = Graphics.FromImage(bitmap))
+            {
+                g.SmoothingMode = System.Drawing.Drawing2D.SmoothingMode.AntiAlias;
+                float s = size / 16f;
+                var lens = new RectangleF(1.5f * s, 1.5f * s, 9 * s, 9 * s);
+                using (var glass = new SolidBrush(Color.FromArgb(200, 225, 240, 255)))
+                    g.FillEllipse(glass, lens);
+                using (var handle = new Pen(Color.FromArgb(120, 80, 40), 3 * s))
+                {
+                    handle.StartCap = System.Drawing.Drawing2D.LineCap.Round;
+                    handle.EndCap = System.Drawing.Drawing2D.LineCap.Round;
+                    g.DrawLine(handle, 10 * s, 10 * s, 14 * s, 14 * s);
+                }
+                using (var rim = new Pen(Color.FromArgb(60, 60, 70), 1.5f * s))
+                    g.DrawEllipse(rim, lens);
+                if (sign != 0)
+                {
+                    using (var mark = new Pen(Color.FromArgb(30, 90, 180), 1.6f * s))
+                    {
+                        float cx = lens.X + (lens.Width / 2), cy = lens.Y + (lens.Height / 2), r = 2.5f * s;
+                        g.DrawLine(mark, cx - r, cy, cx + r, cy);
+                        if (sign > 0)
+                            g.DrawLine(mark, cx, cy - r, cx, cy + r);
+                    }
+                }
+            }
+            return bitmap;
         }
 
         /// <summary>
@@ -1283,6 +1394,8 @@ namespace IntelOrca.PeggleEdit.Designer
         /// </remarks>
         public void UpdateViewPanel()
         {
+            UpdateZoomButton();
+
             var level = LevelEditor?.Level;
             if (level == null)
                 return;
@@ -1624,6 +1737,13 @@ namespace IntelOrca.PeggleEdit.Designer
                 new ShortcutAction(Keys.PageUp, false, true, new EventHandler(bringForwardRibbonButton_Click)),
                 new ShortcutAction(Keys.PageDown, false, true, new EventHandler(sendBackwardRibbonButton_Click)),
                 new ShortcutAction((Keys)222, false, true, new EventHandler(showGridRibbonButton_Click)),
+
+                new ShortcutAction(Keys.Oemplus, true, () => SetZoomLevel(editor => editor.GetNextZoomLevel(1))),
+                new ShortcutAction(Keys.Add, true, () => SetZoomLevel(editor => editor.GetNextZoomLevel(1))),
+                new ShortcutAction(Keys.OemMinus, true, () => SetZoomLevel(editor => editor.GetNextZoomLevel(-1))),
+                new ShortcutAction(Keys.Subtract, true, () => SetZoomLevel(editor => editor.GetNextZoomLevel(-1))),
+                new ShortcutAction(Keys.D0, true, () => SetZoomLevel(editor => 1)),
+                new ShortcutAction(Keys.NumPad0, true, () => SetZoomLevel(editor => 1)),
             };
 
             mParent.RegisterShortcutContainer(this);

@@ -929,15 +929,15 @@ namespace IntelOrca.PeggleEdit.Designer
 
             // Drawn on whole device pixels with a pen of whole pixels, at the same size wherever the object is, so that
             // the dashes look the same as it moves (zoomed, a part of a pixel blurred or moved them). The object's edge
-            // is put on a pixel as its image is (see DrawImageSnapped), and the box a whole number of pixels (5 units)
-            // out from it, so that it stays the same distance from the object.
+            // is put on a pixel as its image is (see DrawImageSnapped), and the box a whole number of pixels (5 at 96
+            // DPI, whatever the zoom) out from it, so that it stays the same distance from the object.
             g.TransformPoints(CoordinateSpace.Device, CoordinateSpace.World, corners);
-            int margin = (int)Math.Round(5 * Zoom);
+            int margin = (int)Math.Round(5 * Dpi.Factor);
             int left = (int)Tools.Extensions.GraphicsExtensions.RoundToPixel(corners[0].X) - margin;
             int top = (int)Tools.Extensions.GraphicsExtensions.RoundToPixel(corners[0].Y) - margin;
             int width = (int)Math.Round(corners[1].X - corners[0].X) + (2 * margin);
             int height = (int)Math.Round(corners[1].Y - corners[0].Y) + (2 * margin);
-            int penWidth = Math.Max(1, (int)Math.Round(Zoom));
+            int penWidth = Math.Max(1, (int)Math.Round(Dpi.Factor));
 
             var state = g.Save();
             g.ResetTransform();
@@ -959,26 +959,27 @@ namespace IntelOrca.PeggleEdit.Designer
             int width = (int)Math.Ceiling(Width / Zoom);
             int height = (int)Math.Ceiling(Height / Zoom);
 
-            Pen p = new Pen(Color.FromArgb(64, 0, 0, 255));
+            using (var p = new Pen(Color.FromArgb(64, 0, 0, 255), OverlayLineWidth))
+            {
+                Point pnt = Level.GetActualXY(0, 0);
 
-            Point pnt = Level.GetActualXY(0, 0);
+                for (int y = pnt.Y; y >= 0; y -= Settings.Default.GridSize)
+                {
+                    g.DrawLine(p, 0, y, width, y);
+                }
+                for (int y = pnt.Y; y < height; y += Settings.Default.GridSize)
+                {
+                    g.DrawLine(p, 0, y, width, y);
+                }
 
-            for (int y = pnt.Y; y >= 0; y -= Settings.Default.GridSize)
-            {
-                g.DrawLine(p, 0, y, width, y);
-            }
-            for (int y = pnt.Y; y < height; y += Settings.Default.GridSize)
-            {
-                g.DrawLine(p, 0, y, width, y);
-            }
-
-            for (int x = pnt.X; x >= 0; x -= Settings.Default.GridSize)
-            {
-                g.DrawLine(p, x, 0, x, height);
-            }
-            for (int x = pnt.X; x < width; x += Settings.Default.GridSize)
-            {
-                g.DrawLine(p, x, 0, x, height);
+                for (int x = pnt.X; x >= 0; x -= Settings.Default.GridSize)
+                {
+                    g.DrawLine(p, x, 0, x, height);
+                }
+                for (int x = pnt.X; x < width; x += Settings.Default.GridSize)
+                {
+                    g.DrawLine(p, x, 0, x, height);
+                }
             }
         }
 
@@ -1334,12 +1335,98 @@ namespace IntelOrca.PeggleEdit.Designer
         #region Zoom
 
         /// <summary>
-        /// Gets how much the level is enlarged on screen. It is the display's DPI scale, so the level is the same
-        /// physical size as at 96 DPI, but drawn sharply at the display's resolution rather than stretched by Windows.
-        /// The editor works in unzoomed coordinates: what is drawn is scaled up, and mouse positions (given to the
-        /// tools and in the mouse events) are scaled down.
+        /// The zoom levels the user can choose, as parts of the level's size at 100%.
         /// </summary>
-        public float Zoom { get; } = Dpi.Factor;
+        public static readonly float[] ZoomLevels = { 0.25f, 1 / 3f, 0.5f, 2 / 3f, 0.75f, 1, 1.25f, 1.5f, 2, 3, 4, 6, 8 };
+
+        // The editor is a control as large as the zoomed level, and Windows gives the mouse's position in a control as
+        // a 16 bit number, so the control is kept smaller than that
+        private const int MaxControlSize = 32000;
+
+        private float mZoomLevel = 1;
+
+        /// <summary>
+        /// Raised when <see cref="ZoomLevel"/> changes.
+        /// </summary>
+        public event EventHandler ZoomChanged;
+
+        /// <summary>
+        /// Gets or sets the zoom the user has chosen, 1 for 100%. It is kept within <see cref="ZoomLevels"/>' range,
+        /// and to what the editor can be at most (see <see cref="MaxZoomLevel"/>). The editor is resized to fit.
+        /// </summary>
+        public float ZoomLevel
+        {
+            get => mZoomLevel;
+            set
+            {
+                value = Math.Max(ZoomLevels[0], Math.Min(MaxZoomLevel, value));
+                if (value == mZoomLevel)
+                    return;
+                mZoomLevel = value;
+                if (mLevel != null)
+                    Size = ZoomSize(mLevel.Bounds.Size);
+                RequestRedraw(null);
+                ZoomChanged?.Invoke(this, EventArgs.Empty);
+            }
+        }
+
+        /// <summary>
+        /// Gets the most the level can be zoomed: the largest of <see cref="ZoomLevels"/> at which the editor is not too
+        /// large for Windows. It is less on a display with a high DPI scale.
+        /// </summary>
+        public float MaxZoomLevel
+        {
+            get
+            {
+                var largest = mLevel == null ? 1 : Math.Max(mLevel.Bounds.Width, mLevel.Bounds.Height);
+                var result = ZoomLevels[0];
+                foreach (var level in ZoomLevels)
+                {
+                    if (largest * Dpi.Factor * level <= MaxControlSize)
+                        result = level;
+                }
+                return result;
+            }
+        }
+
+        /// <summary>
+        /// Gets the next zoom level in <see cref="ZoomLevels"/> from the current one, larger when
+        /// <paramref name="direction"/> is positive, or the current one if there is no other that way.
+        /// </summary>
+        public float GetNextZoomLevel(int direction) => GetNextZoomLevel(mZoomLevel, direction);
+
+        /// <summary>
+        /// Gets the next zoom level in <see cref="ZoomLevels"/> from <paramref name="zoomLevel"/>, larger when
+        /// <paramref name="direction"/> is positive, or <paramref name="zoomLevel"/> if there is no other that way.
+        /// </summary>
+        public float GetNextZoomLevel(float zoomLevel, int direction)
+        {
+            // Allowing for a zoom level that is not one of the steps
+            var max = MaxZoomLevel;
+            if (direction > 0)
+                return ZoomLevels.Where(x => x > zoomLevel + 0.001f && x <= max).DefaultIfEmpty(zoomLevel).Min();
+            return ZoomLevels.Where(x => x < zoomLevel - 0.001f).DefaultIfEmpty(zoomLevel).Max();
+        }
+
+        /// <summary>
+        /// Gets how much the level is enlarged on screen: the zoom the user has chosen, times the display's DPI scale,
+        /// so that at 100% the level is the same physical size as at 96 DPI, but drawn sharply at the display's
+        /// resolution rather than stretched by Windows. The editor works in unzoomed coordinates: what is drawn is
+        /// scaled up, and mouse positions (given to the tools and in the mouse events) are scaled down.
+        /// </summary>
+        public float Zoom => Dpi.Factor * mZoomLevel;
+
+        /// <summary>
+        /// Converts a distance on screen, in pixels at 96 DPI, to level units at the current zoom, for what is the same
+        /// size on screen whatever the zoom: what the editor draws over the level (e.g. the grid), which is not part of
+        /// it, and how near the mouse has to be to something.
+        /// </summary>
+        public float PixelsToUnits(float pixels) => pixels / mZoomLevel;
+
+        /// <summary>
+        /// Gets the width, in level units, of a line that is one pixel at 96 DPI whatever the zoom.
+        /// </summary>
+        public float OverlayLineWidth => PixelsToUnits(1);
 
         /// <summary>
         /// Gets the size of the editor on screen for the given unzoomed size.

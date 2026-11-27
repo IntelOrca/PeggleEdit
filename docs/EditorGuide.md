@@ -60,6 +60,8 @@ The **Remove** button can remove:
 | Particles | Shows the particles of [emitters](Emitters.md). |
 | 3D Mode | Shows emitters as the game does with 3D acceleration, which is how nearly everyone plays. |
 
+**Zoom** shows the level larger or smaller, from 25% to 800%. The large button shows the zoom; click it to pick one. **Zoom In** and **Zoom Out** go up or down a step, and **100%** goes back to the usual size. You can also hold **Ctrl** and turn the mouse wheel to zoom in and out around the mouse, and hold **Shift** and turn it to scroll sideways. Each level window has its own zoom.
+
 **Power-ups** shows the free ball bucket and the things some masters' powers add to the level:
 * **Bucket**: the free ball bucket. It swings from side to side in the preview.
 * **Pyramid**: Kat Tut's Pyramid Power.
@@ -89,6 +91,10 @@ Open the README, the GitHub page, or see which version you have.
 | Page Up, Page Down | Bring forwards, send backwards |
 | B, V | Add a brick joined on to the selected brick. See [Bricks](Bricks.md) |
 | ' (# on a UK keyboard) | Show or hide the grid |
+| Ctrl++, Ctrl+- | Zoom in and out |
+| Ctrl+0 | Zoom to 100% |
+| Ctrl+mouse wheel | Zoom in and out around the mouse |
+| Shift+mouse wheel | Scroll sideways |
 | F1 | Open the README |
 
 ## Options

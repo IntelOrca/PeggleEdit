@@ -48,6 +48,13 @@ namespace IntelOrca.PeggleEdit.Designer
         /// window they belong to, as the application's own dialogs are, rather than over the screen.
         /// </summary>
         void CentreSystemDialogs();
+
+        /// <summary>
+        /// Stops a control and its children being drawn until the returned object is disposed, when all of it is
+        /// drawn again at once, so that a change made in steps (e.g. resizing, moving and scrolling) is never shown
+        /// part way through.
+        /// </summary>
+        IDisposable SuspendDrawing(Control control);
     }
 
     static class PlatformServices
@@ -93,6 +100,54 @@ namespace IntelOrca.PeggleEdit.Designer
         {
             return IsWindowEnabled(form.Handle);
         }
+
+        #region Suspending drawing
+
+        private const int WM_SETREDRAW = 0x000B;
+        private const uint RDW_INVALIDATE = 0x0001;
+        private const uint RDW_ERASE = 0x0004;
+        private const uint RDW_ALLCHILDREN = 0x0080;
+        private const uint RDW_UPDATENOW = 0x0100;
+        private const uint RDW_FRAME = 0x0400;
+
+        [DllImport("user32.dll")]
+        private static extern IntPtr SendMessage(IntPtr hWnd, int msg, IntPtr wParam, IntPtr lParam);
+
+        [DllImport("user32.dll")]
+        private static extern bool RedrawWindow(IntPtr hWnd, IntPtr lprcUpdate, IntPtr hrgnUpdate, uint flags);
+
+        public IDisposable SuspendDrawing(Control control)
+        {
+            // Only a control that is shown, so that one hidden is not shown when drawing is turned back on (and one
+            // whose drawing is already suspended, e.g. by its parent's, is left to that)
+            if (!control.IsHandleCreated || !IsWindowVisible(control.Handle))
+                return new DrawingSuspension(null);
+            SendMessage(control.Handle, WM_SETREDRAW, IntPtr.Zero, IntPtr.Zero);
+            return new DrawingSuspension(control);
+        }
+
+        private sealed class DrawingSuspension : IDisposable
+        {
+            private Control mControl;
+
+            public DrawingSuspension(Control control)
+            {
+                mControl = control;
+            }
+
+            public void Dispose()
+            {
+                var control = mControl;
+                mControl = null;
+                if (control == null || !control.IsHandleCreated)
+                    return;
+                SendMessage(control.Handle, WM_SETREDRAW, new IntPtr(1), IntPtr.Zero);
+                RedrawWindow(control.Handle, IntPtr.Zero, IntPtr.Zero,
+                    RDW_INVALIDATE | RDW_ERASE | RDW_FRAME | RDW_ALLCHILDREN | RDW_UPDATENOW);
+            }
+        }
+
+        #endregion
 
         #region Centring system dialogs
 
@@ -220,6 +275,28 @@ namespace IntelOrca.PeggleEdit.Designer
         public void CentreSystemDialogs()
         {
             // Mono's message boxes are its own forms
+        }
+
+        public IDisposable SuspendDrawing(Control control)
+        {
+            // Drawn again afterwards, though not kept from being drawn in between
+            return new Redraw(control);
+        }
+
+        private sealed class Redraw : IDisposable
+        {
+            private Control mControl;
+
+            public Redraw(Control control)
+            {
+                mControl = control;
+            }
+
+            public void Dispose()
+            {
+                mControl?.Invalidate(true);
+                mControl = null;
+            }
         }
 
         public string CompactPath(string path, int length)

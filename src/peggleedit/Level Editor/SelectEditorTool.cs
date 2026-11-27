@@ -37,6 +37,12 @@ namespace IntelOrca.PeggleEdit.Designer
         private bool _commandKeyDown;
         private PointF _placePosition;
 
+        /// <summary>
+        /// How near a point of an object the mouse is to pick it, in level units: its handle (8 units each way), or 8
+        /// pixels on screen when zoomed out so far that the handle is smaller.
+        /// </summary>
+        private float PointTolerance => Math.Max(8, Editor.PixelsToUnits(8));
+
         public override void MouseDown(MouseButtons button, Point location, Keys modifierKeys)
         {
             var level = Editor.Level;
@@ -52,9 +58,10 @@ namespace IntelOrca.PeggleEdit.Designer
                     {
                         var p = pc.GetInteractionPoint(i);
 
+                        // On the point's handle, or near enough on screen when zoomed out
                         var rect = new RectangleF();
                         rect.Offset(p);
-                        rect.Inflate(8, 8);
+                        rect.Inflate(PointTolerance, PointTolerance);
                         if (rect.Contains(vl))
                         {
                             _selectionStart = location;
@@ -249,7 +256,7 @@ namespace IntelOrca.PeggleEdit.Designer
                             if (i != _pointMoveIndex)
                             {
                                 var other = pc.GetInteractionPoint(i);
-                                if (p.GetLength(other) < 8)
+                                if (p.GetLength(other) < PointTolerance)
                                 {
                                     p = other;
                                     break;
@@ -558,12 +565,17 @@ namespace IntelOrca.PeggleEdit.Designer
             // Draw the mouse selection
             if (_state == State.Selecting)
             {
-                var rect = _selectionRect;
-                g.FillRectangle(new SolidBrush(Color.FromArgb(40, 255, 255, 255)), rect);
-                g.DrawRectangle(Pens.CornflowerBlue, rect);
+                // Lines of the same width on screen whatever the zoom
+                RectangleF rect = _selectionRect;
+                var line = Editor.OverlayLineWidth;
+                using (var brush = new SolidBrush(Color.FromArgb(40, 255, 255, 255)))
+                    g.FillRectangle(brush, rect);
+                using (var outer = new Pen(Color.CornflowerBlue, line))
+                    g.DrawRectangle(outer, rect.X, rect.Y, rect.Width, rect.Height);
 
-                rect.Inflate(-1, -1);
-                g.DrawRectangle(Pens.SkyBlue, rect);
+                rect.Inflate(-line, -line);
+                using (var inner = new Pen(Color.SkyBlue, line))
+                    g.DrawRectangle(inner, rect.X, rect.Y, rect.Width, rect.Height);
             }
         }
 

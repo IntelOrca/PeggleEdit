@@ -38,7 +38,8 @@ namespace IntelOrca.PeggleEdit.Tools.Extensions
         public static void DrawImageSnapped(this Graphics g, Image image, RectangleF dst, Rectangle src)
         {
             // Zoomed (e.g. for a high DPI display), the image is scaled once to the size it is shown at and then copied
-            // pixel for pixel, as scaling it every time it is drawn is slow
+            // pixel for pixel, as scaling it every time it is drawn is slow. Zoomed so far that the scaled image would
+            // be very large, only the part of it that is drawn is scaled, each time.
             float[] m;
             using (var transform = g.Transform)
                 m = transform.Elements;
@@ -50,6 +51,11 @@ namespace IntelOrca.PeggleEdit.Tools.Extensions
                 var height = (int)Math.Round(dst.Height * m[3]);
                 if (width <= 0 || height <= 0)
                     return;
+                if ((long)width * height > MaxScaledPixels)
+                {
+                    DrawVisiblePartScaled(g, image, new Rectangle(left, top, width, height), src);
+                    return;
+                }
                 var scaled = GetScaledImage(image, src, new Size(width, height));
                 var state = g.Save();
                 g.ResetTransform();
@@ -74,35 +80,110 @@ namespace IntelOrca.PeggleEdit.Tools.Extensions
             g.DrawImage(image, points, src, GraphicsUnit.Pixel, ClampedEdges);
         }
 
+        /// <summary>
+        /// Draws the part of an image that is visible, scaled to <paramref name="device"/> (in device pixels), as the
+        /// scaled images that are kept are made.
+        /// </summary>
+        private static void DrawVisiblePartScaled(Graphics g, Image image, Rectangle device, Rectangle src)
+        {
+            var state = g.Save();
+            try
+            {
+                g.ResetTransform();
+                var visible = Rectangle.Intersect(device, Rectangle.Ceiling(g.VisibleClipBounds));
+                if (visible.Width <= 0 || visible.Height <= 0)
+                    return;
+                // The part of the image under the visible pixels, with two of its pixels around it so that the edges are
+                // sampled as when the whole image is drawn
+                float sx = (float)src.Width / device.Width, sy = (float)src.Height / device.Height;
+                visible.Inflate((int)Math.Ceiling(2 / sx) + 1, (int)Math.Ceiling(2 / sy) + 1);
+                visible.Intersect(device);
+                g.InterpolationMode = System.Drawing.Drawing2D.InterpolationMode.HighQualityBicubic;
+                g.PixelOffsetMode = System.Drawing.Drawing2D.PixelOffsetMode.HighQuality;
+                g.DrawImage(image, visible,
+                    src.X + ((visible.X - device.X) * sx), src.Y + ((visible.Y - device.Y) * sy),
+                    visible.Width * sx, visible.Height * sy, GraphicsUnit.Pixel, ClampedEdges);
+            }
+            finally
+            {
+                g.Restore(state);
+            }
+        }
+
         // The images scaled for drawing zoomed, by image, then by the part of it and the size it is scaled to
         private static readonly System.Runtime.CompilerServices.ConditionalWeakTable<Image, Dictionary<(Rectangle, Size), Bitmap>> _scaled =
             new System.Runtime.CompilerServices.ConditionalWeakTable<Image, Dictionary<(Rectangle, Size), Bitmap>>();
 
+        // Each image's scaled images, so that they can all be let go of when there are too many
+        private static readonly List<WeakReference<Dictionary<(Rectangle, Size), Bitmap>>> _allScaled =
+            new List<WeakReference<Dictionary<(Rectangle, Size), Bitmap>>>();
+
+        // The pixels in the scaled images kept, of all images
+        private static long _scaledPixels;
+
+        private static readonly object _scaledLock = new object();
+
         // The most sizes kept of one image (e.g. a peg drawn at many sizes), after which they are made again
         private const int MaxScaledSizes = 64;
 
+        // The most pixels an image is scaled to and kept (e.g. 2800 x 2100, a background zoomed 350%), so that zooming
+        // far in does not use a lot of memory
+        private const long MaxScaledPixels = 8 * 1024 * 1024;
+
+        // The most pixels kept in scaled images of all images (about 100 MB), after which they are all made again
+        private const long MaxAllScaledPixels = 24 * 1024 * 1024;
+
         private static Bitmap GetScaledImage(Image image, Rectangle src, Size size)
         {
-            var sizes = _scaled.GetOrCreateValue(image);
-            if (sizes.TryGetValue((src, size), out var result))
-                return result;
-            if (sizes.Count >= MaxScaledSizes)
+            lock (_scaledLock)
             {
-                foreach (var bitmap in sizes.Values)
-                    bitmap.Dispose();
-                sizes.Clear();
-            }
+                if (!_scaled.TryGetValue(image, out var sizes))
+                {
+                    sizes = new Dictionary<(Rectangle, Size), Bitmap>();
+                    _scaled.Add(image, sizes);
+                    _allScaled.RemoveAll(r => !r.TryGetTarget(out _));
+                    _allScaled.Add(new WeakReference<Dictionary<(Rectangle, Size), Bitmap>>(sizes));
+                }
+                if (sizes.TryGetValue((src, size), out var result))
+                    return result;
 
-            result = new Bitmap(size.Width, size.Height, PixelFormat.Format32bppPArgb);
-            using (var g = Graphics.FromImage(result))
-            {
-                g.CompositingMode = System.Drawing.Drawing2D.CompositingMode.SourceCopy;
-                g.InterpolationMode = System.Drawing.Drawing2D.InterpolationMode.HighQualityBicubic;
-                g.PixelOffsetMode = System.Drawing.Drawing2D.PixelOffsetMode.HighQuality;
-                g.DrawImage(image, new Rectangle(Point.Empty, size), src.X, src.Y, src.Width, src.Height, GraphicsUnit.Pixel, ClampedEdges);
+                long pixels = (long)size.Width * size.Height;
+                if (sizes.Count >= MaxScaledSizes)
+                    Clear(sizes);
+                if (_scaledPixels + pixels > MaxAllScaledPixels)
+                {
+                    foreach (var reference in _allScaled)
+                    {
+                        if (reference.TryGetTarget(out var other))
+                            Clear(other);
+                    }
+                    // Images no longer used may have had scaled images that are not counted any more
+                    _scaledPixels = 0;
+                }
+
+                result = new Bitmap(size.Width, size.Height, PixelFormat.Format32bppPArgb);
+                using (var g = Graphics.FromImage(result))
+                {
+                    g.CompositingMode = System.Drawing.Drawing2D.CompositingMode.SourceCopy;
+                    g.InterpolationMode = System.Drawing.Drawing2D.InterpolationMode.HighQualityBicubic;
+                    g.PixelOffsetMode = System.Drawing.Drawing2D.PixelOffsetMode.HighQuality;
+                    g.DrawImage(image, new Rectangle(Point.Empty, size), src.X, src.Y, src.Width, src.Height, GraphicsUnit.Pixel, ClampedEdges);
+                }
+                sizes[(src, size)] = result;
+                _scaledPixels += pixels;
+                return result;
             }
-            sizes[(src, size)] = result;
-            return result;
+        }
+
+        private static void Clear(Dictionary<(Rectangle, Size), Bitmap> sizes)
+        {
+            foreach (var bitmap in sizes.Values)
+            {
+                _scaledPixels -= (long)bitmap.Width * bitmap.Height;
+                bitmap.Dispose();
+            }
+            sizes.Clear();
+            _scaledPixels = Math.Max(0, _scaledPixels);
         }
 
         /// <summary>

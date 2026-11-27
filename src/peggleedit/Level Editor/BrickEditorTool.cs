@@ -229,15 +229,18 @@ namespace IntelOrca.PeggleEdit.Designer
             // Draw cross
             if (_connectPosition is PointF pos)
             {
-                var pen0 = new Pen(Color.White, 2);
-                var pen1 = new Pen(Color.Magenta, 1);
-
-                var rect = new RectangleF(pos.X, pos.Y, 0, 0);
-                rect.Inflate(4, 4);
-                g.DrawLine(pen0, rect.Left, rect.Top, rect.Right, rect.Bottom);
-                g.DrawLine(pen0, rect.Right, rect.Top, rect.Left, rect.Bottom);
-                g.DrawLine(pen1, rect.Left, rect.Top, rect.Right, rect.Bottom);
-                g.DrawLine(pen1, rect.Right, rect.Top, rect.Left, rect.Bottom);
+                // The same size on screen, whatever the zoom
+                var width = Editor.OverlayLineWidth;
+                using (var pen0 = new Pen(Color.White, 2 * width))
+                using (var pen1 = new Pen(Color.Magenta, width))
+                {
+                    var rect = new RectangleF(pos.X, pos.Y, 0, 0);
+                    rect.Inflate(4 * width, 4 * width);
+                    g.DrawLine(pen0, rect.Left, rect.Top, rect.Right, rect.Bottom);
+                    g.DrawLine(pen0, rect.Right, rect.Top, rect.Left, rect.Bottom);
+                    g.DrawLine(pen1, rect.Left, rect.Top, rect.Right, rect.Bottom);
+                    g.DrawLine(pen1, rect.Right, rect.Top, rect.Left, rect.Bottom);
+                }
             }
         }
 

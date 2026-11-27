@@ -249,7 +249,8 @@ namespace IntelOrca.PeggleEdit.Designer
             {
                 foreach (ShortcutAction sa in container.GetShortcuts())
                 {
-                    if (sa.Key == e.KeyCode && ((sa.Ctrl && e.Control) || (!sa.Ctrl && !e.Control)))
+                    // Not with Alt, so that characters typed with AltGr (Ctrl + Alt) are not taken as Ctrl shortcuts
+                    if (sa.Key == e.KeyCode && ((sa.Ctrl && e.Control && !e.Alt) || (!sa.Ctrl && !e.Control)))
                     {
                         if (sa.EditorMustBeFocused && !IsLevelEditorFocused())
                             break;
@@ -504,6 +505,15 @@ namespace IntelOrca.PeggleEdit.Designer
         {
             mLastFocusedLevel = window;
             mMenuToolPanel.UpdateViewPanel();
+        }
+
+        /// <summary>
+        /// Shows a level's zoom on the ribbon, if it is the level being worked on.
+        /// </summary>
+        public void LevelZoomChanged(LevelEditor editor)
+        {
+            if (editor == GetFocusedLevelEditor())
+                mMenuToolPanel.UpdateViewPanel();
         }
 
         public bool IsEditorAvailable()
