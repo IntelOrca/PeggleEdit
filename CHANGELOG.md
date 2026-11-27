@@ -34,6 +34,7 @@ PeggleEdit 5.2.0 (Flamingo) (TBC)
 * [Fix] Spelling of the Vertical Radius, Spiral Count and Appearance labels
 * [Fix] The Entry List lists a level's objects as soon as the level is opened or switched to, rather than once it is clicked
 * [Fix] A level that is opened is drawn once it is in place, rather than at each size and place it has on the way, which were left drawn over the other windows
+* [Fix] A window drag that another window takes the mouse from part way through (e.g. Print Screen) ends, rather than the window following the mouse until a click, which then failed
 * [Feature] Generators no longer need to be applied: levels are saved with the pegs and bricks they make, so they are playable, and PeggleEdit keeps the generators in its own data after the level
 * [Feature] Preview shows generators as the pegs and bricks they make, moving as they will in the game
 * [Feature] A generator's movement is passed on to its pegs and bricks, so that they move together as one shape: a rotating ring of bricks stays a ring

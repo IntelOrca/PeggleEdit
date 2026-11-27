@@ -71,7 +71,8 @@ namespace Crom.Controls.Docking
       {
          if (_movedWindow != null)
          {
-            throw new InvalidOperationException("Err001");
+            // A movement not ended (e.g. one whose mouse button was let go where it was not seen) is cancelled
+            CancelWindowMovement();
          }
 
          _movedWindow = window;

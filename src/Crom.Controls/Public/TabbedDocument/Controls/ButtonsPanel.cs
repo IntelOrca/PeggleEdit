@@ -548,6 +548,22 @@ namespace Crom.Controls.TabbedDocument
       }
 
       /// <summary>
+      /// Occurs when the mouse is captured or released. Captured by another window (e.g. by Print Screen) part way
+      /// through dragging a tab, it ends the drag as letting go of the button would, as the button can then be let go
+      /// without it being seen.
+      /// </summary>
+      /// <param name="e">event argument</param>
+      protected override void OnMouseCaptureChanged(EventArgs e)
+      {
+         if (Capture == false)
+         {
+            EndMouseAction(false);
+         }
+
+         base.OnMouseCaptureChanged(e);
+      }
+
+      /// <summary>
       /// ProcessDialogKey
       /// </summary>
       /// <param name="keyData">keyData</param>

@@ -76,30 +76,35 @@ namespace Crom.Controls.Docking
          TitleBar.MouseDown    += OnMouseDownInTitleBar;
          TitleBar.MouseMove    += OnMouseMoveInTitleBar;
          TitleBar.MouseUp      += OnMouseUpFromTitleBar;
+         TitleBar.MouseCaptureChanged += OnMouseCaptureChanged;
 
          TopMargin.Height       = DefaultTopMargin;
          TopMargin.Cursor       = Cursors.SizeNS;
          TopMargin.MouseDown   += OnMouseDownInTopMargin;
          TopMargin.MouseMove   += OnMouseMoveInTopMargin;
          TopMargin.MouseUp     += OnMouseUpFromTopMargin;
+         TopMargin.MouseCaptureChanged += OnMouseCaptureChanged;
 
          LeftMargin.Width       = DefaultLeftMargin;
          LeftMargin.Cursor      = Cursors.SizeWE;
          LeftMargin.MouseDown  += OnMouseDownInLeftMargin;
          LeftMargin.MouseMove  += OnMouseMoveInLeftMargin;
          LeftMargin.MouseUp    += OnMouseUpFromLeftMargin;
+         LeftMargin.MouseCaptureChanged += OnMouseCaptureChanged;
 
          RightMargin.Width      = DefaultRightMargin;
          RightMargin.Cursor     = Cursors.SizeWE;
          RightMargin.MouseDown += OnMouseDownInRightMargin;
          RightMargin.MouseMove += OnMouseMoveInRightMargin;
          RightMargin.MouseUp   += OnMouseUpFromRightMargin;
+         RightMargin.MouseCaptureChanged += OnMouseCaptureChanged;
 
          BottomMargin.Height    = DefaultBottomMargin;
          BottomMargin.Cursor    = Cursors.SizeNS;
          BottomMargin.MouseDown += OnMouseDownInBottomMargin;
          BottomMargin.MouseMove += OnMouseMoveInBottomMargin;
          BottomMargin.MouseUp   += OnMouseUpFromBottomMargin;
+         BottomMargin.MouseCaptureChanged += OnMouseCaptureChanged;
 
 
          TitleBar.BackColor     = SystemColors.Control;
@@ -318,6 +323,9 @@ namespace Crom.Controls.Docking
       /// <param name="mouseScreenPos">mouse down screen position</param>
       public void BeginMovementByMouse(Point mouseScreenPos)
       {
+         // A movement not ended (e.g. one whose mouse button was let go where it was not seen) is ended first
+         EndMovementByMouse();
+
          if (Positioner.CanMove)
          {
             _mouseDownScreenPos            = mouseScreenPos;
@@ -360,13 +368,16 @@ namespace Crom.Controls.Docking
       /// </summary>
       public void EndMovementByMouse()
       {
-         if (_moving)
+         // Ended before the positioner is told, as docking the window can end it again (e.g. its title bar losing the
+         // mouse as it is disposed)
+         bool moving = _moving;
+         _moving   = false;
+         _sizeMode = zSizeMode.None;
+
+         if (moving)
          {
             Positioner.StopMoveByMouse();
-            _moving = false;
          }
-
-         _sizeMode = zSizeMode.None;
       }
 
       /// <summary>
@@ -758,7 +769,7 @@ namespace Crom.Controls.Docking
       /// <param name="e">event arg</param>
       private void OnMouseDownInTitleBar(object sender, MouseEventArgs e)
       {
-         _sizeMode = zSizeMode.None;
+         EndMovementByMouse();
 
          if (e.Button == MouseButtons.Left)
          {
@@ -815,10 +826,18 @@ namespace Crom.Controls.Docking
       {
          if (_sizeMode == zSizeMode.Move)
          {
-            Point location = TitleBar.PointToScreen(e.Location);
-            ContinueMovementByMouse(location);
+            if ((e.Button & MouseButtons.Left) == 0)
+            {
+               // The button was let go where it was not seen
+               EndMovementByMouse();
+            }
+            else
+            {
+               Point location = TitleBar.PointToScreen(e.Location);
+               ContinueMovementByMouse(location);
 
-            return;
+               return;
+            }
          }
 
          int buttonIndex  = _titleRenderer.TitleBarButtonIndexUnderMouse;
@@ -852,6 +871,29 @@ namespace Crom.Controls.Docking
       private void OnMouseUpFromTitleBar(object sender, MouseEventArgs e)
       {
          EndMovementByMouse();
+      }
+
+      /// <summary>
+      /// On the mouse captured by another window (e.g. by Print Screen) part way through moving or sizing, which ends
+      /// it as letting go of the button would, as the button can then be let go without it being seen
+      /// </summary>
+      /// <param name="sender">sender of the event</param>
+      /// <param name="e">event arg</param>
+      private void OnMouseCaptureChanged(object sender, EventArgs e)
+      {
+         if (((Control)sender).Capture)
+         {
+            return;
+         }
+
+         if (_sizeMode == zSizeMode.Move)
+         {
+            EndMovementByMouse();
+         }
+         else
+         {
+            _sizeMode = zSizeMode.None;
+         }
       }
 
 
@@ -892,7 +934,7 @@ namespace Crom.Controls.Docking
             bounds.Height  = _positionerSizeOnMouseDown.Height - dy;
 
             Positioner.Bounds = bounds;
-         }
+            }
       }
 
       /// <summary>
@@ -943,7 +985,7 @@ namespace Crom.Controls.Docking
             bounds.Height  = _positionerSizeOnMouseDown.Height;
 
             Positioner.Bounds = bounds;
-         }
+            }
       }
 
       /// <summary>
@@ -990,7 +1032,7 @@ namespace Crom.Controls.Docking
             Positioner.Size = new Size(
                _positionerSizeOnMouseDown.Width + dx,
                Positioner.Size.Height);
-         }
+            }
       }
 
       /// <summary>
@@ -1037,7 +1079,7 @@ namespace Crom.Controls.Docking
             Positioner.Size = new Size(
                Positioner.Size.Width,
                _positionerSizeOnMouseDown.Height + dy);
-         }
+            }
       }
 
       /// <summary>
