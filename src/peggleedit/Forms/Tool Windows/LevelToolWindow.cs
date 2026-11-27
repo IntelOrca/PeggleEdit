@@ -218,11 +218,14 @@ namespace IntelOrca.PeggleEdit.Designer
             base.OnShown(e);
         }
 
-        private void CentreScrollPosition()
+        /// <summary>
+        /// Scrolls to put the middle of the level in the middle of the window.
+        /// </summary>
+        public void CentreScrollPosition()
         {
-            // The middle of the level in the middle of the window
             var bounds = mLevelEditor.Level.Bounds;
-            ScrollTo(new PointF(bounds.Width / 2f, bounds.Height / 2f), new Point(ClientSize.Width / 2, ClientSize.Height / 2));
+            using (PlatformServices.Current.SuspendDrawing(this))
+                ScrollTo(new PointF(bounds.Width / 2f, bounds.Height / 2f), new Point(ClientSize.Width / 2, ClientSize.Height / 2));
         }
 
         /// <summary>

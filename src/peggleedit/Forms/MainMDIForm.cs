@@ -468,17 +468,27 @@ namespace IntelOrca.PeggleEdit.Designer
         private void AddLevelWindow(Level level)
         {
             LevelToolWindow ltw = new LevelToolWindow(this, level);
-            DockableFormInfo dfi = AddToolWindow(ltw);
+            DockableFormInfo dfi;
 
-            DockableFormInfo oldfi = mDockContainer.GetFormInfo(mLastFocusedLevel);
-            if (oldfi == null)
+            // Drawn once it has been docked and its level put in the middle, rather than at each size and place it has
+            // on the way (which were left drawn over the other windows until they were next drawn)
+            using (PlatformServices.Current.SuspendDrawing(mDockContainer))
             {
-                mDockContainer.DockForm(dfi, DockStyle.Fill, zDockMode.Inner);
+                dfi = AddToolWindow(ltw);
+
+                DockableFormInfo oldfi = mDockContainer.GetFormInfo(mLastFocusedLevel);
+                if (oldfi == null)
+                {
+                    mDockContainer.DockForm(dfi, DockStyle.Fill, zDockMode.Inner);
+                }
+                else
+                {
+                    mDockContainer.DockForm(dfi, oldfi, DockStyle.Fill, zDockMode.Inner);
+                }
+                ltw.CentreScrollPosition();
             }
-            else
-            {
-                mDockContainer.DockForm(dfi, oldfi, DockStyle.Fill, zDockMode.Inner);
-            }
+            // Focused once it is drawn, as it can not be before
+            ltw.Focus();
 
             mLevelToolWindowInfos.Add(dfi);
             LevelWindowHasFocus(ltw);
