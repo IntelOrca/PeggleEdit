@@ -481,8 +481,7 @@ namespace IntelOrca.PeggleEdit.Designer
             }
 
             mLevelToolWindowInfos.Add(dfi);
-            mLastFocusedLevel = ltw;
-            mMenuToolPanel.UpdateViewPanel();
+            LevelWindowHasFocus(ltw);
 
             mEditedLevels.Add(level);
             ltw.UpdateTitle(mPack.IsLevelModified(level));
@@ -508,6 +507,8 @@ namespace IntelOrca.PeggleEdit.Designer
         {
             mLastFocusedLevel = window;
             mMenuToolPanel.UpdateViewPanel();
+            // The Entry List shows the level being worked on, from when it is opened or switched to
+            UpdateEntryList(window.LevelEditor);
         }
 
         /// <summary>

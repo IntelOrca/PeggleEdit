@@ -32,6 +32,7 @@ PeggleEdit 5.2.0 (Flamingo) (TBC)
 * [Fix] New and imported levels are given a file name no other level in the pack has, and a pack is not saved while two of its levels share a file name, as one would be saved over the other
 * [Fix] Export in the menu of an image in the Pack Explorer did nothing
 * [Fix] Spelling of the Vertical Radius, Spiral Count and Appearance labels
+* [Fix] The Entry List lists a level's objects as soon as the level is opened or switched to, rather than once it is clicked
 * [Feature] Generators no longer need to be applied: levels are saved with the pegs and bricks they make, so they are playable, and PeggleEdit keeps the generators in its own data after the level
 * [Feature] Preview shows generators as the pegs and bricks they make, moving as they will in the game
 * [Feature] A generator's movement is passed on to its pegs and bricks, so that they move together as one shape: a rotating ring of bricks stays a ring
