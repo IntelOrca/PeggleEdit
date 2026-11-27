@@ -23,8 +23,10 @@ Right-click the pack's name to:
 
 Right-click a level to:
 * **Properties**: set its display name, file name, minimum stage and ace score. Every level in a pack needs its own file name. PeggleEdit gives new and imported levels one, and will not let two levels share a file name.
-* **Set Background**: pick an image. It is shown behind the game's frame, as the game will show it. Keep it at its own size, or have it scaled and cropped to fill the screen (800 x 600) or the opening in the frame (646 x 543). Drag it to move it, or use the mouse wheel to zoom it; it is then saved as 800 x 600. Save it as a PNG, which keeps every pixel, or a smaller JPG, whose loss of detail the preview shows.
-* **Set Thumbnail**: pick an image to show when choosing the level in the game, instead of a picture of the level. It is resized and cropped to the game's 200 x 177 for you, and kept when you change the level. **Reset Thumbnail** goes back to a picture of the level.
+* **Background > Import**: pick an image. It is shown behind the game's frame, as the game will show it. Keep it at its own size, or have it scaled and cropped to fill the screen (800 x 600) or the opening in the frame (646 x 543). Drag it to move it, or use the mouse wheel to zoom it; it is then saved as 800 x 600. Save it as a PNG, which keeps every pixel, or a smaller JPG, whose loss of detail the preview shows.
+* **Background > Export**: save the background as it is stored in the pack, or as a PNG.
+* **Thumbnail > Import**: pick an image to show when choosing the level in the game, instead of a picture of the level. It is resized and cropped to the game's 200 x 177 for you, and kept when you change the level. **Thumbnail > Reset** goes back to a picture of the level.
+* **Thumbnail > Export**: save the thumbnail the pack will be saved with, yours or the picture of the level.
 * **Export**: save the level on its own for Pego, Peggle Deluxe or Peggle Nights, or as XML.
 * **Delete** it. You can also press **Delete**.
 

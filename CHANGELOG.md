@@ -19,8 +19,9 @@ PeggleEdit 5.2.0 (Flamingo) (TBC)
 * [Feature] #40: Group objects, so that they are selected together, and lock objects, so that they can not be selected or moved in the level (Home > Group, Ctrl+G, Ctrl+L)
 * [Feature] #38: Show or hide each kind of object, and show invisible objects as normal, faded or not at all (View > Kinds). Hidden objects can not be selected in the level
 * [Feature] #37: Zoom the level in and out, from 25% to 800% (View > Zoom, Ctrl++, Ctrl+-, Ctrl+0, or Ctrl and the mouse wheel)
-* [Feature] #41: Set a level's thumbnail to an image of your own, kept when the level changes (Pack Explorer: level > Set Thumbnail)
-* [Feature] #43: Set Background shows the image behind the game's frame, and keeps it at its own size or scales it to fill the screen (800 x 600) or the opening in the frame (646 x 543). Move and zoom it with the mouse to place it by hand, and save it as a PNG or a JPG of the quality you choose
+* [Feature] #41: Set a level's thumbnail to an image of your own, kept when the level changes (Pack Explorer: level > Thumbnail > Import)
+* [Feature] #44: Export a level's background and thumbnail (Pack Explorer: level > Background > Export, level > Thumbnail > Export)
+* [Feature] #43: Background > Import shows the image behind the game's frame, and keeps it at its own size or scales it to fill the screen (800 x 600) or the opening in the frame (646 x 543). Move and zoom it with the mouse to place it by hand, and save it as a PNG or a JPG of the quality you choose
 * [Fix] A 646 x 543 background, the size of Peggle's own, is drawn where the game draws it, a few pixels from where it was
 * [Feature] A level with unsaved changes has an * after its name on its tab, as does the pack in the title bar
 * [Change] PeggleEdit asks to save only when something has changed, with Save, Don't Save and Cancel, and also when it is closed

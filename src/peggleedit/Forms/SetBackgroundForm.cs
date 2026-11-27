@@ -46,7 +46,7 @@ namespace IntelOrca.PeggleEdit.Designer.Forms
         private const float MaxZoomedSide = 16000;
         // How much + and - zoom by
         private const double KeyZoom = 1.02;
-        private const string Title = "Set Background";
+        private const string Title = "Import Background";
 
         private readonly Level mLevel;
         private readonly string mBaseName;

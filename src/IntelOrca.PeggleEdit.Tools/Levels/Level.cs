@@ -1081,10 +1081,17 @@ namespace IntelOrca.PeggleEdit.Tools.Levels
         public Image GetSavedThumbnail()
         {
             var image = Thumbnail?.Image;
-            if (image != null && (CustomThumbnail || GetData(LevelWriter.DefaultFileVersion).CalculateFnv1a() == Hash))
+            if (image != null && IsThumbnailSaved)
                 return image;
             return GetThumbnail();
         }
+
+        /// <summary>
+        /// Gets whether the pack is saved with the level's thumbnail as it is: the user's own, or the one it has while it
+        /// is unchanged since the pack was opened or saved. Otherwise one is made from the level.
+        /// </summary>
+        public bool IsThumbnailSaved =>
+            Thumbnail != null && (CustomThumbnail || GetData(LevelWriter.DefaultFileVersion).CalculateFnv1a() == Hash);
 
         public Image GetThumbnail()
         {

@@ -876,13 +876,25 @@ namespace IntelOrca.PeggleEdit.Designer
             mContextMenu.Items.Add(mnuExport);
             mContextMenu.Items.Add(new ToolStripSeparator());
             mContextMenu.Items.Add(new ToolStripMenuItem("Properties", Resources.properties_16, mnuLevelProperties_Click));
-            mContextMenu.Items.Add(new ToolStripMenuItem("Set Background...", Resources.image_16, mnuSetBackground_Click));
-            mContextMenu.Items.Add(new ToolStripMenuItem("Set Thumbnail...", Resources.image_16, mnuSetThumbnail_Click));
             var level = SelectedNode?.Tag as Level;
-            mContextMenu.Items.Add(new ToolStripMenuItem("Reset Thumbnail", null, mnuResetThumbnail_Click)
+
+            var mnuBackground = new ToolStripMenuItem("Background", Resources.image_16);
+            mnuBackground.DropDownItems.Add(new ToolStripMenuItem("Import...", Resources.import_16, mnuSetBackground_Click));
+            mnuBackground.DropDownItems.Add(new ToolStripMenuItem("Export...", Resources.export_16, mnuExportBackground_Click)
+            {
+                Enabled = level?.Background != null,
+            });
+            mContextMenu.Items.Add(mnuBackground);
+
+            var mnuThumbnail = new ToolStripMenuItem("Thumbnail", Resources.image_16);
+            mnuThumbnail.DropDownItems.Add(new ToolStripMenuItem("Import...", Resources.import_16, mnuSetThumbnail_Click));
+            mnuThumbnail.DropDownItems.Add(new ToolStripMenuItem("Export...", Resources.export_16, mnuExportThumbnail_Click));
+            mnuThumbnail.DropDownItems.Add(new ToolStripSeparator());
+            mnuThumbnail.DropDownItems.Add(new ToolStripMenuItem("Reset", null, mnuResetThumbnail_Click)
             {
                 Enabled = level != null && level.CustomThumbnail && level.Thumbnail != null,
             });
+            mContextMenu.Items.Add(mnuThumbnail);
         }
 
         private void mnuLevelOpen_Click(object sender, EventArgs e)
@@ -970,7 +982,7 @@ namespace IntelOrca.PeggleEdit.Designer
                 return;
             using (var dialog = new OpenFileDialog())
             {
-                dialog.Title = "Set Background";
+                dialog.Title = "Import Background";
                 dialog.Filter = "Supported Image Files|*.png;*.jpg;*.jpeg;*.bmp;*.gif|All Files|*.*";
                 if (dialog.ShowDialog(mParent) != DialogResult.OK)
                     return;
@@ -994,7 +1006,7 @@ namespace IntelOrca.PeggleEdit.Designer
                 return;
             using (var dialog = new OpenFileDialog())
             {
-                dialog.Title = "Set Thumbnail";
+                dialog.Title = "Import Thumbnail";
                 dialog.Filter = "Supported Image Files|*.png;*.jpg;*.jpeg;*.bmp;*.gif|All Files|*.*";
                 if (dialog.ShowDialog(mParent) != DialogResult.OK)
                     return;
@@ -1009,7 +1021,7 @@ namespace IntelOrca.PeggleEdit.Designer
                 {
                     // Image.FromFile throws OutOfMemoryException for a file that is not an image it can read
                     var message = ex is OutOfMemoryException ? "The file is not an image that can be read." : ex.Message;
-                    MessageBox.Show(message, "Set Thumbnail", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                    MessageBox.Show(message, "Import Thumbnail", MessageBoxButtons.OK, MessageBoxIcon.Error);
                     return;
                 }
 
@@ -1017,6 +1029,37 @@ namespace IntelOrca.PeggleEdit.Designer
                 level.CustomThumbnail = true;
                 mParent.UpdateChanges();
             }
+        }
+
+        private void mnuExportBackground_Click(object sender, EventArgs e)
+        {
+            if (!(SelectedNode?.Tag is Level level) || level.Background == null)
+                return;
+            ExportImage(level.Background, "Export Background", level.Info.Filename);
+        }
+
+        private void mnuExportThumbnail_Click(object sender, EventArgs e)
+        {
+            if (!(SelectedNode?.Tag is Level level))
+                return;
+
+            // The thumbnail the pack is saved with: the user's own, the one it has, or one made from the level now
+            var thumbnail = level.IsThumbnailSaved ? level.Thumbnail : null;
+            if (thumbnail == null)
+            {
+                try
+                {
+                    thumbnail = new PakImage($"{level.Info.Filename}.png", level.GetThumbnail());
+                }
+                catch (Exception ex) when (ex is ArgumentException || ex is InvalidOperationException ||
+                    ex is OutOfMemoryException || ex is System.Runtime.InteropServices.ExternalException)
+                {
+                    MessageBox.Show(mParent, "The thumbnail could not be made: " + ex.Message, "Export Thumbnail",
+                        MessageBoxButtons.OK, MessageBoxIcon.Error);
+                    return;
+                }
+            }
+            ExportImage(thumbnail, "Export Thumbnail", $"{level.Info.Filename} thumbnail");
         }
 
         private void mnuResetThumbnail_Click(object sender, EventArgs e)
@@ -1114,16 +1157,23 @@ namespace IntelOrca.PeggleEdit.Designer
 
         private void mnuImageExport_Click(object sender, EventArgs e)
         {
-            if (!(SelectedNode?.Tag is PakImage image))
-                return;
+            if (SelectedNode?.Tag is PakImage image)
+                ExportImage(image, "Export Image", Path.GetFileNameWithoutExtension(image.FileName));
+        }
 
+        /// <summary>
+        /// Asks where to save an image from the pack, and saves it.
+        /// </summary>
+        private void ExportImage(PakImage image, string title, string fileName)
+        {
             // The image as it is stored in the pack, or as a PNG, which any image editor can open (e.g. for a .jp2)
             var extension = Path.GetExtension(image.FileName).ToLowerInvariant();
             var isPng = extension == ".png";
             using (var dialog = new SaveFileDialog())
             {
-                dialog.Title = "Export image";
-                dialog.FileName = Path.GetFileNameWithoutExtension(image.FileName);
+                dialog.Title = title;
+                // With its extension, as a name with a dot in it would otherwise be taken to have one
+                dialog.FileName = fileName + (isPng || extension.Length == 0 ? ".png" : extension);
                 dialog.Filter = isPng || extension.Length == 0
                     ? "Portable Network Graphics (*.png)|*.png"
                     : $"{extension.Substring(1).ToUpperInvariant()} image (*{extension})|*{extension}|Portable Network Graphics (*.png)|*.png";
@@ -1132,24 +1182,28 @@ namespace IntelOrca.PeggleEdit.Designer
 
                 try
                 {
-                    var asStored = Path.GetExtension(dialog.FileName).Equals(isPng ? ".png" : extension, StringComparison.OrdinalIgnoreCase);
+                    var chosen = Path.GetExtension(dialog.FileName).ToLowerInvariant();
+                    var asStored = chosen == (isPng ? ".png" : extension) ||
+                        (extension == ".jpg" && chosen == ".jpeg");
                     if (asStored)
                     {
                         File.WriteAllBytes(dialog.FileName, image.Data);
                     }
                     else if (image.Image != null)
                     {
-                        image.Image.Save(dialog.FileName, System.Drawing.Imaging.ImageFormat.Png);
+                        // Anything else is a PNG, with the extension of one
+                        var path = chosen == ".png" ? dialog.FileName : dialog.FileName + ".png";
+                        image.Image.Save(path, System.Drawing.Imaging.ImageFormat.Png);
                     }
                     else
                     {
-                        MessageBox.Show(mParent, "This image could not be read, so it can only be exported as it is stored.", "Export Image",
+                        MessageBox.Show(mParent, "This image could not be read, so it can only be exported as it is stored.", title,
                             MessageBoxButtons.OK, MessageBoxIcon.Error);
                     }
                 }
                 catch (Exception ex) when (ex is IOException || ex is UnauthorizedAccessException || ex is System.Runtime.InteropServices.ExternalException)
                 {
-                    MessageBox.Show(mParent, ex.Message, "Export Image", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                    MessageBox.Show(mParent, ex.Message, title, MessageBoxButtons.OK, MessageBoxIcon.Error);
                 }
             }
         }
