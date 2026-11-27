@@ -62,6 +62,51 @@ namespace IntelOrca.PeggleEdit.Tools.Tests
         }
 
         [Fact]
+        public void FitsInAnAreaLeavingTheSidesEqually()
+        {
+            var screen = new Rectangle(Point.Empty, LevelBackground.ScreenSize);
+            var wide = LevelBackground.Contain(new Size(1600, 1000), screen);
+            Assert.Equal(0, wide.X, 3);
+            Assert.Equal(50, wide.Y, 3);
+            Assert.Equal(800, wide.Width, 3);
+            Assert.Equal(500, wide.Height, 3);
+        }
+
+        [Fact]
+        public void AnImageAtItsOwnSizeIsCopiedPixelForPixel()
+        {
+            // A single bright pixel in each 3 x 3 block, which any scaling would spread into the pixels around it, and the
+            // premultiplied format the window draws from, with some pixels half transparent
+            using (var image = new Bitmap(51, 42, System.Drawing.Imaging.PixelFormat.Format32bppPArgb))
+            {
+                for (int y = 0; y < image.Height; y++)
+                    for (int x = 0; x < image.Width; x++)
+                    {
+                        var bright = x % 3 == 1 && y % 3 == 1;
+                        image.SetPixel(x, y, bright ? Color.FromArgb(x < 25 ? 255 : 128, 250, 240, 230) : Color.FromArgb(255, 10, 20, 30));
+                    }
+                Assert.True(LevelBackground.IsUnscaled(image.Size, new RectangleF(10.0001f, 5f, 51, 42)));
+                Assert.False(LevelBackground.IsUnscaled(image.Size, new RectangleF(10.5f, 5f, 51, 42)));
+                Assert.False(LevelBackground.IsUnscaled(image.Size, new RectangleF(10f, 5f, 52, 42)));
+                using (var result = LevelBackground.Draw(image, new Size(80, 60), new RectangleF(10, 5, 51, 42)))
+                {
+                    for (int y = 0; y < image.Height; y++)
+                        for (int x = 0; x < image.Width; x++)
+                        {
+                            // Shown over black, as the game shows it
+                            var source = image.GetPixel(x, y);
+                            var actual = result.GetPixel(x + 10, y + 5);
+                            Assert.InRange(actual.R, (source.R * source.A / 255) - 1, (source.R * source.A / 255) + 1);
+                            Assert.InRange(actual.G, (source.G * source.A / 255) - 1, (source.G * source.A / 255) + 1);
+                            Assert.InRange(actual.B, (source.B * source.A / 255) - 1, (source.B * source.A / 255) + 1);
+                        }
+                    Assert.Equal(Color.Black.ToArgb(), result.GetPixel(9, 5).ToArgb());
+                    Assert.Equal(Color.Black.ToArgb(), result.GetPixel(61, 46).ToArgb());
+                }
+            }
+        }
+
+        [Fact]
         public void DrawsTheImageWhereItIsPlacedOnBlack()
         {
             using (var image = Filled(100, 100, Color.Red))

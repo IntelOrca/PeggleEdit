@@ -21,7 +21,7 @@ Under **PeggleEdit Options > Application**, you can choose an update ring:
 1. PeggleEdit starts with a new, empty pack open in the **Pack Explorer**. It already has one level. (To start again later, click **New** in the orca menu at the top left.)
 2. Double-click the level to open it.
 3. Right-click the level and choose **Properties** to give it a name.
-4. Right-click the level and choose **Background > Import** to pick an image. It is shown behind the game's frame, scaled and cropped to 800 x 600 if it is not made to fit already.
+4. Right-click the level and choose **Background > Import** to pick an image. It is shown behind the game's frame, scaled to cover 800 x 600, unless it is made to fit already (800 x 600, or 646 x 543 like Peggle's own).
 5. Pick a tool from the **Tools** tab, such as **Peg**, and click on the level to place objects.
 6. Click **Save** and save the pack in the `levelpacks` folder inside your Peggle Nights folder. Create the folder if it is not there.
 7. Start Peggle Nights to play it. Close the game before you save again, as it keeps the pack open.

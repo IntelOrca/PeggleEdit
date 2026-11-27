@@ -78,6 +78,18 @@ namespace IntelOrca.PeggleEdit.Tools.Levels
         }
 
         /// <summary>
+        /// Gets where an image of the given size goes to fit in an area: scaled to show all of it, keeping its shape, and
+        /// centred on it, so that what it does not cover is left equally at each side.
+        /// </summary>
+        public static RectangleF Contain(Size image, Rectangle area)
+        {
+            var scale = Math.Min((float)area.Width / image.Width, (float)area.Height / image.Height);
+            var width = image.Width * scale;
+            var height = image.Height * scale;
+            return new RectangleF(area.X + ((area.Width - width) / 2), area.Y + ((area.Height - height) / 2), width, height);
+        }
+
+        /// <summary>
         /// Draws an image, scaled to the given place, onto a new bitmap of the given size. What the image does not cover
         /// is black, as the game shows it.
         /// </summary>
@@ -90,6 +102,14 @@ namespace IntelOrca.PeggleEdit.Tools.Levels
                 using (var attributes = new ImageAttributes())
                 {
                     g.Clear(Color.Black);
+                    if (IsUnscaled(image.Size, bounds))
+                    {
+                        // Copied pixel for pixel, as scaling it would blur it however little it moved
+                        g.InterpolationMode = InterpolationMode.NearestNeighbor;
+                        g.PixelOffsetMode = PixelOffsetMode.Half;
+                        g.DrawImage(image, Rectangle.Round(bounds), 0, 0, image.Width, image.Height, GraphicsUnit.Pixel);
+                        return result;
+                    }
                     g.InterpolationMode = InterpolationMode.HighQualityBicubic;
                     g.PixelOffsetMode = PixelOffsetMode.HighQuality;
                     g.CompositingQuality = CompositingQuality.HighQuality;
@@ -110,6 +130,18 @@ namespace IntelOrca.PeggleEdit.Tools.Levels
                 result.Dispose();
                 throw;
             }
+        }
+
+        /// <summary>
+        /// Gets whether an image at the given place is at its own size, on whole pixels, so that each of its pixels is one
+        /// of the screen's.
+        /// </summary>
+        public static bool IsUnscaled(Size image, RectangleF bounds)
+        {
+            const float tolerance = 0.001f;
+            return Math.Abs(bounds.Width - image.Width) < tolerance && Math.Abs(bounds.Height - image.Height) < tolerance &&
+                Math.Abs(bounds.X - (float)Math.Round(bounds.X)) < tolerance &&
+                Math.Abs(bounds.Y - (float)Math.Round(bounds.Y)) < tolerance;
         }
 
         /// <summary>

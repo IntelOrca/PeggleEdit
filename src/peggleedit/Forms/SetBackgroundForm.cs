@@ -27,9 +27,9 @@ using IntelOrca.PeggleEdit.Tools.Pack;
 namespace IntelOrca.PeggleEdit.Designer.Forms
 {
     /// <summary>
-    /// Sets a level's background from an image: kept at its own size, or scaled to fill the screen or the opening in the
-    /// frame, and saved as a PNG or a JPG. A preview shows it behind the frame, as the game will, where it can be moved
-    /// and zoomed by hand.
+    /// Sets a level's background from an image: kept at its own size, or cut to the size of the screen or of the opening
+    /// in the frame, which it covers or fits in, or is at its own size in; and saved as a PNG or a JPG. A preview shows it
+    /// behind the frame, as the game will, where it can be moved and zoomed by hand.
     /// </summary>
     sealed class SetBackgroundForm : Form
     {
@@ -38,6 +38,15 @@ namespace IntelOrca.PeggleEdit.Designer.Forms
             Keep,
             Screen,
             Peggle,
+        }
+
+        // How the image goes in its size, or placed by hand
+        private enum BackgroundFit
+        {
+            Cover,
+            Contain,
+            Actual,
+            Custom,
         }
 
         // The largest side of the copy of the image drawn while it is being changed, which is quicker than the image
@@ -59,14 +68,13 @@ namespace IntelOrca.PeggleEdit.Designer.Forms
         private readonly bool mSourceKeepable;
 
         private BackgroundSize mSize;
+        private BackgroundFit mFit;
         // Where the image is on the screen
         private RectangleF mPlacement;
-        // Whether it has been moved or zoomed by hand
-        private bool mPlaced;
         // The size and format chosen when the window was opened, which Reset goes back to
         private BackgroundSize mInitialSize;
         private bool mInitialJpg;
-        private bool mSettingSize;
+        private bool mSettingOptions;
 
         // The background as it will be saved
         private byte[] mResultData;
@@ -91,6 +99,10 @@ namespace IntelOrca.PeggleEdit.Designer.Forms
         private readonly RadioButton mKeepSize;
         private readonly RadioButton mScreenSize;
         private readonly RadioButton mPeggleSize;
+        private readonly GroupBox mFitGroup;
+        private readonly RadioButton mCover;
+        private readonly RadioButton mContain;
+        private readonly RadioButton mActual;
         private readonly Button mReset;
         private readonly RadioButton mPng;
         private readonly RadioButton mJpg;
@@ -168,11 +180,19 @@ namespace IntelOrca.PeggleEdit.Designer.Forms
                 Margin = new Padding(0, gap, 0, 0),
             };
 
-            // Size
+            // Size, which is what is cut from the screen and saved
+            mScreenSize = NewRadio("&800 × 600, the whole screen");
+            mPeggleSize = NewRadio("&646 × 543, just inside the frame");
             mKeepSize = NewRadio($"&Keep its size, {source.Width} × {source.Height}");
-            mScreenSize = NewRadio("&800 × 600, filling the screen");
-            mPeggleSize = NewRadio("&646 × 543, filling the opening in the frame");
-            var sizeGroup = NewGroup("Size", columnWidth, mKeepSize, mScreenSize, mPeggleSize);
+            var sizeGroup = NewGroup("Size", columnWidth, mScreenSize, mPeggleSize, mKeepSize);
+
+            // How the image goes in its size
+            mCover = NewRadio("Cov&er");
+            mContain = NewRadio("Co&ntain");
+            mActual = NewRadio("&100%");
+            mCover.Margin = mContain.Margin = new Padding(0, 0, Dpi.Scale(16), 0);
+            mActual.Margin = Padding.Empty;
+            mFitGroup = NewGroup("Fit", columnWidth, NewRow(mCover, mContain, mActual));
 
             // Format
             mPng = NewRadio("&PNG, which keeps every pixel");
@@ -233,7 +253,7 @@ namespace IntelOrca.PeggleEdit.Designer.Forms
                 AutoSizeMode = AutoSizeMode.GrowAndShrink,
                 Margin = new Padding(margin, 0, 0, 0),
             };
-            side.Controls.AddRange(new Control[] { sizeGroup, formatGroup, mShowObjects, warning });
+            side.Controls.AddRange(new Control[] { sizeGroup, mFitGroup, formatGroup, mShowObjects, warning });
 
             // OK closes the window itself, once the background is made
             var ok = new Button { Text = "OK", Size = buttonSize, UseVisualStyleBackColor = true, Margin = new Padding(gap, 0, 0, 0), TabIndex = 0 };
@@ -281,28 +301,20 @@ namespace IntelOrca.PeggleEdit.Designer.Forms
                 (margin * 2) + Math.Max(minPreview.Height, sideSize.Height) + bottom) + chrome;
             ActiveControl = mPreview;
 
-            // A background that fits as it is, at its own size, is kept so; any other is made to fill the screen
-            var bounds = LevelBackground.GetBounds(source.Size);
-            var fits = source.Width <= LevelBackground.ScreenSize.Width && source.Height <= LevelBackground.ScreenSize.Height &&
-                LevelBackground.CoversFrameOpening(bounds);
-            mInitialSize = fits ? BackgroundSize.Keep : BackgroundSize.Screen;
-            SetSize(mInitialSize);
+            // An image the size of the screen or of Peggle's backgrounds is kept as it is; any other covers the screen
+            var made = source.Size == LevelBackground.ScreenSize || source.Size == LevelBackground.PeggleBounds.Size;
+            mInitialSize = made ? BackgroundSize.Keep : BackgroundSize.Screen;
+            SetOptions(mInitialSize, BackgroundFit.Cover);
             // A photo stays a JPG; anything else, which may have sharp edges or few colours, is kept exact as a PNG
             mInitialJpg = mSourceJpeg;
             (mInitialJpg ? mJpg : mPng).Checked = true;
 
             mKeepSize.CheckedChanged += (s, e) => OnSizeChecked(mKeepSize, BackgroundSize.Keep);
             mScreenSize.CheckedChanged += (s, e) => OnSizeChecked(mScreenSize, BackgroundSize.Screen);
-            // It is ticked already once the image is placed by hand, so clicking it again fills the screen again
-            mScreenSize.Click += (s, e) =>
-            {
-                if (mPlaced)
-                {
-                    SetSize(BackgroundSize.Screen);
-                    Changed(true);
-                }
-            };
             mPeggleSize.CheckedChanged += (s, e) => OnSizeChecked(mPeggleSize, BackgroundSize.Peggle);
+            mCover.CheckedChanged += (s, e) => OnFitChecked(mCover, BackgroundFit.Cover);
+            mContain.CheckedChanged += (s, e) => OnFitChecked(mContain, BackgroundFit.Contain);
+            mActual.CheckedChanged += (s, e) => OnFitChecked(mActual, BackgroundFit.Actual);
             mPng.CheckedChanged += (s, e) => { if (mPng.Checked) Changed(false); };
             mJpg.CheckedChanged += (s, e) => { if (mJpg.Checked) Changed(false); };
             mQuality.ValueChanged += (s, e) => Changed(false);
@@ -403,38 +415,65 @@ namespace IntelOrca.PeggleEdit.Designer.Forms
         /// </summary>
         private bool KeepsFile => mSize == BackgroundSize.Keep && mSourceKeepable && (mJpg.Checked ? mSourceJpeg : mSourcePng);
 
-        private void SetSize(BackgroundSize size)
+        /// <summary>
+        /// Sets the size and how the image goes in it, which puts it there, unless it is placed by hand, when it stays
+        /// where it is. A kept image is where the game puts it, at its own size.
+        /// </summary>
+        private void SetOptions(BackgroundSize size, BackgroundFit fit)
         {
             mSize = size;
-            mPlaced = false;
-            mPlacement = size == BackgroundSize.Keep ? (RectangleF)OutputBounds : LevelBackground.Fill(mSource.Size, OutputBounds);
-            mSettingSize = true;
-            mKeepSize.Checked = size == BackgroundSize.Keep;
+            mFit = fit;
+            var bounds = OutputBounds;
+            if (size == BackgroundSize.Keep)
+                mPlacement = bounds;
+            else if (fit == BackgroundFit.Cover)
+                mPlacement = LevelBackground.Fill(mSource.Size, bounds);
+            else if (fit == BackgroundFit.Contain)
+                mPlacement = LevelBackground.Contain(mSource.Size, bounds);
+            else if (fit == BackgroundFit.Actual)
+                // Where the game would show it at its own size, cut to the size
+                mPlacement = LevelBackground.GetBounds(mSource.Size);
+
+            mSettingOptions = true;
             mScreenSize.Checked = size == BackgroundSize.Screen;
             mPeggleSize.Checked = size == BackgroundSize.Peggle;
-            mSettingSize = false;
+            mKeepSize.Checked = size == BackgroundSize.Keep;
+            mCover.Checked = fit == BackgroundFit.Cover;
+            mContain.Checked = fit == BackgroundFit.Contain;
+            mActual.Checked = fit == BackgroundFit.Actual;
+            mSettingOptions = false;
+            // Checking a radio button takes the others out of the tab order, so with none checked one is put back
+            if (fit == BackgroundFit.Custom)
+                mCover.TabStop = true;
+            // A kept image is not scaled
+            mFitGroup.Enabled = size != BackgroundSize.Keep;
         }
 
         private void OnSizeChecked(RadioButton radio, BackgroundSize size)
         {
-            if (mSettingSize || !radio.Checked)
+            if (mSettingOptions || !radio.Checked)
                 return;
-            SetSize(size);
+            // A kept image is not placed by hand, so it is not where it was placed once it is cut to a size again
+            SetOptions(size, size == BackgroundSize.Keep && mFit == BackgroundFit.Custom ? BackgroundFit.Cover : mFit);
+            Changed(true);
+        }
+
+        private void OnFitChecked(RadioButton radio, BackgroundFit fit)
+        {
+            if (mSettingOptions || !radio.Checked)
+                return;
+            SetOptions(mSize, fit);
             Changed(true);
         }
 
         /// <summary>
-        /// Starts placing the image by hand, from where it is: it is then saved as 800 x 600.
+        /// Starts placing the image by hand, from where it is, in the size chosen; a kept image is then 800 x 600.
         /// </summary>
         private void BeginPlacing()
         {
-            if (mPlaced)
+            if (mFit == BackgroundFit.Custom && mSize != BackgroundSize.Keep)
                 return;
-            mPlaced = true;
-            mSize = BackgroundSize.Screen;
-            mSettingSize = true;
-            mScreenSize.Checked = true;
-            mSettingSize = false;
+            SetOptions(mSize == BackgroundSize.Keep ? BackgroundSize.Screen : mSize, BackgroundFit.Custom);
         }
 
         /// <summary>
@@ -442,7 +481,7 @@ namespace IntelOrca.PeggleEdit.Designer.Forms
         /// </summary>
         private void ResetSettings()
         {
-            SetSize(mInitialSize);
+            SetOptions(mInitialSize, BackgroundFit.Cover);
             (mInitialJpg ? mJpg : mPng).Checked = true;
             mQuality.Value = LevelBackground.DefaultJpegQuality;
             mShowObjects.Checked = true;
@@ -454,7 +493,22 @@ namespace IntelOrca.PeggleEdit.Designer.Forms
         {
             BeginPlacing();
             mPlacement.Offset(dx, dy);
+            SnapToPixels();
             Changed(true);
+        }
+
+        /// <summary>
+        /// Puts an image that is at its own size, or as near as zooming back to it leaves it, on whole pixels, so that
+        /// it is sharp.
+        /// </summary>
+        private void SnapToPixels()
+        {
+            const float tolerance = 0.01f;
+            if (Math.Abs(mPlacement.Width - mSource.Width) < tolerance && Math.Abs(mPlacement.Height - mSource.Height) < tolerance)
+            {
+                mPlacement = new RectangleF(
+                    (float)Math.Round(mPlacement.X), (float)Math.Round(mPlacement.Y), mSource.Width, mSource.Height);
+            }
         }
 
         /// <summary>
@@ -472,6 +526,7 @@ namespace IntelOrca.PeggleEdit.Designer.Forms
             mPlacement = new RectangleF(
                 about.X - ((about.X - mPlacement.X) * f), about.Y - ((about.Y - mPlacement.Y) * f),
                 (float)width, mPlacement.Height * f);
+            SnapToPixels();
             Changed(true);
         }
 
@@ -646,20 +701,34 @@ namespace IntelOrca.PeggleEdit.Designer.Forms
                 }
                 else
                 {
-                    // Until it is made, the image is drawn where it is, cut to what is saved
+                    // Until it is made, the image is drawn where it is, cut to what is saved. At its own size it is copied
+                    // pixel for pixel, as it will be saved; bigger than the copy of it, it is drawn from the image itself,
+                    // so that it is as sharp as it will be
                     g.SetClip(OutputBounds);
-                    g.InterpolationMode = mDragging ? InterpolationMode.Bilinear : InterpolationMode.HighQualityBicubic;
-                    g.PixelOffsetMode = PixelOffsetMode.HighQuality;
-                    using (var attributes = new ImageAttributes())
+                    if (LevelBackground.IsUnscaled(mSource.Size, mPlacement))
                     {
-                        attributes.SetWrapMode(WrapMode.TileFlipXY);
-                        var points = new[]
+                        g.InterpolationMode = InterpolationMode.NearestNeighbor;
+                        g.PixelOffsetMode = PixelOffsetMode.Half;
+                        g.DrawImage(mSource, Rectangle.Round(mPlacement), 0, 0, mSource.Width, mSource.Height, GraphicsUnit.Pixel);
+                    }
+                    else
+                    {
+                        // The image itself only when it is not made much smaller, which, as it is drawn quickly while
+                        // it is dragged, would make it shimmer and be slow
+                        var image = mPlacement.Width > mProxy.Width && mPlacement.Width >= mSource.Width / 2f ? mSource : mProxy;
+                        g.InterpolationMode = mDragging ? InterpolationMode.Bilinear : InterpolationMode.HighQualityBicubic;
+                        g.PixelOffsetMode = PixelOffsetMode.HighQuality;
+                        using (var attributes = new ImageAttributes())
                         {
-                            mPlacement.Location,
-                            new PointF(mPlacement.Right, mPlacement.Top),
-                            new PointF(mPlacement.Left, mPlacement.Bottom),
-                        };
-                        g.DrawImage(mProxy, points, new RectangleF(0, 0, mProxy.Width, mProxy.Height), GraphicsUnit.Pixel, attributes);
+                            attributes.SetWrapMode(WrapMode.TileFlipXY);
+                            var points = new[]
+                            {
+                                mPlacement.Location,
+                                new PointF(mPlacement.Right, mPlacement.Top),
+                                new PointF(mPlacement.Left, mPlacement.Bottom),
+                            };
+                            g.DrawImage(image, points, new RectangleF(0, 0, image.Width, image.Height), GraphicsUnit.Pixel, attributes);
+                        }
                     }
                     g.ResetClip();
                 }
@@ -697,9 +766,15 @@ namespace IntelOrca.PeggleEdit.Designer.Forms
             if (!mDragging || e.Location == mDragStart)
                 return;
             var scale = PreviewScale;
+            // By whole pixels, from where it was, so that an image at its own size stays sharp
+            var dx = (float)Math.Round(mDragPlacement.X + ((e.X - mDragStart.X) / scale)) - mDragPlacement.X;
+            var dy = (float)Math.Round(mDragPlacement.Y + ((e.Y - mDragStart.Y) / scale)) - mDragPlacement.Y;
+            // A jiggle of the mouse too small to move it leaves the settings as they are
+            if (Math.Abs(dx) < 0.5f && Math.Abs(dy) < 0.5f && mFit != BackgroundFit.Custom)
+                return;
             BeginPlacing();
             mPlacement = mDragPlacement;
-            mPlacement.Offset((e.X - mDragStart.X) / scale, (e.Y - mDragStart.Y) / scale);
+            mPlacement.Offset(dx, dy);
             Changed(true);
             // Drawn as it moves, as the mouse moving would otherwise hold it up
             mPreview.Update();
@@ -821,7 +896,7 @@ namespace IntelOrca.PeggleEdit.Designer.Forms
                     format = image.RawFormat;
                     keepable = IsKeepable(image);
                     // A copy, as the image needs its stream for as long as it is used
-                    source = new Bitmap(image.Width, image.Height, PixelFormat.Format32bppArgb);
+                    source = new Bitmap(image.Width, image.Height, PixelFormat.Format32bppPArgb);
                     using (var g = Graphics.FromImage(source))
                         g.DrawImage(image, new Rectangle(0, 0, image.Width, image.Height), 0, 0, image.Width, image.Height, GraphicsUnit.Pixel);
                 }

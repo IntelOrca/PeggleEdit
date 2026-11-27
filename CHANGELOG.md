@@ -22,6 +22,7 @@ PeggleEdit 5.2.0 (Flamingo) (TBC)
 * [Feature] #41: Set a level's thumbnail to an image of your own, kept when the level changes (Pack Explorer: level > Thumbnail > Import)
 * [Feature] #44: Export a level's background and thumbnail (Pack Explorer: level > Background > Export, level > Thumbnail > Export)
 * [Feature] #43: Background > Import shows the image behind the game's frame, and keeps it at its own size or scales it to fill the screen (800 x 600) or the opening in the frame (646 x 543). Move and zoom it with the mouse to place it by hand, and save it as a PNG or a JPG of the quality you choose
+* [Feature] #45: Background > Import can fit the image in its size with black around it, or show it at 100%, as well as cover it
 * [Fix] A 646 x 543 background, the size of Peggle's own, is drawn where the game draws it, a few pixels from where it was
 * [Feature] A level with unsaved changes has an * after its name on its tab, as does the pack in the title bar
 * [Change] PeggleEdit asks to save only when something has changed, with Save, Don't Save and Cancel, and also when it is closed
