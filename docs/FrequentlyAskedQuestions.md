@@ -37,7 +37,9 @@ Turn on **Preview** on the **View** tab. Objects move and emitters run as they w
 ### What size should my level art be?
 800 x 600, the size the game runs at. To see where the game's interface will cover your art, put [this overlay](img/bg_template.png) on top of it as a layer in your image editor.
 
-**Set Background** resizes and crops any image to 800 x 600 for you.
+The game does not scale backgrounds. It shows 800 x 600 as the whole screen, and 646 x 543 (the size of Peggle's own) just inside the frame. It centres any other size, so one narrower than 644 or shorter than 582 has black around it.
+
+**Set Background** shows your image behind the frame. You can keep it at its own size, or have it scaled and cropped to 800 x 600 or 646 x 543 for you. Drag it to move it, or use the mouse wheel to zoom it, to fit it by hand.
 
 ### Why do my images have white boxes around them?
 The image is not transparent. Save it as a PNG with a transparent background. Free programs such as [GIMP](https://www.gimp.org/) and [Inkscape](https://inkscape.org/) can do this.

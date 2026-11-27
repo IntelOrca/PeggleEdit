@@ -18,11 +18,11 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Drawing;
-using System.Drawing.Drawing2D;
 using System.IO;
 using System.Runtime.InteropServices;
 using System.Text;
 using System.Windows.Forms;
+using IntelOrca.PeggleEdit.Designer.Forms;
 using IntelOrca.PeggleEdit.Designer.Properties;
 using IntelOrca.PeggleEdit.Tools.Levels;
 using IntelOrca.PeggleEdit.Tools.Levels.Xml;
@@ -876,7 +876,7 @@ namespace IntelOrca.PeggleEdit.Designer
             mContextMenu.Items.Add(mnuExport);
             mContextMenu.Items.Add(new ToolStripSeparator());
             mContextMenu.Items.Add(new ToolStripMenuItem("Properties", Resources.properties_16, mnuLevelProperties_Click));
-            mContextMenu.Items.Add(new ToolStripMenuItem("Set Background", Resources.image_16, mnuSetBackground_Click));
+            mContextMenu.Items.Add(new ToolStripMenuItem("Set Background...", Resources.image_16, mnuSetBackground_Click));
             mContextMenu.Items.Add(new ToolStripMenuItem("Set Thumbnail...", Resources.image_16, mnuSetThumbnail_Click));
             var level = SelectedNode?.Tag as Level;
             mContextMenu.Items.Add(new ToolStripMenuItem("Reset Thumbnail", null, mnuResetThumbnail_Click)
@@ -966,43 +966,26 @@ namespace IntelOrca.PeggleEdit.Designer
 
         private void mnuSetBackground_Click(object sender, EventArgs e)
         {
-            Level level = SelectedNode.Tag as Level;
-            OpenFileDialog dialog = new OpenFileDialog();
-            dialog.Title = "Import background image";
-            dialog.Filter = "Supported Image Files|*.png;*.jpg|Portable Network Graphics (*.png)|*.png|Joint Photographic Experts Group (*.jpg)|*.jpg";
-            if (dialog.ShowDialog(mParent) == DialogResult.OK)
+            if (!(SelectedNode?.Tag is Level level))
+                return;
+            using (var dialog = new OpenFileDialog())
             {
-                using (var fileImage = Image.FromFile(dialog.FileName))
-                {
-                    var bitmap = new Bitmap(800, 600);
-                    using (var g = Graphics.FromImage(bitmap))
-                    {
-                        g.SmoothingMode = SmoothingMode.HighQuality;
+                dialog.Title = "Set Background";
+                dialog.Filter = "Supported Image Files|*.png;*.jpg;*.jpeg;*.bmp;*.gif|All Files|*.*";
+                if (dialog.ShowDialog(mParent) != DialogResult.OK)
+                    return;
 
-                        // Calculate the zoomed crop rectangle
-                        var zoomFactor = Math.Max((float)bitmap.Width / fileImage.Width, (float)bitmap.Height / fileImage.Height);
-                        var zoomedWidth = (int)(fileImage.Width * zoomFactor);
-                        var zoomedHeight = (int)(fileImage.Height * zoomFactor);
-                        var zoomedX = (bitmap.Width - zoomedWidth) / 2;
-                        var zoomedY = (bitmap.Height - zoomedHeight) / 2;
-                        g.DrawImage(
-                            fileImage,
-                            new Rectangle(zoomedX, zoomedY, zoomedWidth, zoomedHeight),
-                            new Rectangle(0, 0, fileImage.Width, fileImage.Height),
-                            GraphicsUnit.Pixel);
-                    }
-                    level.Background = new PakImage(Path.GetFileName(dialog.FileName), bitmap);
-                    // A thumbnail made from the level is made again; one of the user's own is kept
-                    if (!level.CustomThumbnail)
-                        level.Thumbnail = null;
-                }
-
-                LevelToolWindow ltw = mParent.GetLevelToolWindow(level);
-                if (ltw != null)
-                {
-                    ltw.LevelEditor.UpdateRedraw();
-                }
+                var background = SetBackgroundForm.Show(mParent, level, dialog.FileName);
+                if (background == null)
+                    return;
+                level.Background = background;
+                // A thumbnail made from the level is made again; one of the user's own is kept
+                if (!level.CustomThumbnail)
+                    level.Thumbnail = null;
             }
+
+            mParent.GetLevelToolWindow(level)?.LevelEditor.UpdateRedraw();
+            mParent.UpdateChanges();
         }
 
         private void mnuSetThumbnail_Click(object sender, EventArgs e)

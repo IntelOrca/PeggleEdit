@@ -57,6 +57,8 @@ namespace IntelOrca.PeggleEdit.Tools.Levels
         private GameDevices mDevices = GameDevices.None;
         private bool mShowCollision = false;
         private bool mShowAnchorsAlways = false;
+        // Whether the screen is cleared to black before the background, which it is but when rendering what is over it
+        private bool mClearCanvas = true;
 
         private int mCanvasMarginWidth = 500;
         private int mCanvasMarginHeight = 500;
@@ -371,7 +373,8 @@ namespace IntelOrca.PeggleEdit.Tools.Levels
             Rectangle bounds = new Rectangle(0, 0, 800, 600);
 
             //Black background
-            g.FillRectangle(Brushes.Black, bounds);
+            if (mClearCanvas)
+                g.FillRectangle(Brushes.Black, bounds);
 
             //Gray background
             //HatchBrush brush = new HatchBrush(HatchStyle.Percent50, Color.Gray);
@@ -469,15 +472,8 @@ namespace IntelOrca.PeggleEdit.Tools.Levels
             if (bg == null)
                 return;
 
-            if (bg.Size == new Size(646, 543))
-            {
-                g.DrawImageSnapped(bg, 73, 53, bg.Width, bg.Height);
-            }
-            else
-            {
-                Rectangle rect = new Rectangle(400 - (bg.Width / 2), 300 - (bg.Height / 2), bg.Width, bg.Height);
-                g.DrawImageSnapped(bg, rect);
-            }
+            // Where the game draws it, never scaled
+            g.DrawImageSnapped(bg, LevelBackground.GetBounds(bg.Size));
         }
 
         /// <summary>
@@ -965,6 +961,20 @@ namespace IntelOrca.PeggleEdit.Tools.Levels
         /// </summary>
         public Bitmap RenderGameView(bool drawInterface = true, int? ticks = null)
         {
+            return RenderGameView(drawInterface, ticks, true, true);
+        }
+
+        /// <summary>
+        /// Renders what the game shows over the level's background, as <see cref="RenderGameView(bool, int?)"/> does, on
+        /// a transparent bitmap: the interface, and optionally the level's objects.
+        /// </summary>
+        public Bitmap RenderOverBackground(bool drawEntries)
+        {
+            return RenderGameView(true, null, false, drawEntries);
+        }
+
+        private Bitmap RenderGameView(bool drawInterface, int? ticks, bool drawBackground, bool drawEntries)
+        {
             var oInterface = mShowingInterface;
             var oShowBackground = mShowingBackground;
             var oShowEntries = mShowingEntries;
@@ -988,8 +998,9 @@ namespace IntelOrca.PeggleEdit.Tools.Levels
                 // The cannon is part of what the interface shows, pointing down as at the start of a level
                 ShowCannon = drawInterface;
                 CannonTarget = null;
-                mShowingBackground = true;
-                mShowingEntries = true;
+                mShowingBackground = drawBackground;
+                mClearCanvas = drawBackground;
+                mShowingEntries = drawEntries;
                 mShowCollision = false;
                 mShowPreview = true;
                 UsePegTextures = true;
@@ -1015,6 +1026,7 @@ namespace IntelOrca.PeggleEdit.Tools.Levels
             {
                 mShowingInterface = oInterface;
                 mShowingBackground = oShowBackground;
+                mClearCanvas = true;
                 mShowingEntries = oShowEntries;
                 mShowCollision = oShowCollision;
                 mShowPreview = oPreview;
