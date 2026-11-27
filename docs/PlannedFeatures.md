@@ -2,7 +2,6 @@
 
 Ideas for future versions of PeggleEdit:
 
-* Grouping objects.
 * Rotating objects with the mouse.
 * Drawing all brick types, and the rotation and scale of polys, as the game does.
 

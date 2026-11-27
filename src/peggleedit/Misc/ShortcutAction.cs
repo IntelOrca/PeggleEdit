@@ -25,6 +25,10 @@ namespace IntelOrca.PeggleEdit.Designer
     {
         public Keys Key;
         public bool Ctrl;
+        /// <summary>
+        /// Whether Shift is held. A shortcut without Shift is also used with Shift held, unless there is one with it.
+        /// </summary>
+        public bool Shift;
         public bool EditorMustBeFocused;
         EventHandler fEventHandler;
         MethodInvoker fMethodInvoker;

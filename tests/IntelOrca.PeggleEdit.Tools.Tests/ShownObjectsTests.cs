@@ -77,14 +77,14 @@ namespace IntelOrca.PeggleEdit.Tools.Tests
         {
             var level = NewLevel();
             var everything = new RectangleF(0, 0, 800, 600);
-            Assert.Equal(3, level.GetShownObjectsIn(everything).Length);
+            Assert.Equal(3, level.GetPickableObjectsIn(everything).Length);
 
             level.ShownKinds = EntryKinds.All & ~EntryKinds.Pegs;
-            var shown = level.GetShownObjectsIn(everything);
+            var shown = level.GetPickableObjectsIn(everything);
             Assert.Equal(2, shown.Length);
             Assert.DoesNotContain(level.Entries[0], shown);
-            Assert.Null(level.GetShownObjectAt(100, 100));
-            Assert.Same(level.Entries[2], level.GetShownObjectAt(500, 100));
+            Assert.Null(level.GetPickableObjectAt(100, 100));
+            Assert.Same(level.Entries[2], level.GetPickableObjectAt(500, 100));
             // Still in the level
             Assert.Equal(3, level.GetObjectsIn(everything).Length);
         }
@@ -108,8 +108,8 @@ namespace IntelOrca.PeggleEdit.Tools.Tests
         {
             var level = NewLevel();
             level.ShowingPegs = false;
-            Assert.Empty(level.GetShownObjectsIn(new RectangleF(0, 0, 800, 600)));
-            Assert.Null(level.GetShownObjectAt(100, 100));
+            Assert.Empty(level.GetPickableObjectsIn(new RectangleF(0, 0, 800, 600)));
+            Assert.Null(level.GetPickableObjectAt(100, 100));
         }
 
         [Fact]
@@ -166,10 +166,10 @@ namespace IntelOrca.PeggleEdit.Tools.Tests
 
             // Faded ones can be picked, hidden ones not; visible objects are not affected
             level.InvisibleObjects = InvisibleObjectsView.Faded;
-            Assert.Same(level.Entries[0], level.GetShownObjectAt(100, 100));
+            Assert.Same(level.Entries[0], level.GetPickableObjectAt(100, 100));
             level.InvisibleObjects = InvisibleObjectsView.Hidden;
-            Assert.Null(level.GetShownObjectAt(100, 100));
-            Assert.Same(level.Entries[2], level.GetShownObjectAt(500, 100));
+            Assert.Null(level.GetPickableObjectAt(100, 100));
+            Assert.Same(level.Entries[2], level.GetPickableObjectAt(500, 100));
         }
 
         [Fact]

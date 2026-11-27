@@ -79,6 +79,20 @@ namespace IntelOrca.PeggleEdit.Designer
             return objects;
         }
 
+        /// <summary>
+        /// Gets the selected objects that can be moved: those that are not locked (e.g. selected in the Entry List).
+        /// </summary>
+        public LevelEntryCollection GetMovableSelectedObjects()
+        {
+            var objects = new LevelEntryCollection();
+            foreach (LevelEntry le in mSelectedEntries)
+            {
+                if (!le.Locked)
+                    objects.Add(le);
+            }
+            return objects;
+        }
+
         public LevelEntryCollection GetSelectedObjects()
         {
             LevelEntryCollection objects = new LevelEntryCollection();
@@ -131,7 +145,7 @@ namespace IntelOrca.PeggleEdit.Designer
                 mLevel.UpdateMoverLinksRead();
 
                 if (mSelectedTool is SelectEditorTool)
-                    ChangeSelection(entries.Where(x => x.Selected && mLevel.IsShown(x)));
+                    ChangeSelection(entries.Where(x => x.Selected && mLevel.IsPickable(x)));
                 UpdateRedraw();
             }
         }
@@ -297,18 +311,79 @@ namespace IntelOrca.PeggleEdit.Designer
         }
 
         /// <summary>
-        /// Selects the objects that are shown (see <see cref="Level.IsShown"/>), so that objects that can not be seen
-        /// are not moved or deleted by mistake.
+        /// Selects the objects that can be picked (see <see cref="Level.IsPickable"/>), so that objects that can not be
+        /// seen, or are locked, are not moved or deleted by mistake.
         /// </summary>
         public void SelectAllObjects()
         {
             mSelectedEntries.Clear();
-            mSelectedEntries.AddRange(mLevel.Entries.Cast<LevelEntry>().Where(mLevel.IsShown));
+            mSelectedEntries.AddRange(mLevel.Entries.Cast<LevelEntry>().Where(mLevel.IsPickable));
 
             UpdateRedraw();
 
             CheckSelectionChanged();
 
+        }
+
+        /// <summary>
+        /// Puts the selected objects in a new group, out of any group they were in, so that picking one of them in the
+        /// level picks them all.
+        /// </summary>
+        public void GroupObjects()
+        {
+            if (mSelectedEntries.Count < 2)
+                return;
+            CreateUndoPoint();
+            int group = mLevel.GetNewGroup();
+            foreach (LevelEntry le in mSelectedEntries)
+                le.Group = group;
+            UpdateRedraw();
+        }
+
+        /// <summary>
+        /// Takes the selected objects out of their groups.
+        /// </summary>
+        public void UngroupObjects()
+        {
+            if (!mSelectedEntries.Cast<LevelEntry>().Any(x => x.Group != 0))
+                return;
+            CreateUndoPoint();
+            foreach (LevelEntry le in mSelectedEntries)
+                le.Group = 0;
+            UpdateRedraw();
+        }
+
+        /// <summary>
+        /// Locks the selected objects, so that they can not be picked or moved in the level, and leaves them out of the
+        /// selection.
+        /// </summary>
+        public void LockObjects()
+        {
+            if (mSelectedEntries.Count == 0)
+                return;
+            CreateUndoPoint();
+            foreach (LevelEntry le in mSelectedEntries)
+                le.Locked = true;
+            mSelectedEntries.Clear();
+            UpdateRedraw();
+            CheckSelectionChanged();
+        }
+
+        /// <summary>
+        /// Unlocks every object in the level, returning how many were locked.
+        /// </summary>
+        public int UnlockAllObjects()
+        {
+            var locked = mLevel.Entries.Cast<LevelEntry>().Where(x => x.Locked).ToList();
+            if (locked.Count == 0)
+                return 0;
+            CreateUndoPoint();
+            foreach (var le in locked)
+                le.Locked = false;
+            UpdateRedraw();
+            // The properties show whether the selected objects are locked
+            InvokeSelectionChangedEvent();
+            return locked.Count;
         }
 
         public void DeleteObjects()
@@ -381,6 +456,23 @@ namespace IntelOrca.PeggleEdit.Designer
 
             mSelectedEntries.Clear();
 
+            // Groups copied are pasted as new groups, and nothing pasted is locked, so that it can be moved
+            var groups = new Dictionary<int, int>();
+            var taken = new HashSet<int>();
+            foreach (LevelEntry cpyLE in entries)
+            {
+                if (cpyLE.Group != 0)
+                {
+                    if (!groups.TryGetValue(cpyLE.Group, out var group))
+                    {
+                        groups[cpyLE.Group] = group = mLevel.GetNewGroup(taken);
+                        taken.Add(group);
+                    }
+                    cpyLE.Group = group;
+                }
+                cpyLE.Locked = false;
+            }
+
             // Only the anchor of the base movement is absolute, so move each base movement once
             // to keep entries that share movements in the same relative position
             var offsetMovements = new HashSet<Mover>();
@@ -414,7 +506,8 @@ namespace IntelOrca.PeggleEdit.Designer
         {
             if (x != 0 || y != 0)
             {
-                LevelEntryCollection LevelObjects = GetSelectedObjects();
+                // Locked objects (e.g. selected in the Entry List) are not moved in the level
+                LevelEntryCollection LevelObjects = GetMovableSelectedObjects();
 
                 if (LevelObjects.Count == 0)
                     return;
@@ -439,7 +532,7 @@ namespace IntelOrca.PeggleEdit.Designer
             RectangleF threshold = RectangleF.Empty;
             float threshold_value = 4.0f;
 
-            LevelEntryCollection objects = GetSelectedObjects();
+            LevelEntryCollection objects = GetMovableSelectedObjects();
             foreach (LevelEntry le in objects)
             {
                 Brick b = le as Brick;
@@ -465,7 +558,7 @@ namespace IntelOrca.PeggleEdit.Designer
 
         public void RotateBricks(float angle)
         {
-            LevelEntryCollection objects = GetSelectedObjects();
+            LevelEntryCollection objects = GetMovableSelectedObjects();
             if (objects.Count == 0)
                 return;
 
@@ -505,7 +598,7 @@ namespace IntelOrca.PeggleEdit.Designer
                 return;
             }
 
-            LevelEntryCollection objects = new LevelEntryCollection(GetSelectedObjects());
+            LevelEntryCollection objects = new LevelEntryCollection(GetMovableSelectedObjects());
             if (objects.Count == 1)
             {
                 if (objects[0] is Brick)
@@ -570,7 +663,7 @@ namespace IntelOrca.PeggleEdit.Designer
         {
             CreateUndoPoint();
 
-            LevelEntryCollection objects = new LevelEntryCollection(GetSelectedObjects());
+            LevelEntryCollection objects = new LevelEntryCollection(GetMovableSelectedObjects());
             if (objects.Count < 2)
                 return;
 
@@ -602,7 +695,7 @@ namespace IntelOrca.PeggleEdit.Designer
         {
             CreateUndoPoint();
 
-            LevelEntryCollection objects = new LevelEntryCollection(GetSelectedObjects());
+            LevelEntryCollection objects = new LevelEntryCollection(GetMovableSelectedObjects());
             if (objects.Count < 2)
                 return;
 
@@ -628,7 +721,7 @@ namespace IntelOrca.PeggleEdit.Designer
 
         public void AlignObjectXs()
         {
-            LevelEntryCollection objects = GetSelectedObjects();
+            LevelEntryCollection objects = GetMovableSelectedObjects();
 
             if (objects.Count < 2)
                 return;
@@ -646,7 +739,7 @@ namespace IntelOrca.PeggleEdit.Designer
 
         public void AlignObjectYs()
         {
-            LevelEntryCollection objects = GetSelectedObjects();
+            LevelEntryCollection objects = GetMovableSelectedObjects();
 
             if (objects.Count < 2)
                 return;
@@ -664,7 +757,7 @@ namespace IntelOrca.PeggleEdit.Designer
 
         public void SpaceObjectXsEqually()
         {
-            LevelEntryCollection objects = GetSelectedObjects();
+            LevelEntryCollection objects = GetMovableSelectedObjects();
 
             if (objects.Count < 3)
                 return;
@@ -687,7 +780,7 @@ namespace IntelOrca.PeggleEdit.Designer
 
         public void SpaceObjectYsEqually()
         {
-            LevelEntryCollection objects = GetSelectedObjects();
+            LevelEntryCollection objects = GetMovableSelectedObjects();
 
             if (objects.Count < 3)
                 return;
@@ -950,14 +1043,40 @@ namespace IntelOrca.PeggleEdit.Designer
             if (mSelectedTool != null)
                 mSelectedTool.Draw(g);
 
-            // Draw the individual object selection rectangles
+            // Draw the individual object selection rectangles, and one around each group with an object selected (around
+            // the objects of the group that are picked with it)
+            var groups = new Dictionary<int, RectangleF>();
             foreach (LevelEntry le in GetSelectedObjects())
-                DrawEntrySelection(g, le);
+            {
+                DrawEntrySelection(g, le.Bounds, 5, le.Locked ? LockedSelectionColor : Color.White);
+                if (le.Group != 0)
+                    groups[le.Group] = RectangleF.Empty;
+            }
+            if (groups.Count != 0)
+            {
+                foreach (LevelEntry le in mLevel.Entries)
+                {
+                    if (le.Group != 0 && groups.TryGetValue(le.Group, out var bounds) && mLevel.IsPickable(le))
+                        groups[le.Group] = bounds.IsEmpty ? le.Bounds : RectangleF.Union(bounds, le.Bounds);
+                }
+                foreach (var bounds in groups.Values)
+                {
+                    if (!bounds.IsEmpty)
+                        DrawEntrySelection(g, bounds, 9, GroupSelectionColor);
+                }
+            }
         }
 
-        private void DrawEntrySelection(Graphics g, LevelEntry le)
+        // The box around a group with an object selected, and around a selected object that is locked
+        private static readonly Color GroupSelectionColor = Color.FromArgb(255, 200, 60);
+        private static readonly Color LockedSelectionColor = Color.FromArgb(255, 90, 90);
+
+        /// <summary>
+        /// Draws a dashed box <paramref name="margin"/> pixels (at 96 DPI) around <paramref name="bounds"/> (in level
+        /// coordinates).
+        /// </summary>
+        private void DrawEntrySelection(Graphics g, RectangleF bounds, int margin96, Color color)
         {
-            var bounds = le.Bounds;
             var origin = mLevel.GetActualXY(0, 0);
             var corners = new[]
             {
@@ -970,7 +1089,7 @@ namespace IntelOrca.PeggleEdit.Designer
             // is put on a pixel as its image is (see DrawImageSnapped), and the box a whole number of pixels (5 at 96
             // DPI, whatever the zoom) out from it, so that it stays the same distance from the object.
             g.TransformPoints(CoordinateSpace.Device, CoordinateSpace.World, corners);
-            int margin = (int)Math.Round(5 * Dpi.Factor);
+            int margin = (int)Math.Round(margin96 * Dpi.Factor);
             int left = (int)Tools.Extensions.GraphicsExtensions.RoundToPixel(corners[0].X) - margin;
             int top = (int)Tools.Extensions.GraphicsExtensions.RoundToPixel(corners[0].Y) - margin;
             int width = (int)Math.Round(corners[1].X - corners[0].X) + (2 * margin);
@@ -980,7 +1099,7 @@ namespace IntelOrca.PeggleEdit.Designer
             var state = g.Save();
             g.ResetTransform();
             g.SmoothingMode = SmoothingMode.None;
-            using (var pen = new Pen(Color.White, penWidth))
+            using (var pen = new Pen(color, penWidth))
             {
                 pen.DashPattern = new float[] { 1, 1 };
                 g.DrawRectangle(pen, left, top, width, height);
@@ -1057,7 +1176,7 @@ namespace IntelOrca.PeggleEdit.Designer
                 lastOverObject = null;
             }
 
-            var entry = Level.GetShownObjectAt(virtualLocation.X, virtualLocation.Y);
+            var entry = Level.GetPickableObjectAt(virtualLocation.X, virtualLocation.Y);
             if (entry != null && entry.HitTest(virtualLocation))
             {
                 entry.MouseOver = true;

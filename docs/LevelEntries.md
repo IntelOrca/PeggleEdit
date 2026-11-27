@@ -18,6 +18,7 @@ Select an object to see its settings in the **Properties** window. Click a setti
 |---|---|
 | Visible | Whether the object is drawn. |
 | Collidable | Whether the ball bounces off it. Turn it off for decoration. |
+| Locked | Whether the object is locked, so that it can not be selected or moved in the level. See the [Editor Guide](EditorGuide.md#home-tab). The game does not use it. |
 | Image | The image drawn for the object. See below. |
 | Background | Draws the object behind everything except the background image. |
 | Foreground | Draws the object in front of everything except the game's interface. |

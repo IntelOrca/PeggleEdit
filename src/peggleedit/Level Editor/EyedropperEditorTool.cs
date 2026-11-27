@@ -26,7 +26,7 @@ namespace IntelOrca.PeggleEdit.Designer
         {
             var level = Editor.Level;
             var pos = level.GetVirtualXY(location);
-            var obj = level.GetShownObjectAt(pos.X, pos.Y);
+            var obj = level.GetPickableObjectAt(pos.X, pos.Y);
             switch (obj)
             {
                 case Ball circle when circle.HasPegInfo:
@@ -45,6 +45,9 @@ namespace IntelOrca.PeggleEdit.Designer
                 {
                     var template = (LevelEntry)entry.Clone();
                     template.MoverLink = null;
+                    // What is drawn with it is not in the object's group, and can be moved
+                    template.Group = 0;
+                    template.Locked = false;
                     SetTool(new DrawEditorTool(template, false));
                     break;
                 }

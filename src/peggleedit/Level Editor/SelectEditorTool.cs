@@ -17,6 +17,7 @@
 using System;
 using System.Collections.Generic;
 using System.Drawing;
+using System.Linq;
 using System.Windows.Forms;
 using IntelOrca.PeggleEdit.Designer.Properties;
 using IntelOrca.PeggleEdit.Tools;
@@ -52,8 +53,8 @@ namespace IntelOrca.PeggleEdit.Designer
 
             foreach (LevelEntry e in Editor.SelectedEntries)
             {
-                // Not the points of objects that are hidden (e.g. selected in the Entry List)
-                if (e is IPointContainer pc && level.IsShown(e))
+                // Not the points of objects that are hidden or locked (e.g. selected in the Entry List)
+                if (e is IPointContainer pc && level.IsPickable(e))
                 {
                     for (var i = 0; i < pc.InteractionPointCount; i++)
                     {
@@ -79,7 +80,7 @@ namespace IntelOrca.PeggleEdit.Designer
             }
 
             // Get the pegs at this point, of those that are shown
-            LevelEntry[] les = level.GetShownObjectsIn(new RectangleF(vl.X, vl.Y, 1, 1));
+            LevelEntry[] les = level.GetPickableObjectsIn(new RectangleF(vl.X, vl.Y, 1, 1));
 
             // Get top most object
             LevelEntry top_le = null;
@@ -107,12 +108,24 @@ namespace IntelOrca.PeggleEdit.Designer
                 le = top_le;
 
             // Did we click on an object
+            _clickedEntry = le;
             if (le != null)
             {
+                // The object's group with it, unless Alt is down to pick just the object
+                var picked = (modifierKeys & Keys.Alt) != 0 ? new[] { le } : level.GetGroup(le);
                 if (Editor.SelectedEntries.Contains(le))
                 {
                     if ((modifierKeys & Keys.Control) != 0)
-                        Editor.SelectedEntries.Remove(le);
+                    {
+                        foreach (var entry in picked)
+                            Editor.SelectedEntries.Remove(entry);
+                    }
+                    else if ((modifierKeys & Keys.Alt) != 0)
+                    {
+                        // Just the object, out of its selected group
+                        Editor.SelectedEntries.Clear();
+                        Editor.SelectedEntries.Add(le);
+                    }
                 }
                 else
                 {
@@ -121,7 +134,11 @@ namespace IntelOrca.PeggleEdit.Designer
                         Editor.SelectedEntries.Clear();
 
                     // Add the new peg to the selection
-                    Editor.SelectedEntries.Add(le);
+                    foreach (var entry in picked)
+                    {
+                        if (!Editor.SelectedEntries.Contains(entry))
+                            Editor.SelectedEntries.Add(entry);
+                    }
                 }
 
                 if (button == MouseButtons.Left && (modifierKeys & Keys.Control) == 0)
@@ -212,10 +229,23 @@ namespace IntelOrca.PeggleEdit.Designer
                     Editor.SelectedEntries.Clear();
                     Editor.SelectedEntries.AddRange(_previousSelection);
 
+                    // With the rest of their groups, unless Alt is down
                     var vl = Editor.Level.GetVirtualXY(_selectionRect.Location);
-                    Editor.SelectedEntries.AddRange(Editor.Level.GetShownObjectsIn(new RectangleF(
+                    var boxed = Editor.Level.GetPickableObjectsIn(new RectangleF(
                          vl.X, vl.Y,
-                         _selectionRect.Width, _selectionRect.Height)));
+                         _selectionRect.Width, _selectionRect.Height));
+                    var selected = new HashSet<LevelEntry>(Editor.SelectedEntries.Cast<LevelEntry>());
+                    var groups = (modifierKeys & Keys.Alt) == 0 && boxed.Any(x => x.Group != 0) ? Editor.Level.GetGroups() : null;
+                    foreach (var boxedEntry in boxed)
+                    {
+                        var picked = groups != null && boxedEntry.Group != 0 && groups.TryGetValue(boxedEntry.Group, out var members) ?
+                            members : new List<LevelEntry> { boxedEntry };
+                        foreach (var entry in picked)
+                        {
+                            if (selected.Add(entry))
+                                Editor.SelectedEntries.Add(entry);
+                        }
+                    }
 
                     Editor.UpdateRedraw();
                     Editor.CheckSelectionChanged();
@@ -285,6 +315,9 @@ namespace IntelOrca.PeggleEdit.Designer
             for (int i = 0; i < Editor.SelectedEntries.Count; i++)
             {
                 LevelEntry obj = Editor.SelectedEntries[i];
+                // Locked objects (e.g. selected in the Entry List) are not moved in the level
+                if (obj.Locked)
+                    continue;
 
                 //Calculate the new x and y with the delta
                 float newX = _objectPoints[i].X + deltaX;
@@ -316,13 +349,32 @@ namespace IntelOrca.PeggleEdit.Designer
             }
         }
 
+        // The object last clicked in the level, which a brick is added on to when its whole group is selected
+        private LevelEntry _clickedEntry;
+
+        /// <summary>
+        /// Gets the object a brick is added on to: the one selected, or the one clicked when its group is selected.
+        /// </summary>
+        private LevelEntry GetPlacementAnchor()
+        {
+            var selectedEntries = Editor.SelectedEntries;
+            if (selectedEntries.Count == 1)
+                return selectedEntries[0];
+            var clicked = _clickedEntry;
+            if (clicked != null && clicked.Group != 0 && selectedEntries.Contains(clicked) &&
+                selectedEntries.Cast<LevelEntry>().All(x => x.Group == clicked.Group))
+                return clicked;
+            return null;
+        }
+
         private void PlaceBrick(bool curved, bool swapDirection, bool force, bool provisional)
         {
             var level = Editor.Level;
             var selectedEntries = Editor.SelectedEntries;
-            if (selectedEntries.Count == 1)
+            var anchor = GetPlacementAnchor();
+            if (anchor != null)
             {
-                if (selectedEntries[0] is Brick prevBrick)
+                if (anchor is Brick prevBrick)
                 {
                     var provisionalBricks = new List<Brick>();
 

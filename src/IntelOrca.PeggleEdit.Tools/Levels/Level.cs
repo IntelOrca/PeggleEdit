@@ -1233,23 +1233,76 @@ namespace IntelOrca.PeggleEdit.Tools.Levels
         private bool IsFaded(LevelEntry le) => !le.Visible && InvisibleObjects == InvisibleObjectsView.Faded && !mShowPreview && !mShowCollision;
 
         /// <summary>
-        /// Gets the object that is shown (see <see cref="IsShown"/>) at a point, as <see cref="GetObjectAt"/> does.
+        /// Whether an object can be picked in the level: it is shown (see <see cref="IsShown"/>) and not locked.
         /// </summary>
-        public LevelEntry GetShownObjectAt(float x, float y)
+        public bool IsPickable(LevelEntry le) => !le.Locked && IsShown(le);
+
+        /// <summary>
+        /// Gets the object that can be picked (see <see cref="IsPickable"/>) at a point, as <see cref="GetObjectAt"/>
+        /// does.
+        /// </summary>
+        public LevelEntry GetPickableObjectAt(float x, float y)
         {
             foreach (LevelEntry le in mEntries)
             {
-                if (IsShown(le) && le.Bounds.Contains(x, y))
+                if (IsPickable(le) && le.Bounds.Contains(x, y))
                     return le;
             }
             return null;
         }
 
         /// <summary>
-        /// Gets the objects that are shown (see <see cref="IsShown"/>) in a rectangle, as <see cref="GetObjectsIn"/>
-        /// does.
+        /// Gets the objects that can be picked (see <see cref="IsPickable"/>) in a rectangle, as
+        /// <see cref="GetObjectsIn"/> does.
         /// </summary>
-        public LevelEntry[] GetShownObjectsIn(RectangleF rect) => GetObjectsIn(rect).Where(IsShown).ToArray();
+        public LevelEntry[] GetPickableObjectsIn(RectangleF rect) => GetObjectsIn(rect).Where(IsPickable).ToArray();
+
+        /// <summary>
+        /// Gets the objects in the same group as an object that can be picked (see <see cref="IsPickable"/>), in the
+        /// order they are in the level, or just the object when it is in no group.
+        /// </summary>
+        public LevelEntry[] GetGroup(LevelEntry le)
+        {
+            if (le.Group == 0)
+                return new[] { le };
+            return mEntries.Cast<LevelEntry>().Where(x => x == le || (x.Group == le.Group && IsPickable(x))).ToArray();
+        }
+
+        /// <summary>
+        /// Gets the objects that can be picked (see <see cref="IsPickable"/>) in each group, in the order they are in the
+        /// level.
+        /// </summary>
+        public Dictionary<int, List<LevelEntry>> GetGroups()
+        {
+            var result = new Dictionary<int, List<LevelEntry>>();
+            foreach (LevelEntry le in mEntries)
+            {
+                if (le.Group == 0 || !IsPickable(le))
+                    continue;
+                if (!result.TryGetValue(le.Group, out var members))
+                    result[le.Group] = members = new List<LevelEntry>();
+                members.Add(le);
+            }
+            return result;
+        }
+
+        /// <summary>
+        /// Gets a group number that no object in the level is in, nor any in <paramref name="taken"/>.
+        /// </summary>
+        public int GetNewGroup(ICollection<int> taken = null)
+        {
+            var used = new HashSet<int>(mEntries.Cast<LevelEntry>().Select(x => x.Group));
+            if (taken != null)
+                used.UnionWith(taken);
+            // After the highest, or the lowest free one if that is as high as can be
+            int highest = used.DefaultIfEmpty(0).Max();
+            if (highest < int.MaxValue)
+                return Math.Max(1, highest + 1);
+            int group = 1;
+            while (used.Contains(group))
+                group++;
+            return group;
+        }
 
         public LevelEntry[] GetObjectsIn(RectangleF rect)
         {

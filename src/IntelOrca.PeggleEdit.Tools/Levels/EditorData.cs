@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using System.Text;
 using IntelOrca.PeggleEdit.Tools.Extensions;
 using IntelOrca.PeggleEdit.Tools.Levels.Children;
@@ -31,6 +32,8 @@ namespace IntelOrca.PeggleEdit.Tools.Levels
     /// The THMB chunk, which is empty, says that the level's thumbnail is one chosen by the user, so PeggleEdit keeps
     /// it rather than making a new one when the level changes. It is kept even when the level has been changed by
     /// another program since.
+    /// The OBJS chunk holds the groups and locks of objects (see <see cref="ObjectRecord"/>): i32 count, then three
+    /// i32s for each object in a group or locked.
     /// The GENS chunk is always written first, even with no generators.
     /// </remarks>
     public static class EditorData
@@ -40,6 +43,7 @@ namespace IntelOrca.PeggleEdit.Tools.Levels
         public const string GeneratorsTag = "GENS";
         public const string LinksTag = "LINK";
         public const string CustomThumbnailTag = "THMB";
+        public const string ObjectsTag = "OBJS";
 
         static readonly byte[] Magic = Encoding.ASCII.GetBytes(MagicText);
         const int HeaderSize = 8 + 4 + 8 + 4;
@@ -65,13 +69,13 @@ namespace IntelOrca.PeggleEdit.Tools.Levels
         /// </summary>
         public static string GetWarning(Status status)
         {
-            const string kept = "The pegs and bricks they generated are kept as ordinary objects.";
+            const string kept = "Any pegs and bricks its generators generated are kept as ordinary objects.";
             switch (status)
             {
                 case Status.Stale:
-                    return "The level was changed by another program after PeggleEdit saved it, so its generators could not be restored. " + kept;
+                    return "The level was changed by another program after PeggleEdit saved it, so its generators, groups and locks could not be restored. " + kept;
                 case Status.Unreadable:
-                    return "The level's PeggleEdit data is from a newer version of PeggleEdit, or is damaged, so its generators could not be restored. " + kept;
+                    return "The level's PeggleEdit data is from a newer version of PeggleEdit, or is damaged, so its generators, groups and locks could not be restored. " + kept;
                 default:
                     return null;
             }
@@ -113,6 +117,24 @@ namespace IntelOrca.PeggleEdit.Tools.Levels
 
             /// <summary>The copy, while writing.</summary>
             internal Mover Copy;
+        }
+
+        /// <summary>
+        /// An object that is in a group, or locked.
+        /// </summary>
+        public struct ObjectRecord
+        {
+            /// <summary>
+            /// The index of the object among the level's objects as PeggleEdit has them, with each generator in place of
+            /// the entries it generated (not counting null entries).
+            /// </summary>
+            public int Index;
+            /// <summary>The group the object is in, or 0 for none.</summary>
+            public int Group;
+            /// <summary>Bit 0: the object is locked.</summary>
+            public int Flags;
+
+            public const int LockedFlag = 1;
         }
 
         /// <summary>
@@ -163,7 +185,7 @@ namespace IntelOrca.PeggleEdit.Tools.Levels
         /// Writes PeggleEdit's data for a level whose file so far is <paramref name="levelPart"/>.
         /// </summary>
         public static void Write(BinaryWriter bw, byte[] levelPart, IReadOnlyList<GeneratorRecord> generators, IReadOnlyList<LinkRecord> links,
-            bool customThumbnail, int version)
+            IReadOnlyList<ObjectRecord> objects, bool customThumbnail, int version)
         {
             var chunks = new List<KeyValuePair<string, byte[]>>();
             var payload = new MemoryStream();
@@ -183,7 +205,73 @@ namespace IntelOrca.PeggleEdit.Tools.Levels
                 chunks.Add(new KeyValuePair<string, byte[]>(LinksTag, WriteLinks(links)));
             if (customThumbnail)
                 chunks.Add(new KeyValuePair<string, byte[]>(CustomThumbnailTag, new byte[0]));
+            if (objects.Count != 0)
+                chunks.Add(new KeyValuePair<string, byte[]>(ObjectsTag, WriteObjects(objects)));
             bw.Write(Build(levelPart, chunks));
+        }
+
+        public static byte[] WriteObjects(IReadOnlyList<ObjectRecord> objects)
+        {
+            var payload = new MemoryStream();
+            using (var pw = new BinaryWriter(payload, Encoding.UTF8, true))
+            {
+                pw.Write(objects.Count);
+                foreach (var record in objects)
+                {
+                    pw.Write(record.Index);
+                    pw.Write(record.Group);
+                    pw.Write(record.Flags);
+                }
+            }
+            return payload.ToArray();
+        }
+
+        /// <summary>
+        /// Reads the groups and locks of objects from an OBJS chunk.
+        /// </summary>
+        /// <exception cref="InvalidDataException">The chunk is damaged.</exception>
+        public static List<ObjectRecord> ReadObjects(byte[] data, Chunk chunk)
+        {
+            var br = new BinaryReader(new MemoryStream(data, chunk.Offset, chunk.Length));
+            int count = br.ReadInt32();
+            if (count < 0 || count != (chunk.Length - 4) / 12 || (chunk.Length - 4) % 12 != 0)
+                throw new InvalidDataException("bad object count");
+            var result = new List<ObjectRecord>(count);
+            for (int i = 0; i < count; i++)
+                result.Add(new ObjectRecord { Index = br.ReadInt32(), Group = br.ReadInt32(), Flags = br.ReadInt32() });
+            return result;
+        }
+
+        /// <summary>
+        /// Gets the groups and locks of a level's objects, as PeggleEdit has them.
+        /// </summary>
+        public static List<ObjectRecord> GetObjects(System.Collections.IEnumerable levelEntries)
+        {
+            var entries = levelEntries.Cast<LevelEntry>().ToList();
+            var result = new List<ObjectRecord>();
+            for (int i = 0; i < entries.Count; i++)
+            {
+                var le = entries[i];
+                if (le.Group != 0 || le.Locked)
+                    result.Add(new ObjectRecord { Index = i, Group = le.Group, Flags = le.Locked ? ObjectRecord.LockedFlag : 0 });
+            }
+            return result;
+        }
+
+        /// <summary>
+        /// Puts the groups and locks of objects back on a level's objects, as PeggleEdit has them. Records for objects
+        /// that are not there are left out.
+        /// </summary>
+        public static void SetObjects(System.Collections.IEnumerable levelEntries, IEnumerable<ObjectRecord> objects)
+        {
+            var entries = levelEntries.Cast<LevelEntry>().ToList();
+            foreach (var record in objects)
+            {
+                if (record.Index < 0 || record.Index >= entries.Count)
+                    continue;
+                entries[record.Index].Group = Math.Max(0, record.Group);
+                entries[record.Index].Locked = (record.Flags & ObjectRecord.LockedFlag) != 0;
+            }
         }
 
         public static byte[] WriteLinks(IReadOnlyList<LinkRecord> links)

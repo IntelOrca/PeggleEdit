@@ -245,21 +245,24 @@ namespace IntelOrca.PeggleEdit.Designer
         {
             base.OnKeyDown(e);
 
+            // The shortcut with Shift as it is, or otherwise one without Shift
+            ShortcutAction match = null;
             foreach (IShortcutContainer container in mShortcutContainers)
             {
                 foreach (ShortcutAction sa in container.GetShortcuts())
                 {
                     // Not with Alt, so that characters typed with AltGr (Ctrl + Alt) are not taken as Ctrl shortcuts
-                    if (sa.Key == e.KeyCode && ((sa.Ctrl && e.Control && !e.Alt) || (!sa.Ctrl && !e.Control)))
-                    {
-                        if (sa.EditorMustBeFocused && !IsLevelEditorFocused())
-                            break;
-
-                        sa.CallMethod();
-                        break;
-                    }
+                    if (sa.Key != e.KeyCode || !((sa.Ctrl && e.Control && !e.Alt) || (!sa.Ctrl && !e.Control)))
+                        continue;
+                    if (sa.Shift && !e.Shift)
+                        continue;
+                    if (match == null || (sa.Shift == e.Shift && match.Shift != e.Shift))
+                        match = sa;
                 }
             }
+
+            if (match != null && (!match.EditorMustBeFocused || IsLevelEditorFocused()))
+                match.CallMethod();
         }
 
         private bool IsLevelEditorFocused()

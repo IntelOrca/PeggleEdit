@@ -49,6 +49,23 @@ namespace IntelOrca.PeggleEdit.Tools.Levels.Children
         [Browsable(false)]
         public bool Provisional { get; set; }
 
+        /// <summary>
+        /// The group the object is in, so that it is picked with the rest of its group in the level, or 0 when it is in
+        /// none. Kept in PeggleEdit's own data, not by the game.
+        /// </summary>
+        [Browsable(false)]
+        public int Group { get; set; }
+
+        /// <summary>
+        /// Whether the object is locked, so that it can not be picked or moved in the level. Kept in PeggleEdit's own
+        /// data, not by the game.
+        /// </summary>
+        [DisplayName("Locked")]
+        [Description("Whether the object is locked, so that it can not be selected or moved in the level, only in the Entry List. The game does not use this.")]
+        [Category("Editor")]
+        [DefaultValue(false)]
+        public bool Locked { get; set; }
+
         float mX;
         float mY;
 
@@ -551,6 +568,8 @@ namespace IntelOrca.PeggleEdit.Tools.Levels.Children
         protected void CloneTo(LevelEntry dest)
         {
             dest.Selected = Selected;
+            dest.Group = Group;
+            dest.Locked = Locked;
 
             dest.mX = mX;
             dest.mY = mY;

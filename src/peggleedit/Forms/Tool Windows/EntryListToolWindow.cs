@@ -230,7 +230,20 @@ namespace IntelOrca.PeggleEdit.Designer
             public EntryItem(int index, LevelEntry entry)
             {
                 Entry = entry;
-                mText = String.Format("{0}. {1}", index, entry);
+                mText = GetText(index, entry);
+            }
+
+            /// <summary>
+            /// The entry's index and what it is, and the group it is in and whether it is locked, if so.
+            /// </summary>
+            public static string GetText(int index, LevelEntry entry)
+            {
+                var text = String.Format("{0}. {1}", index, entry);
+                if (entry.Group != 0)
+                    text += String.Format(" [group {0}]", entry.Group);
+                if (entry.Locked)
+                    text += " [locked]";
+                return text;
             }
 
             public LevelEntry Entry { get; }
@@ -271,7 +284,7 @@ namespace IntelOrca.PeggleEdit.Designer
                     ItemHeight = height;
             }
 
-            private static string GetItemText(int index, object item) => String.Format("{0}. {1}", index, ((EntryItem)item).Entry);
+            private static string GetItemText(int index, object item) => EntryItem.GetText(index, ((EntryItem)item).Entry);
 
             /// <summary>
             /// Draws again the items whose text has changed.

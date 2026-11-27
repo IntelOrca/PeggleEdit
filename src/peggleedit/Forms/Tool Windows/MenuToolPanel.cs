@@ -306,6 +306,40 @@ namespace IntelOrca.PeggleEdit.Designer
             panelZOrder.Items.Add(btnBringToFront);
             panelZOrder.Items.Add(btnSendToBack);
 
+            RibbonButton btnGroup = new RibbonButton("Group");
+            btnGroup.MaxSizeMode = RibbonElementSizeMode.Medium;
+            btnGroup.SmallImage = CreateGroupIcon(16, true);
+            btnGroup.ToolTipTitle = "Group (Ctrl+G)";
+            btnGroup.ToolTip = "Group the selected objects, so that clicking any of them in the level selects them all. Hold Alt as you click to select just one.";
+            btnGroup.Click += (sender, e) => { if (IsEditorAvailable()) LevelEditor.GroupObjects(); };
+
+            RibbonButton btnUngroup = new RibbonButton("Ungroup");
+            btnUngroup.MaxSizeMode = RibbonElementSizeMode.Medium;
+            btnUngroup.SmallImage = CreateGroupIcon(16, false);
+            btnUngroup.ToolTipTitle = "Ungroup (Ctrl+Shift+G)";
+            btnUngroup.ToolTip = "Take the selected objects out of their groups.";
+            btnUngroup.Click += (sender, e) => { if (IsEditorAvailable()) LevelEditor.UngroupObjects(); };
+
+            RibbonButton btnLock = new RibbonButton("Lock");
+            btnLock.MaxSizeMode = RibbonElementSizeMode.Medium;
+            btnLock.SmallImage = CreateLockIcon(16, true);
+            btnLock.ToolTipTitle = "Lock (Ctrl+L)";
+            btnLock.ToolTip = "Lock the selected objects, so that they can not be selected or moved in the level. You can still select them in the Entry List.";
+            btnLock.Click += (sender, e) => { if (IsEditorAvailable()) LevelEditor.LockObjects(); };
+
+            RibbonButton btnUnlockAll = new RibbonButton("Unlock All");
+            btnUnlockAll.MaxSizeMode = RibbonElementSizeMode.Medium;
+            btnUnlockAll.SmallImage = CreateLockIcon(16, false);
+            btnUnlockAll.ToolTipTitle = "Unlock All (Ctrl+Shift+L)";
+            btnUnlockAll.ToolTip = "Unlock every object in the level.";
+            btnUnlockAll.Click += (sender, e) => UnlockAllObjects();
+
+            RibbonPanel panelGroup = new RibbonPanel("Group");
+            panelGroup.Items.Add(btnGroup);
+            panelGroup.Items.Add(btnUngroup);
+            panelGroup.Items.Add(btnLock);
+            panelGroup.Items.Add(btnUnlockAll);
+
             RibbonButton btnLaunchPeggleNights = new RibbonButton("Nights");
             btnLaunchPeggleNights.Image = Resources.PeggleNights_32;
             btnLaunchPeggleNights.Click += new EventHandler(peggleNightsRibbonButton_Click);
@@ -317,6 +351,7 @@ namespace IntelOrca.PeggleEdit.Designer
             tabHome.Panels.Add(panelClipboard);
             tabHome.Panels.Add(panelAlignment);
             tabHome.Panels.Add(panelZOrder);
+            tabHome.Panels.Add(panelGroup);
             tabHome.Panels.Add(panelPeggle);
 
             mRibbon.Tabs.Add(tabHome);
@@ -701,6 +736,77 @@ namespace IntelOrca.PeggleEdit.Designer
         }
 
         private static string FormatZoom(float zoomLevel) => Math.Round(zoomLevel * 100) + "%";
+
+        private void UnlockAllObjects()
+        {
+            if (!IsEditorAvailable())
+                return;
+            int count = LevelEditor.UnlockAllObjects();
+            mParent.SetStatus(count == 1 ? "1 object unlocked." : "{0} objects unlocked.", count);
+        }
+
+        /// <summary>
+        /// Draws two objects, with a box around them (<paramref name="grouped"/>) or apart.
+        /// </summary>
+        private static Bitmap CreateGroupIcon(int size, bool grouped)
+        {
+            var bitmap = new Bitmap(size, size);
+            using (var g = Graphics.FromImage(bitmap))
+            {
+                g.SmoothingMode = System.Drawing.Drawing2D.SmoothingMode.AntiAlias;
+                float s = size / 16f;
+                using (var fill = new SolidBrush(Color.FromArgb(70, 140, 220)))
+                using (var fill2 = new SolidBrush(Color.FromArgb(240, 170, 40)))
+                using (var outline = new Pen(Color.FromArgb(50, 50, 60), 1 * s))
+                {
+                    var a = grouped ? new RectangleF(3 * s, 3 * s, 6 * s, 6 * s) : new RectangleF(1.5f * s, 1.5f * s, 6 * s, 6 * s);
+                    var b = grouped ? new RectangleF(7 * s, 7 * s, 6 * s, 6 * s) : new RectangleF(8.5f * s, 8.5f * s, 6 * s, 6 * s);
+                    g.FillEllipse(fill, a);
+                    g.DrawEllipse(outline, a);
+                    g.FillRectangle(fill2, b);
+                    g.DrawRectangle(outline, b.X, b.Y, b.Width, b.Height);
+                }
+                if (grouped)
+                {
+                    using (var box = new Pen(Color.FromArgb(50, 50, 60), 1 * s))
+                    {
+                        box.DashPattern = new[] { 2f, 1.5f };
+                        g.DrawRectangle(box, 0.5f * s, 0.5f * s, 15 * s - 1, 15 * s - 1);
+                    }
+                }
+            }
+            return bitmap;
+        }
+
+        /// <summary>
+        /// Draws a padlock, closed (<paramref name="locked"/>) or open.
+        /// </summary>
+        private static Bitmap CreateLockIcon(int size, bool locked)
+        {
+            var bitmap = new Bitmap(size, size);
+            using (var g = Graphics.FromImage(bitmap))
+            {
+                g.SmoothingMode = System.Drawing.Drawing2D.SmoothingMode.AntiAlias;
+                float s = size / 16f;
+                using (var shackle = new Pen(Color.FromArgb(90, 90, 100), 2 * s))
+                {
+                    // Open: lifted out of the body on the right
+                    float lift = locked ? 0 : 2.5f * s;
+                    var arc = new RectangleF(4.5f * s, 1.5f * s - lift, 7 * s, 8 * s);
+                    g.DrawArc(shackle, arc, 180, 180);
+                    g.DrawLine(shackle, arc.Left, arc.Top + (arc.Height / 2), arc.Left, 7.5f * s - (locked ? 0 : lift));
+                    g.DrawLine(shackle, arc.Right, arc.Top + (arc.Height / 2), arc.Right, 7.5f * s - lift);
+                }
+                var body = new RectangleF(2.5f * s, 7 * s, 11 * s, 8 * s);
+                using (var fill = new SolidBrush(Color.FromArgb(230, 180, 50)))
+                    g.FillRectangle(fill, body);
+                using (var outline = new Pen(Color.FromArgb(140, 100, 20), 1 * s))
+                    g.DrawRectangle(outline, body.X, body.Y, body.Width, body.Height);
+                using (var hole = new SolidBrush(Color.FromArgb(90, 60, 10)))
+                    g.FillEllipse(hole, 7 * s, 9.5f * s, 2 * s, 2.5f * s);
+            }
+            return bitmap;
+        }
 
         /// <summary>
         /// Zooms the level being worked on, keeping the middle of its window where it is.
@@ -1284,7 +1390,7 @@ namespace IntelOrca.PeggleEdit.Designer
 
             bool firstItem = true;
             float x = 0.0f, y = 0.0f;
-            foreach (LevelEntry o in LevelEditor.GetSelectedObjects())
+            foreach (LevelEntry o in LevelEditor.GetMovableSelectedObjects())
             {
                 if (firstItem)
                 {
@@ -1827,6 +1933,11 @@ namespace IntelOrca.PeggleEdit.Designer
                 new ShortcutAction(Keys.Subtract, true, () => SetZoomLevel(editor => editor.GetNextZoomLevel(-1))),
                 new ShortcutAction(Keys.D0, true, () => SetZoomLevel(editor => 1)),
                 new ShortcutAction(Keys.NumPad0, true, () => SetZoomLevel(editor => 1)),
+
+                new ShortcutAction(Keys.G, true, true, () => LevelEditor?.GroupObjects()),
+                new ShortcutAction(Keys.G, true, true, () => LevelEditor?.UngroupObjects()) { Shift = true },
+                new ShortcutAction(Keys.L, true, true, () => LevelEditor?.LockObjects()),
+                new ShortcutAction(Keys.L, true, true, UnlockAllObjects) { Shift = true },
             };
 
             mParent.RegisterShortcutContainer(this);

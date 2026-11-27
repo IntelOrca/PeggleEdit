@@ -151,7 +151,7 @@ namespace IntelOrca.PeggleEdit.Tools.Levels
                 // level
                 mCustomThumbnail = chunks.Exists(x => x.Tag == EditorData.CustomThumbnailTag && x.Length == 0);
             }
-            if (status == EditorData.Status.Stale && !HasGenerators(data, chunks))
+            if (status == EditorData.Status.Stale && !HasGenerators(data, chunks) && !HasObjects(data, chunks))
             {
                 // Nothing that depends on the level as it was is lost, so there is nothing to warn about
                 return EditorData.Status.None;
@@ -178,6 +178,22 @@ namespace IntelOrca.PeggleEdit.Tools.Levels
                 var links = linksChunk < 0 ? new List<EditorData.LinkRecord>() : EditorData.ReadLinks(data, chunks[linksChunk]);
 
                 mLevel.RestoreGenerators(generators, links);
+                // Numbered as the objects are with the generators back in place. Damaged, they are left out, which loses
+                // nothing in the level
+                var objectsChunk = chunks.FindIndex(x => x.Tag == EditorData.ObjectsTag);
+                if (objectsChunk >= 0)
+                {
+                    try
+                    {
+                        EditorData.SetObjects(mLevel.Entries, EditorData.ReadObjects(data, chunks[objectsChunk]));
+                    }
+                    catch (InvalidDataException)
+                    {
+                    }
+                    catch (EndOfStreamException)
+                    {
+                    }
+                }
                 return status;
             }
             catch (Exception)
@@ -189,9 +205,19 @@ namespace IntelOrca.PeggleEdit.Tools.Levels
         /// <summary>
         /// Whether PeggleEdit's data has any generators in it.
         /// </summary>
-        private static bool HasGenerators(byte[] data, List<EditorData.Chunk> chunks)
+        private static bool HasGenerators(byte[] data, List<EditorData.Chunk> chunks) => HasRecords(data, chunks, EditorData.GeneratorsTag);
+
+        /// <summary>
+        /// Whether PeggleEdit's data has any groups or locks in it.
+        /// </summary>
+        private static bool HasObjects(byte[] data, List<EditorData.Chunk> chunks) => HasRecords(data, chunks, EditorData.ObjectsTag);
+
+        /// <summary>
+        /// Whether PeggleEdit's data has a chunk that does not start with a count of 0.
+        /// </summary>
+        private static bool HasRecords(byte[] data, List<EditorData.Chunk> chunks, string tag)
         {
-            var chunk = chunks.FindIndex(x => x.Tag == EditorData.GeneratorsTag);
+            var chunk = chunks.FindIndex(x => x.Tag == tag);
             return chunk >= 0 && (chunks[chunk].Length < 4 || BitConverter.ToInt32(data, chunks[chunk].Offset) != 0);
         }
 

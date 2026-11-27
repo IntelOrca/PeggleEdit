@@ -85,6 +85,9 @@ namespace IntelOrca.PeggleEdit.Tools.Levels
             {
                 if (entry.MoverLink?.Mover is Mover mover)
                     mover.IsGenerated = false;
+                // In the generator's group, and locked if it was
+                entry.Group = generator.Group;
+                entry.Locked = generator.Locked;
                 level.Entries.Insert(index++, entry);
             }
         }

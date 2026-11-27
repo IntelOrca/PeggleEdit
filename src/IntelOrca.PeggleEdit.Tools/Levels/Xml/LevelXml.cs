@@ -147,6 +147,8 @@ namespace IntelOrca.PeggleEdit.Tools.Levels.Xml
         const string EntryHashName = "entryHash";
 
         const string LinkName = "Link";
+        // An object in a group, or locked, by its index among the objects as PeggleEdit has them
+        const string ObjectName = "Object";
         // Whether the level's thumbnail is the user's own
         const string CustomThumbnailName = "customThumbnail";
 
@@ -173,6 +175,7 @@ namespace IntelOrca.PeggleEdit.Tools.Levels.Xml
                 if (count < 0)
                     return null;
                 int next = 0;
+                int generatedTotal = 0;
                 for (int i = 0; i < count; i++)
                 {
                     int first = r.I32();
@@ -181,6 +184,7 @@ namespace IntelOrca.PeggleEdit.Tools.Levels.Xml
                     if (first < next || generated < 0 || generated > entryCount - first)
                         return null;
                     next = first + generated;
+                    generatedTotal += generated;
 
                     var el = ReadEntry(r, version);
                     if (!GeneratorNames.Contains(el.Name.LocalName))
@@ -208,6 +212,29 @@ namespace IntelOrca.PeggleEdit.Tools.Levels.Xml
                         result.Add(el);
                     }
                 }
+
+                int objectsChunk = chunks.FindIndex(x => x.Tag == EditorData.ObjectsTag);
+                if (objectsChunk >= 0 && IsReadable(() => EditorData.ReadObjects(data, chunks[objectsChunk])))
+                {
+                    // Only objects that are there, as PeggleEdit reads them: others are left out, rather than the rest of
+                    // PeggleEdit's data
+                    int objectCount = entryCount - generatedTotal + count;
+                    foreach (var record in EditorData.ReadObjects(data, chunks[objectsChunk]))
+                    {
+                        if (record.Index < 0 || record.Index >= objectCount || record.Group < 0)
+                            continue;
+                        var el = new XElement(ObjectName, new XAttribute("index", record.Index));
+                        if (record.Group != 0)
+                            el.Add(new XAttribute("group", record.Group));
+                        if ((record.Flags & EditorData.ObjectRecord.LockedFlag) != 0)
+                            el.Add(new XAttribute("locked", "true"));
+                        // Flags PeggleEdit does not know of yet are kept
+                        int otherFlags = record.Flags & ~EditorData.ObjectRecord.LockedFlag;
+                        if (otherFlags != 0)
+                            el.Add(new XAttribute("flags", "0x" + otherFlags.ToString("X8", Inv)));
+                        result.Add(el);
+                    }
+                }
             }
             catch (Exception ex) when (ex is LevelFormatException || ex is OverflowException || ex is InvalidDataException || ex is EndOfStreamException)
             {
@@ -225,13 +252,22 @@ namespace IntelOrca.PeggleEdit.Tools.Levels.Xml
             var w = new BinWriter();
             bool customThumbnail = n.Bool(CustomThumbnailName, false);
             var children = n.RemainingChildren();
-            var generators = children.Where(x => x.Name != LinkName).ToList();
+            var generators = children.Where(x => x.Name != LinkName && x.Name != ObjectName).ToList();
             var links = new List<EditorData.LinkRecord>();
+            var objects = new List<(EditorData.ObjectRecord Record, Node Element)>();
             w.I32(generators.Count);
             int next = 0;
+            int generated = 0;
             foreach (var child in children)
             {
                 n.UseChild(child.Element);
+                if (child.Name == ObjectName)
+                {
+                    objects.Add((ReadObjectElement(child), child));
+                    continue;
+                }
+                if (objects.Count != 0)
+                    throw child.Error($"<{ObjectName}> elements must come after the generators and links.");
                 if (child.Name == LinkName)
                 {
                     links.Add(ReadLinkElement(child, generators.Count));
@@ -240,7 +276,7 @@ namespace IntelOrca.PeggleEdit.Tools.Levels.Xml
                 if (links.Count != 0)
                     throw child.Error($"<{LinkName}> elements must come after the generators.");
                 if (!GeneratorNames.Contains(child.Name))
-                    throw child.Error($"<{EditorDataName}> can only hold generators and links, not <{child.Name}>.");
+                    throw child.Error($"<{EditorDataName}> can only hold generators, links and objects, not <{child.Name}>.");
                 int first = child.Int32(FirstEntryName);
                 int count = child.Int32(EntryCountName);
                 if (first < next || first > entryCount)
@@ -248,6 +284,7 @@ namespace IntelOrca.PeggleEdit.Tools.Levels.Xml
                 if (count < 0 || count > entryCount - first)
                     throw child.Error($"'{EntryCountName}' must be from 0 to {entryCount - first}.", EntryCountName);
                 next = first + count;
+                generated += count;
                 var hashText = child.String(EntryHashName);
                 if (!hashText.StartsWith("0x", StringComparison.OrdinalIgnoreCase) ||
                     !ulong.TryParse(hashText.Substring(2), NumberStyles.AllowHexSpecifier, Inv, out var hash))
@@ -259,12 +296,63 @@ namespace IntelOrca.PeggleEdit.Tools.Levels.Xml
                 WriteEntry(child, w, version);
             }
             n.Done();
+            // The objects as PeggleEdit has them: each generator in place of the entries it generated
+            int objectCount = entryCount - generated + generators.Count;
+            foreach (var (record, element) in objects)
+            {
+                if (record.Index >= objectCount)
+                    throw element.Error($"'index' must be from 0 to {objectCount - 1}: the objects as PeggleEdit has them, with each generator in place of the entries it generated.", "index");
+            }
             var chunks = new List<KeyValuePair<string, byte[]>> { new KeyValuePair<string, byte[]>(EditorData.GeneratorsTag, w.ToArray()) };
             if (links.Count != 0)
                 chunks.Add(new KeyValuePair<string, byte[]>(EditorData.LinksTag, EditorData.WriteLinks(links)));
             if (customThumbnail)
                 chunks.Add(new KeyValuePair<string, byte[]>(EditorData.CustomThumbnailTag, new byte[0]));
+            if (objects.Count != 0)
+                chunks.Add(new KeyValuePair<string, byte[]>(EditorData.ObjectsTag, EditorData.WriteObjects(objects.Select(x => x.Record).ToList())));
             return EditorData.Build(levelPart, chunks);
+        }
+
+        static bool IsReadable(Action read)
+        {
+            try
+            {
+                read();
+                return true;
+            }
+            catch (InvalidDataException)
+            {
+                return false;
+            }
+            catch (EndOfStreamException)
+            {
+                return false;
+            }
+        }
+
+        static EditorData.ObjectRecord ReadObjectElement(Node n)
+        {
+            var record = new EditorData.ObjectRecord { Index = n.Int32("index") };
+            if (record.Index < 0)
+                throw n.Error("'index' must not be negative.", "index");
+            if (n.Has("group"))
+            {
+                record.Group = n.Int32("group");
+                if (record.Group < 0)
+                    throw n.Error("'group' must not be negative.", "group");
+            }
+            if (n.Has("flags"))
+            {
+                var text = n.String("flags");
+                if (!text.StartsWith("0x", StringComparison.OrdinalIgnoreCase) ||
+                    !uint.TryParse(text.Substring(2), NumberStyles.AllowHexSpecifier, Inv, out var flags))
+                    throw n.Error("'flags' must be a hex number, e.g. 0x00000002.", "flags");
+                record.Flags = (int)flags & ~EditorData.ObjectRecord.LockedFlag;
+            }
+            if (n.Bool("locked", false))
+                record.Flags |= EditorData.ObjectRecord.LockedFlag;
+            n.Done();
+            return record;
         }
 
         static EditorData.LinkRecord ReadLinkElement(Node n, int generatorCount)

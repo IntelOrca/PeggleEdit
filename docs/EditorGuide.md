@@ -15,6 +15,10 @@ If you close a window, open it again from the **View** tab. PeggleEdit remembers
 * **Clipboard**: cut, copy, paste and delete objects. You can copy objects from one level to another, or even between two copies of PeggleEdit.
 * **Alignment**: line objects up, space them out evenly, flip them and rotate them.
 * **Z Order**: change which objects are drawn on top of others.
+* **Group**: group objects, and lock them.
+  * **Group** puts the selected objects in a group. Clicking or boxing any object in a group selects the whole group, with a yellow box around it; hold **Alt** as you click or box to select just the objects themselves. **Ungroup** takes the selected objects out of their groups.
+  * **Lock** locks the selected objects, so that they can not be selected or moved in the level, for example a background of bricks you are building on. You can still select a locked object in the Entry List, which shows it with a red box, and change it in the Properties window (**Locked** turns it off for just that object). **Unlock All** unlocks every object in the level.
+  * The Entry List marks objects that are in a group or locked. Groups and locks are kept in PeggleEdit's own data in the level, which the game ignores. Pasted objects are put in new groups of their own and are not locked.
 * **Nights**: start Peggle Nights. If it does not start, set where the game is under **PeggleEdit Options > Peggle Nights**.
 
 ## Tools tab
@@ -89,6 +93,9 @@ Open the README, the GitHub page, or see which version you have.
 | Arrow keys | Move the selected objects by 1 (Select tool) |
 | Ctrl+Arrow keys | Move them by 5 |
 | Alt+Arrow keys | Move them by a tiny amount (1/16) |
+| Ctrl+G, Ctrl+Shift+G | Group and ungroup the selected objects |
+| Ctrl+L, Ctrl+Shift+L | Lock the selected objects, and unlock everything |
+| Alt+click | Select an object without the rest of its group |
 | Home, End | Bring to front, send to back |
 | Page Up, Page Down | Bring forwards, send backwards |
 | B, V | Add a brick joined on to the selected brick. See [Bricks](Bricks.md) |
