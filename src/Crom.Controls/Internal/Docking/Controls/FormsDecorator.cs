@@ -359,6 +359,7 @@ namespace Crom.Controls.Docking
          }
 
          Positioner.PerformMoveByMouse(_positionerPositionOnMouseDown.X + dx, _positionerPositionOnMouseDown.Y + dy);
+         DrawUncovered();
 
          return true;
       }
@@ -896,6 +897,15 @@ namespace Crom.Controls.Docking
          }
       }
 
+      /// <summary>
+      /// Draws the windows this has uncovered as it moved or changed size now, as while the mouse moves they are
+      /// otherwise not drawn, leaving a trail of where it was over them
+      /// </summary>
+      private void DrawUncovered()
+      {
+         WindowingApi.Current.DrawNow(TopLevelControl ?? this);
+      }
+
 
       /// <summary>
       /// On mouse down in title top margin
@@ -934,7 +944,8 @@ namespace Crom.Controls.Docking
             bounds.Height  = _positionerSizeOnMouseDown.Height - dy;
 
             Positioner.Bounds = bounds;
-            }
+            DrawUncovered();
+         }
       }
 
       /// <summary>
@@ -985,7 +996,8 @@ namespace Crom.Controls.Docking
             bounds.Height  = _positionerSizeOnMouseDown.Height;
 
             Positioner.Bounds = bounds;
-            }
+            DrawUncovered();
+         }
       }
 
       /// <summary>
@@ -1032,7 +1044,8 @@ namespace Crom.Controls.Docking
             Positioner.Size = new Size(
                _positionerSizeOnMouseDown.Width + dx,
                Positioner.Size.Height);
-            }
+            DrawUncovered();
+         }
       }
 
       /// <summary>
@@ -1079,7 +1092,8 @@ namespace Crom.Controls.Docking
             Positioner.Size = new Size(
                Positioner.Size.Width,
                _positionerSizeOnMouseDown.Height + dy);
-            }
+            DrawUncovered();
+         }
       }
 
       /// <summary>

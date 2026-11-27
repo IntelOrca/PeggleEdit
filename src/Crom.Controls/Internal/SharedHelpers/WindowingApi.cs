@@ -27,6 +27,12 @@ namespace Crom.Controls
       /// window without activating it otherwise.
       /// </summary>
       void ShowTopMostWithoutActivating(Form form);
+
+      /// <summary>
+      /// Draws now the parts of the control and its children that need drawing, e.g. those a window moved over them
+      /// has uncovered, rather than when no input is waiting (which, while the mouse moves, can be a long time).
+      /// </summary>
+      void DrawNow(Control control);
    }
 
    /// <summary>
@@ -79,6 +85,20 @@ namespace Crom.Controls
       {
          SetWindowPos(form.Handle, HWND_TOPMOST, form.Left, form.Top, form.Width, form.Height, SWP_NOACTIVATE | SWP_SHOWWINDOW);
       }
+
+      public void DrawNow(Control control)
+      {
+         if (control.IsHandleCreated)
+         {
+            RedrawWindow(control.Handle, IntPtr.Zero, IntPtr.Zero, RDW_UPDATENOW | RDW_ALLCHILDREN);
+         }
+      }
+
+      private const int RDW_ALLCHILDREN = 0x0080;
+      private const int RDW_UPDATENOW   = 0x0100;
+
+      [DllImport("user32")]
+      private static extern bool RedrawWindow(IntPtr hWnd, IntPtr lprcUpdate, IntPtr hrgnUpdate, int flags);
 
       [StructLayout(LayoutKind.Sequential)]
       private struct Rect
@@ -140,6 +160,15 @@ namespace Crom.Controls
       {
          form.TopMost = true;
          form.Show();
+      }
+
+      public void DrawNow(Control control)
+      {
+         control.Update();
+         foreach (Control child in control.Controls)
+         {
+            DrawNow(child);
+         }
       }
    }
 }
