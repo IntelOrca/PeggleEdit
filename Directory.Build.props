@@ -4,6 +4,10 @@
     <GenerateResourceUsePreserializedResources>true</GenerateResourceUsePreserializedResources>
     <Copyright>Copyright © Ted John 2010-2026</Copyright>
     <AssemblyVersion>5.2.0</AssemblyVersion>
+    <!-- A warning stops the build, so that none are left to pile up -->
+    <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
+    <!-- Except NuGet's warnings of a vulnerability found in a package, which can come with no change made here -->
+    <WarningsNotAsErrors>NU1901;NU1902;NU1903;NU1904</WarningsNotAsErrors>
   </PropertyGroup>
   <ItemGroup>
     <PackageReference Include="System.Resources.Extensions" Version="7.0.0" />
