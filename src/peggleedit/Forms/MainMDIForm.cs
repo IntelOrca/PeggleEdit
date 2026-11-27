@@ -508,7 +508,8 @@ namespace IntelOrca.PeggleEdit.Designer
         }
 
         /// <summary>
-        /// Shows a level's zoom on the ribbon, if it is the level being worked on.
+        /// Shows how a level is viewed (e.g. its zoom, or the kinds of object shown) on the ribbon, if it is the level
+        /// being worked on.
         /// </summary>
         public void LevelZoomChanged(LevelEditor editor)
         {

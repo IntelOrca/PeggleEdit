@@ -254,6 +254,8 @@ namespace IntelOrca.PeggleEdit.Tools.Levels
             mTransparentBuffer = null;
             mTransparentBackground?.Dispose();
             mTransparentBackground = null;
+            mFadedBuffer?.Dispose();
+            mFadedBuffer = null;
             _particlePreview.ReleaseCaches();
         }
 
@@ -429,14 +431,20 @@ namespace IntelOrca.PeggleEdit.Tools.Levels
                         bg.SmoothingMode = g.SmoothingMode;
                     }
 
+                    // The bitmaps are kept from one draw to the next, so the part used is cleared first (see Draw)
+                    var used = new Rectangle(0, 0, device.Width, device.Height);
                     using (var bg = Graphics.FromImage(mTransparentBuffer))
                     {
+                        bg.SetClip(used);
+                        bg.Clear(Color.Transparent);
                         Prepare(bg);
                         DrawCanvas(bg, new RenderTarget(mTransparentBuffer, bg));
                     }
 
                     using (var bg = Graphics.FromImage(mTransparentBackground))
                     {
+                        bg.SetClip(used);
+                        bg.Clear(Color.Transparent);
                         Prepare(bg);
                         bg.FillRectangle(Brushes.Black, canvas);
                         if (mShowingBackground)
@@ -531,9 +539,15 @@ namespace IntelOrca.PeggleEdit.Tools.Levels
             var layers = new List<LevelEntry>[5];
             for (int i = 0; i < layers.Length; i++)
                 layers[i] = new List<LevelEntry>();
+            // Objects of a kind that is hidden are left out, and faded invisible objects are drawn over the rest
+            var faded = new List<LevelEntry>();
             foreach (LevelEntry le in mEntries)
             {
-                if (!mShowPreview || !takenAway.Contains(le))
+                if (!IsShown(le))
+                    continue;
+                if (IsFaded(le))
+                    faded.Add(le);
+                else if (!mShowPreview || !takenAway.Contains(le))
                     layers[(int)GetDrawLayer(le)].Add(le);
             }
             var deviceTime = mShowPreview ? mPreviewTime : 0;
@@ -589,6 +603,7 @@ namespace IntelOrca.PeggleEdit.Tools.Levels
             DrawCannon(g);
             DrawInterfacePart(DrawInterfaceFrame);
             DrawLayerEntries(g, target, layers[(int)DrawLayer.Foreground2]);
+            DrawFadedEntries(g, target, faded);
 
             if (mShowCollision)
                 DrawGameCollision(g, deviceTime);
@@ -598,6 +613,76 @@ namespace IntelOrca.PeggleEdit.Tools.Levels
 
             g.Restore(containerState);
             g.TranslateTransform(-Level.DrawAdjustX, -Level.DrawAdjustY);
+        }
+
+        private Bitmap mFadedBuffer;
+        private static readonly System.Drawing.Imaging.ImageAttributes Faded = CreateFaded();
+
+        private static System.Drawing.Imaging.ImageAttributes CreateFaded()
+        {
+            var attributes = new System.Drawing.Imaging.ImageAttributes();
+            attributes.SetColorMatrix(new System.Drawing.Imaging.ColorMatrix { Matrix33 = 0.35f });
+            return attributes;
+        }
+
+        /// <summary>
+        /// Draws objects faint: drawn as normal on a bitmap of their own, which is then drawn faint over the level.
+        /// </summary>
+        private void DrawFadedEntries(Graphics g, RenderTarget target, List<LevelEntry> entries)
+        {
+            if (entries.Count == 0)
+                return;
+            if (target == null)
+            {
+                DrawLayerEntries(g, null, entries);
+                return;
+            }
+
+            // Only around the faded objects, where they are visible, so that a few faded objects are quick to draw
+            var area = RectangleF.Empty;
+            foreach (var le in entries)
+            {
+                var bounds = le.Bounds;
+                if (bounds.IsEmpty)
+                {
+                    area = g.VisibleClipBounds;
+                    break;
+                }
+                area = area.IsEmpty ? bounds : RectangleF.Union(area, bounds);
+            }
+            // With room for what is drawn outside an object's bounds (e.g. a glow or outline)
+            area.Inflate(16, 16);
+            area.Intersect(g.VisibleClipBounds);
+            if (area.Width <= 0 || area.Height <= 0)
+                return;
+            var corners = new[] { area.Location, new PointF(area.Right, area.Bottom) };
+            g.TransformPoints(CoordinateSpace.Device, CoordinateSpace.World, corners);
+            var device = Rectangle.Intersect(new Rectangle(Point.Empty, target.Bitmap.Size), Rectangle.FromLTRB(
+                (int)Math.Floor(Math.Min(corners[0].X, corners[1].X)), (int)Math.Floor(Math.Min(corners[0].Y, corners[1].Y)),
+                (int)Math.Ceiling(Math.Max(corners[0].X, corners[1].X)), (int)Math.Ceiling(Math.Max(corners[0].Y, corners[1].Y))));
+            if (device.Width <= 0 || device.Height <= 0)
+                return;
+
+            var size = target.Bitmap.Size;
+            if (mFadedBuffer == null || mFadedBuffer.Width < size.Width || mFadedBuffer.Height < size.Height)
+            {
+                mFadedBuffer?.Dispose();
+                mFadedBuffer = new Bitmap(size.Width, size.Height, System.Drawing.Imaging.PixelFormat.Format32bppPArgb);
+            }
+            using (var fg = Graphics.FromImage(mFadedBuffer))
+            {
+                fg.SetClip(device);
+                fg.Clear(Color.Transparent);
+                using (var transform = g.Transform)
+                    fg.Transform = transform;
+                fg.SmoothingMode = g.SmoothingMode;
+                DrawLayerEntries(fg, new RenderTarget(mFadedBuffer, fg), entries);
+            }
+
+            var state = g.Save();
+            g.ResetTransform();
+            g.DrawImage(mFadedBuffer, device, device.X, device.Y, device.Width, device.Height, GraphicsUnit.Pixel, Faded);
+            g.Restore(state);
         }
 
         private void DrawLightningRod(Graphics g, double ticks)
@@ -892,8 +977,13 @@ namespace IntelOrca.PeggleEdit.Tools.Levels
             var oTransparent = TransparentObjects;
             var oShowCannon = ShowCannon;
             var oCannonTarget = CannonTarget;
+            var oShownKinds = ShownKinds;
+            var oInvisibleObjects = InvisibleObjects;
             try
             {
+                // As the game shows it, whatever is shown while editing
+                ShownKinds = EntryKinds.All;
+                InvisibleObjects = InvisibleObjectsView.Shown;
                 mShowingInterface = drawInterface;
                 // The cannon is part of what the interface shows, pointing down as at the start of a level
                 ShowCannon = drawInterface;
@@ -935,6 +1025,8 @@ namespace IntelOrca.PeggleEdit.Tools.Levels
                 TransparentObjects = oTransparent;
                 ShowCannon = oShowCannon;
                 CannonTarget = oCannonTarget;
+                ShownKinds = oShownKinds;
+                InvisibleObjects = oInvisibleObjects;
                 // A running preview starts its emitters again, as they were replaced
                 if (ticks != null)
                     _particlePreview.Clear();
@@ -992,7 +1084,14 @@ namespace IntelOrca.PeggleEdit.Tools.Levels
             var oShowParticles = ShowParticles;
             var oDevices = mDevices;
             var oShowCannon = ShowCannon;
+            var oShowEntries = mShowingEntries;
+            var oShownKinds = ShownKinds;
+            var oInvisibleObjects = InvisibleObjects;
 
+            // As the game shows it, whatever is shown while editing
+            mShowingEntries = true;
+            ShownKinds = EntryKinds.All;
+            InvisibleObjects = InvisibleObjectsView.Shown;
             mShowingInterface = false;
             ShowCannon = false;
             mShowingBackground = true;
@@ -1004,18 +1103,26 @@ namespace IntelOrca.PeggleEdit.Tools.Levels
             mDevices = GameDevices.None;
 
             Bitmap fs = new Bitmap(800, 600);
-            Graphics fsG = Graphics.FromImage(fs);
-            DrawCanvas(fsG, null);
-            fsG.Dispose();
-            ShowParticles = oShowParticles;
-            mDevices = oDevices;
-            ShowCannon = oShowCannon;
+            try
+            {
+                using (Graphics fsG = Graphics.FromImage(fs))
+                    DrawCanvas(fsG, null);
+            }
+            finally
+            {
+                ShowParticles = oShowParticles;
+                mDevices = oDevices;
+                ShowCannon = oShowCannon;
+                mShowingEntries = oShowEntries;
+                ShownKinds = oShownKinds;
+                InvisibleObjects = oInvisibleObjects;
 
-            mShowingInterface = oInterface;
-            mShowingBackground = oShowBackground;
-            mShowCollision = oShowCollision;
-            mShowPreview = oAllPegsBlue;
-            UsePegTextures = oUsePegTextures;
+                mShowingInterface = oInterface;
+                mShowingBackground = oShowBackground;
+                mShowCollision = oShowCollision;
+                mShowPreview = oAllPegsBlue;
+                UsePegTextures = oUsePegTextures;
+            }
 
             Rectangle sRect = new Rectangle(100, 64, 600, 531);
             Size tbSize = ThumbnailSize;
@@ -1092,6 +1199,57 @@ namespace IntelOrca.PeggleEdit.Tools.Levels
 
             return null;
         }
+
+        /// <summary>
+        /// Gets or sets the kinds of object that are shown while editing. The others are not drawn, and can not be
+        /// picked in the level (see <see cref="IsShown"/>). The game's view and thumbnails show every kind.
+        /// </summary>
+        public EntryKinds ShownKinds { get; set; } = EntryKinds.All;
+
+        /// <summary>
+        /// Gets or sets how objects whose Visible setting is off are shown while editing. In the preview they are not
+        /// drawn, as in the game, but hidden ones still can not be picked.
+        /// </summary>
+        public InvisibleObjectsView InvisibleObjects { get; set; } = InvisibleObjectsView.Shown;
+
+        /// <summary>
+        /// Whether an object is shown, so that it can be picked in the level: objects are shown, its kind is shown, and
+        /// it is not an invisible object while they are hidden.
+        /// </summary>
+        public bool IsShown(LevelEntry le)
+        {
+            if (!mShowingEntries)
+                return false;
+            var kind = EntryKind.Get(le);
+            if (kind != EntryKinds.None && (ShownKinds & kind) == 0)
+                return false;
+            return le.Visible || InvisibleObjects != InvisibleObjectsView.Hidden;
+        }
+
+        /// <summary>
+        /// Whether an object is drawn faint: an invisible object while they are faded, other than in the preview and the
+        /// collision view (as the ball still hits it).
+        /// </summary>
+        private bool IsFaded(LevelEntry le) => !le.Visible && InvisibleObjects == InvisibleObjectsView.Faded && !mShowPreview && !mShowCollision;
+
+        /// <summary>
+        /// Gets the object that is shown (see <see cref="IsShown"/>) at a point, as <see cref="GetObjectAt"/> does.
+        /// </summary>
+        public LevelEntry GetShownObjectAt(float x, float y)
+        {
+            foreach (LevelEntry le in mEntries)
+            {
+                if (IsShown(le) && le.Bounds.Contains(x, y))
+                    return le;
+            }
+            return null;
+        }
+
+        /// <summary>
+        /// Gets the objects that are shown (see <see cref="IsShown"/>) in a rectangle, as <see cref="GetObjectsIn"/>
+        /// does.
+        /// </summary>
+        public LevelEntry[] GetShownObjectsIn(RectangleF rect) => GetObjectsIn(rect).Where(IsShown).ToArray();
 
         public LevelEntry[] GetObjectsIn(RectangleF rect)
         {

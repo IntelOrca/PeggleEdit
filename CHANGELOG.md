@@ -13,6 +13,7 @@ PeggleEdit 5.2.0 (Flamingo) (TBC)
 * [Feature] Export levels to XML and import them back, losslessly (Pack Explorer: level > Export (XML), Levels > Import Level)
 * [Feature] peggleedit-cli command line tool for converting levels to and from XML
 * [Feature] Open a game's main.pak to open the levels and challenges Peggle, Peggle Nights or Pego come with as a level pack, to look at, copy from, or save as a level pack of their own
+* [Feature] #38: Show or hide each kind of object, and show invisible objects as normal, faded or not at all (View > Kinds). Hidden objects can not be selected in the level
 * [Feature] #37: Zoom the level in and out, from 25% to 800% (View > Zoom, Ctrl++, Ctrl+-, Ctrl+0, or Ctrl and the mouse wheel)
 * [Feature] #41: Set a level's thumbnail to an image of your own, kept when the level changes (Pack Explorer: level > Set Thumbnail)
 * [Feature] A level with unsaved changes has an * after its name on its tab, as does the pack in the title bar

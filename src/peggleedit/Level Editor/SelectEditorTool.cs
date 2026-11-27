@@ -52,7 +52,8 @@ namespace IntelOrca.PeggleEdit.Designer
 
             foreach (LevelEntry e in Editor.SelectedEntries)
             {
-                if (e is IPointContainer pc)
+                // Not the points of objects that are hidden (e.g. selected in the Entry List)
+                if (e is IPointContainer pc && level.IsShown(e))
                 {
                     for (var i = 0; i < pc.InteractionPointCount; i++)
                     {
@@ -77,8 +78,8 @@ namespace IntelOrca.PeggleEdit.Designer
                 }
             }
 
-            // Get the pegs at this point
-            LevelEntry[] les = level.GetObjectsIn(new RectangleF(vl.X, vl.Y, 1, 1));
+            // Get the pegs at this point, of those that are shown
+            LevelEntry[] les = level.GetShownObjectsIn(new RectangleF(vl.X, vl.Y, 1, 1));
 
             // Get top most object
             LevelEntry top_le = null;
@@ -212,7 +213,7 @@ namespace IntelOrca.PeggleEdit.Designer
                     Editor.SelectedEntries.AddRange(_previousSelection);
 
                     var vl = Editor.Level.GetVirtualXY(_selectionRect.Location);
-                    Editor.SelectedEntries.AddRange(Editor.Level.GetObjectsIn(new RectangleF(
+                    Editor.SelectedEntries.AddRange(Editor.Level.GetShownObjectsIn(new RectangleF(
                          vl.X, vl.Y,
                          _selectionRect.Width, _selectionRect.Height)));
 
@@ -465,6 +466,7 @@ namespace IntelOrca.PeggleEdit.Designer
                         {
                             Editor.CreateUndoPoint();
                             level.Entries.Add(bestBrick);
+                            Editor.ShowEntries(bestBrick);
                             Editor.ChangeSelection(bestBrick);
                             Editor.UpdateRedraw();
                         }
@@ -489,6 +491,7 @@ namespace IntelOrca.PeggleEdit.Designer
                 else
                 {
                     Editor.Level.Entries.Add(brick);
+                    Editor.ShowEntries(brick);
                     Editor.ChangeSelection(brick);
                     Editor.UpdateRedraw();
                 }

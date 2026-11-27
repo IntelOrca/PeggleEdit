@@ -548,6 +548,7 @@ namespace IntelOrca.PeggleEdit.Designer
 
             RibbonPanel panelPowerUps = InitPowerUpsPanel();
             RibbonPanel panelZoom = InitZoomPanel();
+            RibbonPanel panelKinds = InitKindsPanel();
 
             RibbonButton btnPackExplorer = new RibbonButton("Pack Explorer");
             btnPackExplorer.Image = Resources.pack_explorer_32;
@@ -568,10 +569,87 @@ namespace IntelOrca.PeggleEdit.Designer
 
             RibbonTab tabView = new RibbonTab(mRibbon, "View");
             tabView.Panels.Add(panelShowHide);
+            tabView.Panels.Add(panelKinds);
             tabView.Panels.Add(panelZoom);
             tabView.Panels.Add(panelPowerUps);
             tabView.Panels.Add(panelWindow);
             mRibbon.Tabs.Add(tabView);
+        }
+
+        readonly List<(RibbonCheckBox CheckBox, EntryKinds Kind)> mKindCheckBoxes = new List<(RibbonCheckBox, EntryKinds)>();
+        RibbonButton btnInvisible;
+
+        /// <summary>
+        /// The panel that shows or hides each kind of object, and objects whose Visible setting is off. Objects that are
+        /// not shown can not be picked in the level, so that they are not moved or deleted by mistake.
+        /// </summary>
+        private RibbonPanel InitKindsPanel()
+        {
+            var panel = new RibbonPanel("Kinds");
+            void Add(string text, EntryKinds kind, string toolTip)
+            {
+                var checkBox = new RibbonCheckBox(text);
+                checkBox.Checked = true;
+                checkBox.ToolTipTitle = text;
+                checkBox.ToolTip = toolTip + " Hidden objects can not be selected in the level, only in the Entry List.";
+                checkBox.CheckedChanged += (sender, e) => SetShownKind(kind, checkBox.Checked);
+                mKindCheckBoxes.Add((checkBox, kind));
+                panel.Items.Add(checkBox);
+            }
+            Add("Pegs", EntryKinds.Pegs, "Show the round pegs, and the generators and pens that make them.");
+            Add("Bricks", EntryKinds.Bricks, "Show the bricks, and the generators and pens that make them.");
+            Add("Balls", EntryKinds.Balls, "Show the balls that are not pegs.");
+            Add("Lines", EntryKinds.Lines, "Show the lines.");
+            Add("Polys", EntryKinds.Polys, "Show the polys.");
+            Add("Holes", EntryKinds.Holes, "Show the holes.");
+            Add("Emitters", EntryKinds.Emitters, "Show the emitters.");
+
+            btnInvisible = new RibbonButton(FormatInvisible(InvisibleObjectsView.Shown));
+            btnInvisible.MaxSizeMode = RibbonElementSizeMode.Medium;
+            btnInvisible.Style = RibbonButtonStyle.DropDown;
+            btnInvisible.ToolTipTitle = "Invisible Objects";
+            btnInvisible.ToolTip = "How objects whose Visible setting is off, which the game does not draw, are shown: as any other object, faint (over the other objects), or not at all. Hidden objects can not be selected in the level, only in the Entry List.";
+            foreach (InvisibleObjectsView view in Enum.GetValues(typeof(InvisibleObjectsView)))
+            {
+                var item = new RibbonButton(view.ToString());
+                item.Click += (sender, e) => SetInvisibleObjects(view);
+                btnInvisible.DropDownItems.Add(item);
+            }
+            panel.Items.Add(btnInvisible);
+            return panel;
+        }
+
+        private static string FormatInvisible(InvisibleObjectsView view) => "Invisible: " + view;
+
+        private void SetShownKind(EntryKinds kind, bool shown)
+        {
+            if (!IsEditorAvailable())
+                return;
+            var level = LevelEditor.Level;
+            level.ShownKinds = shown ? level.ShownKinds | kind : level.ShownKinds & ~kind;
+            OnShownObjectsChanged();
+        }
+
+        private void SetInvisibleObjects(InvisibleObjectsView view)
+        {
+            if (!IsEditorAvailable())
+                return;
+            LevelEditor.Level.InvisibleObjects = view;
+            btnInvisible.Text = FormatInvisible(view);
+            OnShownObjectsChanged();
+        }
+
+        /// <summary>
+        /// Leaves the objects that are no longer shown out of the selection, and draws the level again.
+        /// </summary>
+        private void OnShownObjectsChanged()
+        {
+            var editor = LevelEditor;
+            var level = editor.Level;
+            var selected = editor.SelectedEntries.Cast<LevelEntry>().ToList();
+            if (selected.Any(x => !level.IsShown(x)))
+                editor.ChangeSelection(selected.Where(level.IsShown));
+            editor.UpdateRedraw();
         }
 
         RibbonButton btnZoom;
@@ -1410,6 +1488,11 @@ namespace IntelOrca.PeggleEdit.Designer
             changed |= SetChecked(chkPreview, level.ShowPreview);
             changed |= SetChecked(chkFastForward, level.PreviewSpeed != 1.0);
             changed |= SetChecked(chkParticles, level.ShowParticles);
+            foreach (var (checkBox, kind) in mKindCheckBoxes)
+                changed |= SetChecked(checkBox, (level.ShownKinds & kind) != 0);
+            var invisible = FormatInvisible(level.InvisibleObjects);
+            if (btnInvisible.Text != invisible)
+                btnInvisible.Text = invisible;
             if (changed)
                 mRibbon.Refresh();
         }
@@ -1438,7 +1521,7 @@ namespace IntelOrca.PeggleEdit.Designer
         private void showPegsRibbonButton_Click(object sender, EventArgs e)
         {
             LevelEditor.Level.ShowingPegs = chkObjects.Checked;
-            LevelEditor.UpdateRedraw();
+            OnShownObjectsChanged();
         }
 
         private void showCollisionRibbonButton_Click(object sender, EventArgs e)

@@ -26,7 +26,7 @@ namespace IntelOrca.PeggleEdit.Designer
         {
             var level = Editor.Level;
             var pos = level.GetVirtualXY(location);
-            var obj = level.GetObjectAt(pos.X, pos.Y);
+            var obj = level.GetShownObjectAt(pos.X, pos.Y);
             switch (obj)
             {
                 case Ball circle when circle.HasPegInfo:

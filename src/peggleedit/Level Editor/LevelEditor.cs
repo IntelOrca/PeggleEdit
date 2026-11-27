@@ -131,7 +131,7 @@ namespace IntelOrca.PeggleEdit.Designer
                 mLevel.UpdateMoverLinksRead();
 
                 if (mSelectedTool is SelectEditorTool)
-                    ChangeSelection(entries.Where(x => x.Selected));
+                    ChangeSelection(entries.Where(x => x.Selected && mLevel.IsShown(x)));
                 UpdateRedraw();
             }
         }
@@ -245,6 +245,40 @@ namespace IntelOrca.PeggleEdit.Designer
 
         }
 
+        /// <summary>
+        /// Raised when the kinds of object shown, or how invisible objects are shown, change.
+        /// </summary>
+        public event EventHandler ShownObjectsChanged;
+
+        /// <summary>
+        /// Shows the given objects (e.g. ones just pasted or placed) if their kind, or invisible objects, are hidden, so
+        /// that what is added can be seen and selected.
+        /// </summary>
+        public void ShowEntries(IEnumerable<LevelEntry> entries)
+        {
+            if (mLevel == null)
+                return;
+            var kinds = mLevel.ShownKinds;
+            var invisible = mLevel.InvisibleObjects;
+            var any = false;
+            foreach (var le in entries)
+            {
+                any = true;
+                kinds |= EntryKind.Get(le);
+                if (!le.Visible && invisible == InvisibleObjectsView.Hidden)
+                    invisible = InvisibleObjectsView.Shown;
+            }
+            if (!any || (kinds == mLevel.ShownKinds && invisible == mLevel.InvisibleObjects && mLevel.ShowingPegs))
+                return;
+            mLevel.ShownKinds = kinds;
+            mLevel.InvisibleObjects = invisible;
+            mLevel.ShowingPegs = true;
+            RequestRedraw(null);
+            ShownObjectsChanged?.Invoke(this, EventArgs.Empty);
+        }
+
+        public void ShowEntries(params LevelEntry[] entries) => ShowEntries((IEnumerable<LevelEntry>)entries);
+
         public void AddToSelection(LevelEntry entry)
         {
             mSelectedEntries.Add(entry);
@@ -262,10 +296,14 @@ namespace IntelOrca.PeggleEdit.Designer
             CheckSelectionChanged();
         }
 
+        /// <summary>
+        /// Selects the objects that are shown (see <see cref="Level.IsShown"/>), so that objects that can not be seen
+        /// are not moved or deleted by mistake.
+        /// </summary>
         public void SelectAllObjects()
         {
             mSelectedEntries.Clear();
-            mSelectedEntries.AddRange(mLevel.Entries);
+            mSelectedEntries.AddRange(mLevel.Entries.Cast<LevelEntry>().Where(mLevel.IsShown));
 
             UpdateRedraw();
 
@@ -364,6 +402,7 @@ namespace IntelOrca.PeggleEdit.Designer
                 mLevel.Entries.Add(cpyLE);
                 mSelectedEntries.Add(cpyLE);
             }
+            ShowEntries(entries);
 
             UpdateRedraw();
 
@@ -758,20 +797,19 @@ namespace IntelOrca.PeggleEdit.Designer
 
         public void RemoveDuplicateObjects()
         {
-            if (mSelectedEntries.Count == 0)
-                SelectAllObjects();
-
-            if (mSelectedEntries.Count == 0)
+            // With nothing selected, every object in the level, shown or not
+            var objects = (mSelectedEntries.Count == 0 ? mLevel.Entries : mSelectedEntries).Cast<LevelEntry>().ToList();
+            if (objects.Count == 0)
                 return;
 
             CreateUndoPoint();
 
-            foreach (LevelEntry obj1 in GetSelectedObjects())
+            foreach (LevelEntry obj1 in objects)
             {
                 if (!mLevel.Entries.Contains(obj1))
                     continue;
 
-                foreach (LevelEntry obj2 in GetSelectedObjects())
+                foreach (LevelEntry obj2 in objects)
                 {
                     if (!mLevel.Entries.Contains(obj1))
                         continue;
@@ -1019,7 +1057,7 @@ namespace IntelOrca.PeggleEdit.Designer
                 lastOverObject = null;
             }
 
-            var entry = Level.GetObjectAt(virtualLocation.X, virtualLocation.Y);
+            var entry = Level.GetShownObjectAt(virtualLocation.X, virtualLocation.Y);
             if (entry != null && entry.HitTest(virtualLocation))
             {
                 entry.MouseOver = true;

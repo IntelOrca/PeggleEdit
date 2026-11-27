@@ -193,6 +193,7 @@ namespace IntelOrca.PeggleEdit.Designer
                     Editor.CreateUndoPoint();
                 }
                 Editor.Level.Entries.Add(newBrick);
+                Editor.ShowEntries(newBrick);
             }
             else
             {

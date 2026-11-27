@@ -55,6 +55,7 @@ namespace IntelOrca.PeggleEdit.Designer
             mLevelEditor.FrameStarting += mLevelEditor_FrameStarting;
             mLevelEditor.MouseWheel += mLevelEditor_MouseWheel;
             mLevelEditor.ZoomChanged += (sender, e) => mParent.LevelZoomChanged(mLevelEditor);
+            mLevelEditor.ShownObjectsChanged += (sender, e) => mParent.LevelZoomChanged(mLevelEditor);
             mParent.Activated += mParent_Activated;
 
             this.Controls.Add(mLevelEditor);

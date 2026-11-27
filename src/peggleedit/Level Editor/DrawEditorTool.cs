@@ -96,6 +96,7 @@ namespace IntelOrca.PeggleEdit.Designer
                         Editor.CreateUndoPoint();
                     }
                     Editor.Level.Entries.Add(entry);
+                    Editor.ShowEntries(entry);
                 }
                 else
                 {
