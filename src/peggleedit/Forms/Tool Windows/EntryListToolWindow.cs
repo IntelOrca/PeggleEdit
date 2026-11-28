@@ -807,13 +807,31 @@ namespace IntelOrca.PeggleEdit.Designer
             // As big as the text, whatever the display's scale
             private int GetLockIconSize() => Math.Max(12, (int)Math.Round(Font.Height * 0.85));
 
+            /// <summary>
+            /// The padlock at a size: the smallest of its sizes that is at least as big, made smaller to fit.
+            /// </summary>
+            private static Bitmap CreateLockIcon(int size)
+            {
+                using (var source = size <= 16 ? Resources.lock_16 : size <= 22 ? Resources.lock_22 : Resources.lock_32)
+                {
+                    var result = new Bitmap(size, size);
+                    using (var g = Graphics.FromImage(result))
+                    {
+                        g.InterpolationMode = System.Drawing.Drawing2D.InterpolationMode.HighQualityBicubic;
+                        g.PixelOffsetMode = System.Drawing.Drawing2D.PixelOffsetMode.HighQuality;
+                        g.DrawImage(source, 0, 0, size, size);
+                    }
+                    return result;
+                }
+            }
+
             private void DrawLockIcon(Graphics g, Rectangle cell)
             {
                 int size = Math.Max(8, Math.Min(cell.Height - 2, GetLockIconSize()));
                 if (mLockIcon == null || mLockIcon.Width != size)
                 {
                     mLockIcon?.Dispose();
-                    mLockIcon = MenuToolPanel.CreateLockIcon(size, true);
+                    mLockIcon = CreateLockIcon(size);
                 }
                 g.DrawImage(mLockIcon, cell.X + ((cell.Width - size) / 2), cell.Y + ((cell.Height - size) / 2), size, size);
             }

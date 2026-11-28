@@ -379,4 +379,22 @@
   <data name="eyedropper_32" type="System.Resources.ResXFileRef, System.Windows.Forms">
     <value>..\Resources\Icons\32\eyedropper_32.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
   </data>
+  <data name="group_32" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\Resources\Icons\32\group_32.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+  </data>
+  <data name="ungroup_32" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\Resources\Icons\32\ungroup_32.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+  </data>
+  <data name="lock_16" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\Resources\Icons\16\lock_16.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+  </data>
+  <data name="lock_22" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\Resources\Icons\22\lock_22.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+  </data>
+  <data name="lock_32" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\Resources\Icons\32\lock_32.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+  </data>
+  <data name="unlock_32" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\Resources\Icons\32\unlock_32.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+  </data>
 </root>

@@ -307,29 +307,25 @@ namespace IntelOrca.PeggleEdit.Designer
             panelZOrder.Items.Add(btnSendToBack);
 
             RibbonButton btnGroup = new RibbonButton("Group");
-            btnGroup.MaxSizeMode = RibbonElementSizeMode.Medium;
-            btnGroup.SmallImage = CreateGroupIcon(16, true);
+            btnGroup.Image = Resources.group_32;
             btnGroup.ToolTipTitle = "Group (Ctrl+G)";
             btnGroup.ToolTip = "Group the selected objects, so that clicking any of them in the level selects them all. Hold Alt as you click to select just one.";
             btnGroup.Click += (sender, e) => { if (IsEditorAvailable()) LevelEditor.GroupObjects(); };
 
             RibbonButton btnUngroup = new RibbonButton("Ungroup");
-            btnUngroup.MaxSizeMode = RibbonElementSizeMode.Medium;
-            btnUngroup.SmallImage = CreateGroupIcon(16, false);
+            btnUngroup.Image = Resources.ungroup_32;
             btnUngroup.ToolTipTitle = "Ungroup (Ctrl+Shift+G)";
             btnUngroup.ToolTip = "Take the selected objects out of their groups.";
             btnUngroup.Click += (sender, e) => { if (IsEditorAvailable()) LevelEditor.UngroupObjects(); };
 
             RibbonButton btnLock = new RibbonButton("Lock");
-            btnLock.MaxSizeMode = RibbonElementSizeMode.Medium;
-            btnLock.SmallImage = CreateLockIcon(16, true);
+            btnLock.Image = Resources.lock_32;
             btnLock.ToolTipTitle = "Lock (Ctrl+L)";
             btnLock.ToolTip = "Lock the selected objects, so that they can not be selected or moved in the level. You can still select them in the Entry List.";
             btnLock.Click += (sender, e) => { if (IsEditorAvailable()) LevelEditor.LockObjects(); };
 
             RibbonButton btnUnlockAll = new RibbonButton("Unlock All");
-            btnUnlockAll.MaxSizeMode = RibbonElementSizeMode.Medium;
-            btnUnlockAll.SmallImage = CreateLockIcon(16, false);
+            btnUnlockAll.Image = Resources.unlock_32;
             btnUnlockAll.ToolTipTitle = "Unlock All (Ctrl+Shift+L)";
             btnUnlockAll.ToolTip = "Unlock every object in the level.";
             btnUnlockAll.Click += (sender, e) => UnlockAllObjects();
@@ -743,69 +739,6 @@ namespace IntelOrca.PeggleEdit.Designer
                 return;
             int count = LevelEditor.UnlockAllObjects();
             mParent.SetStatus(count == 1 ? "1 object unlocked." : "{0} objects unlocked.", count);
-        }
-
-        /// <summary>
-        /// Draws two objects, with a box around them (<paramref name="grouped"/>) or apart.
-        /// </summary>
-        private static Bitmap CreateGroupIcon(int size, bool grouped)
-        {
-            var bitmap = new Bitmap(size, size);
-            using (var g = Graphics.FromImage(bitmap))
-            {
-                g.SmoothingMode = System.Drawing.Drawing2D.SmoothingMode.AntiAlias;
-                float s = size / 16f;
-                using (var fill = new SolidBrush(Color.FromArgb(70, 140, 220)))
-                using (var fill2 = new SolidBrush(Color.FromArgb(240, 170, 40)))
-                using (var outline = new Pen(Color.FromArgb(50, 50, 60), 1 * s))
-                {
-                    var a = grouped ? new RectangleF(3 * s, 3 * s, 6 * s, 6 * s) : new RectangleF(1.5f * s, 1.5f * s, 6 * s, 6 * s);
-                    var b = grouped ? new RectangleF(7 * s, 7 * s, 6 * s, 6 * s) : new RectangleF(8.5f * s, 8.5f * s, 6 * s, 6 * s);
-                    g.FillEllipse(fill, a);
-                    g.DrawEllipse(outline, a);
-                    g.FillRectangle(fill2, b);
-                    g.DrawRectangle(outline, b.X, b.Y, b.Width, b.Height);
-                }
-                if (grouped)
-                {
-                    using (var box = new Pen(Color.FromArgb(50, 50, 60), 1 * s))
-                    {
-                        box.DashPattern = new[] { 2f, 1.5f };
-                        g.DrawRectangle(box, 0.5f * s, 0.5f * s, 15 * s - 1, 15 * s - 1);
-                    }
-                }
-            }
-            return bitmap;
-        }
-
-        /// <summary>
-        /// Draws a padlock, closed (<paramref name="locked"/>) or open.
-        /// </summary>
-        internal static Bitmap CreateLockIcon(int size, bool locked)
-        {
-            var bitmap = new Bitmap(size, size);
-            using (var g = Graphics.FromImage(bitmap))
-            {
-                g.SmoothingMode = System.Drawing.Drawing2D.SmoothingMode.AntiAlias;
-                float s = size / 16f;
-                using (var shackle = new Pen(Color.FromArgb(90, 90, 100), 2 * s))
-                {
-                    // Open: lifted out of the body on the right
-                    float lift = locked ? 0 : 2.5f * s;
-                    var arc = new RectangleF(4.5f * s, 1.5f * s - lift, 7 * s, 8 * s);
-                    g.DrawArc(shackle, arc, 180, 180);
-                    g.DrawLine(shackle, arc.Left, arc.Top + (arc.Height / 2), arc.Left, 7.5f * s - (locked ? 0 : lift));
-                    g.DrawLine(shackle, arc.Right, arc.Top + (arc.Height / 2), arc.Right, 7.5f * s - lift);
-                }
-                var body = new RectangleF(2.5f * s, 7 * s, 11 * s, 8 * s);
-                using (var fill = new SolidBrush(Color.FromArgb(230, 180, 50)))
-                    g.FillRectangle(fill, body);
-                using (var outline = new Pen(Color.FromArgb(140, 100, 20), 1 * s))
-                    g.DrawRectangle(outline, body.X, body.Y, body.Width, body.Height);
-                using (var hole = new SolidBrush(Color.FromArgb(90, 60, 10)))
-                    g.FillEllipse(hole, 7 * s, 9.5f * s, 2 * s, 2.5f * s);
-            }
-            return bitmap;
         }
 
         /// <summary>
