@@ -39,8 +39,7 @@ namespace IntelOrca.PeggleEdit.Cli
   peggleedit-cli to-dat <level.xml>... [-o <output>] [--force]
   peggleedit-cli render <level.dat|level.xml>... [-o <output>] [--force]
                         [--peggle <dir>] [--no-interface] [--time <seconds>]
-                        [--no-particles] [--software] [--master <name>]
-                        [--power] [--devices <list>]
+                        [--no-particles] [--software] [--devices <list>]
 
 to-xml and to-dat convert Pego, Peggle and Peggle Nights level files to and from
 XML. Converting a .dat to XML and back gives a byte-for-byte identical file.
@@ -50,7 +49,7 @@ render draws levels to 800x600 .png images as the game shows them at the start
 of play (all pegs blue), with each emitter shown as it looks once it has been
 running. With --time, the level is run from the start for that long instead, as
 the game would: moving objects move and emitters start from nothing. The free
-ball bucket is shown, and with --power the devices of the master's power. The
+ball bucket is shown, or the devices given with --devices. The
 background is the image next to the level with the same name (.jp2, .jpg or
 .png). Images used by the level are found in the game directory, which is the
 parent of the level's directory if that is called 'levels', or given with
@@ -66,15 +65,9 @@ Options:
   --no-particles       Leave out the particles of emitters (render).
   --software           Show emitters as the game does without 3D acceleration,
                        which leaves most of them out (render).
-  --master <name>      The master the level is played as: bjorn, jimmy, kattut,
-                       splork, claude, renfield, tula, warren, cinderbottom,
-                       masterhu or marina (render, default bjorn).
-  --power              Show the master's power active: Kat Tut's pyramid,
-                       Claude's flippers, the lid of Renfield and Lord
-                       Cinderbottom, or Marina's lightning rod (render).
-  --devices <list>     The devices to show instead, separated by commas: bucket,
-                       pyramid, flippers, flippersraised, cover, lightningrod,
-                       or none (render).
+  --devices <list>     The devices to show instead of the bucket, separated by
+                       commas: bucket, pyramid, flippers, flippersraised, cover,
+                       lightningrod, or none (render).
   -h, --help           Show this help.";
 
         static int Main(string[] args)
@@ -151,14 +144,6 @@ Options:
                         break;
                     case "--software" when render:
                         renderOptions.Software = true;
-                        break;
-                    case "--master" when render:
-                        if (++i >= args.Length)
-                            throw new UsageException($"{args[i - 1]} needs a name");
-                        renderOptions.Master = ParseMaster(args[i]);
-                        break;
-                    case "--power" when render:
-                        renderOptions.Power = true;
                         break;
                     case "--devices" when render:
                         if (++i >= args.Length)
@@ -250,26 +235,7 @@ Options:
             public int? Ticks { get; set; }
             public bool ShowParticles { get; set; } = true;
             public bool Software { get; set; }
-            public Master Master { get; set; } = Master.Bjorn;
-            public bool Power { get; set; }
-            public GameDevices? Devices { get; set; }
-
-            public GameDevices GetDevices() =>
-                Devices ?? (GameDevices.Bucket | (Power ? MasterInfo.Get(Master).PowerDevices : GameDevices.None));
-        }
-
-        static Master ParseMaster(string name)
-        {
-            var key = name.Replace(" ", "").Replace("-", "");
-            foreach (var info in MasterInfo.All)
-            {
-                if (info.Master.ToString().Equals(key, StringComparison.OrdinalIgnoreCase) ||
-                    info.Name.Replace(" ", "").Equals(key, StringComparison.OrdinalIgnoreCase))
-                {
-                    return info.Master;
-                }
-            }
-            throw new UsageException($"unknown master '{name}'");
+            public GameDevices Devices { get; set; } = GameDevices.Bucket;
         }
 
         static GameDevices ParseDevices(string list)
@@ -321,7 +287,7 @@ Options:
 
             level.ShowParticles = options.ShowParticles;
             level.SoftwareRendering = options.Software;
-            level.Devices = options.GetDevices();
+            level.Devices = options.Devices;
             using (var image = level.RenderGameView(options.DrawInterface, options.Ticks))
             using (var stream = File.Create(target))
             {

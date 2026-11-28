@@ -13,8 +13,7 @@ peggleedit-cli to-dat <level.xml>... [-o <output>] [--force]
 ```
 peggleedit-cli render <level.dat|level.xml>... [-o <output>] [--force]
                       [--peggle <dir>] [--no-interface] [--time <seconds>]
-                      [--no-particles] [--software] [--master <name>]
-                      [--power] [--devices <list>]
+                      [--no-particles] [--software] [--devices <list>]
 ```
 `render` saves an 800 x 600 PNG of each level, as the game shows it at the start of play. The background is the image next to the level with the same name.
 
@@ -29,9 +28,7 @@ peggleedit-cli render <level.dat|level.xml>... [-o <output>] [--force]
 | `--time <seconds>` | Show the level this many seconds after it starts, with objects moved and emitters running. |
 | `--no-particles` | Leave out emitter particles. |
 | `--software` | Show emitters as the game does without 3D acceleration. |
-| `--master <name>` | The master to play as: bjorn, jimmy, kattut, splork, claude, renfield, tula, warren, cinderbottom, masterhu or marina. |
-| `--power` | Show the master's power, such as Claude's flippers. |
-| `--devices <list>` | Choose what to show, separated by commas: bucket, pyramid, flippers, flippersraised, cover, lightningrod, or none. |
+| `--devices <list>` | Choose what to show instead of the bucket, separated by commas: bucket, pyramid, flippers, flippersraised, cover, lightningrod, or none. |
 | `-h`, `--help` | Show the help. |
 
 ## The editor's own commands

@@ -193,18 +193,6 @@ namespace IntelOrca.PeggleEdit.Tools.Tests
         }
 
         [Fact]
-        public void Masters_ShowTheirPowers()
-        {
-            Assert.Equal(GameDevices.Pyramid, MasterInfo.Get(Master.KatTut).PowerDevices);
-            Assert.Equal(GameDevices.Flippers, MasterInfo.Get(Master.Claude).PowerDevices);
-            Assert.Equal(GameDevices.Cover, MasterInfo.Get(Master.Renfield).PowerDevices);
-            Assert.Equal(GameDevices.Cover, MasterInfo.Get(Master.Cinderbottom).PowerDevices);
-            Assert.Equal(GameDevices.LightningRod, MasterInfo.Get(Master.Marina).PowerDevices);
-            Assert.Equal(GameDevices.None, MasterInfo.Get(Master.Bjorn).PowerDevices);
-            Assert.Equal(11, MasterInfo.All.Count);
-        }
-
-        [Fact]
         public void Collision_IsWhatTheBallBouncesOff()
         {
             var level = new Level();

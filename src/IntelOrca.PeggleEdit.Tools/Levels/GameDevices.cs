@@ -46,68 +46,6 @@ namespace IntelOrca.PeggleEdit.Tools.Levels
     }
 
     /// <summary>
-    /// The masters a level can be played as.
-    /// </summary>
-    public enum Master
-    {
-        Bjorn,
-        Jimmy,
-        KatTut,
-        Splork,
-        Claude,
-        Renfield,
-        Tula,
-        Warren,
-        Cinderbottom,
-        MasterHu,
-        Marina,
-    }
-
-    /// <summary>
-    /// What a master's power is, and which devices it shows on the level when it is active.
-    /// </summary>
-    public sealed class MasterInfo
-    {
-        public Master Master { get; }
-        public string Name { get; }
-        public string Power { get; }
-        public string Description { get; }
-
-        /// <summary>
-        /// The devices the master's power shows while it is active (none for most masters).
-        /// </summary>
-        public GameDevices PowerDevices { get; }
-
-        private MasterInfo(Master master, string name, string power, string description, GameDevices powerDevices)
-        {
-            Master = master;
-            Name = name;
-            Power = power;
-            Description = description;
-            PowerDevices = powerDevices;
-        }
-
-        public override string ToString() => Name;
-
-        public static IReadOnlyList<MasterInfo> All { get; } = new[]
-        {
-            new MasterInfo(Master.Bjorn, "Bjorn", "Super Guide", "Shows a longer aim guide. Nothing changes on the level.", GameDevices.None),
-            new MasterInfo(Master.Jimmy, "Jimmy Lightning", "Multiball", "Adds a second ball. Nothing changes on the level.", GameDevices.None),
-            new MasterInfo(Master.KatTut, "Kat Tut", "Pyramid Power", "Puts a pyramid over the free ball bucket, which swings less far.", GameDevices.Pyramid),
-            new MasterInfo(Master.Splork, "Splork", "Space Blast", "Blasts the pegs around the ball. Nothing changes on the level.", GameDevices.None),
-            new MasterInfo(Master.Claude, "Claude", "Flippers", "Puts flippers in the bottom corners, takes away the objects in their way, and makes the bucket swing much less far.", GameDevices.Flippers),
-            new MasterInfo(Master.Renfield, "Renfield", "Spooky Ball", "Puts a lid on the free ball bucket while the spooky ball is in play.", GameDevices.Cover),
-            new MasterInfo(Master.Tula, "Tula", "Flower Power", "Grows flowers on hit pegs. Nothing changes on the level.", GameDevices.None),
-            new MasterInfo(Master.Warren, "Warren", "Lucky Spin", "Spins a wheel of powers. Nothing changes on the level.", GameDevices.None),
-            new MasterInfo(Master.Cinderbottom, "Lord Cinderbottom", "Fireball", "Puts a lid on the free ball bucket while the fireball is in play.", GameDevices.Cover),
-            new MasterInfo(Master.MasterHu, "Master Hu", "Zen Shot", "Finds the best shot. Nothing changes on the level.", GameDevices.None),
-            new MasterInfo(Master.Marina, "Marina", "Electrobolt", "Raises a lightning rod over the free ball bucket while the electrobolt ball is in play.", GameDevices.LightningRod),
-        };
-
-        public static MasterInfo Get(Master master) => All.First(x => x.Master == master);
-    }
-
-    /// <summary>
     /// The objects of levels\_base.dat, which the game adds to every level (whose name does not start with _) after the
     /// level's own objects, and shows or hides by their id for the masters' powers.
     /// </summary>
