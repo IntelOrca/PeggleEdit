@@ -864,6 +864,10 @@ namespace IntelOrca.PeggleEdit.Designer
             using (var dialog = new OpenFileDialog())
             {
                 dialog.Filter = "Level packs and game levels (*.pak, stages.cfg)|*.pak;stages.cfg|All files (*.*)|*.*";
+                // The folder of the pack that is open
+                var directory = mParent.PackDirectory;
+                if (directory != null && Directory.Exists(directory))
+                    dialog.InitialDirectory = directory;
                 if (dialog.ShowDialog(mParent) == DialogResult.OK)
                     mParent.Open(dialog.FileName);
             }

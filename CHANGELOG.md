@@ -105,6 +105,7 @@ The biggest PeggleEdit release yet. Levels are drawn and previewed as the game s
 * [Fix] New and imported levels are given a file name no other level in the pack has, and a pack is not saved while two of its levels share a file name, as one would be saved over the other
 * [Fix] Close in the orb menu closes the level pack, and opening a recent level pack or importing one asks before closing the open pack
 * [Fix] A file is only listed once in the recent files, however its path was written
+* [Fix] Open and Save As start in the folder of the pack that is open
 * [Fix] #22: A blank pack description stopped the first level of each stage from loading
 * [Fix] #21: A pack's .cfg file links to PeggleEdit's GitHub page, rather than a website that no longer exists
 * [Fix] Challenges keep the game's settings that PeggleEdit does not show (e.g. a score ceiling, a background override) when a pack is saved

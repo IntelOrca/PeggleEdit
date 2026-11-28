@@ -672,6 +672,23 @@ namespace IntelOrca.PeggleEdit.Designer
         LevelPack mPack;
         string mPackFilename;
 
+        /// <summary>
+        /// The folder of the pack (or game levels) last opened or saved, which the open and save dialogs start in, or
+        /// null for none.
+        /// </summary>
+        public string PackDirectory { get; private set; }
+
+        private void SetPackDirectory(string path)
+        {
+            try
+            {
+                PackDirectory = Path.GetDirectoryName(Path.GetFullPath(path));
+            }
+            catch (Exception ex) when (ex is ArgumentException || ex is NotSupportedException || ex is PathTooLongException)
+            {
+            }
+        }
+
         private void DefaultStartupPack()
         {
             //Check command line arguments
@@ -783,6 +800,7 @@ namespace IntelOrca.PeggleEdit.Designer
             if (pack.Open(filename))
             {
                 mPackFilename = filename;
+                SetPackDirectory(filename);
                 SetStatus("'{0}' successfully loaded.", Path.GetFileName(filename));
             }
             else
@@ -833,6 +851,7 @@ namespace IntelOrca.PeggleEdit.Designer
             }
 
             mPackFilename = String.Empty;
+            SetPackDirectory(path);
             UpdateRecentList(path);
             OpenPack(pack);
             SetStatus("{0} levels of '{1}' loaded.", pack.Levels.Count, pack.Name);
@@ -933,10 +952,15 @@ namespace IntelOrca.PeggleEdit.Designer
             using (var dialog = new SaveFileDialog())
             {
                 dialog.Filter = "Peggle Level Packs (*.pak)|*.pak";
+                if (PackDirectory != null && Directory.Exists(PackDirectory))
+                    dialog.InitialDirectory = PackDirectory;
+                if (!String.IsNullOrEmpty(mPackFilename) && !IsGamePakName(mPackFilename))
+                    dialog.FileName = Path.GetFileName(mPackFilename);
                 if (dialog.ShowDialog(this) != DialogResult.OK || !SavePack(dialog.FileName))
                     return false;
 
                 mPackFilename = dialog.FileName;
+                SetPackDirectory(dialog.FileName);
                 return true;
             }
         }
