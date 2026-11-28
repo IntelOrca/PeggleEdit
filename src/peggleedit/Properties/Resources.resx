@@ -118,9 +118,6 @@
     <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </resheader>
   <assembly alias="System.Windows.Forms" name="System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089" />
-  <data name="edit_select_all_16" type="System.Resources.ResXFileRef, System.Windows.Forms">
-    <value>..\Resources\edit_select_all.png;System.Drawing.Bitmap, System.Drawing, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
-  </data>
   <data name="rotate_cw_16" type="System.Resources.ResXFileRef, System.Windows.Forms">
     <value>..\Resources\rotate_cw.png;System.Drawing.Bitmap, System.Drawing, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
   </data>
@@ -138,9 +135,6 @@
   </data>
   <data name="insert_image_16" type="System.Resources.ResXFileRef, System.Windows.Forms">
     <value>..\Resources\insert_image.png;System.Drawing.Bitmap, System.Drawing, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
-  </data>
-  <data name="transform_16" type="System.Resources.ResXFileRef, System.Windows.Forms">
-    <value>..\Resources\transform_move.png;System.Drawing.Bitmap, System.Drawing, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
   </data>
   <data name="add_16" type="System.Resources.ResXFileRef, System.Windows.Forms">
     <value>..\Resources\add.png;System.Drawing.Bitmap, System.Drawing, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
@@ -190,32 +184,14 @@
   <data name="saveas_16" type="System.Resources.ResXFileRef, System.Windows.Forms">
     <value>..\Resources\filesaveas.png;System.Drawing.Bitmap, System.Drawing, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
   </data>
-  <data name="pointer_16" type="System.Resources.ResXFileRef, System.Windows.Forms">
-    <value>..\Resources\pointer.png;System.Drawing.Bitmap, System.Drawing, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
-  </data>
   <data name="peg_16" type="System.Resources.ResXFileRef, System.Windows.Forms">
     <value>..\Resources\pegIcon.png;System.Drawing.Bitmap, System.Drawing, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
-  </data>
-  <data name="add_32" type="System.Resources.ResXFileRef, System.Windows.Forms">
-    <value>..\Resources\Icons\32\add_32.png;System.Drawing.Bitmap, System.Drawing, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
-  </data>
-  <data name="background_32" type="System.Resources.ResXFileRef, System.Windows.Forms">
-    <value>..\Resources\Icons\32\background_32.png;System.Drawing.Bitmap, System.Drawing, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
   </data>
   <data name="brick_32" type="System.Resources.ResXFileRef, System.Windows.Forms">
     <value>..\Resources\Icons\32\brick_32.png;System.Drawing.Bitmap, System.Drawing, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
   </data>
   <data name="paste_32" type="System.Resources.ResXFileRef, System.Windows.Forms">
     <value>..\Resources\Icons\32\editpaste_32.png;System.Drawing.Bitmap, System.Drawing, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
-  </data>
-  <data name="close_32" type="System.Resources.ResXFileRef, System.Windows.Forms">
-    <value>..\Resources\Icons\32\fileclose_32.png;System.Drawing.Bitmap, System.Drawing, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
-  </data>
-  <data name="export_32" type="System.Resources.ResXFileRef, System.Windows.Forms">
-    <value>..\Resources\Icons\32\fileexport_32.png;System.Drawing.Bitmap, System.Drawing, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
-  </data>
-  <data name="import_32" type="System.Resources.ResXFileRef, System.Windows.Forms">
-    <value>..\Resources\Icons\32\fileimport_32.png;System.Drawing.Bitmap, System.Drawing, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
   </data>
   <data name="new_32" type="System.Resources.ResXFileRef, System.Windows.Forms">
     <value>..\Resources\Icons\32\filenew_32.png;System.Drawing.Bitmap, System.Drawing, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
@@ -229,9 +205,6 @@
   <data name="save_32" type="System.Resources.ResXFileRef, System.Windows.Forms">
     <value>..\Resources\Icons\32\filesave_32.png;System.Drawing.Bitmap, System.Drawing, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
   </data>
-  <data name="insert_image_32" type="System.Resources.ResXFileRef, System.Windows.Forms">
-    <value>..\Resources\Icons\32\insert_image_32.png;System.Drawing.Bitmap, System.Drawing, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
-  </data>
   <data name="peg_32" type="System.Resources.ResXFileRef, System.Windows.Forms">
     <value>..\Resources\Icons\32\peg_32.png;System.Drawing.Bitmap, System.Drawing, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
   </data>
@@ -241,14 +214,8 @@
   <data name="properties_32" type="System.Resources.ResXFileRef, System.Windows.Forms">
     <value>..\Resources\Icons\32\properties_32.png;System.Drawing.Bitmap, System.Drawing, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
   </data>
-  <data name="remove_32" type="System.Resources.ResXFileRef, System.Windows.Forms">
-    <value>..\Resources\Icons\32\remove_32.png;System.Drawing.Bitmap, System.Drawing, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
-  </data>
   <data name="remove_peg_32" type="System.Resources.ResXFileRef, System.Windows.Forms">
     <value>..\Resources\Icons\32\remove_peg_32.png;System.Drawing.Bitmap, System.Drawing, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
-  </data>
-  <data name="script_32" type="System.Resources.ResXFileRef, System.Windows.Forms">
-    <value>..\Resources\Icons\32\script_32.png;System.Drawing.Bitmap, System.Drawing, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
   </data>
   <data name="peg_circle_32" type="System.Resources.ResXFileRef, System.Windows.Forms">
     <value>..\Resources\Icons\32\peg_circle_32.png;System.Drawing.Bitmap, System.Drawing, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
@@ -271,14 +238,8 @@
   <data name="orca" type="System.Resources.ResXFileRef, System.Windows.Forms">
     <value>..\orca.ico;System.Drawing.Icon, System.Drawing, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
   </data>
-  <data name="challenge_32" type="System.Resources.ResXFileRef, System.Windows.Forms">
-    <value>..\resources\icons\32\challenge_32.png;System.Drawing.Bitmap, System.Drawing, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
-  </data>
   <data name="challenge_add_16" type="System.Resources.ResXFileRef, System.Windows.Forms">
     <value>..\resources\icons\16\challenge_add_16.png;System.Drawing.Bitmap, System.Drawing, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
-  </data>
-  <data name="challenge_remove_16" type="System.Resources.ResXFileRef, System.Windows.Forms">
-    <value>..\resources\icons\16\challenge_remove_16.png;System.Drawing.Bitmap, System.Drawing, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
   </data>
   <data name="down_16" type="System.Resources.ResXFileRef, System.Windows.Forms">
     <value>..\resources\icons\16\down_16.png;System.Drawing.Bitmap, System.Drawing, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>

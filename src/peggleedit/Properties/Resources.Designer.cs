@@ -73,16 +73,6 @@ namespace IntelOrca.PeggleEdit.Designer.Properties {
         /// <summary>
         ///   Looks up a localized resource of type System.Drawing.Bitmap.
         /// </summary>
-        internal static System.Drawing.Bitmap add_32 {
-            get {
-                object obj = ResourceManager.GetObject("add_32", resourceCulture);
-                return ((System.Drawing.Bitmap)(obj));
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized resource of type System.Drawing.Bitmap.
-        /// </summary>
         internal static System.Drawing.Bitmap align_horizontally_16 {
             get {
                 object obj = ResourceManager.GetObject("align_horizontally_16", resourceCulture);
@@ -96,16 +86,6 @@ namespace IntelOrca.PeggleEdit.Designer.Properties {
         internal static System.Drawing.Bitmap align_vertically_16 {
             get {
                 object obj = ResourceManager.GetObject("align_vertically_16", resourceCulture);
-                return ((System.Drawing.Bitmap)(obj));
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized resource of type System.Drawing.Bitmap.
-        /// </summary>
-        internal static System.Drawing.Bitmap background_32 {
-            get {
-                object obj = ResourceManager.GetObject("background_32", resourceCulture);
                 return ((System.Drawing.Bitmap)(obj));
             }
         }
@@ -183,39 +163,9 @@ namespace IntelOrca.PeggleEdit.Designer.Properties {
         /// <summary>
         ///   Looks up a localized resource of type System.Drawing.Bitmap.
         /// </summary>
-        internal static System.Drawing.Bitmap challenge_32 {
-            get {
-                object obj = ResourceManager.GetObject("challenge_32", resourceCulture);
-                return ((System.Drawing.Bitmap)(obj));
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized resource of type System.Drawing.Bitmap.
-        /// </summary>
         internal static System.Drawing.Bitmap challenge_add_16 {
             get {
                 object obj = ResourceManager.GetObject("challenge_add_16", resourceCulture);
-                return ((System.Drawing.Bitmap)(obj));
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized resource of type System.Drawing.Bitmap.
-        /// </summary>
-        internal static System.Drawing.Bitmap challenge_remove_16 {
-            get {
-                object obj = ResourceManager.GetObject("challenge_remove_16", resourceCulture);
-                return ((System.Drawing.Bitmap)(obj));
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized resource of type System.Drawing.Bitmap.
-        /// </summary>
-        internal static System.Drawing.Bitmap close_32 {
-            get {
-                object obj = ResourceManager.GetObject("close_32", resourceCulture);
                 return ((System.Drawing.Bitmap)(obj));
             }
         }
@@ -273,16 +223,6 @@ namespace IntelOrca.PeggleEdit.Designer.Properties {
         /// <summary>
         ///   Looks up a localized resource of type System.Drawing.Bitmap.
         /// </summary>
-        internal static System.Drawing.Bitmap edit_select_all_16 {
-            get {
-                object obj = ResourceManager.GetObject("edit_select_all_16", resourceCulture);
-                return ((System.Drawing.Bitmap)(obj));
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized resource of type System.Drawing.Bitmap.
-        /// </summary>
         internal static System.Drawing.Bitmap emitter_32 {
             get {
                 object obj = ResourceManager.GetObject("emitter_32", resourceCulture);
@@ -316,16 +256,6 @@ namespace IntelOrca.PeggleEdit.Designer.Properties {
         internal static System.Drawing.Bitmap export_16 {
             get {
                 object obj = ResourceManager.GetObject("export_16", resourceCulture);
-                return ((System.Drawing.Bitmap)(obj));
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized resource of type System.Drawing.Bitmap.
-        /// </summary>
-        internal static System.Drawing.Bitmap export_32 {
-            get {
-                object obj = ResourceManager.GetObject("export_32", resourceCulture);
                 return ((System.Drawing.Bitmap)(obj));
             }
         }
@@ -423,29 +353,9 @@ namespace IntelOrca.PeggleEdit.Designer.Properties {
         /// <summary>
         ///   Looks up a localized resource of type System.Drawing.Bitmap.
         /// </summary>
-        internal static System.Drawing.Bitmap import_32 {
-            get {
-                object obj = ResourceManager.GetObject("import_32", resourceCulture);
-                return ((System.Drawing.Bitmap)(obj));
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized resource of type System.Drawing.Bitmap.
-        /// </summary>
         internal static System.Drawing.Bitmap insert_image_16 {
             get {
                 object obj = ResourceManager.GetObject("insert_image_16", resourceCulture);
-                return ((System.Drawing.Bitmap)(obj));
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized resource of type System.Drawing.Bitmap.
-        /// </summary>
-        internal static System.Drawing.Bitmap insert_image_32 {
-            get {
-                object obj = ResourceManager.GetObject("insert_image_32", resourceCulture);
                 return ((System.Drawing.Bitmap)(obj));
             }
         }
@@ -653,16 +563,6 @@ namespace IntelOrca.PeggleEdit.Designer.Properties {
         /// <summary>
         ///   Looks up a localized resource of type System.Drawing.Bitmap.
         /// </summary>
-        internal static System.Drawing.Bitmap pointer_16 {
-            get {
-                object obj = ResourceManager.GetObject("pointer_16", resourceCulture);
-                return ((System.Drawing.Bitmap)(obj));
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized resource of type System.Drawing.Bitmap.
-        /// </summary>
         internal static System.Drawing.Bitmap pointer_32 {
             get {
                 object obj = ResourceManager.GetObject("pointer_32", resourceCulture);
@@ -716,16 +616,6 @@ namespace IntelOrca.PeggleEdit.Designer.Properties {
         internal static System.Drawing.Bitmap remove_16 {
             get {
                 object obj = ResourceManager.GetObject("remove_16", resourceCulture);
-                return ((System.Drawing.Bitmap)(obj));
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized resource of type System.Drawing.Bitmap.
-        /// </summary>
-        internal static System.Drawing.Bitmap remove_32 {
-            get {
-                object obj = ResourceManager.GetObject("remove_32", resourceCulture);
                 return ((System.Drawing.Bitmap)(obj));
             }
         }
@@ -813,16 +703,6 @@ namespace IntelOrca.PeggleEdit.Designer.Properties {
         /// <summary>
         ///   Looks up a localized resource of type System.Drawing.Bitmap.
         /// </summary>
-        internal static System.Drawing.Bitmap script_32 {
-            get {
-                object obj = ResourceManager.GetObject("script_32", resourceCulture);
-                return ((System.Drawing.Bitmap)(obj));
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized resource of type System.Drawing.Bitmap.
-        /// </summary>
         internal static System.Drawing.Bitmap send_backward_32 {
             get {
                 object obj = ResourceManager.GetObject("send_backward_32", resourceCulture);
@@ -896,16 +776,6 @@ namespace IntelOrca.PeggleEdit.Designer.Properties {
         internal static System.Drawing.Bitmap teleport_32 {
             get {
                 object obj = ResourceManager.GetObject("teleport_32", resourceCulture);
-                return ((System.Drawing.Bitmap)(obj));
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized resource of type System.Drawing.Bitmap.
-        /// </summary>
-        internal static System.Drawing.Bitmap transform_16 {
-            get {
-                object obj = ResourceManager.GetObject("transform_16", resourceCulture);
                 return ((System.Drawing.Bitmap)(obj));
             }
         }
