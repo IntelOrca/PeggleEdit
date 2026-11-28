@@ -1,6 +1,6 @@
 # Changelog
 
-## PeggleEdit 5.2.0 (Flamingo) (2026-11-27)
+## PeggleEdit 5.2.0 (Flamingo) (2026-11-28)
 
 The biggest PeggleEdit release yet: levels are drawn as the game shows them, generators no longer need applying, levels are saved exactly as they were read, and PeggleEdit updates itself.
 
