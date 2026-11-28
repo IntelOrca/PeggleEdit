@@ -36,6 +36,8 @@ namespace IntelOrca.PeggleEdit.Designer
 
             chkAlwaysShowAnchors.Checked = Settings.Default.ShowAnchorsAlways;
 
+            txtPeggleExePath.Text = Settings.Default.PeggleExePath;
+            txtPeggleExePath.Text = Settings.Default.PeggleExePath;
             txtPeggleNightsExePath.Text = Settings.Default.PeggleNightsExePath;
 
             cmbUpdateRing.SelectedIndex = (int)Settings.Default.EffectiveUpdateRing;
@@ -57,6 +59,8 @@ namespace IntelOrca.PeggleEdit.Designer
 
             Settings.Default.ShowAnchorsAlways = chkAlwaysShowAnchors.Checked;
 
+            Settings.Default.PeggleExePath = txtPeggleExePath.Text;
+            Settings.Default.PeggleExePath = txtPeggleExePath.Text;
             Settings.Default.PeggleNightsExePath = txtPeggleNightsExePath.Text;
             MainMDIForm.RegisterGamePaths();
 
@@ -87,13 +91,11 @@ namespace IntelOrca.PeggleEdit.Designer
             nudSnapThreshold.Maximum = newMax;
         }
 
-        private void txtPeggleNightsExePath_TextChanged(object sender, EventArgs e)
+        private void txtExePath_TextChanged(object sender, EventArgs e)
         {
-            string path = txtPeggleNightsExePath.Text;
-            if (File.Exists(path))
-                txtPeggleNightsExePath.ForeColor = Color.Green;
-            else
-                txtPeggleNightsExePath.ForeColor = Color.Red;
+            // Green when the game is there, red when it is not
+            var textBox = (TextBox)sender;
+            textBox.ForeColor = File.Exists(textBox.Text) ? Color.Green : Color.Red;
         }
 
         private void btnSetFileAssociation_Click(object sender, EventArgs e)

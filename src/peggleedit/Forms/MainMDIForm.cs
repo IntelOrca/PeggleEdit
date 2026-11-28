@@ -744,7 +744,7 @@ namespace IntelOrca.PeggleEdit.Designer
             if (s_openedGame.HasValue)
                 LevelPack.RegisterPegglePath(s_openedGame.Value.Directory, s_openedGame.Value.MainPak);
             else
-                LevelPack.RegisterPegglePath(Settings.Default.PeggleNightsPath);
+                LevelPack.RegisterPegglePath(Settings.Default.GamePath);
         }
 
         /// <summary>

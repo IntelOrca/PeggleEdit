@@ -19,7 +19,7 @@ If you close a window, open it again from the **View** tab. PeggleEdit remembers
   * **Group** puts the selected objects in a group. Clicking or boxing any object in a group selects the whole group, with a yellow box around it; hold **Alt** as you click or box to select just the objects themselves. **Ungroup** takes the selected objects out of their groups.
   * **Lock** locks the selected objects, so that they can not be selected or moved in the level, for example a background of bricks you are building on. You can still select a locked object in the Entry List, which shows it with a red box, and change it in the Properties window (**Locked** turns it off for just that object). **Unlock All** unlocks every object in the level.
   * The Entry List shows the group each object is in, and a padlock for each locked object. Groups and locks are kept in PeggleEdit's own data in the level, which the game ignores. Pasted objects are put in new groups of their own and are not locked.
-* **Nights**: start Peggle Nights. If it does not start, set where the game is under **PeggleEdit Options > Peggle Nights**.
+* **Peggle** and **Nights**: start Peggle or Peggle Nights. If one does not start, set where the game is under **PeggleEdit Options > Games**.
 
 ## Rotating objects
 With the **Select** tool, a round handle shows above the selected objects. Drag it to turn them around their middle, marked with a cross, in steps of 1 degree; the angle is shown as you drag. Hold **Ctrl** to turn in steps of 22.5 degrees, or **Ctrl+Shift** for 45 degrees. To turn them around another point, hold **Shift** and click (or drag) to move the cross there first; it stays there for them, and moves with them as you move them, until you select something else. The objects turn together: each is moved around the point, bricks and generators turn, and the points of lines, polys, holes' destinations and pens turn with them. An object that moves has its movement path turned with it, and an object that moves along with another keeps where it is from it (see **Parent Mover**). A peg generator's ellipse (with different radii) only keeps its shape when turned by a quarter turn or a half turn; at other angles its pegs go round the ellipse instead. Locked objects are left where they are, and the whole turn is undone in one go.
@@ -113,5 +113,5 @@ Open the README, the GitHub page, or see which version you have.
 ## Options
 Open **PeggleEdit Options** from the orca menu.
 * **Designer**: show the grid, snap objects to it, set its size, always show the anchors of moving objects, and draw pegs and bricks with the game's own textures or as plain shapes.
-* **Peggle Nights**: where the game is, for the **Nights** button.
+* **Games**: where Peggle and Peggle Nights are, for the **Peggle** and **Nights** buttons. PeggleEdit also looks in Peggle Nights' folder (or Peggle's, if Peggle Nights is not there) for images that levels use but packs do not have.
 * **Application**: open .pak files with PeggleEdit when you double-click them, and choose your update ring.

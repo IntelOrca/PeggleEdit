@@ -31,8 +31,39 @@ namespace IntelOrca.PeggleEdit.Designer
     {
         public static Settings Default { get; private set; } = new Settings();
 
+        public string PeggleExePath { get; set; } = @"C:\Program Files\PopCap Games\Peggle\Peggle.exe";
+        public string PegglePath => GetDirectory(PeggleExePath);
         public string PeggleNightsExePath { get; set; } = @"C:\Program Files\PopCap Games\Peggle Nights\PeggleNights.exe";
-        public string PeggleNightsPath => PeggleNightsExePath == null ? null : Path.GetDirectoryName(PeggleNightsExePath);
+        public string PeggleNightsPath => GetDirectory(PeggleNightsExePath);
+
+        /// <summary>
+        /// The game directory to find the game's files in, such as the images levels use: Peggle Nights', or Peggle's
+        /// if Peggle Nights is not there.
+        /// </summary>
+        [JsonIgnore]
+        public string GamePath
+        {
+            get
+            {
+                var nights = PeggleNightsPath;
+                if (nights != null && Directory.Exists(nights))
+                    return nights;
+                var peggle = PegglePath;
+                return peggle != null && Directory.Exists(peggle) ? peggle : nights;
+            }
+        }
+
+        private static string GetDirectory(string exePath)
+        {
+            try
+            {
+                return String.IsNullOrEmpty(exePath) ? null : Path.GetDirectoryName(exePath);
+            }
+            catch (ArgumentException)
+            {
+                return null;
+            }
+        }
         public bool ShowGrid { get; set; }
         public bool SnapToGrid { get; set; } = true;
         public int GridSize { get; set; } = 20;

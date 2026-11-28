@@ -336,11 +336,20 @@ namespace IntelOrca.PeggleEdit.Designer
             panelGroup.Items.Add(btnLock);
             panelGroup.Items.Add(btnUnlockAll);
 
+            RibbonButton btnLaunchPeggle = new RibbonButton("Peggle");
+            btnLaunchPeggle.Image = Resources.Peggle_32;
+            btnLaunchPeggle.ToolTipTitle = "Launch Peggle";
+            btnLaunchPeggle.ToolTip = "Start Peggle. Set where it is in PeggleEdit Options > Games.";
+            btnLaunchPeggle.Click += (sender, e) => LaunchGame(Settings.Default.PeggleExePath, "Peggle");
+
             RibbonButton btnLaunchPeggleNights = new RibbonButton("Nights");
             btnLaunchPeggleNights.Image = Resources.PeggleNights_32;
-            btnLaunchPeggleNights.Click += new EventHandler(peggleNightsRibbonButton_Click);
+            btnLaunchPeggleNights.ToolTipTitle = "Launch Peggle Nights";
+            btnLaunchPeggleNights.ToolTip = "Start Peggle Nights. Set where it is in PeggleEdit Options > Games.";
+            btnLaunchPeggleNights.Click += (sender, e) => LaunchGame(Settings.Default.PeggleNightsExePath, "Peggle Nights");
 
             RibbonPanel panelPeggle = new RibbonPanel("Launch Peggle");
+            panelPeggle.Items.Add(btnLaunchPeggle);
             panelPeggle.Items.Add(btnLaunchPeggleNights);
 
             RibbonTab tabHome = new RibbonTab(mRibbon, "Home");
@@ -1085,19 +1094,17 @@ namespace IntelOrca.PeggleEdit.Designer
             LevelEditor.SendObjectsToBack();
         }
 
-        private void peggleNightsRibbonButton_Click(object sender, EventArgs e)
+        /// <summary>
+        /// Starts a game from its executable, in its own directory, or says why it could not be started.
+        /// </summary>
+        private void LaunchGame(string path, string name)
         {
-            var errorMessage = null as string;
-            var path = Settings.Default.PeggleNightsExePath;
-            var psi = new ProcessStartInfo(Settings.Default.PeggleNightsExePath)
-            {
-                WorkingDirectory = Path.GetDirectoryName(Settings.Default.PeggleNightsExePath)
-            };
-            if (File.Exists(path))
+            string errorMessage = null;
+            if (!String.IsNullOrEmpty(path) && File.Exists(path))
             {
                 try
                 {
-                    Process.Start(psi);
+                    Process.Start(new ProcessStartInfo(path) { WorkingDirectory = Path.GetDirectoryName(path) });
                 }
                 catch (Exception ex)
                 {
@@ -1106,11 +1113,11 @@ namespace IntelOrca.PeggleEdit.Designer
             }
             else
             {
-                errorMessage = $"Unable to find '{path}'.\nIf this path is wrong, you can change it in settings.";
+                errorMessage = $"Unable to find '{path}'.\nIf this path is wrong, you can change it in PeggleEdit Options > Games.";
             }
             if (errorMessage != null)
             {
-                MessageBox.Show(errorMessage, "Unable To Launch Peggle Nights", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                MessageBox.Show(mParent, errorMessage, "Unable To Launch " + name, MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
         }
 

@@ -146,6 +146,7 @@ The biggest PeggleEdit release yet. Levels are drawn and previewed as the game s
 ### Interface
 
 * [Feature] PeggleEdit is DPI aware: it is sharp on high DPI displays, with the ribbon, windows, dialogs and level scaled to match
+* [Feature] Launch Peggle as well as Peggle Nights (Home > Launch Peggle), and set where each game is in Options > Games
 * [Change] Remove the unimplemented script button
 * [Fix] Ribbon drop-downs close when clicking elsewhere, pressing Escape or switching to another application
 * [Fix] Ribbon panel labels no longer cut off the tails of letters, and check box labels line up with their check boxes

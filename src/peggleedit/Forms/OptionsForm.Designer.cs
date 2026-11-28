@@ -41,6 +41,8 @@
             this.chkShowGrid = new System.Windows.Forms.CheckBox();
             this.tabPeggleNights = new System.Windows.Forms.TabPage();
             this.grpTesting = new System.Windows.Forms.GroupBox();
+            this.lblPeggleExePath = new System.Windows.Forms.Label();
+            this.txtPeggleExePath = new System.Windows.Forms.TextBox();
             this.lblPeggleNightsExePath = new System.Windows.Forms.Label();
             this.txtPeggleNightsExePath = new System.Windows.Forms.TextBox();
             this.tabApplication = new System.Windows.Forms.TabPage();
@@ -204,42 +206,65 @@
             this.tabPeggleNights.Name = "tabPeggleNights";
             this.tabPeggleNights.Size = new System.Drawing.Size(642, 353);
             this.tabPeggleNights.TabIndex = 1;
-            this.tabPeggleNights.Text = "Peggle Nights";
+            this.tabPeggleNights.Text = "Games";
             this.tabPeggleNights.UseVisualStyleBackColor = true;
             // 
             // grpTesting
             // 
+            this.grpTesting.Controls.Add(this.lblPeggleExePath);
+            this.grpTesting.Controls.Add(this.txtPeggleExePath);
             this.grpTesting.Controls.Add(this.lblPeggleNightsExePath);
             this.grpTesting.Controls.Add(this.txtPeggleNightsExePath);
             this.grpTesting.Location = new System.Drawing.Point(12, 12);
             this.grpTesting.Margin = new System.Windows.Forms.Padding(6, 6, 6, 6);
             this.grpTesting.Name = "grpTesting";
             this.grpTesting.Padding = new System.Windows.Forms.Padding(6, 6, 6, 6);
-            this.grpTesting.Size = new System.Drawing.Size(618, 131);
+            this.grpTesting.Size = new System.Drawing.Size(618, 224);
             this.grpTesting.TabIndex = 1;
             this.grpTesting.TabStop = false;
-            this.grpTesting.Text = "Testing";
+            this.grpTesting.Text = "Game Paths";
+            // 
+            // lblPeggleExePath
+            // 
+            this.lblPeggleExePath.AutoSize = true;
+            this.lblPeggleExePath.Location = new System.Drawing.Point(12, 42);
+            this.lblPeggleExePath.Margin = new System.Windows.Forms.Padding(6, 0, 6, 0);
+            this.lblPeggleExePath.Name = "lblPeggleExePath";
+            this.lblPeggleExePath.Size = new System.Drawing.Size(250, 25);
+            this.lblPeggleExePath.TabIndex = 2;
+            this.lblPeggleExePath.Text = "Peggle executable path:";
+            // 
+            // txtPeggleExePath
+            // 
+            this.txtPeggleExePath.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left)
+            | System.Windows.Forms.AnchorStyles.Right)));
+            this.txtPeggleExePath.Location = new System.Drawing.Point(18, 73);
+            this.txtPeggleExePath.Margin = new System.Windows.Forms.Padding(6, 6, 6, 6);
+            this.txtPeggleExePath.Name = "txtPeggleExePath";
+            this.txtPeggleExePath.Size = new System.Drawing.Size(584, 31);
+            this.txtPeggleExePath.TabIndex = 0;
+            this.txtPeggleExePath.TextChanged += new System.EventHandler(this.txtExePath_TextChanged);
             // 
             // lblPeggleNightsExePath
             // 
             this.lblPeggleNightsExePath.AutoSize = true;
-            this.lblPeggleNightsExePath.Location = new System.Drawing.Point(12, 42);
+            this.lblPeggleNightsExePath.Location = new System.Drawing.Point(12, 135);
             this.lblPeggleNightsExePath.Margin = new System.Windows.Forms.Padding(6, 0, 6, 0);
             this.lblPeggleNightsExePath.Name = "lblPeggleNightsExePath";
             this.lblPeggleNightsExePath.Size = new System.Drawing.Size(311, 25);
-            this.lblPeggleNightsExePath.TabIndex = 1;
+            this.lblPeggleNightsExePath.TabIndex = 3;
             this.lblPeggleNightsExePath.Text = "Peggle Nights executable path:";
             // 
             // txtPeggleNightsExePath
             // 
             this.txtPeggleNightsExePath.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
             | System.Windows.Forms.AnchorStyles.Right)));
-            this.txtPeggleNightsExePath.Location = new System.Drawing.Point(18, 73);
+            this.txtPeggleNightsExePath.Location = new System.Drawing.Point(18, 166);
             this.txtPeggleNightsExePath.Margin = new System.Windows.Forms.Padding(6, 6, 6, 6);
             this.txtPeggleNightsExePath.Name = "txtPeggleNightsExePath";
             this.txtPeggleNightsExePath.Size = new System.Drawing.Size(584, 31);
-            this.txtPeggleNightsExePath.TabIndex = 0;
-            this.txtPeggleNightsExePath.TextChanged += new System.EventHandler(this.txtPeggleNightsExePath_TextChanged);
+            this.txtPeggleNightsExePath.TabIndex = 1;
+            this.txtPeggleNightsExePath.TextChanged += new System.EventHandler(this.txtExePath_TextChanged);
             // 
             // tabApplication
             // 
@@ -416,6 +441,8 @@
         private System.Windows.Forms.CheckBox chkAlwaysShowAnchors;
         private System.Windows.Forms.TabPage tabPeggleNights;
         private System.Windows.Forms.GroupBox grpTesting;
+        private System.Windows.Forms.Label lblPeggleExePath;
+        private System.Windows.Forms.TextBox txtPeggleExePath;
         private System.Windows.Forms.Label lblPeggleNightsExePath;
         private System.Windows.Forms.TextBox txtPeggleNightsExePath;
         private System.Windows.Forms.TabPage tabApplication;
