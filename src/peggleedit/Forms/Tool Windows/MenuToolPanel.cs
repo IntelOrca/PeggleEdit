@@ -608,11 +608,10 @@ namespace IntelOrca.PeggleEdit.Designer
         }
 
         readonly List<(RibbonCheckBox CheckBox, EntryKinds Kind)> mKindCheckBoxes = new List<(RibbonCheckBox, EntryKinds)>();
-        RibbonButton btnInvisible;
 
         /// <summary>
-        /// The panel that shows or hides each kind of object, and objects whose Visible setting is off. Objects that are
-        /// not shown can not be picked in the level, so that they are not moved or deleted by mistake.
+        /// The panel that shows or hides each kind of object. Objects that are not shown can not be picked in the level,
+        /// so that they are not moved or deleted by mistake.
         /// </summary>
         private RibbonPanel InitKindsPanel()
         {
@@ -634,23 +633,8 @@ namespace IntelOrca.PeggleEdit.Designer
             Add("Polys", EntryKinds.Polys, "Show the polys.");
             Add("Holes", EntryKinds.Holes, "Show the holes.");
             Add("Emitters", EntryKinds.Emitters, "Show the emitters.");
-
-            btnInvisible = new RibbonButton(FormatInvisible(InvisibleObjectsView.Shown));
-            btnInvisible.MaxSizeMode = RibbonElementSizeMode.Medium;
-            btnInvisible.Style = RibbonButtonStyle.DropDown;
-            btnInvisible.ToolTipTitle = "Invisible Objects";
-            btnInvisible.ToolTip = "How objects whose Visible setting is off, which the game does not draw, are shown: as any other object, faint (over the other objects), or not at all. Hidden objects can not be selected in the level, only in the Entry List.";
-            foreach (InvisibleObjectsView view in Enum.GetValues(typeof(InvisibleObjectsView)))
-            {
-                var item = new RibbonButton(view.ToString());
-                item.Click += (sender, e) => SetInvisibleObjects(view);
-                btnInvisible.DropDownItems.Add(item);
-            }
-            panel.Items.Add(btnInvisible);
             return panel;
         }
-
-        private static string FormatInvisible(InvisibleObjectsView view) => "Invisible: " + view;
 
         private void SetShownKind(EntryKinds kind, bool shown)
         {
@@ -658,15 +642,6 @@ namespace IntelOrca.PeggleEdit.Designer
                 return;
             var level = LevelEditor.Level;
             level.ShownKinds = shown ? level.ShownKinds | kind : level.ShownKinds & ~kind;
-            OnShownObjectsChanged();
-        }
-
-        private void SetInvisibleObjects(InvisibleObjectsView view)
-        {
-            if (!IsEditorAvailable())
-                return;
-            LevelEditor.Level.InvisibleObjects = view;
-            btnInvisible.Text = FormatInvisible(view);
             OnShownObjectsChanged();
         }
 
@@ -1496,9 +1471,6 @@ namespace IntelOrca.PeggleEdit.Designer
             changed |= SetChecked(chkParticles, level.ShowParticles);
             foreach (var (checkBox, kind) in mKindCheckBoxes)
                 changed |= SetChecked(checkBox, (level.ShownKinds & kind) != 0);
-            var invisible = FormatInvisible(level.InvisibleObjects);
-            if (btnInvisible.Text != invisible)
-                btnInvisible.Text = invisible;
             if (changed)
                 mRibbon.Refresh();
         }

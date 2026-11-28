@@ -23,19 +23,6 @@ namespace IntelOrca.PeggleEdit.Tools.Levels
         All = Pegs | Bricks | Balls | Lines | Polys | Holes | Emitters,
     }
 
-    /// <summary>
-    /// How objects whose Visible setting is off (which the game does not draw) are shown while editing.
-    /// </summary>
-    public enum InvisibleObjectsView
-    {
-        /// <summary>Drawn as any other object.</summary>
-        Shown,
-        /// <summary>Drawn faint, over the other objects.</summary>
-        Faded,
-        /// <summary>Not drawn, and can not be picked in the level.</summary>
-        Hidden,
-    }
-
     public static class EntryKind
     {
         /// <summary>

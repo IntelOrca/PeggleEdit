@@ -28,7 +28,7 @@ The biggest PeggleEdit release yet. Levels are drawn and previewed as the game s
 * [Feature] #37: Zoom the level in and out, from 25% to 800% (View > Zoom, Ctrl++, Ctrl+-, Ctrl+0, or Ctrl and the mouse wheel)
 * [Feature] #39: Rotate the selected objects with the mouse, around their middle or a point you choose, by whole degrees or in steps of 22.5 or 45 degrees with Ctrl
 * [Feature] #40: Group objects, so that they are selected together, and lock objects, so that they can not be selected or moved in the level (Home > Group, Ctrl+G, Ctrl+L)
-* [Feature] #38: Show or hide each kind of object, and show invisible objects as normal, faded or not at all (View > Kinds). Hidden objects can not be selected in the level
+* [Feature] #38: Show or hide each kind of object (View > Kinds). Hidden objects can not be selected in the level
 * [Feature] #23: Hold ALT to move objects by 0.0625 (1/16) units
 * [Feature] #14: Remove > Unreachable Pegs removes the pegs and bricks no shot from the cannon can reach without a bounce, worked out from how the game fires the ball
 * [Feature] #42: The Entry List is a table, with columns for each object's index, type, position and group, and a padlock for locked objects

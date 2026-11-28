@@ -260,32 +260,28 @@ namespace IntelOrca.PeggleEdit.Designer
         }
 
         /// <summary>
-        /// Raised when the kinds of object shown, or how invisible objects are shown, change.
+        /// Raised when the kinds of object shown change.
         /// </summary>
         public event EventHandler ShownObjectsChanged;
 
         /// <summary>
-        /// Shows the given objects (e.g. ones just pasted or placed) if their kind, or invisible objects, are hidden, so
-        /// that what is added can be seen and selected.
+        /// Shows the given objects (e.g. ones just pasted or placed) if their kind is hidden, so that what is added can be
+        /// seen and selected.
         /// </summary>
         public void ShowEntries(IEnumerable<LevelEntry> entries)
         {
             if (mLevel == null)
                 return;
             var kinds = mLevel.ShownKinds;
-            var invisible = mLevel.InvisibleObjects;
             var any = false;
             foreach (var le in entries)
             {
                 any = true;
                 kinds |= EntryKind.Get(le);
-                if (!le.Visible && invisible == InvisibleObjectsView.Hidden)
-                    invisible = InvisibleObjectsView.Shown;
             }
-            if (!any || (kinds == mLevel.ShownKinds && invisible == mLevel.InvisibleObjects && mLevel.ShowingPegs))
+            if (!any || (kinds == mLevel.ShownKinds && mLevel.ShowingPegs))
                 return;
             mLevel.ShownKinds = kinds;
-            mLevel.InvisibleObjects = invisible;
             mLevel.ShowingPegs = true;
             RequestRedraw(null);
             ShownObjectsChanged?.Invoke(this, EventArgs.Empty);
