@@ -607,7 +607,7 @@ namespace IntelOrca.PeggleEdit.Tools.Levels
 
         private void DrawLightningRod(Graphics g, double ticks)
         {
-            var image = LevelPack.Current?.GetImage(@"images\game\lightningRodOn")?.Image;
+            var image = LevelPack.GetEmbeddedImage(@"images\game\lightningRodOn")?.Image;
             if (image == null)
                 return;
             var position = BaseObjects.GetLightningRodPosition(ticks, BaseObjects.GetBucketRadius(mDevices));
@@ -702,14 +702,6 @@ namespace IntelOrca.PeggleEdit.Tools.Levels
             Cannon.Draw(g, Cannon.GetAngle(CannonTarget));
         }
 
-        // The walls around the board in level coordinates, from _base.dat, for when the game's files are not found
-        private static readonly RectangleF[] DefaultWalls =
-        {
-            RectangleF.FromLTRB(-39.5f, -759.5f, -0.5f, 1239.5f),
-            RectangleF.FromLTRB(649.5f, -759.5f, 688.5f, 1239.5f),
-            RectangleF.FromLTRB(0.75f, -15.375f, 649.25f, 9.375f),
-        };
-
         /// <summary>
         /// Draws what the ball collides with that the game adds to every level, as the level's collision is drawn: the
         /// walls around the board, the bucket and the devices that are out, and the end of the cannon. The interface
@@ -721,11 +713,6 @@ namespace IntelOrca.PeggleEdit.Tools.Levels
             g.SetClip(new RectangleF(-Level.DrawAdjustX, -Level.DrawAdjustY, 800, 600), CombineMode.Intersect);
 
             var entries = BaseObjects.GetCollisionEntries(this, mDevices, ticks);
-            if (BaseObjects.BaseLevel == null)
-            {
-                foreach (var wall in DefaultWalls)
-                    g.FillRectangle(Brushes.White, wall);
-            }
 
             // Drawn as in the preview, as they can not be edited
             var oPreview = mShowPreview;

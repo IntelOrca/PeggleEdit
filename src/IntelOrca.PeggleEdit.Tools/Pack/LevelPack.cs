@@ -50,7 +50,7 @@ namespace IntelOrca.PeggleEdit.Tools.Pack
         public string Description { get; set; } = "Type your description here.";
 
         /// <summary>
-        /// Points the game file lookups (images, levels\_base.dat) at a game directory, and its main.pak or
+        /// Points the game file lookups (images) at a game directory, and its main.pak or
         /// <paramref name="mainPakPath"/> if given (e.g. a game's renamed main.pak).
         /// </summary>
         public static void RegisterPegglePath(string pegglePath, string mainPakPath = null)
@@ -124,12 +124,6 @@ namespace IntelOrca.PeggleEdit.Tools.Pack
         /// The game directory registered with <see cref="RegisterPegglePath"/>, if any.
         /// </summary>
         public static string PegglePath => _pegglePath;
-
-        /// <summary>
-        /// Gets a file of the game (e.g. levels\_base.dat), from main.pak or from the game directory when it has been
-        /// extracted, or null if it can not be found.
-        /// </summary>
-        public static byte[] GetGameFile(string path) => GetMainFile(path);
 
         /// <summary>
         /// Gets a file of the game, from main.pak or from the game directory when it has been extracted.
@@ -308,7 +302,36 @@ namespace IntelOrca.PeggleEdit.Tools.Pack
                 return null;
 
             key = key.Replace("/", "\\");
-            return GetPackImage(key) ?? GetMainPakImage(key);
+            return GetPackImage(key) ?? GetEmbeddedImage(key) ?? GetMainPakImage(key);
+        }
+
+        private static readonly Dictionary<string, PakImage> _embeddedImageCache = new Dictionary<string, PakImage>(StringComparer.OrdinalIgnoreCase);
+
+        /// <summary>
+        /// Gets one of the game's images that is embedded in PeggleEdit (see <see cref="GameFiles"/>), e.g. those of the
+        /// bucket and the cannon, combined with its alpha image, or null if it is not one of them.
+        /// </summary>
+        public static PakImage GetEmbeddedImage(string key)
+        {
+            if (key == null)
+                return null;
+
+            key = key.Replace("/", "\\");
+            lock (_embeddedImageCache)
+            {
+                if (_embeddedImageCache.TryGetValue(key, out var cached))
+                    return cached;
+
+                PakImage result = null;
+                foreach (var candidate in GetImageCandidates(key))
+                {
+                    result = FindImage(candidate, GameFiles.Get);
+                    if (result != null)
+                        break;
+                }
+                _embeddedImageCache[key] = result;
+                return result;
+            }
         }
 
         public bool Open(string path)

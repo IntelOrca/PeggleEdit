@@ -16,7 +16,6 @@ namespace IntelOrca.PeggleEdit.Tools.Tests
     [Collection("LevelPack.Current")]
     public class GameDevicesTests : IDisposable
     {
-        private readonly string _pegglePath;
 
         // A cut down _base.dat: the bucket's hole and front plate, the pyramid, the lid and a flipper, as in the game's
         const string BaseXml = @"<PeggleLevel schema=""1"" fileVersion=""0x52"">
@@ -48,23 +47,13 @@ namespace IntelOrca.PeggleEdit.Tools.Tests
 
         public GameDevicesTests()
         {
-            _pegglePath = Path.Combine(Path.GetTempPath(), "peggleedit-tests-" + Guid.NewGuid().ToString("N"));
-            Directory.CreateDirectory(Path.Combine(_pegglePath, "levels"));
-            File.WriteAllBytes(Path.Combine(_pegglePath, "levels", "_base.dat"), LevelXml.Import(BaseXml));
-            LevelPack.RegisterPegglePath(_pegglePath);
+            BaseObjects.BaseLevel = ReadXml(BaseXml);
             LevelPack.Current = new LevelPack();
         }
 
         public void Dispose()
         {
-            LevelPack.RegisterPegglePath(null);
-            try
-            {
-                Directory.Delete(_pegglePath, true);
-            }
-            catch (IOException)
-            {
-            }
+            BaseObjects.BaseLevel = null;
         }
 
         static Level ReadXml(string xml)
@@ -112,6 +101,40 @@ namespace IntelOrca.PeggleEdit.Tools.Tests
         {
             Assert.NotNull(BaseObjects.BaseLevel);
             Assert.Equal(6, BaseObjects.BaseLevel.Entries.Count);
+        }
+
+        [Fact]
+        public void GameFiles_AreEmbedded()
+        {
+            // The objects of the game's _base.dat that are shown, whatever game directory there is
+            BaseObjects.BaseLevel = null;
+            var ids = BaseObjects.BaseLevel.Entries.Cast<LevelEntry>().Select(x => x.Id).ToArray();
+            Assert.Equal(3, ids.Count(x => x == "wall"));
+            Assert.Equal(5, ids.Count(x => x == "freeball"));
+            Assert.Equal(5, ids.Count(x => x == "bumperhole"));
+            Assert.Equal(1, ids.Count(x => x == "freeballcover"));
+            Assert.Equal(2, ids.Count(x => x == "flipper"));
+            Assert.Equal(16, ids.Length);
+
+            // And the images of the bucket and the devices, with their alpha, and those of the cannon and lightning rod
+            var images = BaseObjects.BaseLevel.Entries.Cast<LevelEntry>().Select(x => x.ImageFilename)
+                .Where(x => !string.IsNullOrEmpty(x)).Distinct().ToArray();
+            Assert.Equal(new[] { "bumpera", "bumperb", "bumperc", "catchera", "catcherb", "catcherc", "catchercover", "lobsterclawl", "lobsterclawr" },
+                         images.OrderBy(x => x, StringComparer.Ordinal).ToArray());
+            foreach (var name in images)
+            {
+                var image = LevelPack.GetEmbeddedImage(name)?.Image;
+                Assert.True(image != null, name);
+                Assert.True(Image.IsAlphaPixelFormat(image.PixelFormat), name);
+            }
+            Assert.NotNull(LevelPack.GetEmbeddedImage(@"images\ip\shooter")?.Image);
+            Assert.NotNull(LevelPack.GetEmbeddedImage(@"images\game\lightningRodOn")?.Image);
+            Assert.NotNull(GameFiles.Get(@"images\ip\seams.gif"));
+            Assert.NotNull(GameFiles.Get(@"images\ip\seams_.gif"));
+            Assert.Null(GameFiles.Get(@"images\levels\nothing.png"));
+
+            // A pack without the image uses the embedded one
+            Assert.Same(LevelPack.GetEmbeddedImage("catchera"), new LevelPack().GetImage("catchera"));
         }
 
         [Fact]

@@ -138,21 +138,16 @@ namespace IntelOrca.PeggleEdit.Tools.Levels
             };
         }
 
-        private static string _imagePath;
         private static Bitmap _image;
         private static bool _imageLoaded;
 
         /// <summary>
-        /// The cannon's image, made from the game's files as the game makes it, or null without them.
+        /// The cannon's image, made from the game's files (embedded, see <see cref="GameFiles"/>) as the game makes it.
         /// </summary>
         private static Bitmap GetImage()
         {
-            var path = LevelPack.PegglePath;
-            if (!_imageLoaded || _imagePath != path)
+            if (!_imageLoaded)
             {
-                _image?.Dispose();
-                _image = null;
-                _imagePath = path;
                 _imageLoaded = true;
                 try
                 {
@@ -167,7 +162,7 @@ namespace IntelOrca.PeggleEdit.Tools.Levels
 
         private static Bitmap MakeImage()
         {
-            var shooter = LevelPack.Current?.GetImage(@"images\ip\shooter")?.Image;
+            var shooter = LevelPack.GetEmbeddedImage(@"images\ip\shooter")?.Image;
             if (shooter == null)
                 return null;
 
@@ -192,8 +187,8 @@ namespace IntelOrca.PeggleEdit.Tools.Levels
         /// </summary>
         private static Bitmap GetSeams()
         {
-            var colourData = LevelPack.GetGameFile(@"images\ip\seams.gif");
-            var alphaData = LevelPack.GetGameFile(@"images\ip\seams_.gif");
+            var colourData = GameFiles.Get(@"images\ip\seams.gif");
+            var alphaData = GameFiles.Get(@"images\ip\seams_.gif");
             if (colourData == null || alphaData == null)
                 return null;
 

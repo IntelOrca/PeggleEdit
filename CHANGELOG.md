@@ -77,6 +77,7 @@ The biggest PeggleEdit release yet. Levels are drawn and previewed as the game s
 * [Feature] Transparent view option to draw the level's objects half transparent over the background
 * [Feature] Fast Forward view option to play the preview at the game's fast forward speed (8x)
 * [Enhancement] Fall back to main.pak or the Peggle Nights directory for images
+* [Change] The bucket, the devices of the powers, the cannon and the lightning rod are drawn from PeggleEdit's own copy of the game's images, so they are shown even when the game's files can not be found
 * [Change] The interface no longer shows a master
 * [Change] The preview plays only in the level that is focused, and pauses while another level or application is in front
 * [Fix] The preview with peg textures is several times faster, especially zoomed on a high DPI display, so PeggleEdit stays responsive while it plays

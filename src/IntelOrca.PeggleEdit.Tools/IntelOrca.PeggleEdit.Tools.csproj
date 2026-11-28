@@ -28,6 +28,8 @@
     <EmbeddedResource Update="Levels\PolyEditor.resx">
       <DependentUpon>PolyEditor.cs</DependentUpon>
     </EmbeddedResource>
+    <!-- The game's images PeggleEdit draws itself, under the paths the game has them at (see GameFiles) -->
+    <EmbeddedResource Include="Resources\GameFiles\**\*" LogicalName="GameFiles\%(RecursiveDir)%(Filename)%(Extension)" />
     <EmbeddedResource Update="Properties\Resources.resx">
       <Generator>ResXFileCodeGenerator</Generator>
       <LastGenOutput>Resources.Designer.cs</LastGenOutput>
