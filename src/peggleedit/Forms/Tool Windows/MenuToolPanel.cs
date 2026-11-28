@@ -571,10 +571,10 @@ namespace IntelOrca.PeggleEdit.Designer
             panelShowHide.Items.Add(chkCannon);
             panelShowHide.Items.Add(chkObjects);
             panelShowHide.Items.Add(chkCollision);
+            panelShowHide.Items.Add(chkParticles);
             panelShowHide.Items.Add(chkTransparent);
             panelShowHide.Items.Add(chkPreview);
             panelShowHide.Items.Add(chkFastForward);
-            panelShowHide.Items.Add(chkParticles);
             panelShowHide.Items.Add(chk3DAcceleration);
 
             RibbonPanel panelPowerUps = InitPowerUpsPanel();

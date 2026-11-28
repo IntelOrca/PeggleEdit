@@ -61,10 +61,10 @@ The **Remove** button can remove:
 | Cannon | Shows the game's cannon, pointing at the mouse, so you can check it is not too close to anything. |
 | Objects | Shows the level's objects. |
 | Collision | Shows what the ball bounces off, including the walls, the bucket and any power-ups. |
+| Particles | Shows the particles of [emitters](Emitters.md). |
 | Transparent | Makes objects see-through, so you can see the background under them. |
 | Preview | Plays the level as the game would: objects move and emitters run. |
 | Fast Forward | Plays the preview at the game's fast forward speed. |
-| Particles | Shows the particles of [emitters](Emitters.md). |
 | 3D Mode | Shows emitters as the game does with 3D acceleration, which is how nearly everyone plays. |
 
 **Kinds** shows or hides each kind of object: **Pegs** (with the generators and pens that make them), **Bricks** (likewise), **Balls** that are not pegs, **Lines**, **Polys**, **Holes** and **Emitters**. **Invisible** chooses how objects whose **Visible** setting is off are shown while editing: **Shown** like any other object, **Faded** (drawn faint, over the other objects), or **Hidden**. Objects that are hidden can not be selected in the level, so that you can not move or delete them by mistake, but they are still saved and you can still select them in the Entry List. Objects you paste or place are always shown, so their kind is shown again if it was hidden. The game's view and thumbnails always show everything.
