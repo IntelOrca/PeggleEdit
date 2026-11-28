@@ -109,6 +109,18 @@ namespace System.Windows.Forms
 
 
         /// <summary>
+        /// Gets or sets texts the button is measured as wide as the widest of (as well as its own text), so that it keeps
+        /// its width as its text changes, e.g. one that shows a value.
+        /// </summary>
+        [Browsable(false), DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
+        public string[] SizingTexts
+        {
+            get { return _sizingTexts; }
+            set { _sizingTexts = value; NotifyOwnerRegionsChanged(); }
+        }
+        private string[] _sizingTexts;
+
+        /// <summary>
         /// Gets or sets a value indicating if the DropDown should be resizable
         /// </summary>
         [DefaultValue(false)]
@@ -675,6 +687,11 @@ namespace System.Windows.Forms
                 case RibbonElementSizeMode.Large:
                 case RibbonElementSizeMode.Overflow:
                     sz = MeasureStringLargeSize(e.Graphics, Text, Owner.Font);
+                    if (_sizingTexts != null)
+                    {
+                        foreach (var text in _sizingTexts)
+                            sz.Width = Math.Max(sz.Width, MeasureStringLargeSize(e.Graphics, text, Owner.Font).Width);
+                    }
                     if (!string.IsNullOrEmpty(Text))
                     {
                         widthSum += Math.Max(sz.Width + 1, img.Width);
@@ -690,6 +707,11 @@ namespace System.Windows.Forms
                 case RibbonElementSizeMode.DropDown:
                 case RibbonElementSizeMode.Medium:
                     sz = TextRenderer.MeasureText(Text, Owner.Font);
+                    if (_sizingTexts != null)
+                    {
+                        foreach (var text in _sizingTexts)
+                            sz.Width = Math.Max(sz.Width, TextRenderer.MeasureText(text, Owner.Font).Width);
+                    }
                     if(!string.IsNullOrEmpty(Text)) widthSum += sz.Width + 1;
                     widthSum += simg.Width + Owner.ItemMargin.Horizontal;
                     heightSum += Math.Max(sz.Height, simg.Height);

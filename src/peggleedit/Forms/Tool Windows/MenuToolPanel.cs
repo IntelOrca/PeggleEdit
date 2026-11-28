@@ -693,6 +693,8 @@ namespace IntelOrca.PeggleEdit.Designer
             btnZoom = new RibbonButton(FormatZoom(1));
             btnZoom.Image = Resources.zoom_32;
             btnZoom.Style = RibbonButtonStyle.DropDown;
+            // As wide as the widest zoom, so that it does not change width with the zoom
+            btnZoom.SizingTexts = LevelEditor.ZoomLevels.Select(FormatZoom).ToArray();
             btnZoom.ToolTipTitle = "Zoom";
             btnZoom.ToolTip = "Choose how large the level is shown. Hold Ctrl and turn the mouse wheel to zoom in and out around the mouse.";
             foreach (var zoomLevel in LevelEditor.ZoomLevels)
